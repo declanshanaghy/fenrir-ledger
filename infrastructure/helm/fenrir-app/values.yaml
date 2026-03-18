@@ -81,7 +81,6 @@ ingress:
   enabled: true
   className: "gce"
   hosts:
-    - fenrirledger.com
     - www.fenrirledger.com
   annotations:
     networking.gke.io/managed-certificates: "fenrir-app-cert"
@@ -116,7 +115,6 @@ ingress:
   managedCertificate:
     enabled: true
     domains:
-      - fenrirledger.com
       - www.fenrirledger.com
 
 # -- Secrets (template only) -----------------------------------------------
