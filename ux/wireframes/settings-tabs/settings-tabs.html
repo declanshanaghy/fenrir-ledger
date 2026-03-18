@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings Tabs — Wireframe</title>
+  <style>
+    /* ── Reset ──────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; padding: 24px; max-width: 960px; margin: 0 auto; }
+
+    /* ── Wireframe annotation ──────────────────────────────────────────── */
+    .note {
+      font-size: 11px;
+      font-style: italic;
+      border: 1px dashed #999;
+      padding: 6px 10px;
+      margin: 8px 0;
+    }
+    .viewport-label {
+      font-size: 13px;
+      font-weight: bold;
+      border-bottom: 2px solid #333;
+      padding-bottom: 4px;
+      margin: 40px 0 16px;
+    }
+
+    /* ── Page header ───────────────────────────────────────────────────── */
+    .page-header {
+      border-bottom: 1px solid #000;
+      padding-bottom: 12px;
+      margin-bottom: 0;
+    }
+    .page-header h1 { font-size: 22px; font-weight: 700; }
+    .page-header .subtitle { font-size: 13px; font-weight: 400; margin-top: 4px; }
+
+    /* ── Tab bar (desktop) ─────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #000;
+    }
+    .tab-bar [role="tab"] {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      border-bottom: none;
+      cursor: pointer;
+      background: none;
+    }
+    .tab-bar [role="tab"][aria-selected="true"] {
+      border: 1px solid #000;
+      border-bottom: 2px solid #fff;
+      margin-bottom: -1px;
+    }
+    .tab-bar [role="tab"]:focus-visible {
+      outline: 2px solid #000;
+      outline-offset: -2px;
+    }
+
+    /* ── Tab panels ────────────────────────────────────────────────────── */
+    [role="tabpanel"] { padding: 20px 0; }
+    [role="tabpanel"][hidden] { display: none; }
+
+    /* ── Card grid (desktop: 2-col, mobile: stack) ─────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .card-grid.full-width {
+      grid-template-columns: 1fr;
+    }
+
+    /* ── Card placeholder ──────────────────────────────────────────────── */
+    .card {
+      border: 1px solid #000;
+      padding: 16px;
+      min-height: 120px;
+    }
+    .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .card .card-body { font-size: 13px; }
+
+    /* ── Bling annotation ──────────────────────────────────────────────── */
+    .bling-annotation {
+      font-size: 10px;
+      font-weight: 600;
+      border: 1px solid #666;
+      padding: 2px 6px;
+      display: inline-block;
+      margin-top: 8px;
+    }
+
+    /* ── Mobile simulation ─────────────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid #333;
+      padding: 16px;
+    }
+    .mobile-frame .card-grid {
+      grid-template-columns: 1fr;
+    }
+
+    /* ── Mobile select (replaces tab bar on small viewports) ────────────── */
+    .tab-select-wrapper {
+      padding: 8px 0 12px;
+      border-bottom: 1px solid #000;
+    }
+    .tab-select-wrapper select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 15px;
+      font-weight: 600;
+      border: 1px solid #000;
+      min-height: 44px;
+    }
+
+    /* ── Section divider ───────────────────────────────────────────────── */
+    hr.section-break {
+      border: none;
+      border-top: 3px double #333;
+      margin: 48px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     DESKTOP VIEWPORT (>1024px)
+     ═══════════════════════════════════════════════════════════════════════ -->
+<p class="viewport-label">DESKTOP (&gt;1024px)</p>
+
+<p class="note">
+  The page container uses max-width: 960px (existing max-w-5xl).
+  Tab bar replaces the old 2-column grid as the primary navigation.
+</p>
+
+<!-- Page header -->
+<header class="page-header">
+  <h1>Settings</h1>
+  <!-- NOTE: Subtitle text changes per active tab. See interaction spec. -->
+  <p class="subtitle" id="desktop-subtitle">
+    Manage your subscription and trial status. The wolf's chain awaits your command.
+  </p>
+</header>
+
+<!-- Tab bar -->
+<nav aria-label="Settings sections">
+  <div class="tab-bar" role="tablist" aria-label="Settings tabs">
+    <!--
+      NOTE: Each tab button carries class="karl-bling-tab" for the bling system.
+      Karl/trial tiers: gold border-bottom on active, gold glow on hover.
+      Thrall: plain border treatment (no bling classes fire).
+      See interaction spec for full bling behavior.
+    -->
+    <button role="tab"
+            id="tab-account"
+            aria-selected="true"
+            aria-controls="panel-account"
+            class="karl-bling-tab">
+      Account
+    </button>
+    <button role="tab"
+            id="tab-household"
+            aria-selected="false"
+            aria-controls="panel-household"
+            tabindex="-1"
+            class="karl-bling-tab">
+      Household
+    </button>
+    <button role="tab"
+            id="tab-settings"
+            aria-selected="false"
+            aria-controls="panel-settings"
+            tabindex="-1"
+            class="karl-bling-tab">
+      Settings
+    </button>
+  </div>
+</nav>
+
+<!-- ── Panel: Account ──────────────────────────────────────────────────── -->
+<section role="tabpanel" id="panel-account" aria-labelledby="tab-account">
+  <div class="card-grid">
+    <!-- Left: StripeSettings -->
+    <article class="card">
+      <h3>Subscription</h3>
+      <p class="card-body">
+        [StripeSettings component]<br>
+        Manage plan, payment method, billing history.
+      </p>
+      <span class="bling-annotation">karl-bling-card</span>
+      <p class="note">
+        Existing StripeSettings component renders here unchanged.
+        Already has karl-bling-card class and rune corners.
+      </p>
+    </article>
+
+    <!-- Right: TrialSettingsSection -->
+    <article class="card">
+      <h3>Trial Status</h3>
+      <p class="card-body">
+        [TrialSettingsSection component]<br>
+        Shows trial days remaining, conversion CTA.
+      </p>
+      <span class="bling-annotation">karl-bling-card</span>
+      <p class="note">
+        Existing TrialSettingsSection component renders here unchanged.
+        Conditionally visible (only during active trial).
+        When hidden, Subscription card expands to full width (grid-column: 1 / -1).
+      </p>
+    </article>
+  </div>
+</section>
+
+<!-- ── Panel: Household ────────────────────────────────────────────────── -->
+<section role="tabpanel" id="panel-household" aria-labelledby="tab-household" hidden>
+  <div class="card-grid">
+    <!-- Left: HouseholdSettingsSection -->
+    <article class="card">
+      <h3>Household</h3>
+      <p class="card-body">
+        [HouseholdSettingsSection component]<br>
+        Manage household members, sharing settings.
+      </p>
+      <span class="bling-annotation">karl-bling-card</span>
+    </article>
+
+    <!-- Right: SyncSettingsSection -->
+    <article class="card">
+      <h3>Cloud Sync</h3>
+      <p class="card-body">
+        [SyncSettingsSection component]<br>
+        Sync status, toggle, conflict resolution.
+      </p>
+      <span class="bling-annotation">karl-bling-card</span>
+    </article>
+  </div>
+</section>
+
+<!-- ── Panel: Settings ─────────────────────────────────────────────────── -->
+<section role="tabpanel" id="panel-settings" aria-labelledby="tab-settings" hidden>
+  <div class="card-grid full-width">
+    <!-- Full width: RestoreTabGuides -->
+    <article class="card">
+      <h3>Tab Guides</h3>
+      <p class="card-body">
+        [RestoreTabGuides component]<br>
+        Restore dismissed tab headers and summaries.
+        "Restore the Guides" button + confirmation message.
+      </p>
+      <span class="bling-annotation">karl-bling-card</span>
+      <p class="note">
+        Full-width single card. Existing RestoreTabGuides component unchanged.
+        Contains Gleipnir Fragment #3 trigger (Mountain Roots).
+      </p>
+    </article>
+  </div>
+</section>
+
+<p class="note">
+  URL HASH PERSISTENCE: Active tab is stored in the URL hash (#account, #household, #settings).
+  On page load, read location.hash and activate matching tab. Default: #account.
+  On tab switch, update location.hash via history.replaceState (no page reload, no history entry).
+</p>
+
+
+<hr class="section-break">
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MOBILE VIEWPORT (<600px) — 375px minimum
+     ═══════════════════════════════════════════════════════════════════════ -->
+<p class="viewport-label">MOBILE (&lt;600px, shown at 375px)</p>
+
+<p class="note">
+  MOBILE TAB PATTERN: Native &lt;select&gt; dropdown replaces the horizontal tab bar.
+  Rationale: At 375px, 3 text tabs can feel cramped and may truncate. A native select
+  is touch-friendly (44px min-height), accessible by default, and familiar on mobile.
+  It also scales if more tabs are added later. The hamburger menu pattern was considered
+  but rejected — it hides navigation behind a tap, reducing discoverability for only 3 items.
+</p>
+
+<div class="mobile-frame">
+  <!-- Page header (mobile) -->
+  <header class="page-header">
+    <h1 style="font-size: 20px;">Settings</h1>
+    <p class="subtitle" style="font-size: 12px;">
+      Manage your subscription and trial status. The wolf's chain awaits your command.
+    </p>
+  </header>
+
+  <!-- Tab selector (mobile: native select) -->
+  <div class="tab-select-wrapper">
+    <label for="mobile-tab-select" style="font-size: 11px; font-weight: 600; display: block; margin-bottom: 4px;">
+      Section
+    </label>
+    <select id="mobile-tab-select" aria-label="Settings section">
+      <!--
+        NOTE: The select element naturally supports karl-bling treatment via
+        a wrapper div with class="karl-bling-card" for border/glow effects.
+        The select itself gets a gold border-color override for karl/trial.
+      -->
+      <option value="account" selected>Account</option>
+      <option value="household">Household</option>
+      <option value="settings">Settings</option>
+    </select>
+    <span class="bling-annotation">karl-bling on wrapper</span>
+  </div>
+
+  <!-- Panel: Account (mobile — cards stack) -->
+  <section style="padding: 16px 0;">
+    <article class="card" style="margin-bottom: 16px;">
+      <h3>Subscription</h3>
+      <p class="card-body">[StripeSettings]</p>
+    </article>
+    <article class="card">
+      <h3>Trial Status</h3>
+      <p class="card-body">[TrialSettingsSection]</p>
+    </article>
+  </section>
+
+  <p class="note">
+    Cards stack vertically at 100% width. Gap: 16px.
+    Touch targets: all interactive elements min 44x44px.
+    Subtitle updates on select change, same as desktop.
+  </p>
+</div>
+
+
+<hr class="section-break">
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     TABLET VIEWPORT (600–1024px)
+     ═══════════════════════════════════════════════════════════════════════ -->
+<p class="viewport-label">TABLET (600–1024px)</p>
+
+<p class="note">
+  Tablet uses the DESKTOP tab bar (horizontal tabs still fit at 600px+).
+  Card grid switches to single-column stacking (same as mobile) to avoid
+  cramped 50/50 splits on narrow tablets. Cards get full width and stack.
+  Breakpoint: md (768px) for grid switch — cards go 2-col only above 768px.
+</p>
+
+<div style="width: 700px; border: 2px solid #333; padding: 20px;">
+  <header class="page-header">
+    <h1>Settings</h1>
+    <p class="subtitle">Manage your subscription and trial status. The wolf's chain awaits your command.</p>
+  </header>
+
+  <nav>
+    <div class="tab-bar" role="tablist">
+      <button role="tab" aria-selected="true">Account</button>
+      <button role="tab" aria-selected="false" tabindex="-1">Household</button>
+      <button role="tab" aria-selected="false" tabindex="-1">Settings</button>
+    </div>
+  </nav>
+
+  <section style="padding: 20px 0;">
+    <!-- Single-column stack on tablet -->
+    <article class="card" style="margin-bottom: 16px;">
+      <h3>Subscription</h3>
+      <p class="card-body">[StripeSettings — full width]</p>
+    </article>
+    <article class="card">
+      <h3>Trial Status</h3>
+      <p class="card-body">[TrialSettingsSection — full width]</p>
+    </article>
+  </section>
+
+  <p class="note">
+    Between 600-767px: tab bar + single-column cards.
+    At 768px+: tab bar + 2-column card grid (same as desktop).
+  </p>
+</div>
+
+
+<hr class="section-break">
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     BLING TIER VISUAL ANNOTATIONS
+     ═══════════════════════════════════════════════════════════════════════ -->
+<p class="viewport-label">BLING TIER BEHAVIOR</p>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+  <!-- Karl -->
+  <section class="card">
+    <h3>data-tier="karl"</h3>
+    <p class="card-body">
+      <strong>Tabs:</strong> Active tab gets gold border-bottom (2px solid #d4a520).
+      Hover: gold glow animation (karl-gold-glow).<br><br>
+      <strong>Cards:</strong> Existing karl-bling-card hover glow. Rune corners visible (0.55 opacity).<br><br>
+      <strong>Mobile select:</strong> Wrapper gets gold border. Select text color remains default.
+    </p>
+  </section>
+
+  <!-- Trial -->
+  <section class="card">
+    <h3>data-tier="trial"</h3>
+    <p class="card-body">
+      <strong>Tabs:</strong> Active tab gets softer gold border-bottom (2px solid rgba(212,165,32,0.55)).
+      Hover: soft gold glow (karl-gold-glow-soft).<br><br>
+      <strong>Cards:</strong> Existing trial karl-bling-card treatment. Rune corners at 0.30 opacity.<br><br>
+      <strong>Mobile select:</strong> Wrapper gets softer gold border.
+    </p>
+  </section>
+
+  <!-- Thrall -->
+  <section class="card">
+    <h3>data-tier="thrall"</h3>
+    <p class="card-body">
+      <strong>Tabs:</strong> Plain border-bottom (default border color). No glow.<br><br>
+      <strong>Cards:</strong> No bling classes fire. Standard border treatment.<br><br>
+      <strong>Mobile select:</strong> Standard border, no gold.
+    </p>
+  </section>
+</div>
+
+<p class="note">
+  NEW CSS CLASS needed: .karl-bling-tab — follows the same cascade pattern as
+  .karl-bling-card and .karl-bling-btn in karl-bling.css. See interaction spec
+  for the full CSS definition. Free trial users get Karl bling on tabs (same
+  as cards/buttons — trial subset includes tabs).
+</p>
+
+
+</body>
+</html>

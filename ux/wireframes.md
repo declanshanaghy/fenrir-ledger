@@ -11,6 +11,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Settings — Tab Redesign
+
+| File | Description |
+|------|-------------|
+| [wireframes/settings-tabs/settings-tabs.html](wireframes/settings-tabs/settings-tabs.html) | Settings page tab redesign: 3-tab layout (Account, Household, Settings) replacing the old 2-column grid. Desktop wireframe shows horizontal tab bar with 50/50 card grids per tab. Mobile wireframe (375px) uses native select dropdown instead of compressed tabs. Tablet wireframe shows tab bar with single-column card stack. Includes bling tier annotations for Karl/trial/thrall across all three viewports. |
+| [wireframes/settings-tabs/settings-tabs-interaction-spec.md](wireframes/settings-tabs/settings-tabs-interaction-spec.md) | Interaction spec: tab switching state machine, URL hash persistence (#account/#household/#settings) via history.replaceState, dynamic subtitle per tab, card layout rules (Trial-conditional full-width expansion), karl-bling-tab CSS class definition for karl-bling.css, mobile native select pattern rationale, WAI-ARIA tabs keyboard navigation (ArrowLeft/Right, Home/End), aria-live subtitle announcements, reduced-motion overrides, analytics events, implementation notes for FiremanDecko. |
+
+---
+
 ## Sync — Indicator States & Settings Section (Issue #1125)
 
 | File | Description |
