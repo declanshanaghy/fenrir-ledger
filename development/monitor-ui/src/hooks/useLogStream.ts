@@ -315,7 +315,7 @@ export function useLogStream() {
                 .filter((b) => b.type === "text")
                 .map((b) => b.text || "")
                 .join("");
-            if (text.length > 800) text = text.slice(0, 800) + "\n\u2026(truncated)";
+            if (text.length > 800) text = text.slice(0, 800) + "\n…(truncated)";
 
             // Search tool-batch children for the matching tool-use
             for (let i = updated.length - 1; i >= 0; i--) {
