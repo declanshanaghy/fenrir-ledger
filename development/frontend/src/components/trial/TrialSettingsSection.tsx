@@ -88,9 +88,47 @@ export function TrialSettingsSection() {
     }
   }, [subscribeStripe]);
 
-  // Don't render if no trial or already converted
-  if (isLoading || status === "none" || status === "converted") {
+  // Don't render while loading or for paid subscribers (already converted)
+  if (isLoading || status === "converted") {
     return null;
+  }
+
+  // Anonymous / no-trial state: show Norse-themed "not started" box
+  if (status === "none") {
+    return (
+      <section
+        className="relative border border-border p-5 flex flex-col gap-3"
+        aria-label="Trial Status"
+      >
+        <h2 className="text-sm font-heading font-bold uppercase tracking-[0.08em] text-foreground">
+          Trial Status
+        </h2>
+        <div className="border border-muted/20 bg-muted/5 p-3 flex flex-col gap-1.5">
+          <p className="text-[13px] font-heading font-semibold text-foreground">
+            Thy trial hath not yet begun, wanderer
+          </p>
+          <p className="text-[12px] text-muted-foreground font-body leading-relaxed">
+            Sign in or add a credit card to begin thy 30&#8209;day Karl Trial — free
+            to start, no charge until thou subscribest.
+          </p>
+        </div>
+        <a
+          href="/ledger/sign-in"
+          className={[
+            "inline-flex items-center justify-center gap-2",
+            "min-h-[44px] md:min-h-[40px] px-5 py-2",
+            "text-base font-heading font-semibold tracking-wide",
+            "bg-gold text-primary-foreground",
+            "hover:brightness-110 transition-colors",
+            "border border-gold rounded-sm",
+            "self-start",
+          ].join(" ")}
+          aria-label="Sign in to begin thy Karl Trial"
+        >
+          Sign in to begin
+        </a>
+      </section>
+    );
   }
 
   const planLabel =

@@ -59,10 +59,10 @@ function computePlanLabel(status: string, remainingDays: number): string {
 
 /**
  * Determines if the settings section should render.
+ * Anonymous users (status "none") now see a "not started" box (issue #1384).
  */
 function shouldShowSettingsSection(status: string, isLoading: boolean): boolean {
   if (isLoading) return false;
-  if (status === "none") return false;
   if (status === "converted") return false;
   return true;
 }
@@ -189,8 +189,8 @@ describe("TrialSettingsSection helpers", () => {
       expect(shouldShowSettingsSection("none", true)).toBe(false);
     });
 
-    it("returns false when status is 'none'", () => {
-      expect(shouldShowSettingsSection("none", false)).toBe(false);
+    it("returns true when status is 'none' — anonymous users see the not-started box (issue #1384)", () => {
+      expect(shouldShowSettingsSection("none", false)).toBe(true);
     });
 
     it("returns false when status is 'converted'", () => {
