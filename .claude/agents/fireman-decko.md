@@ -98,6 +98,120 @@ These patterns were found and deleted from this repo (issue #1253):
 `chronicles/chronicle-agent-css.test.ts` (CSS string), `gke/gke-api-routes.test.ts` (vacuous),
 `components/marketing-navbar.test.tsx` (static copy), `chronicles/chronicle-1050-mdx-heckler.test.ts` (CSS string).
 
+## GitHub Actions Authoring
+
+FiremanDecko owns the CI/CD implementation. When writing or modifying `.github/workflows/` files:
+
+### Step Naming (UNBREAKABLE)
+
+**Every step must have a `name:`.** No anonymous `uses:` blocks. Use these canonical names consistently across all jobs:
+
+| Action | Step name |
+|--------|-----------|
+| `actions/checkout` | `Checkout` |
+| `google-github-actions/auth` | `Authenticate to GCP` |
+| `google-github-actions/setup-gcloud` | `Setup gcloud CLI` |
+| `google-github-actions/get-gke-credentials` | `Get GKE credentials` |
+| `azure/setup-helm` | `Setup Helm` |
+| `docker/setup-buildx-action` | `Setup Buildx` |
+| `actions/setup-node` | `Setup Node.js` |
+| `hashicorp/setup-terraform` | `Setup Terraform` |
+
+### Step Order Within Deploy Jobs (UNBREAKABLE)
+
+Every deploy job follows this sequence:
+
+1. `Checkout`
+2. `Authenticate to GCP`
+3. `Setup gcloud CLI`
+4. `Get GKE credentials`
+5. `Setup Helm` (if deploying via Helm)
+6. `Ensure namespace`
+7. `Sync secrets`
+8. Login to external registries (GHCR, etc.)
+9. `Helm deploy` / `Helm deploy <component>`
+10. `Verify rollout` / `Summary`
+
+### Namespace Isolation
+
+Every service lives in its own namespace. Bootstrap job must adopt **all** of them:
+
+| Service | Namespace |
+|---------|-----------|
+| App | `fenrir-app` |
+| Agents | `fenrir-agents` |
+| Odin's Throne | `fenrir-monitor` |
+| Analytics | `fenrir-analytics` |
+| Marketing Engine | `fenrir-marketing` |
+
+When adding a new service: add its namespace to the `Pre-adopt bootstrap resources` step AND the `Verify namespaces` step in the `namespaces` job.
+
+Always use idempotent kubectl creates:
+```bash
+kubectl create namespace <ns> --dry-run=client -o yaml | kubectl apply -f -
+kubectl create secret generic <name> --namespace=<ns> \
+  --from-literal=KEY="value" \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+### External OCI Charts (GHCR)
+
+Jobs pulling from `oci://ghcr.io/` need:
+1. `packages: read` in the job's `permissions:` block
+2. A `Login to GHCR for <chart> chart` step before the helm deploy:
+```yaml
+- name: Login to GHCR for <chart> chart
+  run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+```
+
+### Docker Image Builds
+
+All custom images use `docker/build-push-action@v7` with:
+- `cache-from: type=gha` / `cache-to: type=gha,mode=max`
+- Two tags: versioned (`${{ env.IMAGE_TAG }}`) + `latest`
+- A `Summary` step writing tag + digest to `$GITHUB_STEP_SUMMARY`
+
+### Helm Deploy Pattern
+
+```yaml
+- name: Helm deploy
+  run: |
+    helm upgrade --install <release> \
+      ./infrastructure/helm/<chart> \
+      --namespace=<namespace> \
+      -f ./infrastructure/helm/<chart>/values-prod.yaml \
+      --set <key>=${{ env.VALUE }} \
+      --wait --timeout=5m
+```
+
+Always include `--wait --timeout=Xm`. Never omit both.
+
+### Verify Rollout Pattern
+
+```yaml
+- name: Verify rollout
+  run: |
+    echo "### <Service> Deploy" >> $GITHUB_STEP_SUMMARY
+    echo '```' >> $GITHUB_STEP_SUMMARY
+    kubectl get pods -n <namespace> >> $GITHUB_STEP_SUMMARY
+    echo '```' >> $GITHUB_STEP_SUMMARY
+    kubectl rollout status deployment/<name> -n <namespace> --timeout=60s
+```
+
+### detect-changes Job
+
+Manual `workflow_dispatch` must set ALL service flags to `true`:
+```bash
+if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+  for key in app k8s-app monitor monitor-ui helm-odin infra bootstrap umami marketing; do
+    echo "$key=true" >> "$GITHUB_OUTPUT"
+  done
+  exit 0
+fi
+```
+
+Push-triggered runs use `git diff --name-only HEAD~1 HEAD` with path patterns.
+
 ## Technical Standards
 
 - Full type annotations on all function signatures
