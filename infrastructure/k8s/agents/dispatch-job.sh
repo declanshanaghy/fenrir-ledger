@@ -24,7 +24,8 @@
 # Optional:
 #   --prompt-file Path to a file containing the task prompt (preferred
 #                 over --prompt — avoids heredoc/shell escaping issues)
-#   --no-spot     Use on-demand nodes instead of Spot (avoids preemption)
+#   --spot        Use Spot nodes (cheaper but can be preempted; default is on-demand)
+#   --no-spot     Explicitly use on-demand nodes (this is already the default)
 #   --image-tag   Container image tag (default: latest)
 #   --dry-run     Print generated manifest without applying
 # --------------------------------------------------------------------------
@@ -41,7 +42,7 @@ PROMPT_FILE=""
 IMAGE_TAG="latest"
 DRY_RUN=false
 ISSUE_NUMBER=""
-USE_SPOT=true
+USE_SPOT=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -52,6 +53,7 @@ while [[ $# -gt 0 ]]; do
     --prompt-file)   PROMPT_FILE="$2"; shift 2 ;;
     --image-tag)     IMAGE_TAG="$2"; shift 2 ;;
     --issue-number)  ISSUE_NUMBER="$2"; shift 2 ;;
+    --spot)          USE_SPOT=true; shift ;;
     --no-spot)       USE_SPOT=false; shift ;;
     --dry-run)       DRY_RUN=true; shift ;;
     *)
