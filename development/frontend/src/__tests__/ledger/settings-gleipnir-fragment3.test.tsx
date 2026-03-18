@@ -9,6 +9,9 @@
  *   - Button is disabled when no tab guides are dismissed
  *   - Button is enabled when at least one guide is dismissed
  *   - Repeat clicks do not re-trigger the fragment
+ *
+ * Updated for issue #1367: RestoreTabGuides is now in the "Settings" tab panel.
+ * Tests navigate to that tab before interacting with the button.
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -32,6 +35,10 @@ vi.mock("@/components/household/HouseholdSettingsSection", () => ({
   HouseholdSettingsSection: () => <div data-testid="household-section" />,
 }));
 
+vi.mock("@/components/sync/SyncSettingsSection", () => ({
+  SyncSettingsSection: () => <div data-testid="sync-section" />,
+}));
+
 // Stub EasterEggModal — we verify the trigger side-effect (localStorage) not the modal UI
 vi.mock("@/components/easter-eggs/EasterEggModal", () => ({
   EasterEggModal: ({ open }: { open: boolean }) =>
@@ -46,16 +53,25 @@ function dismissOneGuide() {
   localStorage.setItem(TAB_GUIDE_KEY, "true");
 }
 
+/** Navigate to the Settings tab so RestoreTabGuides is visible */
+function navigateToSettingsTab() {
+  const settingsTab = screen.getByRole("tab", { name: /^Settings$/i });
+  fireEvent.click(settingsTab);
+}
+
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
 describe("SettingsPage — RestoreTabGuides → Fragment #3 trigger", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    // Reset URL hash so each test starts on default (account) tab
+    window.location.hash = "";
   });
 
   it("Restore button is disabled when no tab guides are dismissed", () => {
     render(<SettingsPage />);
+    navigateToSettingsTab();
     const btn = screen.getByRole("button", { name: /Restore the Guides/i }) as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
   });
@@ -63,6 +79,7 @@ describe("SettingsPage — RestoreTabGuides → Fragment #3 trigger", () => {
   it("Restore button is enabled when at least one guide is dismissed", () => {
     dismissOneGuide();
     render(<SettingsPage />);
+    navigateToSettingsTab();
     const btn = screen.getByRole("button", { name: /Restore the Guides/i }) as HTMLButtonElement;
     expect(btn.disabled).toBe(false);
   });
@@ -70,6 +87,7 @@ describe("SettingsPage — RestoreTabGuides → Fragment #3 trigger", () => {
   it("clicking Restore sets egg:gleipnir-3 in localStorage on first restore", () => {
     dismissOneGuide();
     render(<SettingsPage />);
+    navigateToSettingsTab();
     const btn = screen.getByRole("button", { name: /Restore the Guides/i });
     fireEvent.click(btn);
     expect(localStorage.getItem("egg:gleipnir-3")).toBe("1");
@@ -78,6 +96,7 @@ describe("SettingsPage — RestoreTabGuides → Fragment #3 trigger", () => {
   it("clicking Restore clears tab guide keys from localStorage", () => {
     dismissOneGuide();
     render(<SettingsPage />);
+    navigateToSettingsTab();
     const btn = screen.getByRole("button", { name: /Restore the Guides/i });
     fireEvent.click(btn);
     expect(localStorage.getItem(TAB_GUIDE_KEY)).toBeNull();
@@ -87,6 +106,7 @@ describe("SettingsPage — RestoreTabGuides → Fragment #3 trigger", () => {
     // First restore: fragment discovered, key written
     dismissOneGuide();
     const { unmount } = render(<SettingsPage />);
+    navigateToSettingsTab();
     fireEvent.click(screen.getByRole("button", { name: /Restore the Guides/i }));
     expect(localStorage.getItem("egg:gleipnir-3")).toBe("1");
     unmount();
@@ -94,6 +114,7 @@ describe("SettingsPage — RestoreTabGuides → Fragment #3 trigger", () => {
     // Simulate a second visit to settings after dismissing a guide again
     dismissOneGuide();
     render(<SettingsPage />);
+    navigateToSettingsTab();
     const btn = screen.getByRole("button", { name: /Restore the Guides/i });
     fireEvent.click(btn);
     // Fragment key is still "1" — no change (trigger was a no-op)
