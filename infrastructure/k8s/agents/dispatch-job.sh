@@ -133,13 +133,14 @@ fi
 
 PROMPT_B64=$(printf '%s' "$PROMPT" | base64 | tr -d '\n')
 
-TMPFILE=$(mktemp /tmp/agent-job-XXXXXX.yaml)
-SPOT_TMPFILE=$(mktemp /tmp/agent-spot-XXXXXX.yaml)
+TMPFILE="$(mktemp /tmp/agent-job-XXXXXX)" && mv "$TMPFILE" "$TMPFILE.yaml" && TMPFILE="$TMPFILE.yaml"
+SPOT_TMPFILE="$(mktemp /tmp/agent-spot-XXXXXX)" && mv "$SPOT_TMPFILE" "$SPOT_TMPFILE.yaml" && SPOT_TMPFILE="$SPOT_TMPFILE.yaml"
 
-# First pass: replace {{SPOT_CONFIG}} with the multi-line block (sed can't do this)
-awk -v spot_config="$SPOT_CONFIG" '{
+# First pass: replace {{SPOT_CONFIG}} with the multi-line block
+# Use env var + ENVIRON[] instead of -v to support multiline values on BSD awk (macOS)
+SPOT_CONFIG="$SPOT_CONFIG" awk '{
   if ($0 ~ /\{\{SPOT_CONFIG\}\}/) {
-    print spot_config
+    print ENVIRON["SPOT_CONFIG"]
   } else {
     print
   }
