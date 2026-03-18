@@ -103,6 +103,11 @@ export function useLogStream() {
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
   const inEntrypoint = useRef(false);
+  // Tracks whether we have already rendered the task prompt (prevents double-emit
+  // when both the raw-line path and the JSON user-event path are present).
+  const hasEmittedTaskPrompt = useRef(false);
+  // Tracks whether any assistant turn has been seen (used to detect the initial user prompt).
+  const seenAssistantTurn = useRef(false);
   // Tracks how many live log-line messages to skip after a cache replay.
   // Set to N after replaying N cached lines so the re-streamed duplicates are ignored.
   const liveSkipRef = useRef(0);
@@ -129,6 +134,8 @@ export function useLogStream() {
     taskPromptBuffer.current = [];
     inTaskPrompt.current = false;
     inEntrypoint.current = false;
+    hasEmittedTaskPrompt.current = false;
+    seenAssistantTurn.current = false;
     setStreamError(null);
     setStreamEnded(false);
     setReplayedFromCache(false);
@@ -189,6 +196,7 @@ export function useLogStream() {
     }
 
     if (ev.type === "assistant" && ev.message?.content) {
+      seenAssistantTurn.current = true;
       const newTools: LogEntry[] = [];
       const newEntries: LogEntry[] = [];
       let hasText = false;
@@ -278,6 +286,23 @@ export function useLogStream() {
     }
 
     if (ev.type === "user" && ev.message?.content) {
+      // Detect initial task prompt: first user turn with text content before any assistant response.
+      // Renders as a collapsible NorseTablet rather than raw unstyled text.
+      if (!seenAssistantTurn.current && !hasEmittedTaskPrompt.current && Array.isArray(ev.message.content)) {
+        const promptParts: string[] = [];
+        for (const block of ev.message.content) {
+          if (block.type === "text" && block.text) promptParts.push(block.text);
+        }
+        if (promptParts.length > 0) {
+          hasEmittedTaskPrompt.current = true;
+          const promptText = promptParts.join("\n\n");
+          setEntries((prev) => [
+            ...prev,
+            { id: nextId(), type: "entrypoint-task", text: promptText },
+          ]);
+        }
+      }
+
       setEntries((prev) => {
         const updated = [...prev];
         for (const block of ev.message!.content!) {
@@ -341,6 +366,7 @@ export function useLogStream() {
         // Task prompt buffering (happens after "Starting Claude Code")
         if (/^---\s*TASK PROMPT\s*---$/.test(stripped)) {
           inTaskPrompt.current = true;
+          hasEmittedTaskPrompt.current = true; // raw path owns this prompt — suppress JSON duplicate
           taskPromptBuffer.current = [];
           return;
         }
