@@ -120,4 +120,28 @@ describe("AboutModal — build info section", () => {
     const buildInfo = document.querySelector("[data-testid='build-info']");
     expect(buildInfo?.textContent).toContain("v0.1.0");
   });
+
+  // ── Loki QA additions — gap coverage ─────────────────────────────────────
+
+  it("unknown commit is a span, not a link", () => {
+    delete process.env.NEXT_PUBLIC_APP_VERSION;
+    renderModal();
+    const commitEl = document.querySelector("[data-testid='build-info-commit']");
+    expect(commitEl?.tagName.toLowerCase()).toBe("span");
+  });
+
+  it("commit link opens in new tab", () => {
+    process.env.NEXT_PUBLIC_APP_VERSION = "abcdef1234567890";
+    renderModal();
+    const anchor = document.querySelector("[data-testid='build-info-commit']") as HTMLAnchorElement;
+    expect(anchor.target).toBe("_blank");
+  });
+
+  it("commit link has rel=noopener noreferrer to prevent tabnapping", () => {
+    process.env.NEXT_PUBLIC_APP_VERSION = "abcdef1234567890";
+    renderModal();
+    const anchor = document.querySelector("[data-testid='build-info-commit']") as HTMLAnchorElement;
+    expect(anchor.rel).toContain("noopener");
+    expect(anchor.rel).toContain("noreferrer");
+  });
 });
