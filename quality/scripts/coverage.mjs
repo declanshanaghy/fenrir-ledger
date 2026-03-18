@@ -306,7 +306,7 @@ async function main() {
     log("Running in --unit-only mode (Vitest coverage only)");
     runUnitCoverage();
     log("Generating quality report...");
-    const qualityScript = path.join(__dirname, "quality-report.mjs");
+    const qualityScript = path.join(__dirname, "quality-report-html.mjs");
     try {
       run(`node "${qualityScript}"`, { cwd: REPO_ROOT });
     } catch {
@@ -370,7 +370,7 @@ async function main() {
 
   // Generate quality report
   log("Generating quality report...");
-  const qualityScript = path.join(__dirname, "quality-report.mjs");
+  const qualityScript = path.join(__dirname, "quality-report-html.mjs");
   try {
     run(`node "${qualityScript}"`, { cwd: REPO_ROOT });
   } catch {

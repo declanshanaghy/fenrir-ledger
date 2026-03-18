@@ -73,12 +73,12 @@ brew install lcov   # macOS
 open quality/reports/coverage/vitest/index.html      # Unit
 open quality/reports/coverage/playwright/index.html  # E2E
 open quality/reports/coverage/combined/index.html    # Combined
-cat quality/reports/quality-report.md                # Quality summary
+open quality/reports/quality-report.html              # Quality summary
 ```
 
 ### Quality report
 
-Every run automatically generates `quality/reports/quality-report.md` via `quality-report.mjs`. It contains:
+Every run automatically generates `quality/reports/quality-report.html` via `quality-report-html.mjs`. It contains:
 
 - **Test inventory** — all test files broken down by category (unit, hook, component, API/route, E2E) with file and test counts
 - **Test quality analysis** — bullshit test detection: vacuous assertions, infra-YAML tests, CSS string tests, source file content assertions, static page copy tests
@@ -87,7 +87,7 @@ Every run automatically generates `quality/reports/quality-report.md` via `quali
 Can also be regenerated standalone:
 
 ```bash
-node quality/scripts/quality-report.mjs
+node quality/scripts/quality-report-html.mjs
 ```
 
 ---

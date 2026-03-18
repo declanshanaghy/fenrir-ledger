@@ -1,0 +1,42 @@
+<!--
+  Formal Change Order — HTML Template
+  Issued when: hollow tests detected OR combined line coverage < 50%
+-->
+<div class="decree wanting">
+  <div class="decree-type">Formal Change Order</div>
+  <div class="decree-title">ᚦ Action Required ᚦ</div>
+  <div class="decree-quote">"{{HEADER_QUOTE}}"</div>
+
+  <div class="deficiencies">
+    <h4>Deficiencies</h4>
+    <ul>
+      <!-- if hollow tests -->
+      <li><strong>{{HOLLOW_COUNT}}</strong> hollow test files ({{HOLLOW_TESTS}} tests) poisoning the suite</li>
+      <!-- if low coverage -->
+      <li>Combined line coverage at <strong>{{COVERAGE_PCT}}%</strong> — below 50% threshold</li>
+    </ul>
+    <h4>Required Actions</h4>
+    <ul class="actions">
+      <li>Delete all flagged hollow test files</li>
+      <li>Replace with behavioural tests</li>
+      <li>Increase coverage to &ge;50% combined lines</li>
+      <li>Priority: auth flows, sync engine, import pipeline</li>
+    </ul>
+  </div>
+
+  <div class="decree-verdict">{{VERDICT_QUOTE}}</div>
+
+  <div class="decree-meta">
+    <dl><dt>Tests</dt><dd>{{TOTAL_TESTS}}</dd></dl>
+    <dl><dt>Files</dt><dd>{{TOTAL_FILES}}</dd></dl>
+    <dl><dt>Coverage</dt><dd>{{COVERAGE_PCT}}%</dd></dl>
+    <dl><dt>Hollow</dt><dd>{{HOLLOW_COUNT}}</dd></dl>
+  </div>
+
+  <div class="decree-closing">"{{CLOSING_QUOTE}}"</div>
+
+  <div class="decree-seal">
+    <!-- Loki SVG seal rendered here -->
+  </div>
+  <div class="decree-tagline">ᚠᛖᚾᚱᛁᚱ — {{TAGLINE}}</div>
+</div>
