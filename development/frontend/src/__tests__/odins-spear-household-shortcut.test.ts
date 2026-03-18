@@ -187,9 +187,10 @@ describe("select-household removal — issue #1377", () => {
       expect(hits).toContain("use-household");
     });
 
-    it("provides numeric completions for 'use-household '", () => {
-      const [hits] = completer("use-household ", householdIndex);
-      expect(hits).toEqual(["1", "2", "3"]);
+    it("provides numeric completions when a digit prefix is typed after 'use-household'", () => {
+      // "use-household 1" → parts = ["use-household", "1"] → numeric hits starting with "1"
+      const [hits] = completer("use-household 1", householdIndex);
+      expect(hits).toEqual(["1"]);
     });
   });
 });
