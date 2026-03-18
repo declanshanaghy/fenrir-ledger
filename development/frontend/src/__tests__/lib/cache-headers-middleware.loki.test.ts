@@ -4,15 +4,14 @@
  * Integration tests for the middleware function itself.
  * FiremanDecko's tests cover getCacheControlForPath() exhaustively.
  * These tests validate that the middleware APPLIES headers correctly and
- * that the redirect safety guarantee holds (301 responses must be header-clean).
+ * that NO redirects occur — redirects are handled at the GCP LB layer.
  *
  * Acceptance criteria validated:
  * - AC3: Marketing pages get Cache-Control: public, s-maxage=300
  * - AC4: App pages (/ledger/*) get Cache-Control: public, s-maxage=60
  * - AC5: /api/* routes get Cache-Control: no-store
- * - Edge: 301 redirect responses do NOT carry a Cache-Control header
- * - Edge: /api/health is NOT redirected on HTTP (GKE probe bypass)
- * - Edge: apex domain (fenrirledger.com) is NOT redirected by middleware (LB handles it — issue #1318)
+ * - Edge: middleware does NOT redirect HTTP requests (GKE cert provisioner needs port 80 clean)
+ * - Edge: middleware does NOT redirect apex domain (GCP LB URL map handles apex→www)
  */
 
 import { describe, it, expect } from "vitest";
@@ -21,15 +20,13 @@ import { middleware } from "@/middleware";
 
 // ── helpers ───────────────────────────────────────────────────────────────
 
-/** Build a NextRequest as if it came through a normal HTTPS apex-domain request. */
-function apexRequest(pathname: string, { www = false, http = false } = {}): NextRequest {
+/** Build a NextRequest as if it came through a normal HTTPS request. */
+function makeRequest(pathname: string, { host = "www.fenrirledger.com", http = false } = {}): NextRequest {
   const proto = http ? "http" : "https";
-  const host = www ? "www.fenrir-ledger.app" : "fenrir-ledger.app";
   return new NextRequest(`${proto}://${host}${pathname}`, {
     method: "GET",
     headers: {
       host,
-      // If simulating HTTP-behind-proxy, set the forwarded-proto header
       ...(http ? { "x-forwarded-proto": "http" } : {}),
     },
   });
@@ -37,104 +34,69 @@ function apexRequest(pathname: string, { www = false, http = false } = {}): Next
 
 // ── Cache-Control is set for normal requests ──────────────────────────────
 
-describe("middleware — Cache-Control applied on normal HTTPS apex requests", () => {
+describe("middleware — Cache-Control applied on normal HTTPS requests", () => {
   it("marketing page / gets public, s-maxage=300", () => {
-    const response = middleware(apexRequest("/"));
+    const response = middleware(makeRequest("/"));
     expect(response.headers.get("Cache-Control")).toBe("public, s-maxage=300");
   });
 
   it("marketing page /pricing gets public, s-maxage=300", () => {
-    const response = middleware(apexRequest("/pricing"));
+    const response = middleware(makeRequest("/pricing"));
     expect(response.headers.get("Cache-Control")).toBe("public, s-maxage=300");
   });
 
   it("/ledger app page gets public, s-maxage=60", () => {
-    const response = middleware(apexRequest("/ledger"));
+    const response = middleware(makeRequest("/ledger"));
     expect(response.headers.get("Cache-Control")).toBe("public, s-maxage=60");
   });
 
   it("/ledger/cards app sub-page gets public, s-maxage=60", () => {
-    const response = middleware(apexRequest("/ledger/cards"));
+    const response = middleware(makeRequest("/ledger/cards"));
     expect(response.headers.get("Cache-Control")).toBe("public, s-maxage=60");
   });
 
   it("/api/auth/token gets no-store", () => {
-    const response = middleware(apexRequest("/api/auth/token"));
+    const response = middleware(makeRequest("/api/auth/token"));
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 
   it("path with no explicit policy (/sign-in) returns a response with no Cache-Control header", () => {
-    const response = middleware(apexRequest("/sign-in"));
+    const response = middleware(makeRequest("/sign-in"));
     expect(response.headers.get("Cache-Control")).toBeNull();
   });
 });
 
-// ── 301 redirects must NOT carry Cache-Control ────────────────────────────
-// www.fenrirledger.com is canonical. HTTP → HTTPS is the only middleware redirect.
-// Apex (fenrirledger.com) → www is handled at GCP LB layer (issue #1318).
+// ── Middleware must NOT redirect — all redirects are at GCP LB layer ──────
+// GKE managed cert provisioner requires port 80 to respond without redirect.
+// Apex→www and HTTP→HTTPS are handled by GCP URL map / LB frontend policy.
 
-/** Build a request to fenrirledger.com (the apex domain). */
-function apexCanonicalRequest(pathname: string, { http = false } = {}): NextRequest {
-  const proto = http ? "http" : "https";
-  const host = "fenrirledger.com";
-  return new NextRequest(`${proto}://${host}${pathname}`, {
-    method: "GET",
-    headers: {
-      host,
-      ...(http ? { "x-forwarded-proto": "http" } : {}),
-    },
-  });
-}
-
-describe("middleware — apex domain (fenrirledger.com) is NOT redirected by middleware", () => {
-  it("HTTPS apex request passes through (LB handles apex→www, not middleware)", () => {
-    const req = apexCanonicalRequest("/");
-    const response = middleware(req);
-    // Middleware must NOT redirect apex HTTPS — GCP LB does this
+describe("middleware — no redirects (GCP LB handles all redirects)", () => {
+  it("www on HTTP is NOT redirected (cert provisioner needs clean port 80)", () => {
+    const response = middleware(makeRequest("/pricing", { http: true }));
     expect(response.status).not.toBe(301);
     expect(response.status).not.toBe(302);
   });
 
-  it("HTTPS apex request still gets Cache-Control headers", () => {
-    const req = apexCanonicalRequest("/");
-    const response = middleware(req);
-    // Marketing page should get CDN TTL headers
-    expect(response.headers.get("Cache-Control")).toBe("public, s-maxage=300");
-  });
-});
-
-describe("middleware — 301 redirect responses must NOT carry Cache-Control", () => {
-  it("HTTP → HTTPS redirect (via x-forwarded-proto) has no Cache-Control header", () => {
-    const req = apexRequest("/pricing", { http: true });
-    const response = middleware(req);
-    expect(response.status).toBe(301);
-    expect(response.headers.get("Cache-Control")).toBeNull();
+  it("apex domain on HTTPS is NOT redirected by middleware (GCP LB URL map handles it)", () => {
+    const response = middleware(makeRequest("/", { host: "fenrirledger.com" }));
+    expect(response.status).not.toBe(301);
+    expect(response.status).not.toBe(302);
   });
 
-  it("apex + HTTP combined redirect has no Cache-Control header", () => {
-    // apex domain over HTTP: isHttp fires (x-forwarded-proto: http) → 301 to https://fenrirledger.com
-    // LB then handles apex→www. Middleware must not cache this redirect.
-    const req = apexCanonicalRequest("/about", { http: true });
-    const response = middleware(req);
-    expect(response.status).toBe(301);
-    expect(response.headers.get("Cache-Control")).toBeNull();
+  it("apex domain on HTTP is NOT redirected by middleware", () => {
+    const response = middleware(makeRequest("/about", { host: "fenrirledger.com", http: true }));
+    expect(response.status).not.toBe(301);
+    expect(response.status).not.toBe(302);
   });
-});
 
-// ── /api/health redirect bypass ───────────────────────────────────────────
-
-describe("middleware — /api/health is exempt from redirect (GKE probe bypass)", () => {
-  it("/api/health on HTTP (x-forwarded-proto: http) is NOT redirected", () => {
-    const req = apexRequest("/api/health", { http: true });
-    const response = middleware(req);
-    // Must NOT be a redirect — GKE liveness probes use plain HTTP
+  it("/api/health on HTTP is NOT redirected (GKE probes use plain HTTP)", () => {
+    const response = middleware(makeRequest("/api/health", { http: true }));
     expect(response.status).not.toBe(301);
     expect(response.status).not.toBe(302);
   });
 
   it("/api/health on HTTP gets Cache-Control: no-store (edge must not cache health)", () => {
-    const req = apexRequest("/api/health", { http: true });
-    const response = middleware(req);
+    const response = middleware(makeRequest("/api/health", { http: true }));
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 });
