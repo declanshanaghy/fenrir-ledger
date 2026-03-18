@@ -804,7 +804,7 @@ jobs:
   # Namespace: fenrir-marketing
   # n8n workflow automation at marketing.fenrirledger.com.
   # Two Helm installs:
-  #   1. oci://ghcr.io/8gears/n8n   — n8n app (external chart, n8n-app-values.yaml)
+  #   1. oci://ghcr.io/n8n-io/n8n-helm-chart/n8n — official n8n chart (n8n-app-values.yaml)
   #   2. infrastructure/helm/n8n/   — infra chart (oauth2-proxy, cert, BackendConfig, ingress)
   # ============================================================================
 
@@ -863,7 +863,8 @@ jobs:
 
       - name: Helm deploy n8n app
         run: |
-          helm upgrade --install n8n oci://ghcr.io/8gears/n8n \
+          helm upgrade --install n8n oci://ghcr.io/n8n-io/n8n-helm-chart/n8n \
+            --version 1.1.0 \
             --namespace=fenrir-marketing \
             --create-namespace \
             -f infrastructure/helm/n8n/n8n-app-values.yaml \

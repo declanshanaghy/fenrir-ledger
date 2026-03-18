@@ -1,25 +1,32 @@
 # --------------------------------------------------------------------------
 # n8n Application Helm Values
-# Chart: oci://ghcr.io/8gears/n8n
+# Chart: oci://ghcr.io/n8n-io/n8n-helm-chart/n8n (official)
 # Namespace: fenrir-marketing
 #
 # Deploy:
-#   helm upgrade --install n8n oci://ghcr.io/8gears/n8n \
+#   helm upgrade --install n8n oci://ghcr.io/n8n-io/n8n-helm-chart/n8n \
+#     --version 1.1.0 \
 #     -n fenrir-marketing \
 #     -f infrastructure/helm/n8n/n8n-app-values.yaml
 # --------------------------------------------------------------------------
 
-n8n:
-  host: "marketing.fenrirledger.com"
-  protocol: "https"
-  port: 5678
-  editorBaseUrl: "https://marketing.fenrirledger.com/"
-  webhookTunnelUrl: "https://marketing.fenrirledger.com/"
+# Standalone mode (no queue, no Redis, no external Postgres)
+queueMode:
+  enabled: false
 
-db:
+# SQLite database (standalone mode)
+database:
   type: sqlite
+  useExternal: false
 
-env:
+# Redis not needed in standalone mode
+redis:
+  enabled: false
+  useExternal: false
+
+# n8n configuration
+config:
+  timezone: UTC
   N8N_HOST: "marketing.fenrirledger.com"
   N8N_PROTOCOL: "https"
   N8N_PORT: "5678"
@@ -29,40 +36,40 @@ env:
   N8N_DIAGNOSTICS_ENABLED: "false"
   N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
 
-extraEnvFrom:
-  - secretRef:
-      name: n8n-secrets
+# Secrets from K8s secret
+secretRefs:
+  existingSecret: "n8n-secrets"
 
+# Persistence for SQLite data
 persistence:
   enabled: true
-  storageClass: standard-rwo
+  accessModes: ["ReadWriteOnce"]
   size: 1Gi
-  mountPath: /home/node/.n8n
-  accessModes:
-    - ReadWriteOnce
+  storageClassName: standard-rwo
 
+# Resources
 resources:
-  requests:
-    cpu: "250m"
-    memory: "512Mi"
-    ephemeral-storage: "128Mi"
-  limits:
-    cpu: "250m"
-    memory: "512Mi"
-    ephemeral-storage: "256Mi"
+  main:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+      ephemeral-storage: "128Mi"
+    limits:
+      cpu: "250m"
+      memory: "512Mi"
+      ephemeral-storage: "256Mi"
 
+# Service
 service:
   type: ClusterIP
-  port: 80
-  targetPort: 5678
+  port: 5678
 
 # Ingress managed by n8n-infra Helm chart (infrastructure/helm/n8n/)
 ingress:
   enabled: false
 
-replicaCount: 1
-
+# Image
 image:
-  repository: n8nio/n8n
-  tag: latest
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "2.11.2"
   pullPolicy: IfNotPresent
