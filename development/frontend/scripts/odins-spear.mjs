@@ -1361,6 +1361,590 @@ try {
   };
 } catch { /* counts are informational — ignore on error */ }
 
+// ── Users Tab — Data Loading ──────────────────────────────────────────────────
+
+/** Fetch all users from Firestore, enriched with tier derived from households. */
+async function loadUsersWithTiers() {
+  const db = getDb();
+  const [usersSnap, hhSnap] = await Promise.all([
+    db.collection("users").orderBy("createdAt", "desc").limit(100).get(),
+    db.collection("households").limit(200).get(),
+  ]);
+
+  const hhMap = new Map();
+  hhSnap.docs.forEach((d) => {
+    const h = d.data();
+    hhMap.set(d.id, { tier: h.tier || "thrall", name: h.name || "" });
+  });
+
+  return usersSnap.docs.map((d) => {
+    const u = d.data();
+    const hh = u.householdId ? hhMap.get(u.householdId) : null;
+    return {
+      id: d.id,
+      email: u.email || "",
+      displayName: u.displayName || "",
+      role: u.role || "",
+      householdId: u.householdId || null,
+      householdName: hh ? hh.name : null,
+      tier: hh ? hh.tier : (u.tier || "thrall"),
+      createdAt: u.createdAt || null,
+      updatedAt: u.updatedAt || null,
+      // Optional Stripe/sync fields that may exist on user doc
+      stripeCustomerId: u.stripeCustomerId || null,
+      lastSyncAt: u.lastSyncAt || null,
+      syncCount: u.syncCount != null ? u.syncCount : null,
+      syncHealth: u.syncHealth || null,
+    };
+  });
+}
+
+/** Fetch full detail for a selected user: household, cards, Stripe, cloud sync. */
+async function loadUserDetailData(user) {
+  const db = getDb();
+  const result = {
+    household: null,
+    stripe: null,
+    cloudSync: user.lastSyncAt != null ? {
+      lastSync: user.lastSyncAt,
+      totalSyncs: user.syncCount || 0,
+      health: user.syncHealth || "unknown",
+    } : null,
+    cardCount: null,
+  };
+
+  if (user.householdId) {
+    try {
+      const [hhSnap, cardSnap] = await Promise.all([
+        db.doc(`households/${user.householdId}`).get(),
+        db.collection(`households/${user.householdId}/cards`).get(),
+      ]);
+      if (hhSnap.exists) {
+        const h = hhSnap.data();
+        result.household = {
+          id: user.householdId,
+          name: h.name || "",
+          tier: h.tier || "thrall",
+          ownerId: h.ownerId || null,
+        };
+        // Cloud sync may be stored on the household doc
+        if (!result.cloudSync && (h.lastSyncAt || h.syncCount != null)) {
+          result.cloudSync = {
+            lastSync: h.lastSyncAt || null,
+            totalSyncs: h.syncCount || 0,
+            health: h.syncHealth || "unknown",
+          };
+        }
+      }
+      const active = cardSnap.docs.filter((d) => !d.data().deletedAt).length;
+      result.cardCount = { active, total: cardSnap.size };
+    } catch { /* best effort */ }
+  }
+
+  // Fetch Stripe subscription if we have a customerId on the user doc
+  const customerId = user.stripeCustomerId;
+  if (customerId) {
+    try {
+      const data = await stripe("GET", `/customers/${customerId}?expand[]=subscriptions`);
+      if (data && data.subscriptions) {
+        const sub =
+          data.subscriptions.data.find((s) => s.status !== "canceled") ||
+          data.subscriptions.data[0];
+        if (sub) {
+          const item = sub.items?.data?.[0];
+          const src = data.default_source;
+          result.stripe = {
+            subId: sub.id,
+            customerId,
+            status: sub.status,
+            amount: item?.price?.unit_amount ?? null,
+            currency: item?.price?.currency ?? "usd",
+            interval: item?.price?.recurring?.interval ?? null,
+            paymentMethod: src?.last4
+              ? `${src.brand || "Card"} ending ${src.last4}`
+              : null,
+          };
+        }
+      }
+    } catch { /* best effort */ }
+  }
+
+  return result;
+}
+
+// ── Users Tab — Ink Components ────────────────────────────────────────────────
+
+const TIER_STYLES = {
+  karl:   { label: "KARL",   color: "black",  bg: "yellow",      bold: true  },
+  trial:  { label: "TRIAL",  color: "black",  bg: "yellowBright", bold: false },
+  thrall: { label: "THRALL", color: "gray",   bg: undefined,     bold: false },
+};
+
+/** Tier badge: Karl=gold bg, Trial=amber bg, Thrall=gray text. */
+function TierBadge({ tier }) {
+  const s = TIER_STYLES[tier] || TIER_STYLES.thrall;
+  return h(Text, { backgroundColor: s.bg, color: s.color, bold: s.bold }, ` ${s.label} `);
+}
+
+/** Subscription status badge. */
+function SubStatusBadge({ status }) {
+  if (!status) return h(Text, { color: "gray", dimColor: true }, "none");
+  const color =
+    status === "active"    ? "green"  :
+    status === "trialing"  ? "yellow" :
+    status === "past_due"  ? "yellow" :
+    status === "canceled"  ? "red"    : "gray";
+  return h(Text, { color, bold: color !== "gray" }, status.replace(/_/g, " "));
+}
+
+/** Cloud sync health indicator. */
+function SyncHealthBadge({ health }) {
+  if (!health || health === "unknown") return h(Text, { color: "gray", dimColor: true }, "N/A");
+  const color = health === "healthy" ? "green" : health === "degraded" ? "yellow" : "red";
+  const dot = health === "healthy" ? "●" : health === "degraded" ? "◑" : "●";
+  return h(Text, { color }, `${dot} ${health}`);
+}
+
+/** A label-value row in the detail panel. */
+function DetailField({ label, children }) {
+  return h(Box, { flexDirection: "row" },
+    h(Text, { color: "gray", dimColor: true }, `  ${label.padEnd(18)}`),
+    children
+  );
+}
+
+/** Section heading. */
+function SectionHeader({ title }) {
+  return h(Box, { marginTop: 1 },
+    h(Text, { color: "yellow", dimColor: true }, `── ${title} `)
+  );
+}
+
+/**
+ * Left-panel list row: email (truncated) + tier badge.
+ * selected item shown with ▶ highlight.
+ */
+function UserListRow({ user, selected }) {
+  const maxEmail = 22;
+  const email = user.email.length > maxEmail
+    ? user.email.slice(0, maxEmail - 1) + "…"
+    : user.email;
+  const bg = selected ? "blue" : undefined;
+  const textColor = selected ? "white" : "white";
+  return h(Box, { flexDirection: "row", alignItems: "center", paddingX: 1 },
+    h(Text, { backgroundColor: bg, color: selected ? "yellow" : "gray", bold: selected }, selected ? "▶ " : "  "),
+    h(Text, { backgroundColor: bg, color: textColor, bold: selected }, email.padEnd(maxEmail)),
+    h(Box, { flexShrink: 0, marginLeft: 1 }, h(TierBadge, { tier: user.tier }))
+  );
+}
+
+/**
+ * Right-panel: full detail for selected user.
+ * Shows identity, household, Stripe, cloud sync, card count, and action shortcuts.
+ */
+function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusMessage }) {
+  const hh = detail?.household ?? null;
+  const stripeData = detail?.stripe ?? null;
+  const sync = detail?.cloudSync ?? null;
+  const cards = detail?.cardCount ?? null;
+
+  // ── Action area ──
+  let actionArea;
+  if (mode === "confirm-delete") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "red", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "red" }, `Delete ${user.email}? `),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
+  } else if (mode === "prompt-tier") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "yellow", paddingX: 1, marginTop: 1, flexDirection: "row" },
+      h(Text, { color: "yellow" }, "New tier (karl/trial/thrall): "),
+      h(Text, { color: "white", bold: true }, tierInput),
+      h(Text, { color: "gray" }, "█  [Enter] Confirm  [Esc] Cancel")
+    );
+  } else if (mode === "confirm-cancel-sub") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "red", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "red" }, "Cancel subscription? "),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
+  } else {
+    actionArea = h(Box, { flexDirection: "row", flexWrap: "wrap", borderStyle: "single", borderColor: "gray", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "red" }, "[d] Delete  "),
+      h(Text, { color: "cyan" }, "[t] Tier  "),
+      ...(stripeData ? [h(Text, { color: "red" }, "[s] Cancel Sub  ")] : []),
+      ...(hh ? [h(Text, { color: "yellow" }, "[h] Household  ")] : []),
+      h(Text, { color: "gray" }, "[Esc] Back")
+    );
+  }
+
+  return h(Box, { flexDirection: "column", flexGrow: 1, paddingX: 2, paddingY: 1 },
+
+    // ── Header ──
+    h(Box, { flexDirection: "row", alignItems: "center", gap: 2, marginBottom: 1,
+             borderStyle: "single", borderColor: "gray", paddingX: 1 },
+      h(Text, { bold: true, color: "yellow" }, user.email),
+      h(TierBadge, { tier: user.tier })
+    ),
+
+    // ── Identity ──
+    h(SectionHeader, { title: "Identity" }),
+    h(DetailField, { label: "User ID" },
+      h(Text, { color: "cyan" }, user.id)   // never truncated
+    ),
+    h(DetailField, { label: "Email" },       h(Text, {}, user.email)),
+    h(DetailField, { label: "Tier" },        h(TierBadge, { tier: user.tier })),
+    h(DetailField, { label: "Role" },        h(Text, { color: user.role === "owner" ? "yellow" : "white" },
+                                               user.role === "owner" ? "★ Owner" : user.role || "—")),
+    h(DetailField, { label: "Joined" },      h(Text, {}, user.createdAt
+      ? new Date(user.createdAt).toLocaleDateString()
+      : "—"
+    )),
+
+    // ── Household ──
+    h(SectionHeader, { title: "Household" }),
+    detailLoading
+      ? h(Text, { color: "gray", dimColor: true }, "  Loading…")
+      : hh
+        ? h(Box, { flexDirection: "column" },
+            h(DetailField, { label: "Name" },
+              h(Text, { color: "yellow" }, `${hh.name}  `)
+            ),
+            h(Text, { color: "gray", dimColor: true }, "                      [h] jump to household"),
+            h(DetailField, { label: "Role" }, h(Text, {}, user.role === "owner" ? "★ Owner" : "Member"))
+          )
+        : h(Text, { color: "gray", dimColor: true }, "  No household (solo user)"),
+
+    // ── Stripe Subscription ──
+    ...(stripeData ? [
+      h(SectionHeader, { title: "Stripe Subscription" }),
+      h(DetailField, { label: "Sub ID" },     h(Text, { color: "cyan" }, stripeData.subId)),
+      h(DetailField, { label: "Status" },     h(SubStatusBadge, { status: stripeData.status })),
+      ...(stripeData.amount != null ? [
+        h(DetailField, { label: "Amount" },
+          h(Text, {}, `$${(stripeData.amount / 100).toFixed(2)} / ${stripeData.interval ?? "—"}`)
+        ),
+      ] : []),
+      ...(stripeData.paymentMethod ? [
+        h(DetailField, { label: "Payment" }, h(Text, {}, stripeData.paymentMethod)),
+      ] : []),
+    ] : []),
+
+    // ── Cloud Sync ──
+    h(SectionHeader, { title: "Cloud Sync" }),
+    detailLoading
+      ? h(Text, { color: "gray", dimColor: true }, "  Loading…")
+      : sync
+        ? h(Box, { flexDirection: "column" },
+            h(DetailField, { label: "Last Sync" },
+              h(Text, {}, sync.lastSync
+                ? new Date(sync.lastSync).toLocaleString()
+                : "never")
+            ),
+            h(DetailField, { label: "Total Syncs" }, h(Text, {}, String(sync.totalSyncs))),
+            h(DetailField, { label: "Health" },      h(SyncHealthBadge, { health: sync.health }))
+          )
+        : h(Text, { color: "gray", dimColor: true }, "  N/A"),
+
+    // ── Cards ──
+    h(SectionHeader, { title: "Cards" }),
+    detailLoading
+      ? h(Text, { color: "gray", dimColor: true }, "  Loading…")
+      : cards
+        ? h(DetailField, { label: "Count" },
+            h(Text, {},
+              `${cards.active} active / ${cards.total} total`)
+          )
+        : h(Text, { color: "gray", dimColor: true }, "  N/A"),
+
+    // ── Actions ──
+    actionArea,
+
+    // ── Status message ──
+    ...(statusMessage ? [
+      h(Box, { marginTop: 1 },
+        h(Text, { color: statusMessage.startsWith("Error") ? "red" : "green" }, statusMessage)
+      ),
+    ] : []),
+  );
+}
+
+/** Full Users tab: left list + right detail panel with keyboard navigation. */
+function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
+  const LIST_HEIGHT = 18;
+
+  const [users, setUsers]               = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [loadError, setLoadError]       = useState(null);
+  const [selectedIdx, setSelectedIdx]   = useState(-1);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [detail, setDetail]             = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [mode, setMode]                 = useState("browse"); // browse | confirm-delete | prompt-tier | confirm-cancel-sub
+  const [tierInput, setTierInput]       = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+
+  // Load users on mount
+  React.useEffect(() => {
+    loadUsersWithTiers()
+      .then((list) => { setUsers(list); })
+      .catch((err) => setLoadError(err.message || String(err)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Load detail when selection changes
+  React.useEffect(() => {
+    if (selectedIdx < 0 || !users[selectedIdx]) {
+      setDetail(null);
+      return;
+    }
+    const user = users[selectedIdx];
+    setDetailLoading(true);
+    setDetail(null);
+    loadUserDetailData(user)
+      .then(setDetail)
+      .finally(() => setDetailLoading(false));
+  }, [selectedIdx]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-clear status message after 3s
+  React.useEffect(() => {
+    if (!statusMessage) return;
+    const tid = setTimeout(() => setStatusMessage(""), 3000);
+    return () => clearTimeout(tid);
+  }, [statusMessage]);
+
+  // ── Action helpers ──
+
+  function doDeleteUser() {
+    const user = users[selectedIdx];
+    if (!user) return;
+    (async () => {
+      try {
+        const db = getDb();
+        if (user.householdId) {
+          const hhSnap = await db.doc(`households/${user.householdId}`).get();
+          if (hhSnap.exists) {
+            const h = hhSnap.data();
+            const newMembers = (h.memberIds || []).filter((id) => id !== user.id);
+            await db.doc(`households/${user.householdId}`).update({
+              memberIds: newMembers,
+              updatedAt: new Date().toISOString(),
+            });
+          }
+        }
+        await db.doc(`users/${user.id}`).delete();
+        setUsers((prev) => prev.filter((_, i) => i !== selectedIdx));
+        setSelectedIdx(-1);
+        setDetail(null);
+        setStatusMessage(`Deleted ${user.email}`);
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
+  function doUpdateTier(newTier) {
+    const user = users[selectedIdx];
+    if (!user) return;
+    if (!user.householdId) {
+      setStatusMessage("Cannot update tier: user has no household");
+      return;
+    }
+    (async () => {
+      try {
+        await getDb().doc(`households/${user.householdId}`).update({
+          tier: newTier,
+          updatedAt: new Date().toISOString(),
+        });
+        setUsers((prev) =>
+          prev.map((u, i) => i === selectedIdx ? { ...u, tier: newTier } : u)
+        );
+        setStatusMessage(`Tier updated to ${newTier}`);
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
+  function doCancelSub() {
+    const subId = detail?.stripe?.subId;
+    if (!subId) return;
+    (async () => {
+      try {
+        const result = await stripe("DELETE", `/subscriptions/${subId}`);
+        if (result) {
+          setDetail((d) => d ? { ...d, stripe: { ...d.stripe, status: "canceled" } } : d);
+          setStatusMessage("Subscription cancelled");
+        }
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
+  // ── Keyboard input ──
+
+  useInput((input, key) => {
+    // ── Text input mode (tier prompt) ──
+    if (mode === "prompt-tier") {
+      if (key.return) {
+        const tier = tierInput.trim().toLowerCase();
+        if (["karl", "trial", "thrall"].includes(tier)) {
+          doUpdateTier(tier);
+        } else {
+          setStatusMessage("Invalid tier. Must be: karl, trial, or thrall");
+        }
+        setTierInput("");
+        setMode("browse");
+        setInputCaptured(false);
+      } else if (key.escape) {
+        setTierInput("");
+        setMode("browse");
+        setInputCaptured(false);
+        setStatusMessage("Tier update cancelled");
+      } else if (key.backspace || key.delete) {
+        setTierInput((t) => t.slice(0, -1));
+      } else if (input && !key.ctrl && !key.meta && input.length === 1) {
+        setTierInput((t) => t + input);
+      }
+      return;
+    }
+
+    // ── Confirmation modes ──
+    if (mode === "confirm-delete") {
+      if (input === "y" || input === "Y") {
+        doDeleteUser();
+      } else {
+        setStatusMessage("Delete cancelled");
+      }
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-cancel-sub") {
+      if (input === "y" || input === "Y") {
+        doCancelSub();
+      } else {
+        setStatusMessage("Cancelled");
+      }
+      setMode("browse");
+      return;
+    }
+
+    // ── Browse mode navigation ──
+    if (key.upArrow) {
+      const newIdx = Math.max(0, selectedIdx <= 0 ? 0 : selectedIdx - 1);
+      setSelectedIdx(newIdx);
+      if (newIdx < scrollOffset) setScrollOffset(newIdx);
+      return;
+    }
+    if (key.downArrow) {
+      const maxIdx = users.length - 1;
+      const newIdx = selectedIdx < 0 ? 0 : Math.min(maxIdx, selectedIdx + 1);
+      setSelectedIdx(newIdx);
+      if (newIdx >= scrollOffset + LIST_HEIGHT) setScrollOffset(newIdx - LIST_HEIGHT + 1);
+      return;
+    }
+    if (key.return) {
+      if (selectedIdx < 0 && users.length > 0) setSelectedIdx(0);
+      return;
+    }
+    if (key.escape) {
+      setSelectedIdx(-1);
+      setMode("browse");
+      return;
+    }
+
+    // ── Action shortcuts (only when a user is selected) ──
+    if (selectedIdx < 0) return;
+
+    if (input === "d") {
+      setMode("confirm-delete");
+      return;
+    }
+    if (input === "t") {
+      setMode("prompt-tier");
+      setInputCaptured(true);
+      return;
+    }
+    if (input === "s" && detail?.stripe) {
+      setMode("confirm-cancel-sub");
+      return;
+    }
+    if (input === "h" && detail?.household) {
+      onJumpToHousehold(detail.household.id);
+      return;
+    }
+  }, { isActive });
+
+  // ── Render ──
+
+  const selectedUser = selectedIdx >= 0 ? users[selectedIdx] : null;
+  const visibleUsers = users.slice(scrollOffset, scrollOffset + LIST_HEIGHT);
+  const canScrollUp   = scrollOffset > 0;
+  const canScrollDown = scrollOffset + LIST_HEIGHT < users.length;
+
+  return h(Box, { flexDirection: "row", flexGrow: 1 },
+
+    // ── Left panel: user list ──
+    h(Box, {
+      flexDirection: "column",
+      width: 36,
+      borderStyle: "single",
+      borderColor: selectedIdx >= 0 ? "gray" : "yellow",
+      flexShrink: 0,
+    },
+      h(Box, { paddingX: 1, borderStyle: "single", borderColor: "gray" },
+        h(Text, { bold: true, color: "yellow" },
+          loading ? "Users (loading…)" :
+          loadError ? "Users (error)" :
+          `Users (${users.length})`
+        )
+      ),
+      canScrollUp && h(Text, { color: "gray", dimColor: true, paddingX: 2 }, "↑ more"),
+      loading
+        ? h(Text, { color: "gray", dimColor: true, paddingX: 2 }, "Loading…")
+        : loadError
+          ? h(Text, { color: "red", paddingX: 2 }, `Error: ${loadError}`)
+          : users.length === 0
+            ? h(Text, { color: "gray", dimColor: true, paddingX: 2 }, "No users found")
+            : visibleUsers.map((u, i) =>
+                h(UserListRow, {
+                  key: u.id,
+                  user: u,
+                  selected: scrollOffset + i === selectedIdx,
+                })
+              ),
+      canScrollDown && h(Text, { color: "gray", dimColor: true, paddingX: 2 }, "↓ more"),
+      h(Box, { flexGrow: 1 }),
+      h(Text, { color: "gray", dimColor: true, paddingX: 1 },
+        "↑/↓ nav  Enter select  Esc back"
+      )
+    ),
+
+    // ── Right panel: user detail or empty state ──
+    selectedUser
+      ? h(UserDetailPanel, {
+          user: selectedUser,
+          detail,
+          detailLoading,
+          mode,
+          tierInput,
+          statusMessage,
+        })
+      : h(Box, {
+          flexGrow: 1,
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 1,
+        },
+          h(Text, { color: "yellow", dimColor: true }, "ᚱ"),
+          h(Text, { color: "gray" }, "Select a user from the list"),
+          h(Text, { color: "gray", dimColor: true }, "↑/↓ navigate   Enter select")
+        )
+  );
+}
+
 // ── Ink TUI ──────────────────────────────────────────────────────────────────
 
 const TUI_TABS = ["Users", "Households"];
@@ -1889,15 +2473,21 @@ function HelpOverlay() {
   );
 }
 
-/** Main content area: master-detail split. Dispatches to per-tab components. */
-function MainContent({ activeTab }) {
+/** Main content area: routes to the correct tab component. */
+function MainContent({ activeTab, onJumpToHousehold, setInputCaptured }) {
+  if (activeTab === 0) {
+    return h(UsersTab, {
+      isActive: true,
+      onJumpToHousehold,
+      setInputCaptured,
+    });
+  }
   if (activeTab === 1) {
     return h(HouseholdsTab, null);
   }
-  // Tab 0 (Users) and any future tabs: placeholder
+  // Other tabs: placeholder
   const tabLabel = TUI_TABS[activeTab];
   return h(Box, { flexDirection: "row", flexGrow: 1 },
-    // Left panel — list
     h(Box, {
       flexDirection: "column",
       width: 32,
@@ -1908,9 +2498,8 @@ function MainContent({ activeTab }) {
       paddingY: 1,
     },
       h(Text, { bold: true, color: "yellow" }, tabLabel),
-      h(Text, { color: "gray", dimColor: true }, "(coming soon)")
+      h(Text, { color: "gray", dimColor: true }, "(coming soon — issue #1388)")
     ),
-    // Right panel — detail
     h(Box, {
       flexDirection: "column",
       flexGrow: 1,
@@ -1927,10 +2516,19 @@ function MainContent({ activeTab }) {
 /** Root TUI application. */
 function SpearApp({ connectionStatus, counts }) {
   const { exit } = useApp();
-  const [activeTab, setActiveTab] = useState(0);
-  const [showHelp, setShowHelp] = useState(false);
+  const [activeTab, setActiveTab]         = useState(0);
+  const [showHelp, setShowHelp]           = useState(false);
+  const [inputCaptured, setInputCaptured] = useState(false); // true when a tab holds input (e.g. text prompt)
+
+  /** Switch to Households tab — called by UsersTab when user presses [h]. */
+  function onJumpToHousehold(_householdId) {
+    setActiveTab(1);
+  }
 
   useInput((input, key) => {
+    // Let the active tab consume input when it has captured focus (e.g. tier prompt)
+    if (inputCaptured) return;
+
     // q — quit
     if (input === "q") {
       redis.quit().catch(() => {}).finally(() => {
@@ -1951,7 +2549,6 @@ function SpearApp({ connectionStatus, counts }) {
     }
     // ^R — reload (placeholder)
     if (key.ctrl && input === "r") {
-      // TODO(#1387/#1388): trigger data reload for active tab
       return;
     }
     // Any key closes help overlay
@@ -1964,7 +2561,7 @@ function SpearApp({ connectionStatus, counts }) {
     h(TopBar, { activeTab, onTabChange: setActiveTab }),
     showHelp
       ? h(HelpOverlay, null)
-      : h(MainContent, { activeTab }),
+      : h(MainContent, { activeTab, onJumpToHousehold, setInputCaptured }),
     h(StatusBar, { connections: connectionStatus, counts })
   );
 }
