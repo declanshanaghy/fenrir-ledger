@@ -53,6 +53,10 @@ gh issue comment <NUMBER> --body "## Freya Handoff
 **Deliverable:** <file path(s)>
 
 **Summary:** <brief summary of research/findings>"
+
+**Step 7 — Decree (UNBREAKABLE — final output of this session):**
+Emit the structured decree block per `.claude/agents/freya.md` § "Decree Complete".
+This MUST be the absolute last output of the session — no text after it.
 ```
 
 ## Mode B: Doc Sync (review, update, clean up owned directory)
@@ -125,4 +129,8 @@ gh issue comment <NUMBER> --body "## Freya → Loki Handoff
 - Confirm README index matches actual file contents
 
 **Build:** Docs-only — no tsc/build needed. Ready for QA."
+
+**Step 7 — Decree (UNBREAKABLE — final output of this session):**
+Emit the structured decree block per `.claude/agents/freya.md` § "Decree Complete".
+This MUST be the absolute last output of the session — no text after it.
 ```

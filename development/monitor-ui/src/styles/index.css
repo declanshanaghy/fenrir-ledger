@@ -892,6 +892,215 @@ body {
   .decree-section-body { transition: none; }
 }
 
+/* ── Agent Decree Card (session sign-off block) ─── */
+.decree-card {
+  border: 1px solid var(--gold-dim-border);
+  border-left: 3px solid var(--gold);
+  border-radius: 6px;
+  background: var(--void);
+  margin: 0.75rem 0;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+}
+.decree-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  background: linear-gradient(90deg, rgba(201, 146, 10, 0.08) 0%, transparent 70%);
+  border-bottom: 1px solid var(--gold-dim-border);
+}
+.decree-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.decree-card-avatar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+.decree-card-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid;
+  object-fit: cover;
+  display: block;
+}
+.decree-card-agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.decree-card-agent-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.decree-card-agent-title {
+  font-size: 0.55rem;
+  color: var(--text-rune);
+}
+.decree-card-agent-runes {
+  font-size: 0.55rem;
+  color: var(--text-void);
+  letter-spacing: 0.1em;
+}
+.decree-card-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+.decree-card-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+}
+.decree-card-rune-delim {
+  color: var(--gold-bright);
+  font-size: 0.65rem;
+}
+.decree-card-issue {
+  font-size: 0.6rem;
+  color: var(--text-rune);
+}
+.decree-card-verdict-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid var(--rune-border);
+  background: rgba(201, 146, 10, 0.04);
+}
+.decree-card-verdict-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-void);
+}
+.decree-card-verdict-value {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.decree-card-pr-link {
+  font-size: 0.6rem;
+  color: var(--teal-asgard);
+  text-decoration: none;
+  margin-left: auto;
+}
+.decree-card-pr-link:hover {
+  text-decoration: underline;
+  color: var(--gold-bright);
+}
+.decree-card-section {
+  border-bottom: 1px solid var(--rune-border);
+}
+.decree-card-section:last-of-type {
+  border-bottom: none;
+}
+.decree-card-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.8rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-rune);
+  text-align: left;
+}
+.decree-card-section-header:hover { background: rgba(201, 146, 10, 0.06); }
+.decree-card-section-glyph {
+  font-size: 0.8rem;
+  color: var(--gold);
+}
+.decree-card-section-title {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-rune);
+  flex: 1;
+}
+.decree-card-section .ep-group-chevron { transition: transform 0.15s; }
+.decree-card-section.open .ep-group-chevron { transform: rotate(90deg); }
+.decree-card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.3rem 0.8rem 0.5rem 1.6rem;
+  font-size: 0.68rem;
+  color: var(--text-rune);
+}
+.decree-card-list-item {
+  padding: 0.12rem 0;
+  line-height: 1.5;
+}
+.decree-card-list-item::before {
+  content: '— ';
+  color: var(--text-void);
+}
+.decree-card-checks { padding-left: 0.8rem; }
+.decree-card-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+  font-size: 0.68rem;
+}
+.decree-card-check-name {
+  color: var(--text-rune);
+  flex: 1;
+}
+.decree-card-check-value {
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+}
+.decree-card-footer {
+  padding: 0.5rem 0.8rem 0.4rem;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(201, 146, 10, 0.04) 0%, transparent 50%, rgba(201, 146, 10, 0.04) 100%);
+}
+.decree-card-seal-band {
+  font-size: 0.6rem;
+  letter-spacing: 0.3rem;
+  color: var(--gold-dim-border);
+  margin: 0.2rem 0;
+}
+.decree-card-seal {
+  font-size: 0.65rem;
+  color: var(--gold);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0.2rem 0;
+}
+.decree-card-signoff {
+  font-size: 0.65rem;
+  font-style: italic;
+  color: var(--text-rune);
+  margin: 0.2rem 0;
+}
+@media (max-width: 600px) {
+  .decree-card-avatar { width: 30px; height: 30px; }
+  .decree-card-verdict-value { font-size: 0.75rem; }
+}
+@media (max-width: 375px) {
+  .decree-card-header { flex-direction: column; }
+  .decree-card-meta { align-items: flex-start; }
+  .decree-card-avatar { width: 28px; height: 28px; }
+  .decree-card-title { font-size: 0.62rem; }
+}
+
 /* ── Entrypoint group (collapsible) ─────────────── */
 .ep-group {
   border: 1px solid var(--rune-border);

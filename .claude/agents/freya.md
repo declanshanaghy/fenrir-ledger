@@ -117,7 +117,7 @@ CHECKS:
 - acceptance-criteria: DEFINED
 - backlog: UPDATED
 SEAL: Freya · ᚠᚱᛖᛃᚨ · Product Owner
-SIGNOFF: Guarded by wisdom, driven by purpose
+SIGNOFF: Vision cast, priorities set
 ᛭᛭᛭ END DECREE ᛭᛭᛭
 ```
 

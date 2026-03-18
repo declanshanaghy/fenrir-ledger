@@ -82,6 +82,7 @@ import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscription";
+import { DecreeBlock, isDecreeBlock } from "./DecreeBlock";
 import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
 
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
@@ -526,6 +527,18 @@ function AgentBubble({
   isLastAssistantText?: boolean;
   onAvatarClick?: (agentKey: string) => void;
 }) {
+  // Detect agent sign-off decree block — rendered anywhere in the assistant text stream
+  if (isDecreeBlock(text)) {
+    return (
+      <DecreeBlock
+        text={text}
+        {...(agentKey ? { agentKey } : {})}
+        {...(agentName ? { agentName } : {})}
+        onAvatarClick={onAvatarClick}
+      />
+    );
+  }
+
   // Render the last assistant text as a Norse verdict inscription if it matches
   if (isLastAssistantText && isVerdictMessage(text)) {
     return (
