@@ -102,8 +102,14 @@ export async function requireAuthz(
   }
 
   // ── Step 3: Household membership check ───────────────────────────────────
+  // Legacy client compat: the client sends session.user.sub (Google sub) as
+  // householdId for localStorage keying. Accept it as "my own household"
+  // since the authenticated user's identity is already verified. The server
+  // still uses firestoreUser.householdId for all Firestore operations, so
+  // IDOR protection is intact.
   if (requirement?.householdId !== undefined) {
-    if (requirement.householdId !== firestoreUser.householdId) {
+    const isOwnSub = requirement.householdId === googleSub;
+    if (!isOwnSub && requirement.householdId !== firestoreUser.householdId) {
       log.warn("requireAuthz: access denied", {
         reason: "household_mismatch",
         googleSub,
