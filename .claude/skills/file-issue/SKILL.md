@@ -127,12 +127,12 @@ https://github.com/declanshanaghy/fenrir-ledger/issues/534
 
 ### 8. Auto-Dispatch (bugs only)
 
-If the issue type is `bug`, immediately ask the user:
+If the issue type is `bug`, use `AskUserQuestion` to prompt the user:
 
-> **Dispatch agent for #N?** (FiremanDecko → Loki chain)
+> **Dispatch agent for #N — "<title>"?** (FiremanDecko → Loki chain)
 
-If the user confirms (yes, y, do it, go, dispatch, send it, etc.), invoke `/dispatch #N`.
-If the user declines or doesn't respond, stop — the issue is filed and on the board.
+Wait for the user's response via `AskUserQuestion`. If they confirm, invoke `/dispatch #N`.
+If they decline, stop — the issue is filed and on the board.
 
 This step is **skipped** for non-bug types (enhancement, ux, security, documentation).
 
