@@ -495,6 +495,27 @@ async function main() {
   mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
   writeFileSync(OUTPUT_PATH, html, "utf-8");
   log(`HTML quality report written to quality/reports/quality-report.html`);
+
+  // Emit machine-readable cull list for the skill post-run prompt
+  const bullshitPct = totalTests > 0 ? ((totalBullshitTests / totalTests) * 100).toFixed(1) : "0.0";
+  const cullJson = {
+    generated: new Date().toISOString(),
+    totalFiles,
+    totalTests,
+    totalCullFiles: bullshitFiles.length,
+    totalCullTests: totalBullshitTests,
+    pctOfSuite: bullshitPct,
+    culls: bullshitFiles.map(f => ({
+      file: f.rel,
+      tests: f.tests,
+      patterns: f.bullshit.map(b => b.id),
+      primaryPattern: f.bullshit[0]?.id ?? "unknown",
+      primaryLabel: f.bullshit[0]?.label ?? "Unknown",
+    })),
+  };
+  const cullPath = path.join(REPO_ROOT, "quality/reports/cull-list.json");
+  writeFileSync(cullPath, JSON.stringify(cullJson, null, 2), "utf-8");
+  log(`Cull list written to quality/reports/cull-list.json (${bullshitFiles.length} files flagged)`);
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });
