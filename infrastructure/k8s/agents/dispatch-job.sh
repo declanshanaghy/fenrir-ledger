@@ -19,9 +19,11 @@
 #   --session-id  Unique session identifier
 #   --branch      Git branch name
 #   --model       Claude model identifier
-#   --prompt      Task prompt text
+#   --prompt      Task prompt text (use --prompt-file for reliability)
 #
 # Optional:
+#   --prompt-file Path to a file containing the task prompt (preferred
+#                 over --prompt — avoids heredoc/shell escaping issues)
 #   --image-tag   Container image tag (default: latest)
 #   --dry-run     Print generated manifest without applying
 # --------------------------------------------------------------------------
@@ -34,6 +36,7 @@ SESSION_ID=""
 BRANCH=""
 MODEL=""
 PROMPT=""
+PROMPT_FILE=""
 IMAGE_TAG="latest"
 DRY_RUN=false
 ISSUE_NUMBER=""
@@ -44,6 +47,7 @@ while [[ $# -gt 0 ]]; do
     --branch)        BRANCH="$2"; shift 2 ;;
     --model)         MODEL="$2"; shift 2 ;;
     --prompt)        PROMPT="$2"; shift 2 ;;
+    --prompt-file)   PROMPT_FILE="$2"; shift 2 ;;
     --image-tag)     IMAGE_TAG="$2"; shift 2 ;;
     --issue-number)  ISSUE_NUMBER="$2"; shift 2 ;;
     --dry-run)       DRY_RUN=true; shift ;;
@@ -54,9 +58,20 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# --------------------------------------------------------------------------
+# Resolve prompt: --prompt-file takes precedence over --prompt
+# --------------------------------------------------------------------------
+if [ -n "$PROMPT_FILE" ]; then
+  if [ ! -f "$PROMPT_FILE" ]; then
+    echo "Error: --prompt-file '${PROMPT_FILE}' does not exist." >&2
+    exit 1
+  fi
+  PROMPT=$(cat "$PROMPT_FILE")
+fi
+
 # Validate required arguments
 if [ -z "$SESSION_ID" ] || [ -z "$BRANCH" ] || [ -z "$MODEL" ] || [ -z "$PROMPT" ]; then
-  echo "Error: --session-id, --branch, --model, and --prompt are all required." >&2
+  echo "Error: --session-id, --branch, --model, and --prompt (or --prompt-file) are all required." >&2
   exit 1
 fi
 

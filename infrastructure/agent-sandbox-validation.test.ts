@@ -290,6 +290,11 @@ describe('Agent Sandbox Infrastructure (Issue #681)', () => {
       expect(dispatchScript).toContain('IMAGE_TAG="latest"');
     });
 
+    it('should support --prompt-file flag for reliable prompt delivery', () => {
+      expect(dispatchScript).toContain('--prompt-file');
+      expect(dispatchScript).toContain('PROMPT_FILE');
+    });
+
     it('should validate required arguments', () => {
       expect(dispatchScript).toContain('required');
       expect(dispatchScript).toContain('exit 1');
