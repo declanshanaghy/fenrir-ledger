@@ -376,8 +376,8 @@ resource "google_monitoring_alert_policy" "cdn_cache_hit_ratio_low" {
           | group_by [], [total: sum(value.request_count)]
         }
         | join
-        | value: div(val(0), val(1))
-        | condition val < 0.5
+        | value [ratio: div(val(0), val(1))]
+        | condition val(ratio) < 0.5
       EOT
       duration = "600s" # 10 minutes
       trigger {
