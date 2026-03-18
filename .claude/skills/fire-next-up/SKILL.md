@@ -306,3 +306,4 @@ git worktree prune
 - For `test` issues, Loki is both first and final agent.
 - Board transitions are handled by GitHub Projects V2 built-in workflows (PR opened → In Progress, PR merged → Done, issue closed → Done). `/dispatch` also moves issues to In Progress as belt & suspenders.
 - **All agent spawning goes through `/dispatch`.** Never call `depot claude` directly.
+- **Always use `AskUserQuestion` when asking Odin anything.** Never output a question as plain text and wait — use the `AskUserQuestion` tool so Odin gets a proper prompt. This applies to ALL interaction points: refinement questions, blocked-issue warnings, research review decisions, FAIL verdict approvals, design interview questions, and any other situation where you need Odin's input before proceeding.
