@@ -248,6 +248,20 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
         <ThemeToggle variant="icon" />
       </div>
 
+      {/* Settings link — visible to anonymous users; page handles auth gating */}
+      <button
+        type="button"
+        onClick={() => {
+          onClose();
+          router.push("/ledger/settings");
+        }}
+        className="flex items-center gap-2 w-full px-1 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-body border-t border-border"
+        style={{ minHeight: 44 }}
+      >
+        <Settings className="h-4 w-4 shrink-0" aria-hidden="true" />
+        Settings
+      </button>
+
       {/* CTAs */}
       <div className="flex flex-col gap-2 pt-1">
         <button
