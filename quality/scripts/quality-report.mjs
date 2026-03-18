@@ -383,6 +383,104 @@ async function main() {
 
   L.push(`---`);
   L.push(``);
+
+  // ── 4. LOKI'S DECREE ───────────────────────────────────────────────────────
+  const combinedLinePct = lcovCombined ? parseFloat(lcovCombined.lines.pct) : (lcovVitest ? parseFloat(lcovVitest.lines.pct) : 0);
+  const isClean = bullshitFiles.length === 0;
+  const isCoverageHealthy = combinedLinePct >= 50;
+  const isShieldSecure = isClean && isCoverageHealthy;
+
+  L.push(`## ᛉ Loki's Decree`);
+  L.push(``);
+
+  if (isShieldSecure) {
+    L.push(`\`\`\``);
+    L.push(`╔══════════════════════════════════════════════════════════════╗`);
+    L.push(`║                                                              ║`);
+    L.push(`║     ᛉ   R U N I C   S E A L   O F   Q U A L I T Y   ᛉ      ║`);
+    L.push(`║                                                              ║`);
+    L.push(`║  The shield wall stands unbroken. ${String(totalTests).padStart(4)} tests guard the        ║`);
+    L.push(`║  realm. ${String(totalFiles).padStart(3)} files carry the weight. No hollow              ║`);
+    L.push(`║  assertions defile the count.                                ║`);
+    L.push(`║                                                              ║`);
+    L.push(`║  Combined line coverage: ${String(combinedLinePct.toFixed(1) + '%').padEnd(7)}                          ║`);
+    L.push(`║                                                              ║`);
+    L.push(`║  I, Loki Laufeyson, QA Tester of Fenrir Ledger,             ║`);
+    L.push(`║  do hereby declare: THE SHIELD WALL IS SECURE.              ║`);
+    L.push(`║                                                              ║`);
+    L.push(`║  The chains hold. The wolf sleeps.                           ║`);
+    L.push(`║  No change order is required at this time.                   ║`);
+    L.push(`║                                                              ║`);
+    L.push(`║                               Signed: ᛚᛟᚲᛁ                   ║`);
+    L.push(`║                               Loki Laufeyson                 ║`);
+    L.push(`║                               QA Tester, Fenrir Ledger       ║`);
+    L.push(`║                               ${new Date().toISOString().split('T')[0]}                       ║`);
+    L.push(`║                                                              ║`);
+    L.push(`╚══════════════════════════════════════════════════════════════╝`);
+    L.push(`\`\`\``);
+  } else {
+    const issues = [];
+    if (!isClean) issues.push(`${bullshitFiles.length} hollow test file${bullshitFiles.length !== 1 ? 's' : ''} (${totalBullshitTests} tests) poisoning the suite`);
+    if (!isCoverageHealthy) issues.push(`combined line coverage at ${combinedLinePct.toFixed(1)}% — below the 50% minimum threshold`);
+
+    L.push(`\`\`\``);
+    L.push(`╔══════════════════════════════════════════════════════════════╗`);
+    L.push(`║                                                              ║`);
+    L.push(`║   ᚦ  F O R M A L   C H A N G E   O R D E R   ᚦ             ║`);
+    L.push(`║                                                              ║`);
+    L.push(`║  TO: Odin, All-Father and Project Owner                      ║`);
+    L.push(`║  FROM: Loki Laufeyson, QA Tester                             ║`);
+    L.push(`║  RE: Test Quality Deficiencies — Immediate Action Required   ║`);
+    L.push(`║                                                              ║`);
+    L.push(`║  The shield wall has been inspected and found WANTING.        ║`);
+    L.push(`║                                                              ║`);
+    L.push(`║  DEFICIENCIES:                                               ║`);
+    for (const issue of issues) {
+      // Word-wrap to fit inside the box (max 52 chars per content line)
+      const words = issue.split(' ');
+      const lines = [];
+      let cur = '';
+      for (const w of words) {
+        if (cur && (cur.length + 1 + w.length) > 52) {
+          lines.push(cur);
+          cur = w;
+        } else {
+          cur = cur ? `${cur} ${w}` : w;
+        }
+      }
+      if (cur) lines.push(cur);
+      for (let i = 0; i < lines.length; i++) {
+        const prefix = i === 0 ? '- ' : '  ';
+        L.push(`║    ${prefix}${lines[i].padEnd(54)}║`);
+      }
+    }
+    L.push(`║                                                              ║`);
+    L.push(`║  REQUIRED ACTIONS:                                           ║`);
+    if (!isClean) {
+      L.push(`║    1. Delete all flagged hollow test files                   ║`);
+      L.push(`║    2. Replace with behavioural tests that guard logic        ║`);
+    }
+    if (!isCoverageHealthy) {
+      L.push(`║    ${isClean ? '1' : '3'}. Increase coverage to ≥50% combined lines              ║`);
+      L.push(`║    ${isClean ? '2' : '4'}. Priority: auth flows, sync engine, import pipeline     ║`);
+    }
+    L.push(`║                                                              ║`);
+    L.push(`║  This decree is BINDING until the deficiencies are           ║`);
+    L.push(`║  resolved and a subsequent quality report issues a           ║`);
+    L.push(`║  Runic Seal of Quality.                                      ║`);
+    L.push(`║                                                              ║`);
+    L.push(`║                               Signed: ᛚᛟᚲᛁ                   ║`);
+    L.push(`║                               Loki Laufeyson                 ║`);
+    L.push(`║                               QA Tester, Fenrir Ledger       ║`);
+    L.push(`║                               ${new Date().toISOString().split('T')[0]}                       ║`);
+    L.push(`║                                                              ║`);
+    L.push(`╚══════════════════════════════════════════════════════════════╝`);
+    L.push(`\`\`\``);
+  }
+
+  L.push(``);
+  L.push(`---`);
+  L.push(``);
   L.push(`*Generated by \`quality/scripts/quality-report.mjs\` · [Coverage index](coverage/index.html)*`);
 
   mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
