@@ -1,0 +1,147 @@
+---
+title: "The Bootstrap Betrayal"
+date: "2026-03-17"
+rune: "ᚦ"
+excerpt: "A blank page in production — traced through browser forensics, cluster logs, and git archaeology to a Helm migration that silently downgraded a load balancer timeout from 3600s to 30s."
+slug: "flukey-fuck"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᚦ ᛇ ᛉ ᛞ</span>
+  <h1 className="session-title">The Bootstrap Betrayal</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-17</span></span>
+      <span>Session <span className="val">flukey-fuck</span></span>
+      <span>Acts <span className="val">5</span></span>
+      <span>Files changed <span className="val">3</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᚦ</span> <span className="toc-num">I</span> The Void Stares Back</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᛇ</span> <span className="toc-num">II</span> The Cluster Speaks</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᛇ</span> <span className="toc-num">III</span> The Code Trail</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᛞ</span> <span className="toc-num">IV</span> Bootstrap's Betrayal</a></li>
+      <li><a href="#act-5"><span className="toc-rune">ᛉ</span> <span className="toc-num">V</span> The Two-Sword Fix</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="The Void Stares Back">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Investigation</p>
+        <h2 className="entry-title">The Void Stares Back</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">https://www.fenrirledger.com/ledger is fucked</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Odin reports <span class="hl">/ledger is blank in production</span>. Chrome browser automation confirms: the page loads its title but renders nothing. The DOM contains a single empty <span class="mono">&lt;main&gt;</span> element — React never hydrated. Console reveals <span class="hl">Error: Connection closed</span> from a Next.js RSC chunk. Network traffic shows all static assets return 200, but <span class="mono">analytics.fenrirledger.com/script.js</span> returns 503. The RSC streaming connection is being killed mid-flight.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="The Cluster Speaks">ᛇ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Infrastructure</p>
+        <h2 className="entry-title">The Cluster Speaks</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">(continued investigation)</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>GKE cluster status reveals app pods are only <span class="hl">17 minutes old</span> — a fresh deployment just landed. Pod logs expose a cascade of <span class="mono">requireAuthz: access denied</span> warnings with reason <span class="hl">household_mismatch</span>. The client sends <span class="mono">session.user.sub</span> (a Google numeric ID) as the household identifier, but Firestore now stores a UUID. Every sync/push call returns 403. Two bugs surface: the blank page and broken cloud sync.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="The Code Trail">ᛇ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Deep Dive</p>
+        <h2 className="entry-title">The Code Trail</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">(continued investigation)</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Tracing through <span class="mono">useCloudSync.ts:211</span>, <span class="mono">AuthContext.tsx:94</span>, and <span class="mono">authz.ts:106</span> reveals the full picture. The client was always designed to use <span class="mono">session.user.sub</span> as the household key — it is the localStorage partition key. But the server's <span class="mono">requireAuthz</span> compares this against <span class="mono">firestoreUser.householdId</span>, which is now a UUID from the household join feature. The IDOR guard rejects the mismatch even though the user IS who they claim to be.</p><p>For the blank page: the Explore agent digs through ingress annotations, Helm values, Dockerfile, and middleware. The smoking gun is <span class="mono">values.yaml:102</span> — <span class="hl">timeoutSec: 30</span>.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Bootstrap's Betrayal">ᛞ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Root Cause</p>
+        <h2 className="entry-title">Bootstrap's Betrayal</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Was it something bootstrap fucked up?</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Git archaeology confirms: <span class="hl">yes, bootstrap fucked it</span>. The deleted raw manifests in <span class="mono">infrastructure/k8s/app/</span> had <span class="mono">timeoutSec: 3600</span> (1 hour). But the Helm chart created in PR #788 hardcoded <span class="mono">timeoutSec: 30</span> — someone never carried the value over. For months the old manifests were still active on the cluster, masking the discrepancy. PR #1243 (today) deleted the raw manifests and redeployed via Helm, silently applying the 30-second timeout. The GCP Load Balancer now kills the RSC stream before React can hydrate.</p></div>
+          <div className="code-block"><pre><span class="cr">-  timeoutSec: 3600  # deleted k8s/app manifests</span>
+<span class="cr">+  timeoutSec: 30    # Helm values (PR #788)</span></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="The Two-Sword Fix">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Fix</p>
+        <h2 className="entry-title">The Two-Sword Fix</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">fix both hkr</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Two surgical fixes applied in a single PR:</p><p><span class="hl">Fix 1 — Restore timeout</span>: <span class="mono">values.yaml:102</span> changed from <span class="mono">30</span> to <span class="mono">3600</span>. The GCP Load Balancer will no longer kill RSC streams.</p><p><span class="hl">Fix 2 — Accept Google sub</span>: <span class="mono">authz.ts</span> now treats the user's own Google sub as a valid self-reference for the household check. IDOR protection remains intact — the server still uses <span class="mono">firestoreUser.householdId</span> for all Firestore operations.</p><p>A new test covers the Google sub compat path — 22/22 pass. PR #1269 merged via HKR. Deploy rolling out.</p></div>
+          <div className="code-block"><pre><span class="ca">+    const isOwnSub = requirement.householdId === googleSub;</span>
+<span class="cr">-    if (requirement.householdId !== firestoreUser.householdId) {</span>
+<span class="ca">+    if (!isOwnSub && requirement.householdId !== firestoreUser.householdId) {</span></pre></div>
+          <div className="bug-box">
+            <p className="bug-label">Bug Fixed</p>
+            <p className="bug-text">BackendConfig timeoutSec: 30 → 3600 (GCP LB killed RSC stream); requireAuthz household_mismatch (client sends Google sub, server expects UUID)</p>
+          </div>
+          <div className="file-chips">
+            <span className="chip chip-mod">infrastructure/helm/fenrir-app/values.yaml</span>
+            <span className="chip chip-mod">development/frontend/src/lib/auth/authz.ts</span>
+            <span className="chip chip-mod">development/frontend/src/__tests__/auth/authz.test.ts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᚦ ᛇ ᛉ ᛞ</div>
+  <div className="footer-text">The Bootstrap Betrayal · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
