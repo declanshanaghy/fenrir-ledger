@@ -157,7 +157,8 @@ test.describe("Auth Callback — CSRF State Mismatch", () => {
   }) => {
     // Spec: auth/callback/page.tsx — pkceData.state !== stateParam →
     //       "State mismatch — possible CSRF attack. Please sign in again."
-    await page.goto("/ledger");
+    // Note: beforeEach already lands on /ledger — seed sessionStorage directly
+    // without a second goto to avoid an extra API request burst that prevents networkidle.
     // Seed PKCE session with a known state
     await page.evaluate(() => {
       sessionStorage.setItem(
