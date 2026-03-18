@@ -329,6 +329,12 @@ async function ensureAuthenticated() {
   console.log(`\n${GOLD}Opening browser for Google authentication...${RESET}`);
   console.log(`${DIM}Complete the auth in your browser. The auth code will appear in this terminal if prompted.${RESET}\n`);
   execSync("gcloud auth application-default login", { stdio: "inherit" });
+  // Pin GOOGLE_APPLICATION_CREDENTIALS to the ADC file gcloud just wrote so
+  // all subsequent clients (e.g. Firestore's internal GoogleAuth) use the file
+  // directly and skip the GCE metadata probe — which emits
+  // MetadataLookupWarning: received unexpected error = All promises were
+  // rejected when running outside GCP (issue #1259).
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = adcPath;
 }
 
 try {

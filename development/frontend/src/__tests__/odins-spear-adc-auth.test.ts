@@ -61,6 +61,9 @@ async function ensureAuthenticated(deps: GoogleAuthDeps): Promise<void> {
   // 3. Fall back to browser flow
   deps.log("Opening browser for Google authentication...");
   deps.runGcloudLogin();
+  // Pin GOOGLE_APPLICATION_CREDENTIALS after gcloud writes the ADC file so
+  // subsequent clients skip the GCE metadata probe (issue #1259).
+  deps.setAdcEnv("/fake/.config/gcloud/application_default_credentials.json");
 }
 
 // ─── Test suite ───────────────────────────────────────────────────────────────
@@ -165,6 +168,12 @@ describe("ensureAuthenticated — ADC startup auth (issue #1246)", () => {
 
       expect(deps.refreshWithToken).not.toHaveBeenCalled();
     });
+
+    it("sets GOOGLE_APPLICATION_CREDENTIALS after browser login so Firestore skips GCE metadata probe (issue #1259)", async () => {
+      await ensureAuthenticated(deps);
+
+      expect(deps.setAdcEnv).toHaveBeenCalledTimes(1);
+    });
   });
 
   // ── Branch 4: ADC file exists but has no refresh_token ────────────────────
@@ -212,10 +221,10 @@ describe("ensureAuthenticated — ADC startup auth (issue #1246)", () => {
       expect(deps.log).toHaveBeenCalledWith(expect.stringContaining("Opening browser"));
     });
 
-    it("does not set GOOGLE_APPLICATION_CREDENTIALS", async () => {
+    it("sets GOOGLE_APPLICATION_CREDENTIALS after browser login completes (fixes MetadataLookupWarning — issue #1259)", async () => {
       await ensureAuthenticated(deps);
 
-      expect(deps.setAdcEnv).not.toHaveBeenCalled();
+      expect(deps.setAdcEnv).toHaveBeenCalledTimes(1);
     });
   });
 
