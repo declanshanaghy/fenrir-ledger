@@ -1,191 +1,326 @@
-/* Valheim — Dark Norse Coverage Report Theme */
+/* Fenrir Ledger — Dark Norse Coverage Theme */
+/* Overrides Istanbul (vitest/c8) and genhtml defaults */
 /* Void-black + gold accent, wolf-inspired brutality */
 
 :root {
   --void-black: #07070d;
+  --void-surface: #0f0f16;
+  --void-hover: #1a1a22;
   --valheim-gold: #c9920a;
+  --valheim-gold-dim: #8b6a0a;
   --valheim-stone: #8b8680;
-  --valheim-dirt: #6b5d4f;
+  --valheim-dirt: #3a2e22;
   --valheim-blood: #8b2e2e;
+  --fenrir-green: #4ade80;
+  --fenrir-green-dim: #1a3a24;
+  --fenrir-red: #ef4444;
+  --fenrir-red-dim: #3a1a1a;
+  --fenrir-yellow: #f9cd0b;
+  --fenrir-yellow-dim: #3a3018;
+  --fenrir-text: #e8e8e0;
+  --fenrir-text-dim: #999;
 }
 
-* {
-  color-scheme: dark;
-}
+* { color-scheme: dark; }
+
+/* ─── Base ─────────────────────────────────────────────────────────────────── */
 
 html, body {
-  background-color: var(--void-black);
-  color: #e8e8e0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  line-height: 1.6;
+  background-color: var(--void-black) !important;
+  color: var(--fenrir-text) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
-/* Headers */
+.wrapper {
+  background-color: var(--void-black) !important;
+}
+
+/* ─── Headers ──────────────────────────────────────────────────────────────── */
+
 h1, h2, h3, h4, h5, h6 {
-  color: var(--valheim-gold);
-  font-weight: 700;
+  color: var(--valheim-gold) !important;
+  font-weight: 700 !important;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 h1 {
-  border-bottom: 3px solid var(--valheim-gold);
-  padding-bottom: 0.5em;
-  margin-bottom: 1em;
+  border-bottom: 3px solid var(--valheim-gold) !important;
+  padding-bottom: 0.5em !important;
 }
 
-/* Links */
-a {
-  color: var(--valheim-gold);
-  text-decoration: none;
-  border-bottom: 1px dashed var(--valheim-gold);
+/* ─── Links ────────────────────────────────────────────────────────────────── */
+
+a, a:link, a:visited {
+  color: var(--valheim-gold) !important;
+  text-decoration: none !important;
 }
 
 a:hover {
-  background-color: var(--valheim-dirt);
-  border-bottom-style: solid;
+  color: var(--fenrir-text) !important;
+  text-decoration: underline !important;
 }
 
-/* Tables */
+div.path a:link, div.path a:visited {
+  color: var(--valheim-gold) !important;
+}
+
+/* ─── Istanbul Summary Table ───────────────────────────────────────────────── */
+
+.coverage-summary {
+  background-color: var(--void-surface) !important;
+  border: 1px solid var(--valheim-stone) !important;
+}
+
+.coverage-summary tr {
+  border-bottom: 1px solid #2a2a34 !important;
+}
+
+.coverage-summary tbody {
+  border: 1px solid #2a2a34 !important;
+}
+
+.coverage-summary td {
+  border-right: 1px solid #2a2a34 !important;
+  color: var(--fenrir-text) !important;
+}
+
+.coverage-summary td:last-child {
+  border-right: none !important;
+}
+
+.coverage-summary th {
+  background-color: var(--valheim-dirt) !important;
+  color: var(--valheim-gold) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.coverage-summary td.file {
+  color: var(--fenrir-text) !important;
+}
+
+.coverage-summary td.file a {
+  color: var(--valheim-gold) !important;
+}
+
+.coverage-summary td.empty {
+  color: var(--fenrir-text-dim) !important;
+}
+
+.keyline-all {
+  border: 1px solid #2a2a34 !important;
+}
+
+/* ─── Coverage Bars ────────────────────────────────────────────────────────── */
+
+.cover-empty {
+  background: #2a2a34 !important;
+}
+
+.chart {
+  border-color: #2a2a34 !important;
+}
+
+/* ─── Coverage Levels — Green/Yellow/Red ───────────────────────────────────── */
+
+/* High (green) */
+.high, .cline-yes {
+  background: var(--fenrir-green-dim) !important;
+}
+.cstat-yes {
+  background: #2a4a2e !important;
+}
+.status-line.high, .high .cover-fill {
+  background: var(--fenrir-green) !important;
+}
+.high .chart {
+  border: 1px solid var(--fenrir-green) !important;
+}
+
+/* Medium (yellow/gold) */
+.medium {
+  background: var(--fenrir-yellow-dim) !important;
+}
+.status-line.medium, .medium .cover-fill {
+  background: var(--valheim-gold) !important;
+}
+.medium .chart {
+  border: 1px solid var(--valheim-gold) !important;
+}
+
+/* Low (red) */
+.low, .cline-no {
+  background: var(--fenrir-red-dim) !important;
+}
+.cstat-no, .fstat-no, .cbranch-no {
+  background: #5a2020 !important;
+}
+.red.solid, .status-line.low, .low .cover-fill {
+  background: var(--fenrir-red) !important;
+}
+.low .chart {
+  border: 1px solid var(--fenrir-red) !important;
+}
+
+.highlighted,
+.highlighted .cstat-no,
+.highlighted .fstat-no,
+.highlighted .cbranch-no {
+  background: var(--fenrir-red) !important;
+}
+
+/* Branch markers */
+.cbranch-no {
+  background: #5a4a00 !important;
+  color: var(--fenrir-yellow) !important;
+}
+.missing-if-branch {
+  background: var(--valheim-gold-dim) !important;
+  color: var(--fenrir-yellow) !important;
+}
+.skip-if-branch {
+  background: #2a2a34 !important;
+  color: var(--fenrir-text-dim) !important;
+}
+.cstat-skip, .fstat-skip, .cbranch-skip {
+  background: #2a2a34 !important;
+  color: var(--fenrir-text-dim) !important;
+}
+
+/* Neutral lines */
+span.cline-neutral {
+  background: var(--void-surface) !important;
+}
+
+/* ─── Text Elements ────────────────────────────────────────────────────────── */
+
+.quiet {
+  color: var(--fenrir-text-dim) !important;
+}
+
+.fraction {
+  background: #2a2a34 !important;
+  color: var(--valheim-stone) !important;
+}
+
+.com {
+  color: #666 !important;
+}
+
+.ignore-none {
+  color: var(--fenrir-text-dim) !important;
+}
+
+/* ─── Code Blocks ──────────────────────────────────────────────────────────── */
+
+pre, code {
+  background-color: var(--void-surface) !important;
+  color: var(--fenrir-text) !important;
+}
+
+table.coverage {
+  background-color: var(--void-black) !important;
+}
+
+table.coverage td.line-count {
+  color: var(--fenrir-text-dim) !important;
+}
+
+table.coverage td.line-coverage {
+  color: var(--fenrir-text-dim) !important;
+}
+
+/* ─── Footer ───────────────────────────────────────────────────────────────── */
+
+.footer {
+  background-color: var(--void-black) !important;
+  color: var(--fenrir-text-dim) !important;
+}
+
+.push {
+  background-color: var(--void-black) !important;
+}
+
+/* ─── genhtml-specific (combined report) ───────────────────────────────────── */
+
 .coverFile, table {
-  background-color: #0f0f16;
-  border: 1px solid var(--valheim-stone);
-  border-collapse: collapse;
+  background-color: var(--void-surface) !important;
+  border: 1px solid var(--valheim-stone) !important;
+  border-collapse: collapse !important;
 }
 
-tr {
-  border-bottom: 1px solid var(--valheim-stone);
-}
+tr { border-bottom: 1px solid #2a2a34 !important; }
 
 th {
-  background-color: var(--valheim-dirt);
-  color: var(--valheim-gold);
-  padding: 0.75em;
-  font-weight: 700;
-  text-align: left;
+  background-color: var(--valheim-dirt) !important;
+  color: var(--valheim-gold) !important;
+  padding: 0.75em !important;
+  font-weight: 700 !important;
 }
 
-td {
-  padding: 0.5em 0.75em;
-}
+td { padding: 0.5em 0.75em !important; }
 
-tr:hover {
-  background-color: #1a1a22;
-}
+tr:hover { background-color: var(--void-hover) !important; }
 
-/* Coverage bars */
 .coverBar {
-  background: linear-gradient(90deg, var(--valheim-blood) 0%, var(--valheim-gold) 100%);
-  height: 20px;
-  border-radius: 2px;
+  background: linear-gradient(90deg, var(--valheim-blood) 0%, var(--valheim-gold) 100%) !important;
+  height: 20px !important;
+  border-radius: 2px !important;
 }
 
-/* Coverage percentages */
-.coverPerHi {
-  color: #4ade80; /* Green — the kill is clean */
-  font-weight: 700;
-}
+.coverPerHi { color: var(--fenrir-green) !important; font-weight: 700 !important; }
+.coverPerMed { color: var(--valheim-gold) !important; font-weight: 600 !important; }
+.coverPerLo { color: var(--fenrir-red) !important; font-weight: 700 !important; }
 
-.coverPerMed {
-  color: var(--valheim-gold); /* Gold — warning, sharpen your blade */
-  font-weight: 600;
-}
-
-.coverPerLo {
-  color: #ef4444; /* Red — blood spilled, tests fall */
-  font-weight: 700;
-}
-
-/* Title row */
 .title {
-  background-color: var(--void-black);
-  color: var(--valheim-gold);
-  font-weight: 700;
-  border-top: 3px solid var(--valheim-gold);
-  border-bottom: 2px solid var(--valheim-gold);
-  padding: 1em 0.75em;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  background-color: var(--void-black) !important;
+  color: var(--valheim-gold) !important;
+  font-weight: 700 !important;
+  border-top: 3px solid var(--valheim-gold) !important;
+  border-bottom: 2px solid var(--valheim-gold) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
 }
 
-/* Table header styling */
 .tableHead {
-  background-color: var(--valheim-dirt);
-  color: var(--valheim-gold);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  background-color: var(--valheim-dirt) !important;
+  color: var(--valheim-gold) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
 }
 
-/* File rows */
-tr.file {
-  background-color: #0f0f16;
-}
+tr.file { background-color: var(--void-surface) !important; }
+tr.file:hover { background-color: var(--void-hover) !important; }
 
-tr.file:hover {
-  background-color: #1a1a22;
-}
+/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
 
-/* Code blocks */
-pre, code {
-  background-color: #0f0f16;
-  color: #e8e8e0;
-  border-left: 3px solid var(--valheim-gold);
-  padding: 0.5em;
-  font-family: "JetBrains Mono", "Courier New", monospace;
-}
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: var(--void-surface); }
+::-webkit-scrollbar-thumb { background: var(--valheim-stone); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--valheim-gold); }
 
-/* Buttons & interactive */
+/* ─── Buttons ──────────────────────────────────────────────────────────────── */
+
 button, input[type="submit"] {
-  background-color: var(--valheim-gold);
-  color: var(--void-black);
-  border: none;
-  padding: 0.5em 1.5em;
-  font-weight: 700;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  background-color: var(--valheim-gold) !important;
+  color: var(--void-black) !important;
+  border: none !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
 }
 
-button:hover, input[type="submit"]:hover {
-  background-color: #d4a84f;
-}
+/* ─── Summary / Legend ─────────────────────────────────────────────────────── */
 
-/* Summary stats */
 .summary {
-  background-color: #0f0f16;
-  border: 2px solid var(--valheim-gold);
-  padding: 1.5em;
-  margin: 1.5em 0;
-  border-radius: 4px;
+  background-color: var(--void-surface) !important;
+  border: 2px solid var(--valheim-gold) !important;
 }
 
-.summary strong {
-  color: var(--valheim-gold);
-}
+.summary strong { color: var(--valheim-gold) !important; }
 
-/* Legend / Info boxes */
 .legend, .info {
-  background-color: #0f0f16;
-  border-left: 4px solid var(--valheim-gold);
-  padding: 1em;
-  margin: 1.5em 0;
-}
-
-/* Scrollbar styling (Webkit browsers) */
-::-webkit-scrollbar {
-  width: 12px;
-}
-
-::-webkit-scrollbar-track {
-  background: #0f0f16;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--valheim-stone);
-  border-radius: 6px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--valheim-gold);
+  background-color: var(--void-surface) !important;
+  border-left: 4px solid var(--valheim-gold) !important;
 }

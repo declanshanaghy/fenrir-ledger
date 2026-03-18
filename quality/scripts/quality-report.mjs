@@ -215,22 +215,126 @@ async function main() {
   const now = new Date().toLocaleString("en-US", { timeZone: "UTC", hour12: false });
   const L = [];
 
+  // Compute decree verdict early — needed for header
+  const combinedLinePct = lcovCombined ? parseFloat(lcovCombined.lines.pct) : (lcovVitest ? parseFloat(lcovVitest.lines.pct) : 0);
+  const isClean = bullshitFiles.length === 0;
+  const isCoverageHealthy = combinedLinePct >= 50;
+  const isShieldSecure = isClean && isCoverageHealthy;
+  const dateStr = new Date().toISOString().split('T')[0];
+
+  // Load Loki's decree quotes
+  const decreesPath = path.join(__dirname, "templates/decrees.json");
+  const decrees = existsSync(decreesPath) ? JSON.parse(readFileSync(decreesPath, "utf-8")) : null;
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const pool = decrees ? (isShieldSecure ? decrees.seal : decrees.changeOrder) : null;
+  const headerQuote = pool ? pick(pool.headers) : null;
+  const verdictQuote = pool ? pick(pool.verdicts) : null;
+  const closingQuote = pool ? pick(pool.closings) : null;
+  const taglineQuote = pool ? pick(pool.taglines) : null;
+
   // ── Header ──────────────────────────────────────────────────────────────────
   L.push(`# ⚔️ Fenrir Ledger — Quality Report`);
   L.push(``);
-  L.push(`> *The chain holds — or it does not. There is no almost.*`);
-  L.push(``);
   L.push(`**Generated:** ${now} UTC · **${totalFiles} test files** · **${totalTests} test cases**`);
+  L.push(``);
+
+  // ── 1. LOKI'S DECREE (top of report) ──────────────────────────────────────
+  if (isShieldSecure) {
+    L.push(`<div align="center">`);
+    L.push(``);
+    L.push(`## ᛉ R U N I C &nbsp; S E A L &nbsp; O F &nbsp; Q U A L I T Y ᛉ`);
+    L.push(``);
+    L.push(`*Issued by Loki Laufeyson, QA Tester · ${dateStr}*`);
+    L.push(``);
+    L.push(`</div>`);
+    L.push(``);
+    L.push(`> *${headerQuote || 'The shield wall stands unbroken.'}*`);
+    L.push(``);
+    L.push(`| | |`);
+    L.push(`|:--|:--|`);
+    L.push(`| **Coverage** | ${combinedLinePct.toFixed(1)}% lines |`);
+    L.push(`| **Hollow Tests** | 0 |`);
+    L.push(`| **Suite** | ${totalTests} tests across ${totalFiles} files |`);
+    L.push(`| **Verdict** | **${verdictQuote || 'THE SHIELD WALL IS SECURE'}** |`);
+    L.push(``);
+    L.push(`> *${closingQuote || 'The chains hold. The wolf sleeps.'}*`);
+    L.push(``);
+    L.push(`<div align="center">`);
+    L.push(``);
+    L.push(`\`\`\``);
+    L.push(`    ╭───────────────────────╮`);
+    L.push(`    │   ᛚ ᛟ ᚲ ᛁ            │`);
+    L.push(`    │   Loki Laufeyson      │`);
+    L.push(`    │   QA · ${dateStr}     │`);
+    L.push(`    ╰───────────────────────╯`);
+    L.push(`\`\`\``);
+    L.push(``);
+    L.push(`*ᚠᛖᚾᚱᛁᚱ — ${taglineQuote || 'the wolf is bound, the ledger is true'}*`);
+    L.push(``);
+    L.push(`</div>`);
+  } else {
+    const issues = [];
+    if (!isClean) issues.push(`**${bullshitFiles.length}** hollow test file${bullshitFiles.length !== 1 ? 's' : ''} (${totalBullshitTests} tests) poisoning the suite`);
+    if (!isCoverageHealthy) issues.push(`Combined line coverage at **${combinedLinePct.toFixed(1)}%** — below the 50% threshold`);
+
+    L.push(`<div align="center">`);
+    L.push(``);
+    L.push(`## ᚦ F O R M A L &nbsp; C H A N G E &nbsp; O R D E R ᚦ`);
+    L.push(``);
+    L.push(`*Issued by Loki Laufeyson, QA Tester · ${dateStr}*`);
+    L.push(``);
+    L.push(`</div>`);
+    L.push(``);
+    L.push(`| | |`);
+    L.push(`|:--|:--|`);
+    L.push(`| **To** | Odin, All-Father |`);
+    L.push(`| **From** | Loki Laufeyson, QA Tester |`);
+    L.push(`| **Re** | Test Quality Deficiencies |`);
+    L.push(``);
+    L.push(`> *${headerQuote || 'The shield wall has been inspected and found WANTING.'}*`);
+    L.push(``);
+    L.push(`**Deficiencies:**`);
+    for (const issue of issues) L.push(`- ${issue}`);
+    L.push(``);
+    L.push(`**Required Actions:**`);
+    let n = 1;
+    if (!isClean) {
+      L.push(`${n++}. Delete all flagged hollow test files`);
+      L.push(`${n++}. Replace with behavioural tests`);
+    }
+    if (!isCoverageHealthy) {
+      L.push(`${n++}. Increase coverage to >=50% combined lines`);
+      L.push(`${n++}. Priority: auth flows, sync engine, import pipeline`);
+    }
+    L.push(``);
+    L.push(`> *${closingQuote || 'Fix this before Ragnarok finds us unprepared.'}*`);
+    L.push(``);
+    L.push(`<div align="center">`);
+    L.push(``);
+    L.push(`\`\`\``);
+    L.push(`    ╭───────────────────────╮`);
+    L.push(`    │   ᛚ ᛟ ᚲ ᛁ            │`);
+    L.push(`    │   Loki Laufeyson      │`);
+    L.push(`    │   QA · ${dateStr}     │`);
+    L.push(`    ╰───────────────────────╯`);
+    L.push(`\`\`\``);
+    L.push(``);
+    L.push(`*ᚠᛖᚾᚱᛁᚱ — ${taglineQuote || 'the wolf strains against the chain'}*`);
+    L.push(``);
+    L.push(`</div>`);
+  }
+
   L.push(``);
   L.push(`---`);
   L.push(``);
 
-  // ── 1. TEST QUALITY ANALYSIS (top) ──────────────────────────────────────────
+  // ── 2. TEST QUALITY ANALYSIS ──────────────────────────────────────────────
   L.push(`## 🐺 Test Quality Analysis`);
   L.push(``);
 
   if (bullshitFiles.length === 0) {
     L.push(`The shield wall is clean. No hollow tests detected — every assertion draws blood.`);
+    L.push(``);
   } else {
     const combinedLinePct = lcovCombined ? parseFloat(lcovCombined.lines.pct) : null;
     const phantom = combinedLinePct !== null
@@ -381,172 +485,6 @@ async function main() {
     L.push(``);
   }
 
-  L.push(`---`);
-  L.push(``);
-
-  // ── 4. LOKI'S DECREE ───────────────────────────────────────────────────────
-  const combinedLinePct = lcovCombined ? parseFloat(lcovCombined.lines.pct) : (lcovVitest ? parseFloat(lcovVitest.lines.pct) : 0);
-  const isClean = bullshitFiles.length === 0;
-  const isCoverageHealthy = combinedLinePct >= 50;
-  const isShieldSecure = isClean && isCoverageHealthy;
-  const dateStr = new Date().toISOString().split('T')[0];
-
-  // Load Loki's decree quotes
-  const decreesPath = path.join(__dirname, "templates/decrees.json");
-  const decrees = existsSync(decreesPath) ? JSON.parse(readFileSync(decreesPath, "utf-8")) : null;
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  const pool = decrees ? (isShieldSecure ? decrees.seal : decrees.changeOrder) : null;
-  const headerQuote = pool ? pick(pool.headers) : null;
-  const verdictQuote = pool ? pick(pool.verdicts) : null;
-  const closingQuote = pool ? pick(pool.closings) : null;
-  const taglineQuote = pool ? pick(pool.taglines) : null;
-
-  L.push(`---`);
-  L.push(``);
-  L.push(`<br>`);
-  L.push(``);
-
-  if (isShieldSecure) {
-    // ── RUNIC SEAL OF QUALITY ──────────────────────────────────────────────
-    L.push(`<div align="center">`);
-    L.push(``);
-    L.push(`# ᛉ`);
-    L.push(``);
-    L.push(`### R U N I C &nbsp; S E A L &nbsp; O F &nbsp; Q U A L I T Y`);
-    L.push(``);
-    L.push(`---`);
-    L.push(``);
-    L.push(`*Issued by the Office of the QA Tester*`);
-    L.push(`*Fenrir Ledger — ${dateStr}*`);
-    L.push(``);
-    L.push(`</div>`);
-    L.push(``);
-    L.push(`<br>`);
-    L.push(``);
-    L.push(`> *${headerQuote || 'The shield wall stands unbroken.'}*`);
-    L.push(`>`);
-    L.push(`> *${totalTests} tests guard the realm. ${totalFiles} files carry the weight.*`);
-    L.push(`> *No hollow assertions defile the count.*`);
-    L.push(``);
-    L.push(`<br>`);
-    L.push(``);
-    L.push(`| | |`);
-    L.push(`|---|---|`);
-    L.push(`| **Combined Line Coverage** | **${combinedLinePct.toFixed(1)}%** |`);
-    L.push(`| **Hollow Tests** | **0** |`);
-    L.push(`| **Test Files** | **${totalFiles}** |`);
-    L.push(`| **Test Cases** | **${totalTests}** |`);
-    L.push(`| **Verdict** | **${verdictQuote || 'THE SHIELD WALL IS SECURE'}** |`);
-    L.push(``);
-    L.push(`<br>`);
-    L.push(``);
-    L.push(`> *${closingQuote || 'The chains hold. The wolf sleeps.'}*`);
-    L.push(`> *No change order is required at this time.*`);
-    L.push(``);
-    L.push(`<br>`);
-    L.push(``);
-    L.push(`<div align="center">`);
-    L.push(``);
-    L.push(`\`\`\``);
-    L.push(`                    ╭─────────────────────────╮`);
-    L.push(`                    │                         │`);
-    L.push(`                    │   ᛚ ᛟ ᚲ ᛁ              │`);
-    L.push(`                    │                         │`);
-    L.push(`                    │   Loki Laufeyson        │`);
-    L.push(`                    │   QA Tester             │`);
-    L.push(`                    │   Fenrir Ledger         │`);
-    L.push(`                    │                         │`);
-    L.push(`                    │   ${dateStr}              │`);
-    L.push(`                    │                         │`);
-    L.push(`                    ╰─────────────────────────╯`);
-    L.push(`\`\`\``);
-    L.push(``);
-    L.push(`*ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ — ${taglineQuote || 'the wolf is bound, the ledger is true'}*`);
-    L.push(``);
-    L.push(`</div>`);
-  } else {
-    // ── FORMAL CHANGE ORDER ────────────────────────────────────────────────
-    const issues = [];
-    if (!isClean) issues.push(`**${bullshitFiles.length}** hollow test file${bullshitFiles.length !== 1 ? 's' : ''} (**${totalBullshitTests}** tests) poisoning the suite`);
-    if (!isCoverageHealthy) issues.push(`Combined line coverage at **${combinedLinePct.toFixed(1)}%** — below the **50%** minimum threshold`);
-
-    L.push(`<div align="center">`);
-    L.push(``);
-    L.push(`# ᚦ`);
-    L.push(``);
-    L.push(`### F O R M A L &nbsp; C H A N G E &nbsp; O R D E R`);
-    L.push(``);
-    L.push(`---`);
-    L.push(``);
-    L.push(`*Issued by the Office of the QA Tester*`);
-    L.push(`*Fenrir Ledger — ${dateStr}*`);
-    L.push(``);
-    L.push(`</div>`);
-    L.push(``);
-    L.push(`<br>`);
-    L.push(``);
-    L.push(`| | |`);
-    L.push(`|---|---|`);
-    L.push(`| **TO** | Odin, All-Father and Project Owner |`);
-    L.push(`| **FROM** | Loki Laufeyson, QA Tester |`);
-    L.push(`| **RE** | Test Quality Deficiencies — Immediate Action Required |`);
-    L.push(`| **DATE** | ${dateStr} |`);
-    L.push(``);
-    L.push(`<br>`);
-    L.push(``);
-    L.push(`> *${headerQuote || 'The shield wall has been inspected and found WANTING.'}*`);
-    L.push(``);
-    L.push(`<br>`);
-    L.push(``);
-    L.push(`#### Deficiencies`);
-    L.push(``);
-    for (const issue of issues) {
-      L.push(`- ${issue}`);
-    }
-    L.push(``);
-    L.push(`#### Required Actions`);
-    L.push(``);
-    let actionNum = 1;
-    if (!isClean) {
-      L.push(`${actionNum++}. Delete all flagged hollow test files`);
-      L.push(`${actionNum++}. Replace with behavioural tests that guard logic`);
-    }
-    if (!isCoverageHealthy) {
-      L.push(`${actionNum++}. Increase coverage to >=50% combined lines`);
-      L.push(`${actionNum++}. Priority: auth flows, sync engine, import pipeline`);
-    }
-    L.push(``);
-    L.push(`<br>`);
-    L.push(``);
-    L.push(`> *${closingQuote || 'This decree is BINDING until the deficiencies are resolved.'}*`);
-    L.push(`> *A subsequent quality report must issue a Runic Seal of Quality.*`);
-    L.push(``);
-    L.push(`<br>`);
-    L.push(``);
-    L.push(`<div align="center">`);
-    L.push(``);
-    L.push(`\`\`\``);
-    L.push(`                    ╭─────────────────────────╮`);
-    L.push(`                    │                         │`);
-    L.push(`                    │   ᛚ ᛟ ᚲ ᛁ              │`);
-    L.push(`                    │                         │`);
-    L.push(`                    │   Loki Laufeyson        │`);
-    L.push(`                    │   QA Tester             │`);
-    L.push(`                    │   Fenrir Ledger         │`);
-    L.push(`                    │                         │`);
-    L.push(`                    │   ${dateStr}              │`);
-    L.push(`                    │                         │`);
-    L.push(`                    ╰─────────────────────────╯`);
-    L.push(`\`\`\``);
-    L.push(``);
-    L.push(`*ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ — ${taglineQuote || 'the wolf strains against the chain'}*`);
-    L.push(``);
-    L.push(`</div>`);
-  }
-
-  L.push(``);
-  L.push(`<br>`);
-  L.push(``);
   L.push(`---`);
   L.push(``);
   L.push(`*Generated by \`quality/scripts/quality-report.mjs\` · [Coverage index](coverage/index.html)*`);
