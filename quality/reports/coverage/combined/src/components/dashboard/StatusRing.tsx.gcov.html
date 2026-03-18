@@ -1,0 +1,288 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - src/components/dashboard/StatusRing.tsx</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory src/components/dashboard">src/components/dashboard</a> - StatusRing.tsx<span style="font-size: 80%;"> (source / <a href="StatusRing.tsx.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">25</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-03-17 20:09:21</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : &quot;use client&quot;;</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : /**</span>
+<span id="L4"><span class="lineNum">       4</span>              :  * StatusRing — SVG circular progress ring around issuer initials.</span>
+<span id="L5"><span class="lineNum">       5</span>              :  *</span>
+<span id="L6"><span class="lineNum">       6</span>              :  * Renders a countdown ring that drains as a deadline approaches.</span>
+<span id="L7"><span class="lineNum">       7</span>              :  * The ring stroke color shifts through Norse realm colors based on</span>
+<span id="L8"><span class="lineNum">       8</span>              :  * daysRemaining thresholds (from ux/interactions.md — Status Ring section).</span>
+<span id="L9"><span class="lineNum">       9</span>              :  *</span>
+<span id="L10"><span class="lineNum">      10</span>              :  * When daysRemaining &lt;= 30, the ring pulses via the .ring--urgent CSS class</span>
+<span id="L11"><span class="lineNum">      11</span>              :  * (muspel-pulse keyframes defined in globals.css — G4.2).</span>
+<span id="L12"><span class="lineNum">      12</span>              :  *</span>
+<span id="L13"><span class="lineNum">      13</span>              :  * Spec source: ux/interactions.md — Status Ring (Deadline Countdown)</span>
+<span id="L14"><span class="lineNum">      14</span>              :  *   - SVG circle with r=18</span>
+<span id="L15"><span class="lineNum">      15</span>              :  *   - Circumference = 2 * PI * 18</span>
+<span id="L16"><span class="lineNum">      16</span>              :  *   - Progress = daysRemaining / totalDays (clamped to [0, 1])</span>
+<span id="L17"><span class="lineNum">      17</span>              :  *   - Offset = circumference * (1 - progress)</span>
+<span id="L18"><span class="lineNum">      18</span>              :  */</span>
+<span id="L19"><span class="lineNum">      19</span>              : </span>
+<span id="L20"><span class="lineNum">      20</span>              : import type { CardStatus } from &quot;@/lib/types&quot;;</span>
+<span id="L21"><span class="lineNum">      21</span>              : import { STATUS_LABELS } from &quot;@/lib/constants&quot;;</span>
+<span id="L22"><span class="lineNum">      22</span>              : </span>
+<span id="L23"><span class="lineNum">      23</span>              : // ── Constants ──────────────────────────────────────────────────────────────────</span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span>              : /** SVG viewBox size. The circle is centered at (cx=24, cy=24) with r=18. */</span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">           4 : const SIZE = 48;</span></span>
+<span id="L27"><span class="lineNum">      27</span>              : </span>
+<span id="L28"><span class="lineNum">      28</span>              : /** Ring radius — spec: r=18 */</span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">           4 : const RADIUS = 18;</span></span>
+<span id="L30"><span class="lineNum">      30</span>              : </span>
+<span id="L31"><span class="lineNum">      31</span>              : /** Full circumference of the ring at r=18. */</span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">           4 : const CIRCUMFERENCE = 2 * Math.PI * RADIUS;</span></span>
+<span id="L33"><span class="lineNum">      33</span>              : </span>
+<span id="L34"><span class="lineNum">      34</span>              : // ── Realm color tokens ─────────────────────────────────────────────────────────</span>
+<span id="L35"><span class="lineNum">      35</span>              : // Thresholds and colors from ux/interactions.md — Status Ring section.</span>
+<span id="L36"><span class="lineNum">      36</span>              : </span>
+<span id="L37"><span class="lineNum">      37</span>              : /** Ragnarok: overdue (daysRemaining &lt;= 0) */</span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">           4 : const COLOR_RAGNAROK = &quot;hsl(var(--realm-ragnarok))&quot;;</span></span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span>              : /** Muspelheim: urgent (daysRemaining &lt;= 30) -- blood orange */</span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">           4 : const COLOR_MUSPEL = &quot;hsl(var(--realm-muspel))&quot;;</span></span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span>              : /** Hati: approaching (daysRemaining &lt;= 60) -- amber */</span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">           4 : const COLOR_HATI = &quot;hsl(var(--realm-hati))&quot;;</span></span>
+<span id="L45"><span class="lineNum">      45</span>              : </span>
+<span id="L46"><span class="lineNum">      46</span>              : /** Asgard: healthy -- teal */</span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">           4 : const COLOR_ASGARD = &quot;hsl(var(--realm-asgard))&quot;;</span></span>
+<span id="L48"><span class="lineNum">      48</span>              : </span>
+<span id="L49"><span class="lineNum">      49</span>              : /** Stone: closed / inactive */</span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">           4 : const COLOR_STONE = &quot;hsl(var(--realm-stone))&quot;;</span></span>
+<span id="L51"><span class="lineNum">      51</span>              : </span>
+<span id="L52"><span class="lineNum">      52</span>              : /** Alfheim: bonus open -- teal */</span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">           4 : const COLOR_ALFHEIM = &quot;hsl(var(--realm-alfheim))&quot;;</span></span>
+<span id="L54"><span class="lineNum">      54</span>              : </span>
+<span id="L55"><span class="lineNum">      55</span>              : /** Niflheim: overdue -- deep red */</span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">           4 : const COLOR_NIFLHEIM = &quot;hsl(var(--realm-niflheim))&quot;;</span></span>
+<span id="L57"><span class="lineNum">      57</span>              : </span>
+<span id="L58"><span class="lineNum">      58</span>              : // ── Helpers ────────────────────────────────────────────────────────────────────</span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span>              : /**</span>
+<span id="L61"><span class="lineNum">      61</span>              :  * Returns the stroke color for the ring based on card status and days remaining.</span>
+<span id="L62"><span class="lineNum">      62</span>              :  *</span>
+<span id="L63"><span class="lineNum">      63</span>              :  * For closed cards the ring uses stone gray regardless of days remaining.</span>
+<span id="L64"><span class="lineNum">      64</span>              :  * For bonus_open cards the ring uses Alfheim teal.</span>
+<span id="L65"><span class="lineNum">      65</span>              :  * For overdue cards the ring uses Niflheim deep red.</span>
+<span id="L66"><span class="lineNum">      66</span>              :  * For all other statuses the color follows the realm thresholds from</span>
+<span id="L67"><span class="lineNum">      67</span>              :  * ux/interactions.md.</span>
+<span id="L68"><span class="lineNum">      68</span>              :  *</span>
+<span id="L69"><span class="lineNum">      69</span>              :  * @param status        - The card's current CardStatus.</span>
+<span id="L70"><span class="lineNum">      70</span>              :  * @param daysRemaining - Days until the relevant deadline.</span>
+<span id="L71"><span class="lineNum">      71</span>              :  * @returns Hex color string.</span>
+<span id="L72"><span class="lineNum">      72</span>              :  */</span>
+<span id="L73"><span class="lineNum">      73</span>              : function getRingColor(status: CardStatus, daysRemaining: number): string {</span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">          12 :   if (status === &quot;closed&quot; || status === &quot;graduated&quot;) return COLOR_STONE;</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">          12 :   if (status === &quot;bonus_open&quot;) return COLOR_ALFHEIM;</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">          12 :   if (status === &quot;overdue&quot;) return COLOR_NIFLHEIM;</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">          12 :   if (daysRemaining &lt;= 0) return COLOR_RAGNAROK;</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">           3 :   if (daysRemaining &lt;= 30) return COLOR_MUSPEL;</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">           3 :   if (daysRemaining &lt;= 60) return COLOR_HATI;</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">           3 :   return COLOR_ASGARD;</span></span>
+<span id="L81"><span class="lineNum">      81</span>              : }</span>
+<span id="L82"><span class="lineNum">      82</span>              : </span>
+<span id="L83"><span class="lineNum">      83</span>              : /**</span>
+<span id="L84"><span class="lineNum">      84</span>              :  * Computes the SVG strokeDashoffset that represents the elapsed portion.</span>
+<span id="L85"><span class="lineNum">      85</span>              :  *</span>
+<span id="L86"><span class="lineNum">      86</span>              :  * Progress is clamped to [0, 1] so the ring never overflows or underflows.</span>
+<span id="L87"><span class="lineNum">      87</span>              :  * When totalDays is 0 or negative the ring renders fully drained.</span>
+<span id="L88"><span class="lineNum">      88</span>              :  *</span>
+<span id="L89"><span class="lineNum">      89</span>              :  * @param daysRemaining - Days remaining until deadline.</span>
+<span id="L90"><span class="lineNum">      90</span>              :  * @param totalDays     - Total span from card open to deadline.</span>
+<span id="L91"><span class="lineNum">      91</span>              :  * @returns The strokeDashoffset value.</span>
+<span id="L92"><span class="lineNum">      92</span>              :  */</span>
+<span id="L93"><span class="lineNum">      93</span>              : function computeOffset(daysRemaining: number, totalDays: number): number {</span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">          12 :   if (totalDays &lt;= 0) return CIRCUMFERENCE;</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">          12 :   const progress = Math.min(Math.max(daysRemaining / totalDays, 0), 1);</span></span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">          12 :   return CIRCUMFERENCE * (1 - progress);</span></span>
+<span id="L97"><span class="lineNum">      97</span>              : }</span>
+<span id="L98"><span class="lineNum">      98</span>              : </span>
+<span id="L99"><span class="lineNum">      99</span>              : // ── Component ──────────────────────────────────────────────────────────────────</span>
+<span id="L100"><span class="lineNum">     100</span>              : </span>
+<span id="L101"><span class="lineNum">     101</span>              : interface StatusRingProps {</span>
+<span id="L102"><span class="lineNum">     102</span>              :   /** Current card status — drives ring color. */</span>
+<span id="L103"><span class="lineNum">     103</span>              :   status: CardStatus;</span>
+<span id="L104"><span class="lineNum">     104</span>              :   /** Days remaining until the relevant deadline (fee or promo). */</span>
+<span id="L105"><span class="lineNum">     105</span>              :   daysRemaining: number;</span>
+<span id="L106"><span class="lineNum">     106</span>              :   /** Total day span: from card open date to the deadline. */</span>
+<span id="L107"><span class="lineNum">     107</span>              :   totalDays: number;</span>
+<span id="L108"><span class="lineNum">     108</span>              :   /**</span>
+<span id="L109"><span class="lineNum">     109</span>              :    * Character(s) displayed inside the ring.</span>
+<span id="L110"><span class="lineNum">     110</span>              :    * For known issuers this is an Elder Futhark rune; for unknown issuers</span>
+<span id="L111"><span class="lineNum">     111</span>              :    * it is 1-2 character initials (fallback).</span>
+<span id="L112"><span class="lineNum">     112</span>              :    */</span>
+<span id="L113"><span class="lineNum">     113</span>              :   initials: string;</span>
+<span id="L114"><span class="lineNum">     114</span>              :   /**</span>
+<span id="L115"><span class="lineNum">     115</span>              :    * Card name for the accessible aria-label.</span>
+<span id="L116"><span class="lineNum">     116</span>              :    * When provided the SVG gets role=&quot;img&quot; with a descriptive label;</span>
+<span id="L117"><span class="lineNum">     117</span>              :    * when omitted the SVG stays aria-hidden (decorative fallback).</span>
+<span id="L118"><span class="lineNum">     118</span>              :    */</span>
+<span id="L119"><span class="lineNum">     119</span>              :   cardName?: string;</span>
+<span id="L120"><span class="lineNum">     120</span>              : }</span>
+<span id="L121"><span class="lineNum">     121</span>              : </span>
+<span id="L122"><span class="lineNum">     122</span>              : /**</span>
+<span id="L123"><span class="lineNum">     123</span>              :  * StatusRing — circular SVG progress ring with issuer initials.</span>
+<span id="L124"><span class="lineNum">     124</span>              :  *</span>
+<span id="L125"><span class="lineNum">     125</span>              :  * Usage:</span>
+<span id="L126"><span class="lineNum">     126</span>              :  *   &lt;StatusRing</span>
+<span id="L127"><span class="lineNum">     127</span>              :  *     status={card.status}</span>
+<span id="L128"><span class="lineNum">     128</span>              :  *     daysRemaining={feeDays}</span>
+<span id="L129"><span class="lineNum">     129</span>              :  *     totalDays={totalDays}</span>
+<span id="L130"><span class="lineNum">     130</span>              :  *     initials=&quot;C&quot;</span>
+<span id="L131"><span class="lineNum">     131</span>              :  *   /&gt;</span>
+<span id="L132"><span class="lineNum">     132</span>              :  */</span>
+<span id="L133"><span class="lineNum">     133</span>              : export function StatusRing({</span>
+<span id="L134"><span class="lineNum">     134</span>              :   status,</span>
+<span id="L135"><span class="lineNum">     135</span>              :   daysRemaining,</span>
+<span id="L136"><span class="lineNum">     136</span>              :   totalDays,</span>
+<span id="L137"><span class="lineNum">     137</span>              :   initials,</span>
+<span id="L138"><span class="lineNum">     138</span>              :   cardName,</span>
+<span id="L139"><span class="lineNum">     139</span>              : }: StatusRingProps) {</span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">          12 :   const strokeColor = getRingColor(status, daysRemaining);</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">          12 :   const offset = computeOffset(daysRemaining, totalDays);</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">          12 :   const isUrgent = status !== &quot;closed&quot; &amp;&amp; daysRemaining &lt;= 30;</span></span>
+<span id="L143"><span class="lineNum">     143</span>              : </span>
+<span id="L144"><span class="lineNum">     144</span>              :   // Build a descriptive label for screen readers when cardName is available.</span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">          12 :   const ariaLabel = cardName</span></span>
+<span id="L146"><span class="lineNum">     146</span>              :     ? status === &quot;closed&quot;</span>
+<span id="L147"><span class="lineNum">     147</span>              :       ? `${cardName}: closed`</span>
+<span id="L148"><span class="lineNum">     148</span>              :       : `${cardName}: ${STATUS_LABELS[status] ?? status}, ${daysRemaining} days remaining`</span>
+<span id="L149"><span class="lineNum">     149</span>              :     : undefined;</span>
+<span id="L150"><span class="lineNum">     150</span>              : </span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">          12 :   return (</span></span>
+<span id="L152"><span class="lineNum">     152</span>              :     &lt;svg</span>
+<span id="L153"><span class="lineNum">     153</span>              :       width={SIZE}</span>
+<span id="L154"><span class="lineNum">     154</span>              :       height={SIZE}</span>
+<span id="L155"><span class="lineNum">     155</span>              :       viewBox={`0 0 ${SIZE} ${SIZE}`}</span>
+<span id="L156"><span class="lineNum">     156</span>              :       role={cardName ? &quot;img&quot; : undefined}</span>
+<span id="L157"><span class="lineNum">     157</span>              :       aria-label={ariaLabel}</span>
+<span id="L158"><span class="lineNum">     158</span>              :       aria-hidden={cardName ? undefined : true}</span>
+<span id="L159"><span class="lineNum">     159</span>              :       className=&quot;shrink-0&quot;</span>
+<span id="L160"><span class="lineNum">     160</span>              :     &gt;</span>
+<span id="L161"><span class="lineNum">     161</span>              :       {/* Background track — stone ring at low opacity */}</span>
+<span id="L162"><span class="lineNum">     162</span>              :       &lt;circle</span>
+<span id="L163"><span class="lineNum">     163</span>              :         cx={SIZE / 2}</span>
+<span id="L164"><span class="lineNum">     164</span>              :         cy={SIZE / 2}</span>
+<span id="L165"><span class="lineNum">     165</span>              :         r={RADIUS}</span>
+<span id="L166"><span class="lineNum">     166</span>              :         fill=&quot;none&quot;</span>
+<span id="L167"><span class="lineNum">     167</span>              :         stroke=&quot;hsl(var(--realm-stone))&quot;</span>
+<span id="L168"><span class="lineNum">     168</span>              :         strokeWidth={3}</span>
+<span id="L169"><span class="lineNum">     169</span>              :         opacity={0.2}</span>
+<span id="L170"><span class="lineNum">     170</span>              :       /&gt;</span>
+<span id="L171"><span class="lineNum">     171</span>              : </span>
+<span id="L172"><span class="lineNum">     172</span>              :       {/*</span>
+<span id="L173"><span class="lineNum">     173</span>              :        * Progress ring — clockwise drain as offset increases.</span>
+<span id="L174"><span class="lineNum">     174</span>              :        * rotate(-90deg) rotates the start point to 12 o'clock.</span>
+<span id="L175"><span class="lineNum">     175</span>              :        * strokeLinecap=&quot;round&quot; gives a polished terminal cap.</span>
+<span id="L176"><span class="lineNum">     176</span>              :        */}</span>
+<span id="L177"><span class="lineNum">     177</span>              :       &lt;circle</span>
+<span id="L178"><span class="lineNum">     178</span>              :         cx={SIZE / 2}</span>
+<span id="L179"><span class="lineNum">     179</span>              :         cy={SIZE / 2}</span>
+<span id="L180"><span class="lineNum">     180</span>              :         r={RADIUS}</span>
+<span id="L181"><span class="lineNum">     181</span>              :         fill=&quot;none&quot;</span>
+<span id="L182"><span class="lineNum">     182</span>              :         stroke={strokeColor}</span>
+<span id="L183"><span class="lineNum">     183</span>              :         strokeWidth={3}</span>
+<span id="L184"><span class="lineNum">     184</span>              :         strokeDasharray={CIRCUMFERENCE}</span>
+<span id="L185"><span class="lineNum">     185</span>              :         strokeDashoffset={offset}</span>
+<span id="L186"><span class="lineNum">     186</span>              :         strokeLinecap=&quot;round&quot;</span>
+<span id="L187"><span class="lineNum">     187</span>              :         style={{</span>
+<span id="L188"><span class="lineNum">     188</span>              :           transform: &quot;rotate(-90deg)&quot;,</span>
+<span id="L189"><span class="lineNum">     189</span>              :           transformOrigin: &quot;center&quot;,</span>
+<span id="L190"><span class="lineNum">     190</span>              :           transition: &quot;stroke-dashoffset 0.4s ease-out, stroke 0.3s ease-out&quot;,</span>
+<span id="L191"><span class="lineNum">     191</span>              :           color: strokeColor,</span>
+<span id="L192"><span class="lineNum">     192</span>              :         }}</span>
+<span id="L193"><span class="lineNum">     193</span>              :         className={isUrgent ? &quot;ring--urgent&quot; : undefined}</span>
+<span id="L194"><span class="lineNum">     194</span>              :       /&gt;</span>
+<span id="L195"><span class="lineNum">     195</span>              : </span>
+<span id="L196"><span class="lineNum">     196</span>              :       {/* Issuer initials — centered inside the ring */}</span>
+<span id="L197"><span class="lineNum">     197</span>              :       &lt;text</span>
+<span id="L198"><span class="lineNum">     198</span>              :         x={SIZE / 2}</span>
+<span id="L199"><span class="lineNum">     199</span>              :         y={SIZE / 2}</span>
+<span id="L200"><span class="lineNum">     200</span>              :         textAnchor=&quot;middle&quot;</span>
+<span id="L201"><span class="lineNum">     201</span>              :         dominantBaseline=&quot;central&quot;</span>
+<span id="L202"><span class="lineNum">     202</span>              :         fill={strokeColor}</span>
+<span id="L203"><span class="lineNum">     203</span>              :         fontSize={initials.length &gt; 1 ? &quot;11&quot; : &quot;13&quot;}</span>
+<span id="L204"><span class="lineNum">     204</span>              :         fontWeight=&quot;600&quot;</span>
+<span id="L205"><span class="lineNum">     205</span>              :         fontFamily=&quot;var(--font-heading), serif&quot;</span>
+<span id="L206"><span class="lineNum">     206</span>              :         style={{ userSelect: &quot;none&quot; }}</span>
+<span id="L207"><span class="lineNum">     207</span>              :       &gt;</span>
+<span id="L208"><span class="lineNum">     208</span>              :         {initials.slice(0, 2).toUpperCase()}</span>
+<span id="L209"><span class="lineNum">     209</span>              :       &lt;/text&gt;</span>
+<span id="L210"><span class="lineNum">     210</span>              :     &lt;/svg&gt;</span>
+<span id="L211"><span class="lineNum">     211</span>              :   );</span>
+<span id="L212"><span class="lineNum">     212</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.3.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
