@@ -90,4 +90,9 @@ gh issue comment <NUMBER> --body "## FiremanDecko → Loki Handoff
 - <Tricky scenarios>
 
 **Build:** tsc + build PASS. Ready for QA."
+**Step 8 — Chain continuation (DONE only):**
+If tsc + build both PASS and handoff comment is posted:
+  /fire-next-up --resume #<NUMBER>
+This dispatches Loki (QA) on the same branch to validate the implementation.
+If ANY verify step FAILED: do NOT run this step — stop and leave the issue for manual triage.
 ```

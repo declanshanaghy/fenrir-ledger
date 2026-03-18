@@ -71,6 +71,12 @@ gh issue comment <NUMBER> --body "## Heimdall → Loki Handoff
 - <What to test: input validation, auth checks, error handling>
 
 **Build:** tsc + build PASS. Ready for QA."
+
+**Step 8 — Chain continuation (security fix only):**
+If tsc + build both PASS and handoff comment is posted:
+  /fire-next-up --resume #<NUMBER>
+This dispatches Loki (QA) on the same branch to validate the security fix.
+If ANY verify step FAILED: do NOT run this step — stop and leave the issue for manual triage.
 ```
 
 ## Mode B: Report / Audit (only writes `.md` files, files issues)
@@ -129,4 +135,10 @@ gh issue comment <NUMBER> --body "## Heimdall Handoff
 **Summary:** <brief summary of findings/work>
 
 **Severity counts:** CRITICAL: N, HIGH: N, MEDIUM: N, LOW: N, INFO: N"
+
+**Step 7 — Chain continuation (report/audit):**
+If work is complete, PR is open, and handoff comment is posted:
+  /fire-next-up --resume #<NUMBER>
+This dispatches the next agent (if any) on the same branch.
+If work is incomplete or blocked: do NOT run this step — stop and leave for manual triage.
 ```
