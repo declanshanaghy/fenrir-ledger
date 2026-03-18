@@ -26,7 +26,7 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 | Flag | Effect |
 |------|--------|
 | `--peek` | Show the prioritized Up Next queue — do NOT spawn anything. |
-| `--resume #N` | Resume an interrupted chain for issue #N. Read `templates/resume-flow.md`. |
+| `--resume #N` | Resume an interrupted chain for issue #N **only**. Calls `--resume-detect N` (and optionally `--chain-status N`). Does **NOT** invoke `--status` and does **NOT** auto-advance other issues. Read `templates/resume-flow.md`. |
 | `--resume <session-id>` | Extract issue number from session ID and resume that chain. Session IDs follow the pattern `issue-<N>-step<S>-<agent>-<uuid>` — parse `<N>` as the issue number. Example: `issue-621-step1-firemandecko-8d0410cd` → resume #621. |
 | `--resume` | (no issue number) Full dashboard: scan ALL in-progress chains, **auto-advance ready ones** (dispatch next agents, merge PASS+CI green PRs, move completed to Done), and report status. **If no chains need advancing**, fall through to default dispatch: pick top Up Next item and present for refinement (always refine, even if `skip-refinement` is in body). |
 | `--batch N` | Pull top N **unblocked** items from "Up Next", start chains in parallel. Max 5. |
@@ -104,9 +104,13 @@ gh pr merge 286 --squash --delete-branch   # #269 Loki PASS — merge it
 /fire-next-up --resume #168                # Research review needed
 ```
 
-### Auto-Advance Rules (`--resume` without #N)
+### Auto-Advance Rules (`--resume` without #N — SCOPED COMMANDS EXCLUDED)
 
-When `--resume` finds actions that are clearly ready, execute them immediately:
+> **SCOPE:** These rules apply **only** when `--resume` is called **without** an issue number.
+> When `--resume #N` is given, skip this section entirely — only advance issue N via `--resume-detect N`.
+> No other in-progress chains are scanned, dispatched, or merged.
+
+When `--resume` (no #N) finds actions that are clearly ready, execute them immediately:
 
 | Condition | Auto-Action |
 |-----------|-------------|
