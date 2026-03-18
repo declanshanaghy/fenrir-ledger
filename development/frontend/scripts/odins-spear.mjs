@@ -737,6 +737,16 @@ const commands = {
       console.log(`${DIM}Use "stripe-subs" to list subscription IDs.${RESET}`);
       return;
     }
+    // Retrieve first to check current status before attempting cancellation
+    const sub = await stripe("GET", `/subscriptions/${id}`);
+    if (!sub) {
+      console.log(`\n  ${RED}Subscription not found:${RESET} ${id}\n`);
+      return;
+    }
+    if (sub.status === "canceled") {
+      console.log(`\n  ${DIM}Subscription ${id} is already canceled.${RESET}\n`);
+      return;
+    }
     // Stripe API is source of truth — cancel there, webhooks sync Redis
     const data = await stripe("DELETE", `/subscriptions/${id}`);
     if (!data) return;
