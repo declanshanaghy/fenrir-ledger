@@ -76,11 +76,14 @@ function startServer() {
   // NODE_V8_COVERAGE is set in the env below. Node.js writes V8 coverage JSON files
   // to V8_COVERAGE_DIR when the process exits cleanly (SIGTERM). c8 then reads
   // those files and follows source maps back to src/ to produce LCOV + HTML.
-  const nextBin = path.join(FRONTEND_DIR, "node_modules", ".bin", "next");
+  //
+  // Use the standalone server directly (output: "standalone" in next.config.ts).
+  // `next start` warns when standalone mode is configured — use the built artifact instead.
+  const standaloneServer = path.join(FRONTEND_DIR, ".next/standalone/server.js");
 
   const serverProc = spawn(
     "node",
-    [nextBin, "start", "-p", "9653"],
+    [standaloneServer],
     {
       cwd: FRONTEND_DIR,
       stdio: ["ignore", "pipe", "pipe"],
@@ -88,6 +91,8 @@ function startServer() {
         ...process.env,
         NODE_ENV: "production",
         NODE_V8_COVERAGE: V8_COVERAGE_DIR,
+        PORT: "9653",
+        HOSTNAME: "0.0.0.0",
       },
     },
   );
@@ -171,6 +176,66 @@ function stopServer(serverProc) {
       resolve();
     }, 10_000);
   });
+}
+
+/**
+ * Resolve a src/-relative path with .js extension to the actual TypeScript extension.
+ * Tries .tsx → .ts → .jsx → .js in order, returning the first that exists on disk.
+ */
+function resolveExtension(srcRelPath, frontendDir) {
+  const base = path.join(frontendDir, srcRelPath.replace(/\.js$/, ""));
+  for (const ext of [".tsx", ".ts", ".jsx", ".js"]) {
+    if (existsSync(base + ext)) return srcRelPath.replace(/\.js$/, ext);
+  }
+  return srcRelPath; // keep .js if nothing found
+}
+
+/**
+ * Post-process the Playwright LCOV to remap .next/server/app/ paths → src/app/ paths
+ * and drop node_modules entries.
+ *
+ * c8 captures V8 coverage from compiled .next/server/app/*.js files, which have the
+ * same directory structure as src/app/ but with .js extension. By remapping paths here,
+ * the combine step can merge Playwright + Vitest coverage for the same source files.
+ *
+ * Line numbers from compiled .js won't perfectly match .ts source lines (known limitation),
+ * but file-level and function-level coverage is accurate.
+ */
+function normalizeLcov(lcovPath) {
+  if (!existsSync(lcovPath)) return;
+  const raw = readFileSync(lcovPath, "utf-8");
+  const records = raw.split(/(?<=end_of_record)/);
+  let kept = 0, dropped = 0, remapped = 0;
+  const out = [];
+
+  for (const rec of records) {
+    if (!rec.trim()) continue;
+    const sfMatch = rec.match(/^SF:(.+)$/m);
+    if (!sfMatch) continue;
+    const sf = sfMatch[1].trim();
+
+    // Drop node_modules entirely
+    if (sf.startsWith("node_modules/")) { dropped++; continue; }
+
+    // Remap .next/server/app/ → src/app/
+    if (sf.startsWith(".next/server/app/")) {
+      const srcPath = sf.replace(/^\.next\/server\//, "src/");
+      const resolved = resolveExtension(srcPath, FRONTEND_DIR);
+      out.push(rec.replace(/^SF:.+$/m, `SF:${resolved}`));
+      remapped++;
+      kept++;
+      continue;
+    }
+
+    // Keep src/ paths as-is (Vitest paths, in case E2E-only mode is used)
+    if (sf.startsWith("src/")) { out.push(rec); kept++; continue; }
+
+    // Drop everything else (.next/server/chunks/, .next/static/, webpack:// etc.)
+    dropped++;
+  }
+
+  writeFileSync(lcovPath, out.join(""));
+  log(`LCOV normalized: ${kept} kept (${remapped} remapped from .next/server/app/), ${dropped} dropped`);
 }
 
 function generateReports() {
@@ -373,6 +438,7 @@ async function main() {
   }
 
   generateReports();
+  normalizeLcov(path.join(REPORTS_DIR, "playwright/lcov.info"));
   applyFenrirTheme(path.join(REPORTS_DIR, "playwright"));
 
   // Phase 3: Merge coverage reports
