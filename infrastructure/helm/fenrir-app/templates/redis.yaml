@@ -1,4 +1,19 @@
 {{- if .Values.redis.enabled }}
+# Custom StorageClass with Retain reclaim policy — prevents PV deletion on PVC removal.
+# GKE default StorageClasses use Delete; this ensures Redis data survives namespace teardown.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: redis-retain
+  labels:
+    {{- include "fenrir-app.redisLabels" . | nindent 4 }}
+provisioner: pd.csi.storage.gke.io
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+parameters:
+  type: pd-standard
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -51,6 +66,7 @@ spec:
         name: redis-data
       spec:
         accessModes: [{{ .Values.redis.persistence.accessMode | quote }}]
+        storageClassName: {{ .Values.redis.persistence.storageClassName | quote }}
         resources:
           requests:
             storage: {{ .Values.redis.persistence.size }}

@@ -144,6 +144,9 @@ redis:
   persistence:
     size: 1Gi
     accessMode: ReadWriteOnce
+    # Custom StorageClass with reclaimPolicy: Retain — PV survives PVC deletion.
+    # Defined in templates/redis.yaml. Prevents cloud sync data loss on redeploy.
+    storageClassName: "redis-retain"
 
   service:
     port: 6379
