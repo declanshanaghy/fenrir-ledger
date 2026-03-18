@@ -55,27 +55,30 @@ export const test = base.extend({
       }),
     );
 
+    // Start V8 JS coverage collection via CDP before tests run.
+    // This captures client-side JavaScript execution coverage directly
+    // from the browser — no build-time instrumentation needed.
+    await page.coverage.startJSCoverage({ resetOnNavigation: false });
+
     await use(page);
 
-    // Collect Istanbul coverage from browser after each test.
-    // swc-plugin-coverage-instrument injects __coverage__ at build time.
+    // Collect V8 coverage from the browser and append to coverage file.
     try {
-      const coverage = await page.evaluate(
-        () => (window as unknown as { __coverage__?: Record<string, unknown> }).__coverage__ ?? null,
-      );
-      if (coverage) {
+      const entries = await page.coverage.stopJSCoverage();
+      if (entries.length > 0) {
         const coverageDir = path.resolve(__dirname, "../../../quality/.coverage-tmp");
-        const coverageFile = path.join(coverageDir, "browser-coverage.json");
+        const coverageFile = path.join(coverageDir, "v8-browser-coverage.json");
         mkdirSync(coverageDir, { recursive: true });
 
-        let merged: Record<string, unknown> = coverage;
+        // Append entries to existing coverage (accumulate across tests)
+        let all = entries;
         if (existsSync(coverageFile)) {
           try {
             const existing = JSON.parse(readFileSync(coverageFile, "utf-8"));
-            merged = { ...existing, ...coverage };
+            all = [...existing, ...entries];
           } catch { /* corrupt — overwrite */ }
         }
-        writeFileSync(coverageFile, JSON.stringify(merged), "utf-8");
+        writeFileSync(coverageFile, JSON.stringify(all), "utf-8");
       }
     } catch { /* page closed — skip */ }
   },

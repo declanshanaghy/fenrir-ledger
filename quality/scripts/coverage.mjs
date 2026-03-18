@@ -66,11 +66,8 @@ function build() {
     log("Skipping build (--skip-build)");
     return;
   }
-  log("Building Next.js app with SWC Istanbul instrumentation (ISTANBUL_COVERAGE=1)...");
-  run("npm run build", {
-    cwd: FRONTEND_DIR,
-    env: { ...process.env, ISTANBUL_COVERAGE: "1" },
-  });
+  log("Building Next.js app...");
+  run("npm run build", { cwd: FRONTEND_DIR });
 }
 
 function startServer() {
@@ -147,7 +144,11 @@ function runTests(extraArgs = []) {
   log("Running Playwright tests...");
   const pwArgs = ["playwright", "test", "--config", "playwright.config.ts", ...extraArgs];
   try {
-    run(`npx ${pwArgs.join(" ")}`, { cwd: FRONTEND_DIR });
+    // Set SERVER_URL so Playwright skips its own webServer (we already started one).
+    run(`npx ${pwArgs.join(" ")}`, {
+      cwd: FRONTEND_DIR,
+      env: { ...process.env, SERVER_URL: "http://localhost:9653" },
+    });
   } catch {
     log("Some tests failed — continuing to generate coverage report from partial data");
   }
@@ -173,25 +174,56 @@ function stopServer(serverProc) {
 }
 
 function generateReports() {
-  // Convert Istanbul browser coverage (window.__coverage__) to LCOV + HTML.
-  // The coverage JSON was collected by Playwright tests via the coverage fixture.
+  // Process V8 browser coverage collected by Playwright's page.coverage API.
+  // The fixture writes CDP coverage entries to v8-browser-coverage.json.
+  // We convert these to c8-compatible format and generate LCOV + HTML.
   const reportsDir = combined ? path.join(REPORTS_DIR, "playwright") : REPORTS_DIR;
   mkdirSync(reportsDir, { recursive: true });
 
-  const browserCoverage = path.join(V8_COVERAGE_DIR, "browser-coverage.json");
+  const browserCoverage = path.join(V8_COVERAGE_DIR, "v8-browser-coverage.json");
   if (!existsSync(browserCoverage)) {
-    log("No browser coverage data found — E2E tests may not have collected window.__coverage__");
-    log("Hint: ensure Playwright tests call collectCoverage(page) after each navigation");
+    log("No browser coverage data found — Playwright tests may not have run or collected coverage");
     return;
   }
 
-  log("Generating Playwright coverage reports from Istanbul browser data...");
+  log("Generating Playwright coverage reports from V8 browser data...");
 
-  const collectScript = path.join(__dirname, "collect-browser-coverage.mjs");
+  // Convert Playwright's CDP coverage format to V8 coverage JSON format
+  // that c8 can process. CDP entries have { url, source, functions[] }.
   try {
-    run(`node "${collectScript}" --input "${browserCoverage}" --output "${reportsDir}"`, { cwd: REPO_ROOT });
-  } catch {
-    log("Browser coverage report generation had warnings — reports may still be valid");
+    const entries = JSON.parse(readFileSync(browserCoverage, "utf-8"));
+    // Filter to only app code (not node_modules, extensions, etc.)
+    const appEntries = entries.filter((e) =>
+      e.url && (e.url.includes("/_next/") || e.url.includes("/ledger")) && !e.url.includes("node_modules")
+    );
+
+    if (appEntries.length === 0) {
+      log("No app-relevant coverage entries found in browser data");
+      return;
+    }
+
+    // Write in V8 coverage JSON format for c8
+    const v8Format = { result: appEntries.map((e) => ({
+      scriptId: "0",
+      url: e.url,
+      functions: e.functions || [],
+    }))};
+    const v8File = path.join(V8_COVERAGE_DIR, "coverage-browser-0.json");
+    writeFileSync(v8File, JSON.stringify(v8Format), "utf-8");
+    log(`Converted ${appEntries.length} browser coverage entries to V8 format`);
+
+    const c8Args = [
+      "c8", "report",
+      "--temp-directory", V8_COVERAGE_DIR,
+      "--reporter", "text-summary",
+      "--reporter", "html",
+      "--reporter", "lcov",
+      "--reports-dir", reportsDir,
+      "--exclude", "node_modules/**",
+    ];
+    run(`npx ${c8Args.join(" ")}`, { cwd: FRONTEND_DIR });
+  } catch (err) {
+    log(`Browser coverage report generation failed: ${err.message}`);
   }
 
   const relDir = path.relative(REPO_ROOT, reportsDir);
