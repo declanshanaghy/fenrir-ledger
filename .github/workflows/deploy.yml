@@ -1,49 +1,30 @@
 # --------------------------------------------------------------------------
-# Unified CI/CD Pipeline — Terraform + Build + Deploy to GKE Autopilot
+# Fenrir Ledger — Unified CI/CD Pipeline
 #
-# Runs on every push to main:
-#   1. Terraform init/plan/apply (idempotent — no-ops if nothing changed)
-#   2. Docker build & push to Google Artifact Registry
-#   3. Rolling deployment to GKE Autopilot (zero-downtime), per-service parallel jobs
-#   4. Post-deploy health check against /api/health
+# Sections:
+#   1. Terraform          — GCP infrastructure (runs when .tf files change)
+#   2. GKE                — Detect changes + build Docker images
+#   3. Namespaces         — Bootstrap cluster (namespaces, SAs, quotas)
+#   4. App + Testing      — Build → unit tests → deploy → E2E (post-deploy)
+#   5. Odin's Throne      — Monitor API + UI deploy
+#   6. Analytics          — Umami self-hosted analytics
+#   7. Marketing Engine   — n8n workflow automation (marketing.fenrirledger.com)
 #
 # Required GitHub Secrets:
-#   GCP_PROJECT_ID              — Google Cloud project ID
-#   GCP_SA_KEY                  — Base64-encoded service account JSON key
-#   GCP_REGION                  — GCP region (e.g. us-central1)
-#   GCP_ZONE                    — GCP zone (e.g. us-central1-a, used by Terraform)
-#   GCP_REGION                  — GCP region (e.g. us-central1, used by GKE)
-#   GKE_CLUSTER_NAME            — GKE cluster name (e.g. fenrir-autopilot)
-#   GOOGLE_CLIENT_SECRET        — OAuth client secret
-#   NEXT_PUBLIC_GOOGLE_CLIENT_ID — OAuth client ID
-#   GOOGLE_PICKER_API_KEY       — Google Picker API key
-#   FENRIR_ANTHROPIC_API_KEY    — Anthropic API key
-#   ENTITLEMENT_ENCRYPTION_KEY  — AES-256 encryption key
-#   STRIPE_SECRET_KEY           — Stripe secret key
-#   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY — Stripe publishable key
-#   STRIPE_WEBHOOK_SECRET       — Stripe webhook signing secret
-#   STRIPE_PRICE_ID             — Stripe price ID
-#   (REDIS_URL is set inline — not a secret, just the in-cluster service URL)
-#   TF_VAR_BILLING_ACCOUNT_ID   — GCP billing account ID for Terraform
-#   CLAUDE_CODE_OAUTH_TOKEN     — OAuth subscription token for agent sandboxes (claude setup-token)
-#   GH_TOKEN_AGENTS             — GitHub PAT for agent repo access (commits, PRs, issues)
-#   UMAMI_OAUTH2_PROXY_COOKIE_SECRET — 32-byte cookie secret for Umami oauth2-proxy sidecar
-#                                       Generate: openssl rand -hex 16  (32 hex chars = 32 bytes)
-#                                       MUST be exactly 16, 24, or 32 bytes — see oauth2-proxy docs
-#   MONITOR_OAUTH2_PROXY_COOKIE_SECRET — 32-byte cookie secret for Odin's Throne oauth2-proxy sidecar
-#                                        Generate: openssl rand -hex 16  (32 hex chars = 32 bytes)
-#                                        MUST be exactly 16, 24, or 32 bytes — see oauth2-proxy docs
-#   ODINS_THRONE_CLIENT_ID            — Google OAuth client ID for Odin's Throne
-#   ODINS_THRONE_CLIENT_SECRET        — Google OAuth client secret for Odin's Throne
-#
-# Required IAM permissions on the GCP_SA_KEY service account:
-#   compute.urlMaps.invalidateCache — needed for post-deploy CDN cache invalidation
-#   Grant via: roles/compute.networkAdmin  OR  a custom role with only this permission
+#   GCP_PROJECT_ID, GCP_SA_KEY, GCP_REGION, GCP_ZONE, GKE_CLUSTER_NAME
+#   GOOGLE_CLIENT_SECRET, NEXT_PUBLIC_GOOGLE_CLIENT_ID, GOOGLE_PICKER_API_KEY
+#   FENRIR_ANTHROPIC_API_KEY, ENTITLEMENT_ENCRYPTION_KEY
+#   STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID
+#   TF_VAR_BILLING_ACCOUNT_ID, TF_VAR_UPTIME_CHECK_HOST
+#   CLAUDE_CODE_OAUTH_TOKEN, GH_TOKEN_AGENTS
+#   UMAMI_OAUTH2_PROXY_COOKIE_SECRET  — 32-byte cookie secret for Umami oauth2-proxy
+#   MONITOR_OAUTH2_PROXY_COOKIE_SECRET — 32-byte cookie secret for Odin's Throne oauth2-proxy
+#   ODINS_THRONE_CLIENT_ID, ODINS_THRONE_CLIENT_SECRET
 # --------------------------------------------------------------------------
 
 name: Deploy to GKE
 
-# Serial deploys — queue runs one after another, never cancel in-flight
+# Serial deploys — queue runs, never cancel in-flight
 concurrency:
   group: deploy-main
   cancel-in-progress: false
@@ -58,7 +39,7 @@ on:
         required: false
         type: string
       skip_deploy:
-        description: "Build only — skip K8s deployment"
+        description: "Build + test only — skip all K8s deployments"
         required: false
         type: boolean
         default: false
@@ -76,90 +57,16 @@ env:
   IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
 
 jobs:
-  # --------------------------------------------------------------------------
-  # Job 0: Detect which services changed — gates all build/deploy jobs
-  #
-  # Outputs (8):
-  #   app        — development/frontend/, Dockerfile, package*.json
-  #   k8s-app    — infrastructure/k8s/app/ OR infrastructure/helm/fenrir-app/ (triggers deploy-app)
-  #   monitor    — development/monitor/
-  #   monitor-ui — development/monitor-ui/
-  #   helm-odin  — infrastructure/helm/odin-throne/
-  #   infra      — infrastructure/terraform/, infrastructure/monitoring/
-  #   bootstrap  — infrastructure/helm/fenrir-bootstrap/
-  #   umami      — infrastructure/helm/umami/
-  # --------------------------------------------------------------------------
-  detect-changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      app: ${{ steps.filter.outputs.app }}
-      k8s-app: ${{ steps.filter.outputs.k8s-app }}
-      monitor: ${{ steps.filter.outputs.monitor }}
-      monitor-ui: ${{ steps.filter.outputs.monitor-ui }}
-      helm-odin: ${{ steps.filter.outputs.helm-odin }}
-      infra: ${{ steps.filter.outputs.infra }}
-      bootstrap: ${{ steps.filter.outputs.bootstrap }}
-      umami: ${{ steps.filter.outputs.umami }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 2
 
-      - name: Detect changed paths
-        id: filter
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "app=true" >> "$GITHUB_OUTPUT"
-            echo "k8s-app=true" >> "$GITHUB_OUTPUT"
-            echo "monitor=true" >> "$GITHUB_OUTPUT"
-            echo "monitor-ui=true" >> "$GITHUB_OUTPUT"
-            echo "helm-odin=true" >> "$GITHUB_OUTPUT"
-            echo "infra=true" >> "$GITHUB_OUTPUT"
-            echo "bootstrap=true" >> "$GITHUB_OUTPUT"
-            echo "umami=true" >> "$GITHUB_OUTPUT"
-            echo "### Manual dispatch — building all services" >> $GITHUB_STEP_SUMMARY
-            exit 0
-          fi
-          CHANGED=$(git diff --name-only HEAD~1 HEAD)
-          check() { echo "$CHANGED" | grep -qE "$1" && echo "true" || echo "false"; }
-          APP=$(check "^development/frontend/|^Dockerfile$|^package\.json$|^package-lock\.json$")
-          K8S_APP=$(check "^infrastructure/k8s/app/|^infrastructure/helm/fenrir-app/")
-          MONITOR=$(check "^development/monitor/")
-          MONITOR_UI=$(check "^development/monitor-ui/")
-          HELM_ODIN=$(check "^infrastructure/helm/odin-throne/")
-          INFRA=$(check "^infrastructure/.*\.tf$|^infrastructure/firestore/")
-          BOOTSTRAP=$(check "^infrastructure/helm/fenrir-bootstrap/")
-          UMAMI=$(check "^infrastructure/helm/umami/")
-          echo "app=$APP" >> "$GITHUB_OUTPUT"
-          echo "k8s-app=$K8S_APP" >> "$GITHUB_OUTPUT"
-          echo "monitor=$MONITOR" >> "$GITHUB_OUTPUT"
-          echo "monitor-ui=$MONITOR_UI" >> "$GITHUB_OUTPUT"
-          echo "helm-odin=$HELM_ODIN" >> "$GITHUB_OUTPUT"
-          echo "infra=$INFRA" >> "$GITHUB_OUTPUT"
-          echo "bootstrap=$BOOTSTRAP" >> "$GITHUB_OUTPUT"
-          echo "umami=$UMAMI" >> "$GITHUB_OUTPUT"
-          echo "### Changed Services" >> $GITHUB_STEP_SUMMARY
-          echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| app | $APP |" >> $GITHUB_STEP_SUMMARY
-          echo "| k8s-app | $K8S_APP |" >> $GITHUB_STEP_SUMMARY
-          echo "| monitor | $MONITOR |" >> $GITHUB_STEP_SUMMARY
-          echo "| monitor-ui | $MONITOR_UI |" >> $GITHUB_STEP_SUMMARY
-          echo "| helm-odin | $HELM_ODIN |" >> $GITHUB_STEP_SUMMARY
-          echo "| infra | $INFRA |" >> $GITHUB_STEP_SUMMARY
-          echo "| bootstrap | $BOOTSTRAP |" >> $GITHUB_STEP_SUMMARY
-          echo "| umami | $UMAMI |" >> $GITHUB_STEP_SUMMARY
+  # ============================================================================
+  # SECTION 1 — TERRAFORM
+  # Manage GCP infrastructure. Runs only when .tf files change.
+  # ============================================================================
 
-  # --------------------------------------------------------------------------
-  # Job 1: Terraform — ensure GKE infrastructure is up to date
-  # --------------------------------------------------------------------------
   terraform:
-    name: Terraform Plan & Apply
-    needs: detect-changes
-    if: ${{ !inputs.skip_terraform && needs.detect-changes.outputs.infra == 'true' }}
+    name: "Terraform: Plan & Apply"
     runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_terraform }}
     permissions:
       contents: read
       id-token: write
@@ -168,8 +75,7 @@ jobs:
         working-directory: infrastructure
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -196,19 +102,68 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -input=false -auto-approve tfplan
 
-      - name: Terraform Output Summary
+      - name: Summary
         run: |
           echo "### Terraform Applied" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           terraform output -no-color >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-  # --------------------------------------------------------------------------
-  # Job 2: Build Docker image & push to Artifact Registry
-  # --------------------------------------------------------------------------
-  build-and-push:
-    name: Build & Push Image
+  # ============================================================================
+  # SECTION 2 — GKE
+  # Detect which services changed and build Docker images for changed services.
+  # ============================================================================
+
+  detect-changes:
+    name: "GKE: Detect Changes"
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+      k8s-app: ${{ steps.filter.outputs.k8s-app }}
+      monitor: ${{ steps.filter.outputs.monitor }}
+      monitor-ui: ${{ steps.filter.outputs.monitor-ui }}
+      helm-odin: ${{ steps.filter.outputs.helm-odin }}
+      infra: ${{ steps.filter.outputs.infra }}
+      bootstrap: ${{ steps.filter.outputs.bootstrap }}
+      umami: ${{ steps.filter.outputs.umami }}
+      marketing: ${{ steps.filter.outputs.marketing }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed paths
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            for key in app k8s-app monitor monitor-ui helm-odin infra bootstrap umami marketing; do
+              echo "$key=true" >> "$GITHUB_OUTPUT"
+            done
+            echo "### Manual dispatch — all services will deploy" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          check() { echo "$CHANGED" | grep -qE "$1" && echo "true" || echo "false"; }
+          echo "app=$(check    '^development/frontend/|^Dockerfile$|^package\.json$|^package-lock\.json$')" >> "$GITHUB_OUTPUT"
+          echo "k8s-app=$(check '^infrastructure/k8s/app/|^infrastructure/helm/fenrir-app/')"               >> "$GITHUB_OUTPUT"
+          echo "monitor=$(check '^development/monitor/')"                                                    >> "$GITHUB_OUTPUT"
+          echo "monitor-ui=$(check '^development/monitor-ui/')"                                              >> "$GITHUB_OUTPUT"
+          echo "helm-odin=$(check '^infrastructure/helm/odin-throne/')"                                      >> "$GITHUB_OUTPUT"
+          echo "infra=$(check   '^infrastructure/.*\.tf$|^infrastructure/firestore/')"                       >> "$GITHUB_OUTPUT"
+          echo "bootstrap=$(check '^infrastructure/helm/fenrir-bootstrap/')"                                 >> "$GITHUB_OUTPUT"
+          echo "umami=$(check   '^infrastructure/helm/umami/')"                                              >> "$GITHUB_OUTPUT"
+          echo "marketing=$(check '^infrastructure/k8s/n8n/')"                                              >> "$GITHUB_OUTPUT"
+          echo "### Changed Services" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          for key in app k8s-app monitor monitor-ui helm-odin infra bootstrap umami marketing; do
+            val=$(grep "^${key}=" "$GITHUB_OUTPUT" | cut -d= -f2 | tail -1)
+            echo "| $key | $val |" >> $GITHUB_STEP_SUMMARY
+          done
+
+  build-app-image:
+    name: "GKE: Build App Image"
     needs: [detect-changes]
     if: needs.detect-changes.outputs.app == 'true' || needs.detect-changes.outputs.k8s-app == 'true'
     runs-on: ubuntu-latest
@@ -220,24 +175,21 @@ jobs:
       full_image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
+      - uses: google-github-actions/setup-gcloud@v3
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@v4
 
-      - name: Build and push app image
+      - name: Build and push
         id: build
         uses: docker/build-push-action@v7
         with:
@@ -255,48 +207,37 @@ jobs:
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
             NEXT_PUBLIC_UMAMI_WEBSITE_ID=ce25059e-57c4-44f9-ad92-389d2bd15e4d
 
-      - name: Output image details
+      - name: Summary
         run: |
-          echo "### Docker Image Published" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Registry:** \`${{ env.REGISTRY }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image:** \`${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "### App Image Published" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Digest:** \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
-  # --------------------------------------------------------------------------
-  # Job 2b: Build Odin's Throne monitor image & push to Artifact Registry
-  # --------------------------------------------------------------------------
-  build-and-push-monitor:
-    name: Build & Push Monitor Image
+  build-monitor-image:
+    name: "GKE: Build Monitor Image"
     needs: [detect-changes]
     if: needs.detect-changes.outputs.monitor == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
-    outputs:
-      full_image: ${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
+      - uses: google-github-actions/setup-gcloud@v3
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@v4
 
-      - name: Build and push monitor image
+      - name: Build and push
         id: build-monitor
         uses: docker/build-push-action@v7
         with:
@@ -309,47 +250,37 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Output monitor image details
+      - name: Summary
         run: |
           echo "### Monitor Image Published" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image:** \`${{ env.MONITOR_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Digest:** \`${{ steps.build-monitor.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
-  # --------------------------------------------------------------------------
-  # Job 2c: Build monitor-ui image & push to Artifact Registry
-  # --------------------------------------------------------------------------
-  build-and-push-monitor-ui:
-    name: Build & Push Monitor UI Image
+  build-monitor-ui-image:
+    name: "GKE: Build Monitor UI Image"
     needs: [detect-changes]
     if: needs.detect-changes.outputs.monitor-ui == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
-    outputs:
-      full_image: ${{ env.REGISTRY }}/${{ env.MONITOR_UI_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
+      - uses: google-github-actions/setup-gcloud@v3
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@v4
 
-      - name: Build and push monitor-ui image
+      - name: Build and push
         id: build-monitor-ui
         uses: docker/build-push-action@v7
         with:
@@ -362,23 +293,101 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Output monitor-ui image details
+      - name: Summary
         run: |
           echo "### Monitor UI Image Published" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image:** \`${{ env.MONITOR_UI_IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Digest:** \`${{ steps.build-monitor-ui.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
-  # --------------------------------------------------------------------------
-  # Job 2d: Test App (pre-deploy) — tsc, unit, build gate before deploy
-  # E2E tests run POST-deploy (see e2e-tests job below) so they validate
-  # the actual deployed version rather than the previous production state.
-  # --------------------------------------------------------------------------
-  test-app:
-    name: Test App
-    needs: build-and-push
-    if: needs.build-and-push.result == 'success'
+  # ============================================================================
+  # SECTION 3 — NAMESPACES
+  # Bootstrap cluster: namespaces, service accounts, resource quotas.
+  # Runs on every deploy — idempotent via helm upgrade --install.
+  # ============================================================================
+
+  namespaces:
+    name: "Namespaces: Bootstrap Cluster"
+    needs: [detect-changes]
+    if: ${{ !inputs.skip_deploy }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+          location: ${{ secrets.GCP_REGION }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: 'v3.20.1'
+
+      - name: Pre-adopt bootstrap resources for Helm
+        # Resources created outside Helm lack ownership metadata.
+        # Idempotently annotate so helm upgrade --install succeeds.
+        run: |
+          RELEASE_NAME=fenrir-bootstrap
+          RELEASE_NS=default
+          adopt() {
+            local kind=$1 name=$2 ns=${3:-}
+            local ns_flag=""; [ -n "$ns" ] && ns_flag="-n $ns"
+            if kubectl get "$kind" "$name" $ns_flag &>/dev/null; then
+              kubectl annotate "$kind" "$name" $ns_flag \
+                "meta.helm.sh/release-name=$RELEASE_NAME" \
+                "meta.helm.sh/release-namespace=$RELEASE_NS" --overwrite
+              kubectl label "$kind" "$name" $ns_flag \
+                "app.kubernetes.io/managed-by=Helm" --overwrite
+              echo "✅ adopted $kind/$name${ns:+ in $ns}"
+            else
+              echo "⏭️  $kind/$name${ns:+ in $ns} not found — skipping"
+            fi
+          }
+          adopt namespace fenrir-app
+          adopt namespace fenrir-agents
+          adopt namespace fenrir-analytics
+          adopt namespace fenrir-monitor
+          adopt serviceaccount fenrir-app-sa    fenrir-app
+          adopt serviceaccount fenrir-agents-sa fenrir-agents
+          adopt secret         agent-secrets    fenrir-agents
+
+      - name: Deploy bootstrap chart
+        run: |
+          helm upgrade --install fenrir-bootstrap \
+            ./infrastructure/helm/fenrir-bootstrap \
+            -f ./infrastructure/helm/fenrir-bootstrap/values-prod.yaml \
+            --wait --timeout=3m
+
+      - name: Verify namespaces
+        run: |
+          echo "### Namespaces" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get namespaces fenrir-app fenrir-agents fenrir-analytics fenrir-monitor >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # SECTION 4 — APP + TESTING
+  # Pre-deploy: TypeScript check + unit tests + build.
+  # Deploy:     Helm rollout to GKE + CDN cache invalidation.
+  # Post-deploy: Playwright E2E against the newly deployed version.
+  # ============================================================================
+
+  app-pre-deploy-tests:
+    name: "App: Pre-Deploy Tests"
+    needs: [build-app-image]
+    if: needs.build-app-image.result == 'success'
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
@@ -386,11 +395,9 @@ jobs:
       NEXT_PUBLIC_APP_VERSION: ${{ github.sha }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-      - name: Set up Node 20
-        uses: actions/setup-node@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -409,134 +416,38 @@ jobs:
       - name: Build check
         run: bash quality/scripts/verify.sh --step build
 
-      - name: Upload test reports on failure
+      - name: Upload reports on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: test-reports-${{ github.sha }}
+          name: pre-deploy-reports-${{ github.sha }}
           path: quality/reports/
           retention-days: 7
 
-  # --------------------------------------------------------------------------
-  # Job 3a: Bootstrap cluster — namespaces, SAs, quotas, network policies
-  # Runs before all other deploy jobs. Idempotent via helm upgrade --install.
-  # --------------------------------------------------------------------------
-  deploy-bootstrap:
-    name: Deploy Bootstrap
-    needs: [detect-changes]
-    if: ${{ !inputs.skip_deploy }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
-
-      - name: Get GKE credentials
-        uses: google-github-actions/get-gke-credentials@v3
-        with:
-          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GCP_REGION }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Set up Helm
-        uses: azure/setup-helm@v4
-        with:
-          version: 'v3.20.1'
-
-      - name: Pre-adopt bootstrap resources for Helm
-        # Namespaces and SAs may have been created outside Helm (kubectl apply).
-        # Helm refuses to adopt resources missing its ownership metadata.
-        # This step idempotently adds the required labels/annotations so that
-        # `helm upgrade --install` succeeds regardless of how resources were created.
-        run: |
-          RELEASE_NAME=fenrir-bootstrap
-          RELEASE_NS=default
-
-          adopt() {
-            local kind=$1 name=$2 ns=${3:-}
-            local ns_flag=""
-            [ -n "$ns" ] && ns_flag="-n $ns"
-            if kubectl get "$kind" "$name" $ns_flag &>/dev/null; then
-              kubectl annotate "$kind" "$name" $ns_flag \
-                "meta.helm.sh/release-name=$RELEASE_NAME" \
-                "meta.helm.sh/release-namespace=$RELEASE_NS" \
-                --overwrite
-              kubectl label "$kind" "$name" $ns_flag \
-                "app.kubernetes.io/managed-by=Helm" \
-                --overwrite
-              echo "✅ adopted $kind/$name${ns:+ in $ns}"
-            else
-              echo "⏭️  $kind/$name${ns:+ in $ns} not found — skipping"
-            fi
-          }
-
-          # Namespaces
-          adopt namespace fenrir-app
-          adopt namespace fenrir-agents
-          adopt namespace fenrir-analytics
-          adopt namespace fenrir-monitor
-
-          # ServiceAccounts
-          adopt serviceaccount fenrir-app-sa    fenrir-app
-          adopt serviceaccount fenrir-agents-sa fenrir-agents
-
-          # Secrets
-          adopt secret agent-secrets fenrir-agents
-
-      - name: Deploy bootstrap chart
-        run: |
-          helm upgrade --install fenrir-bootstrap \
-            ./infrastructure/helm/fenrir-bootstrap \
-            -f ./infrastructure/helm/fenrir-bootstrap/values-prod.yaml \
-            --wait \
-            --timeout=3m
-
-      - name: Verify bootstrap
-        run: |
-          echo "### Bootstrap Deploy" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get namespaces fenrir-app fenrir-agents fenrir-analytics >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-  # --------------------------------------------------------------------------
-  # Job 3b: Deploy Fenrir App to GKE
-  # --------------------------------------------------------------------------
-  deploy-fenrir-app:
-    name: Deploy Fenrir App
-    needs: [test-app, build-and-push, detect-changes, deploy-bootstrap]
+  app-deploy:
+    name: "App: Deploy to GKE"
+    needs: [app-pre-deploy-tests, build-app-image, detect-changes, namespaces]
     if: >-
       always() && !inputs.skip_deploy &&
-      (needs.build-and-push.result == 'success' ||
-       (needs.build-and-push.result == 'skipped' && needs.detect-changes.outputs.k8s-app == 'true')) &&
-      needs.build-and-push.result != 'failure' &&
-      (needs.test-app.result == 'success' || needs.test-app.result == 'skipped')
+      (needs.build-app-image.result == 'success' ||
+       (needs.build-app-image.result == 'skipped' && needs.detect-changes.outputs.k8s-app == 'true')) &&
+      needs.build-app-image.result != 'failure' &&
+      needs.namespaces.result == 'success' &&
+      (needs.app-pre-deploy-tests.result == 'success' || needs.app-pre-deploy-tests.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
+      - uses: google-github-actions/setup-gcloud@v3
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -545,25 +456,20 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Ensure namespaces and service accounts
+      - name: Ensure namespaces and workload identity bindings
         run: |
-          # App namespace
           kubectl create namespace fenrir-app --dry-run=client -o yaml | kubectl apply -f -
           kubectl create serviceaccount fenrir-app-sa \
             --namespace=fenrir-app --dry-run=client -o yaml | kubectl apply -f -
-          kubectl annotate serviceaccount fenrir-app-sa \
-            --namespace=fenrir-app --overwrite \
+          kubectl annotate serviceaccount fenrir-app-sa --namespace=fenrir-app --overwrite \
             iam.gke.io/gcp-service-account=fenrir-app-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
-
-          # Agents namespace
           kubectl create namespace fenrir-agents --dry-run=client -o yaml | kubectl apply -f -
           kubectl create serviceaccount fenrir-agents-sa \
             --namespace=fenrir-agents --dry-run=client -o yaml | kubectl apply -f -
-          kubectl annotate serviceaccount fenrir-agents-sa \
-            --namespace=fenrir-agents --overwrite \
+          kubectl annotate serviceaccount fenrir-agents-sa --namespace=fenrir-agents --overwrite \
             iam.gke.io/gcp-service-account=fenrir-agents-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
 
-      - name: Create/update K8s secrets
+      - name: Sync app secrets
         run: |
           kubectl create secret generic fenrir-app-secrets \
             --namespace=fenrir-app \
@@ -581,7 +487,7 @@ jobs:
             --from-literal=NEXT_PUBLIC_APP_VERSION="${{ github.sha }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Create/update agent secrets
+      - name: Sync agent secrets
         run: |
           kubectl create secret generic agent-secrets \
             --namespace=fenrir-agents \
@@ -589,32 +495,27 @@ jobs:
             --from-literal=gh-token="${{ secrets.GH_TOKEN_AGENTS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Resolve image tag from cluster (Helm/K8s-only deploy)
+      - name: Resolve image tag
         id: resolve-tag
         run: |
-          # When only k8s manifests changed (no new image built), use the tag
-          # already running in the cluster. Fallback to IMAGE_TAG for first deploys.
-          if [ "${{ needs.build-and-push.result }}" = "skipped" ]; then
+          if [ "${{ needs.build-app-image.result }}" = "skipped" ]; then
             CLUSTER_TAG=$(kubectl get deployment fenrir-app -n fenrir-app \
               -o jsonpath='{.spec.template.spec.containers[?(@.name=="fenrir-app")].image}' 2>/dev/null \
               | rev | cut -d: -f1 | rev)
             if [ -n "$CLUSTER_TAG" ] && [ "$CLUSTER_TAG" != "fenrir-app" ]; then
               echo "tag=$CLUSTER_TAG" >> "$GITHUB_OUTPUT"
-              echo "Resolved cluster tag: $CLUSTER_TAG"
             else
               echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
-              echo "No existing deployment found, using IMAGE_TAG: ${{ env.IMAGE_TAG }}"
             fi
           else
             echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@v4
         with:
           version: 'v3.20.1'
 
-      - name: Deploy with Helm
+      - name: Helm deploy
         run: |
           helm upgrade --install fenrir-app \
             ./infrastructure/helm/fenrir-app \
@@ -622,85 +523,45 @@ jobs:
             -f ./infrastructure/helm/fenrir-app/values-prod.yaml \
             --set app.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set app.image.tag=${{ steps.resolve-tag.outputs.tag }} \
-            --wait \
-            --timeout=5m
+            --wait --timeout=5m
 
-      - name: Verify fenrir-app
+      - name: Verify rollout
         run: |
-          echo "### Fenrir App Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "### App Deploy" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           kubectl get pods -n fenrir-app -l app.kubernetes.io/name=fenrir-app >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           kubectl rollout status deployment/fenrir-app -n fenrir-app --timeout=60s
 
-      # --------------------------------------------------------------------------
-      # Post-deploy CDN cache invalidation — HTML pages only.
-      # Static assets (/_next/static/*) are content-hashed; they never need invalidation.
-      #
-      # URL map name is discovered dynamically from the GKE Ingress annotation
-      # kubernetes.io/ingress.global-static-ip-name, then resolved to the URL map
-      # that GKE creates automatically when an Ingress with class "gce" is applied.
-      # GKE names the URL map after the Ingress: k8s2-um-<hash>-<namespace>-<name>-<hash>
-      # We discover it by listing URL maps and matching the ingress name pattern.
-      #
-      # Required IAM permission on the GitHub Actions service account (GCP_SA_KEY):
-      #   compute.urlMaps.invalidateCache  (roles/compute.networkAdmin covers this,
-      #   or create a custom role with just this permission for least-privilege)
-      # --------------------------------------------------------------------------
-      - name: Invalidate CDN cache (HTML pages)
+      - name: Invalidate CDN cache
         continue-on-error: true
         run: |
-          # Discover the URL map created by GKE for the fenrir-app Ingress.
-          # GKE auto-creates a URL map named like: k8s2-um-<cluster-hash>-fenrir-app-fenrir-app-<suffix>
-          # We match by namespace+ingress name to find the right one.
           URL_MAP=$(gcloud compute url-maps list \
             --project="${{ secrets.GCP_PROJECT_ID }}" \
-            --format="value(name)" \
-            --filter="name~fenrir-app" \
-            2>/dev/null | head -1)
-
+            --format="value(name)" --filter="name~fenrir-app" 2>/dev/null | head -1)
           if [ -z "$URL_MAP" ]; then
-            echo "::warning::CDN invalidation skipped — no URL map matching 'fenrir-app' found. Deploy succeeded."
+            echo "::warning::CDN invalidation skipped — no URL map found"
             exit 0
           fi
-
-          echo "Invalidating CDN cache on URL map: $URL_MAP (paths: / and HTML pages)"
-
-          # Invalidate HTML pages. Static assets (/_next/static/*) are content-hashed
-          # and intentionally excluded — they never need invalidation.
           gcloud compute url-maps invalidate-cdn-cache "$URL_MAP" \
-            --project="${{ secrets.GCP_PROJECT_ID }}" \
-            --path "/*" \
-            --async \
-            && echo "::notice::CDN invalidation request submitted for $URL_MAP" \
-            || echo "::warning::CDN invalidation failed for $URL_MAP — deploy still succeeded."
+            --project="${{ secrets.GCP_PROJECT_ID }}" --path "/*" --async \
+            && echo "::notice::CDN invalidation submitted for $URL_MAP" \
+            || echo "::warning::CDN invalidation failed — deploy still succeeded"
+          echo "- **CDN URL Map:** \`$URL_MAP\`" >> $GITHUB_STEP_SUMMARY
 
-          echo "### CDN Cache Invalidation" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **URL Map:** \`$URL_MAP\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Path:** \`/*\` (HTML pages; /_next/static/* excluded as content-hashed)" >> $GITHUB_STEP_SUMMARY
-
-  # --------------------------------------------------------------------------
-  # Job 3b-post: E2E tests — runs AFTER deploy-fenrir-app so tests validate
-  # the newly deployed version, not the previous production state.
-  # --------------------------------------------------------------------------
-  e2e-tests:
-    name: E2E Tests (post-deploy)
-    needs: [deploy-fenrir-app, build-and-push]
-    if: needs.deploy-fenrir-app.result == 'success'
+  app-e2e-tests:
+    name: "App: E2E Tests (post-deploy)"
+    needs: [app-deploy]
+    if: needs.app-deploy.result == 'success'
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
-      NEXT_PUBLIC_BUILD_ID: ${{ github.sha }}
-      NEXT_PUBLIC_APP_VERSION: ${{ github.sha }}
       SERVER_URL: https://fenrirledger.com
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-      - name: Set up Node 20
-        uses: actions/setup-node@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -717,7 +578,7 @@ jobs:
       - name: E2E tests
         run: bash quality/scripts/verify.sh --step e2e
 
-      - name: Upload test reports on failure
+      - name: Upload reports on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
@@ -725,117 +586,38 @@ jobs:
           path: quality/reports/
           retention-days: 7
 
-  # --------------------------------------------------------------------------
-  # Job 3c: Deploy Umami analytics to GKE
-  # --------------------------------------------------------------------------
-  deploy-umami:
-    name: Deploy Umami
-    needs: [detect-changes, deploy-bootstrap]
-    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.umami == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+  # ============================================================================
+  # SECTION 5 — ODIN'S THRONE
+  # Monitor API + UI — job log streaming, K8s agent visibility.
+  # ============================================================================
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
-
-      - name: Get GKE credentials
-        uses: google-github-actions/get-gke-credentials@v3
-        with:
-          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GCP_REGION }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Ensure fenrir-analytics namespace
-        run: |
-          kubectl create namespace fenrir-analytics --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Create/update Umami secrets
-        run: |
-          kubectl create secret generic umami-secrets \
-            --namespace=fenrir-analytics \
-            --from-literal=DATABASE_URL="postgresql://umami:umami-pg-password@postgresql-svc.fenrir-analytics.svc.cluster.local:5432/umami" \
-            --from-literal=POSTGRES_PASSWORD="umami-pg-password" \
-            --from-literal=DATABASE_PASSWORD="umami-pg-password" \
-            --from-literal=APP_SECRET="umami-app-secret-change-in-prod" \
-            --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Create/update Umami oauth2-proxy secrets
-        # oauth2-proxy requires OAUTH2_PROXY_COOKIE_SECRET to be exactly 16, 24, or 32 bytes.
-        # This secret is created imperatively (NOT via Helm template) to prevent placeholder
-        # values from values.yaml overwriting real credentials on every helm upgrade.
-        run: |
-          kubectl create secret generic umami-oauth2-proxy-secrets \
-            --namespace=fenrir-analytics \
-            --from-literal=GOOGLE_CLIENT_ID="${{ secrets.ODINS_THRONE_CLIENT_ID }}" \
-            --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.ODINS_THRONE_CLIENT_SECRET }}" \
-            --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.UMAMI_OAUTH2_PROXY_COOKIE_SECRET }}" \
-            --from-literal=emails.txt="declanshanaghy@gmail.com" \
-            --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Set up Helm
-        uses: azure/setup-helm@v4
-        with:
-          version: 'v3.20.1'
-
-      - name: Deploy Umami with Helm
-        run: |
-          helm upgrade --install umami \
-            ./infrastructure/helm/umami \
-            --namespace=fenrir-analytics \
-            -f ./infrastructure/helm/umami/values-prod.yaml \
-            --wait \
-            --timeout=5m
-
-      - name: Verify umami
-        run: |
-          echo "### Umami Deploy" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n fenrir-analytics >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl rollout status deployment/umami -n fenrir-analytics --timeout=60s
-
-  # --------------------------------------------------------------------------
-  # Job 3d: Deploy Odin's Throne monitor to GKE
-  # --------------------------------------------------------------------------
-  deploy-odin-throne:
-    name: Deploy Odin's Throne
-    needs: [build-and-push-monitor, build-and-push-monitor-ui, detect-changes, deploy-bootstrap]
+  odins-throne:
+    name: "Odin's Throne: Deploy Monitor"
+    needs: [build-monitor-image, build-monitor-ui-image, detect-changes, namespaces]
     if: >-
       always() && !inputs.skip_deploy &&
-      (needs.build-and-push-monitor.result == 'success' ||
-       needs.build-and-push-monitor-ui.result == 'success' ||
-       (needs.build-and-push-monitor.result == 'skipped' &&
-        needs.build-and-push-monitor-ui.result == 'skipped' &&
+      (needs.build-monitor-image.result == 'success' ||
+       needs.build-monitor-ui-image.result == 'success' ||
+       (needs.build-monitor-image.result == 'skipped' &&
+        needs.build-monitor-ui-image.result == 'skipped' &&
         needs.detect-changes.outputs.helm-odin == 'true')) &&
-      needs.build-and-push-monitor.result != 'failure' &&
-      needs.build-and-push-monitor-ui.result != 'failure'
+      needs.build-monitor-image.result != 'failure' &&
+      needs.build-monitor-ui-image.result != 'failure' &&
+      needs.namespaces.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
+      - uses: google-github-actions/setup-gcloud@v3
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -845,13 +627,9 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Ensure fenrir-monitor namespace
-        run: |
-          kubectl create namespace fenrir-monitor --dry-run=client -o yaml | kubectl apply -f -
+        run: kubectl create namespace fenrir-monitor --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Create/update Odin's Throne oauth2-proxy secrets
-        # oauth2-proxy requires OAUTH2_PROXY_COOKIE_SECRET to be exactly 16, 24, or 32 bytes.
-        # Created imperatively (NOT via Helm template) to prevent placeholder values from
-        # values.yaml overwriting real credentials on every helm upgrade.
+      - name: Sync oauth2-proxy secrets
         run: |
           kubectl create secret generic odin-throne-oauth2-proxy-secrets \
             --namespace=fenrir-monitor \
@@ -861,50 +639,39 @@ jobs:
             --from-literal=emails.txt="declanshanaghy@gmail.com" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Resolve monitor image tag from cluster (Helm-only deploy)
+      - name: Resolve monitor image tag
         id: resolve-monitor-tag
         run: |
-          # When only Helm files changed (no new image built), use the tag
-          # already running in the cluster. Fallback to IMAGE_TAG for first deploys.
-          if [ "${{ needs.build-and-push-monitor.result }}" = "skipped" ]; then
+          if [ "${{ needs.build-monitor-image.result }}" = "skipped" ]; then
             CLUSTER_TAG=$(kubectl get deployment odin-throne -n fenrir-monitor \
               -o jsonpath='{.spec.template.spec.containers[?(@.name=="odin-throne")].image}' 2>/dev/null \
               | rev | cut -d: -f1 | rev)
-            if [ -n "$CLUSTER_TAG" ] && [ "$CLUSTER_TAG" != "odin-throne" ]; then
-              echo "tag=$CLUSTER_TAG" >> "$GITHUB_OUTPUT"
-              echo "Resolved cluster monitor tag: $CLUSTER_TAG"
-            else
-              echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
-              echo "No existing deployment found, using IMAGE_TAG: ${{ env.IMAGE_TAG }}"
-            fi
+            [ -n "$CLUSTER_TAG" ] && [ "$CLUSTER_TAG" != "odin-throne" ] \
+              && echo "tag=$CLUSTER_TAG" >> "$GITHUB_OUTPUT" \
+              || echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Resolve monitor-ui image tag from cluster (Helm-only deploy)
+      - name: Resolve monitor-ui image tag
         id: resolve-monitor-ui-tag
         run: |
-          if [ "${{ needs.build-and-push-monitor-ui.result }}" = "skipped" ]; then
+          if [ "${{ needs.build-monitor-ui-image.result }}" = "skipped" ]; then
             CLUSTER_TAG=$(kubectl get deployment odin-throne-ui -n fenrir-monitor \
               -o jsonpath='{.spec.template.spec.containers[?(@.name=="odin-throne-ui")].image}' 2>/dev/null \
               | rev | cut -d: -f1 | rev)
-            if [ -n "$CLUSTER_TAG" ] && [ "$CLUSTER_TAG" != "odin-throne-ui" ]; then
-              echo "tag=$CLUSTER_TAG" >> "$GITHUB_OUTPUT"
-              echo "Resolved cluster monitor-ui tag: $CLUSTER_TAG"
-            else
-              echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
-              echo "No existing deployment found, using IMAGE_TAG: ${{ env.IMAGE_TAG }}"
-            fi
+            [ -n "$CLUSTER_TAG" ] && [ "$CLUSTER_TAG" != "odin-throne-ui" ] \
+              && echo "tag=$CLUSTER_TAG" >> "$GITHUB_OUTPUT" \
+              || echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@v4
         with:
           version: 'v3.20.1'
 
-      - name: Deploy Odin's Throne with Helm
+      - name: Helm deploy
         run: |
           helm upgrade --install odin-throne \
             ./infrastructure/helm/odin-throne \
@@ -914,10 +681,9 @@ jobs:
             --set app.image.tag=${{ steps.resolve-monitor-tag.outputs.tag }} \
             --set ui.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_UI_IMAGE_NAME }} \
             --set ui.image.tag=${{ steps.resolve-monitor-ui-tag.outputs.tag }} \
-            --wait \
-            --timeout=5m
+            --wait --timeout=5m
 
-      - name: Verify odin-throne
+      - name: Verify rollout
         run: |
           echo "### Odin's Throne Deploy" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -925,3 +691,155 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           kubectl rollout status deployment/odin-throne -n fenrir-monitor --timeout=60s
           kubectl rollout status deployment/odin-throne-ui -n fenrir-monitor --timeout=60s
+
+  # ============================================================================
+  # SECTION 6 — ANALYTICS
+  # Umami self-hosted analytics at analytics.fenrirledger.com.
+  # ============================================================================
+
+  analytics:
+    name: "Analytics: Deploy Umami"
+    needs: [detect-changes, namespaces]
+    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.umami == 'true' && needs.namespaces.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+          location: ${{ secrets.GCP_REGION }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Ensure fenrir-analytics namespace
+        run: kubectl create namespace fenrir-analytics --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Sync Umami secrets
+        run: |
+          kubectl create secret generic umami-secrets \
+            --namespace=fenrir-analytics \
+            --from-literal=DATABASE_URL="postgresql://umami:umami-pg-password@postgresql-svc.fenrir-analytics.svc.cluster.local:5432/umami" \
+            --from-literal=POSTGRES_PASSWORD="umami-pg-password" \
+            --from-literal=DATABASE_PASSWORD="umami-pg-password" \
+            --from-literal=APP_SECRET="umami-app-secret-change-in-prod" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Sync oauth2-proxy secrets
+        run: |
+          kubectl create secret generic umami-oauth2-proxy-secrets \
+            --namespace=fenrir-analytics \
+            --from-literal=GOOGLE_CLIENT_ID="${{ secrets.ODINS_THRONE_CLIENT_ID }}" \
+            --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.ODINS_THRONE_CLIENT_SECRET }}" \
+            --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.UMAMI_OAUTH2_PROXY_COOKIE_SECRET }}" \
+            --from-literal=emails.txt="declanshanaghy@gmail.com" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: 'v3.20.1'
+
+      - name: Helm deploy
+        run: |
+          helm upgrade --install umami \
+            ./infrastructure/helm/umami \
+            --namespace=fenrir-analytics \
+            -f ./infrastructure/helm/umami/values-prod.yaml \
+            --wait --timeout=5m
+
+      - name: Verify rollout
+        run: |
+          echo "### Analytics Deploy" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n fenrir-analytics >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl rollout status deployment/umami -n fenrir-analytics --timeout=60s
+
+  # ============================================================================
+  # SECTION 7 — MARKETING ENGINE
+  # n8n workflow automation at marketing.fenrirledger.com.
+  # Deployed via external Helm chart (oci://ghcr.io/8gears/n8n) +
+  # supplementary k8s manifests (oauth2-proxy, ingress, managed cert).
+  # ============================================================================
+
+  marketing-engine:
+    name: "Marketing Engine: Deploy n8n"
+    needs: [detect-changes, namespaces]
+    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.marketing == 'true' && needs.namespaces.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+          location: ${{ secrets.GCP_REGION }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Ensure fenrir-analytics namespace
+        run: kubectl create namespace fenrir-analytics --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Sync oauth2-proxy secrets
+        # n8n-oauth2-proxy-secrets mirrors umami-oauth2-proxy-secrets (same Google OAuth app).
+        # n8n-oauth2-proxy-emails controls who can access marketing.fenrirledger.com.
+        run: |
+          kubectl create secret generic n8n-oauth2-proxy-secrets \
+            --namespace=fenrir-analytics \
+            --from-literal=GOOGLE_CLIENT_ID="${{ secrets.ODINS_THRONE_CLIENT_ID }}" \
+            --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.ODINS_THRONE_CLIENT_SECRET }}" \
+            --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.UMAMI_OAUTH2_PROXY_COOKIE_SECRET }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret generic n8n-oauth2-proxy-emails \
+            --namespace=fenrir-analytics \
+            --from-literal=emails.txt="declanshanaghy@gmail.com" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: 'v3.20.1'
+
+      - name: Helm deploy n8n
+        run: |
+          helm upgrade --install n8n oci://ghcr.io/8gears/n8n \
+            --namespace=fenrir-analytics \
+            -f infrastructure/k8s/n8n/values.yaml \
+            --wait --timeout=5m
+
+      - name: Apply supplementary manifests
+        # ManagedCertificate, oauth2-proxy Deployment+Service, GCE Ingress routing
+        run: |
+          kubectl apply -f infrastructure/k8s/n8n/managed-certificate.yaml -n fenrir-analytics
+          kubectl apply -f infrastructure/k8s/n8n/oauth2-proxy.yaml        -n fenrir-analytics
+          kubectl apply -f infrastructure/k8s/n8n/ingress-patch.yaml       -n fenrir-analytics
+
+      - name: Verify rollout
+        run: |
+          echo "### Marketing Engine Deploy" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n fenrir-analytics -l app.kubernetes.io/name=n8n >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n fenrir-analytics -l app.kubernetes.io/name=n8n-oauth2-proxy >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          kubectl rollout status deployment/n8n -n fenrir-analytics --timeout=60s || true
