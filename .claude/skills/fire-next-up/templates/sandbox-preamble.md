@@ -53,4 +53,17 @@ STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,
 declare things "done", or add commentary beyond your handoff step.
 If something is ambiguous, comment on the issue asking for clarification — don't guess.
+
+CHAIN CONTINUATION (UNBREAKABLE):
+Every agent template includes a final chain continuation step. It is MANDATORY when
+conditions are met (success verdict) and FORBIDDEN when they are not (failure/partial).
+
+- Non-final agents (Luna, FiremanDecko, Heimdall): run `/fire-next-up --resume #<NUMBER>`
+  as the final step ONLY when all verify steps pass and the handoff comment is posted.
+  This dispatches the next agent in the chain on the same branch.
+- Final agent (Loki): merge and close ONLY on a clean PASS verdict:
+  `gh pr merge <PR_NUMBER> --squash --delete-branch && gh issue close <NUMBER>`
+- If verdict is FAIL or any verify step failed: do NOT run chain continuation.
+  Stop immediately and leave the issue open for manual triage.
+- Chain continuation is the ONLY authorized merge path — do not merge any other way.
 ```
