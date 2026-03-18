@@ -124,7 +124,7 @@ secrets:
   # When enabled, creates the Secret resource with placeholder values.
   # In production, secrets are injected by the CD pipeline via kubectl.
   enabled: false
-  appBaseUrl: "https://fenrirledger.com"
+  appBaseUrl: "https://www.fenrirledger.com"
 
 # -- Redis -----------------------------------------------------------------
 redis:

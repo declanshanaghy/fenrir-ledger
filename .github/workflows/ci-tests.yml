@@ -4,7 +4,7 @@
 # Runs on every push to PR branches and workflow_dispatch:
 #   1. TypeScript type-checking (tsc --noEmit)
 #   2. Vitest unit tests
-#   3. Playwright E2E tests against https://fenrirledger.com
+#   3. Playwright E2E tests against https://www.fenrirledger.com
 #   4. Upload test artifacts + upsert PR comment with results
 #
 # Replaces the former Vercel-deployment-based CI workflow (Issue #734).
@@ -68,7 +68,7 @@ jobs:
       - name: Run Playwright E2E tests
         id: e2e
         env:
-          SERVER_URL: https://fenrirledger.com
+          SERVER_URL: https://www.fenrirledger.com
         run: npx playwright test
 
       - name: Upload Playwright report
@@ -114,7 +114,7 @@ jobs:
               '',
               `**Commit:** \`${sha.slice(0, 7)}\``,
               `**Run:** [View details](${runUrl})`,
-              `**Target:** https://fenrirledger.com`,
+              `**Target:** https://www.fenrirledger.com`,
             ].join('\n');
 
             // Upsert: find existing comment or create new

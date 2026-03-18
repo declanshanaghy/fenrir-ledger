@@ -33,15 +33,16 @@ export function middleware(request: NextRequest) {
   const { hostname, protocol, pathname, search } = request.nextUrl;
 
   // -----------------------------------------------------------------------
-  // Canonical domain redirect: www → apex, HTTP → HTTPS
+  // Canonical domain redirect: apex → www, HTTP → HTTPS
+  // www.fenrirledger.com is canonical. Apex and HTTP requests redirect here.
   // Skip in development (localhost) and health check endpoint (GCP probes use HTTP)
   // -----------------------------------------------------------------------
   if (hostname !== "localhost" && hostname !== "127.0.0.1" && pathname !== "/api/health") {
-    const isWww = hostname.startsWith("www.");
+    const isApex = !hostname.startsWith("www.") && hostname.includes("fenrirledger.com");
     const isHttp = protocol === "http:" || request.headers.get("x-forwarded-proto") === "http";
 
-    if (isWww || isHttp) {
-      const canonicalHost = hostname.replace(/^www\./, "");
+    if (isApex || isHttp) {
+      const canonicalHost = isApex ? `www.${hostname}` : hostname;
       const url = `https://${canonicalHost}${pathname}${search}`;
       return NextResponse.redirect(url, 301);
     }
