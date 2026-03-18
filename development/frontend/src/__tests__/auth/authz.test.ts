@@ -241,6 +241,23 @@ describe("requireAuthz", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("returns ok:true when supplied householdId matches user's Google sub (legacy client compat)", async () => {
+    vi.mocked(requireAuth).mockReturnValue(makeAuthSuccess(KARL_USER));
+    vi.mocked(getUser).mockResolvedValue(FIRESTORE_USER);
+    vi.mocked(getStripeEntitlement).mockResolvedValue(KARL_ENTITLEMENT);
+
+    // Client sends session.user.sub as householdId (localStorage key pattern).
+    // This differs from firestoreUser.householdId but should be accepted
+    // because it matches the authenticated user's own Google sub.
+    const result = await requireAuthz(makeRequest(), {
+      householdId: KARL_USER.sub, // "google-sub-karl" !== "household-abc"
+      tier: "karl",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(log.warn).not.toHaveBeenCalled();
+  });
+
   it("returns 403 when supplied householdId does not match", async () => {
     vi.mocked(requireAuth).mockReturnValue(makeAuthSuccess(KARL_USER));
     vi.mocked(getUser).mockResolvedValue(FIRESTORE_USER);

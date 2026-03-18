@@ -99,7 +99,7 @@ ingress:
       type: HTTP
       requestPath: /api/health
       port: 3000
-    timeoutSec: 30
+    timeoutSec: 3600
     connectionDraining:
       drainingTimeoutSec: 15
     cdn:
