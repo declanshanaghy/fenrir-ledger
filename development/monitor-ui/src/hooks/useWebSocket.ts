@@ -46,7 +46,7 @@ export function useWebSocket(onMessage: (msg: ServerMessage) => void) {
 
     ws.addEventListener("error", () => {
       setState("error");
-      setError("WebSocket connection lost \u2014 reconnecting\u2026");
+      setError("WebSocket connection lost — reconnecting…");
     });
   }, []);
 

@@ -359,12 +359,12 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
             aria-live="polite"
           >
             <span className={isPodStarting ? "pod-starting-rune" : "connecting-spinner"} aria-hidden="true">
-              {isPodStarting ? "\u16C8" : ""}
+              {isPodStarting ? "ᛈ" : ""}
             </span>
             <span>
               {isPodStarting
-                ? "\u23F3 Agent is starting up \u2014 logs will appear shortly\u2026"
-                : "Awaiting the Norns\u2026"}
+                ? "⏳ Agent is starting up — logs will appear shortly…"
+                : "Awaiting the Norns…"}
             </span>
           </div>
         )}
@@ -1034,7 +1034,7 @@ function StartupBlock({ group }: { group: StartupGroup }) {
   const sessionEntry = group.metaEntries.find((e) => /^Session:\s*/.test(e.text ?? ""));
   const model = modelEntry?.text?.replace(/^Model:\s*/, "").trim() ?? "";
   const session = sessionEntry?.text?.replace(/^Session:\s*/, "").trim() ?? "";
-  const shortSession = session.length > 24 ? session.slice(0, 24) + "\u2026" : session;
+  const shortSession = session.length > 24 ? session.slice(0, 24) + "…" : session;
 
   return (
     <div className={`ep-group ${open ? "open" : ""}`}>
