@@ -1248,7 +1248,53 @@ const commands = {
   ${CYAN}delete${RESET}                 Delete trial from Redis
   ${CYAN}list${RESET}                   Switch trial     ${CYAN}quit${RESET}  Exit
 `);
+    } else if (selectedHouseholdId) {
+      // Household selected — show all sections including Cards
+      console.log(`
+  ${BOLD}No trial selected${RESET} — start here:
+  ${DIM}${"─".repeat(50)}${RESET}
+
+  ${CYAN}list${RESET}                          List all trials (pick by number)
+  ${CYAN}use <N|fingerprint>${RESET}           Select a trial
+  ${CYAN}create <fingerprint>${RESET}           Create a new trial
+  ${CYAN}identity${RESET}                      How to find your fingerprint
+
+  ${BOLD}Redis / Stripe${RESET}
+  ${CYAN}keys${RESET}                          All Redis key prefixes
+  ${CYAN}entitlements${RESET}                   Stripe entitlement cache
+  ${CYAN}stripe-customers${RESET}              Stripe customers
+  ${CYAN}stripe-subs${RESET}                   Stripe subscriptions
+  ${CYAN}delete-customer <cus_xxx>${RESET}      Delete Stripe customer
+  ${CYAN}cancel-sub <sub_xxx>${RESET}           Cancel subscription
+  ${CYAN}reconnect${RESET}                     Reconnect port-forward
+
+  ${BOLD}Firestore — Households${RESET}  ${DIM}(selected: ${shortId(selectedHouseholdId)})${RESET}
+  ${CYAN}households${RESET}                    List all households (paginated, 50)
+  ${CYAN}household [id]${RESET}                Show household details
+  ${CYAN}use-household <N|id>${RESET}          Select a household
+  ${CYAN}kick <userId>${RESET}                 Remove member from selected household
+  ${CYAN}transfer-owner <userId>${RESET}       Transfer ownership
+  ${CYAN}set-tier <free|karl>${RESET}          Change subscription tier
+  ${CYAN}regen-invite${RESET}                  Regenerate invite code
+  ${CYAN}delete-household [id]${RESET}         Permanently delete household + cards
+
+  ${BOLD}Firestore — Users${RESET}
+  ${CYAN}users${RESET}                         List all users (paginated, 50)
+  ${CYAN}user <clerkUserId>${RESET}            Show user details
+  ${CYAN}delete-user <clerkUserId>${RESET}     Delete user document
+
+  ${BOLD}Firestore — Cards${RESET}  ${DIM}(household: ${shortId(selectedHouseholdId)})${RESET}
+  ${CYAN}cards${RESET}                         List cards for selected household
+  ${CYAN}card <cardId>${RESET}                 Show card details
+  ${CYAN}card-count${RESET}                    Count active/deleted cards
+  ${CYAN}delete-card <cardId>${RESET}          Soft-delete a card (sets deletedAt)
+  ${CYAN}restore-card <cardId>${RESET}         Restore a soft-deleted card
+  ${CYAN}expunge-card <cardId>${RESET}         Permanently delete a card
+
+  ${CYAN}quit${RESET}                          Exit
+`);
     } else {
+      // No household selected — hide Cards section, prompt to select one
       console.log(`
   ${BOLD}No trial selected${RESET} — start here:
   ${DIM}${"─".repeat(50)}${RESET}
@@ -1282,13 +1328,7 @@ const commands = {
   ${CYAN}user <clerkUserId>${RESET}            Show user details
   ${CYAN}delete-user <clerkUserId>${RESET}     Delete user document
 
-  ${BOLD}Firestore — Cards${RESET}  ${DIM}(requires use-household first)${RESET}
-  ${CYAN}cards${RESET}                         List cards for selected household
-  ${CYAN}card <cardId>${RESET}                 Show card details
-  ${CYAN}card-count${RESET}                    Count active/deleted cards
-  ${CYAN}delete-card <cardId>${RESET}          Soft-delete a card (sets deletedAt)
-  ${CYAN}restore-card <cardId>${RESET}         Restore a soft-deleted card
-  ${CYAN}expunge-card <cardId>${RESET}         Permanently delete a card
+  ${DIM}Firestore — Cards: run use-household <N> to unlock card commands${RESET}
 
   ${CYAN}quit${RESET}                          Exit
 `);
@@ -1298,7 +1338,12 @@ const commands = {
 
 // ── Tab completion ───────────────────────────────────────────────────────────
 
-const ALL_COMMANDS = [
+// Commands that require a household to be selected first
+const CARD_COMMANDS = [
+  "cards", "card", "delete-card", "restore-card", "expunge-card", "card-count",
+];
+
+const BASE_COMMANDS = [
   // Trial / Redis
   "list", "use", "status", "set", "shift", "reset", "expire",
   "convert", "unconvert", "create", "delete",
@@ -1310,20 +1355,24 @@ const ALL_COMMANDS = [
   "kick", "transfer-owner", "set-tier", "regen-invite", "delete-household",
   // Firestore — User
   "users", "user", "delete-user",
-  // Firestore — Card
-  "cards", "card", "delete-card", "restore-card", "expunge-card", "card-count",
   // Meta
   "help", "quit", "exit",
 ];
 
+/** Returns the set of commands valid for the current REPL state. */
+function availableCommands() {
+  return selectedHouseholdId ? [...BASE_COMMANDS, ...CARD_COMMANDS] : BASE_COMMANDS;
+}
+
 function completer(line) {
   const parts = line.trim().split(/\s+/);
   const cmd = parts[0]?.toLowerCase() || "";
+  const cmds = availableCommands();
 
   // If typing the first word, complete command names
   if (parts.length <= 1) {
-    const hits = ALL_COMMANDS.filter((c) => c.startsWith(cmd));
-    return [hits.length ? hits : ALL_COMMANDS, cmd];
+    const hits = cmds.filter((c) => c.startsWith(cmd));
+    return [hits.length ? hits : cmds, cmd];
   }
 
   // For "use", complete with trial index numbers
