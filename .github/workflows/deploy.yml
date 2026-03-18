@@ -414,6 +414,8 @@ jobs:
         run: bash quality/scripts/verify.sh --step build
 
       - name: E2E tests
+        env:
+          SERVER_URL: https://fenrirledger.com
         run: bash quality/scripts/verify.sh --step e2e
 
       - name: Upload test reports on failure
