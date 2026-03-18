@@ -40,6 +40,8 @@ export function App() {
     streamError,
     replayedFromCache,
     isConnecting,
+    isPodStarting,
+    showPodStartTimeout,
   } = useLogStream();
 
   // Tracks the sessionId we currently have an active WS subscription for.
@@ -200,6 +202,29 @@ export function App() {
     }
   }, [wsState, activeSessionId, send, clearEntries, replayFromTempLog, setLiveSkipCount, jobs]);
 
+  // Auto-retry subscribe when pod is starting up (HTTP 400 returned by kubectl logs).
+  // Retries every 4 seconds. Clears when logs start flowing or after 2-minute timeout.
+  const podStartBeginRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!isPodStarting || !activeSessionId) {
+      podStartBeginRef.current = null;
+      return;
+    }
+    if (podStartBeginRef.current === null) {
+      podStartBeginRef.current = Date.now();
+    }
+    const intervalId = setInterval(() => {
+      const elapsed = Date.now() - (podStartBeginRef.current ?? Date.now());
+      if (elapsed >= 120_000) {
+        clearInterval(intervalId);
+        showPodStartTimeout();
+        return;
+      }
+      send({ type: "subscribe", sessionId: activeSessionId });
+    }, 4000);
+    return () => clearInterval(intervalId);
+  }, [isPodStarting, activeSessionId, send, showPodStartTimeout]);
+
   const activeJob = jobs.find((j) => j.sessionId === activeSessionId) || null;
 
   /** Toggle pin for any session by sessionId. Used by both header and sidebar. */
@@ -281,6 +306,7 @@ export function App() {
             onAvatarClick={setProfileAgent}
             replayedFromCache={replayedFromCache}
             isConnecting={isConnecting}
+            isPodStarting={isPodStarting}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
                 send({ type: "set-speed", sessionId: activeSessionId, speed });

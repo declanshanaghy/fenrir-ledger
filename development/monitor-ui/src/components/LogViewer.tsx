@@ -208,9 +208,10 @@ interface Props {
   onAvatarClick?: (agentKey: string) => void;
   replayedFromCache?: boolean;
   isConnecting?: boolean;
+  isPodStarting?: boolean;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick, replayedFromCache, isConnecting }: Props) {
+export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick, replayedFromCache, isConnecting, isPodStarting }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -352,9 +353,19 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
         onScroll={handleScroll}
       >
         {isConnecting && entries.length === 0 && (
-          <div className="session-connecting" aria-label="Connecting to session" aria-live="polite">
-            <span className="connecting-spinner" aria-hidden="true" />
-            <span>Awaiting the Norns\u2026</span>
+          <div
+            className={`session-connecting${isPodStarting ? " pod-starting" : ""}`}
+            aria-label={isPodStarting ? "Agent is starting up" : "Connecting to session"}
+            aria-live="polite"
+          >
+            <span className={isPodStarting ? "pod-starting-rune" : "connecting-spinner"} aria-hidden="true">
+              {isPodStarting ? "\u16C8" : ""}
+            </span>
+            <span>
+              {isPodStarting
+                ? "\u23F3 Agent is starting up \u2014 logs will appear shortly\u2026"
+                : "Awaiting the Norns\u2026"}
+            </span>
           </div>
         )}
         {displayEntries.map((item) => {
