@@ -67,11 +67,11 @@ const SECRETS = [
 
   // --- GitHub → K8s agent secrets (deploy workflow creates agent-secrets) ---
   { name: "CLAUDE_CODE_OAUTH_TOKEN", dest: "github", group: "Agent Sandbox", secretsVar: "CLAUDE_CODE_OAUTH_TOKEN" },
-  { name: "GH_TOKEN_AGENTS",         dest: "github", group: "Agent Sandbox", secretsVar: "GITHUB_TOKEN_PAT_FINE_GRAINED" },
+  { name: "GH_TOKEN_AGENTS",         dest: "github", group: "Agent Sandbox", secretsVar: "GITHUB_TOKEN_PAT_CLASSIC" },
 
   // --- K8s agent-secrets (fenrir-agents namespace) ---
   { name: "anthropic-api-key",   dest: "k8s-agents", group: "K8s Agent Secrets", envVar: "FENRIR_ANTHROPIC_API_KEY", k8sSecret: "agent-secrets" },
-  { name: "gh-token",            dest: "k8s-agents", group: "K8s Agent Secrets", secretsVar: "GITHUB_TOKEN_PAT_FINE_GRAINED",  k8sSecret: "agent-secrets" },
+  { name: "gh-token",            dest: "k8s-agents", group: "K8s Agent Secrets", secretsVar: "GITHUB_TOKEN_PAT_CLASSIC",  k8sSecret: "agent-secrets" },
   { name: "claude-oauth-token",  dest: "k8s-agents", group: "K8s Agent Secrets", secretsVar: "CLAUDE_CODE_OAUTH_TOKEN",  k8sSecret: "agent-secrets" },
 
   // --- K8s n8n-secrets (fenrir-marketing namespace) ---
