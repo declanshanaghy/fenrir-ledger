@@ -8,7 +8,7 @@ staticIpName: marketing-ip
 
 oauth2Proxy:
   image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
-  upstream: http://n8n.fenrir-marketing.svc.cluster.local:80
+  upstream: http://n8n.fenrir-marketing.svc.cluster.local:5678
   redirectUrl: https://marketing.fenrirledger.com/oauth2/callback
   cookieDomain: marketing.fenrirledger.com
   secretsSecretName: n8n-oauth2-proxy-secrets
