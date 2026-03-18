@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     jq \
     openssh-client \
+    uuid-runtime \
     # Playwright Chromium system dependencies (avoids slow `--with-deps` at runtime)
     libnss3 \
     libnspr4 \
@@ -55,7 +56,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # --------------------------------------------------------------------------
-# 2. GitHub CLI
+# 2. kubectl — required for chain continuation (dispatch-job.sh applies K8s Jobs)
+# --------------------------------------------------------------------------
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+    && rm kubectl
+
+# --------------------------------------------------------------------------
+# 4. GitHub CLI
 # --------------------------------------------------------------------------
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
       -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
@@ -66,12 +74,12 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && rm -rf /var/lib/apt/lists/*
 
 # --------------------------------------------------------------------------
-# 3. Claude Code CLI (global)
+# 5. Claude Code CLI (global)
 # --------------------------------------------------------------------------
 RUN npm install -g @anthropic-ai/claude-code@latest
 
 # --------------------------------------------------------------------------
-# 4. Pre-install Playwright Chromium browser binary
+# 6. Pre-install Playwright Chromium browser binary
 #    Version is pinned to whatever @playwright/test ships with.
 #    sandbox-setup.sh skips this step when browsers are already present.
 # --------------------------------------------------------------------------
@@ -82,13 +90,13 @@ RUN cd /tmp/frontend \
     && rm -rf /tmp/frontend
 
 # --------------------------------------------------------------------------
-# 5. Non-root user — Claude Code refuses --dangerously-skip-permissions as root
+# 7. Non-root user — Claude Code refuses --dangerously-skip-permissions as root
 # --------------------------------------------------------------------------
 # node:20 image ships with user 'node' (uid 1000) — reuse it
 RUN mkdir -p /workspace && chown node:node /workspace
 
 # --------------------------------------------------------------------------
-# 6. Workspace + git config
+# 8. Workspace + git config
 # --------------------------------------------------------------------------
 WORKDIR /workspace
 USER node
@@ -97,7 +105,7 @@ RUN git config --global init.defaultBranch main \
     && git config --global advice.detachedHead false
 
 # --------------------------------------------------------------------------
-# 7. Entrypoint — clones repo, runs sandbox setup, executes task
+# 9. Entrypoint — clones repo, runs sandbox setup, executes task
 # --------------------------------------------------------------------------
 COPY --chown=node:node infrastructure/k8s/agents/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh

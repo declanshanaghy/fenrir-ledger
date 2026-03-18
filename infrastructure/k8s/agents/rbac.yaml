@@ -1,0 +1,53 @@
+# --------------------------------------------------------------------------
+# RBAC — Agent Sandbox ServiceAccount
+#
+# Grants the fenrir-agents-sa ServiceAccount permission to create and manage
+# Jobs in the fenrir-agents namespace. Required for chain continuation:
+# agents running inside sandbox pods call dispatch-job.sh, which runs
+# `kubectl apply` to spawn the next agent in the chain.
+#
+# Apply: kubectl apply -f infrastructure/k8s/agents/rbac.yaml
+# --------------------------------------------------------------------------
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fenrir-agents-sa
+  namespace: fenrir-agents
+  labels:
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: agent-sandbox
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: fenrir-agents-job-creator
+  namespace: fenrir-agents
+  labels:
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: agent-sandbox
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: fenrir-agents-job-creator-binding
+  namespace: fenrir-agents
+  labels:
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: agent-sandbox
+subjects:
+  - kind: ServiceAccount
+    name: fenrir-agents-sa
+    namespace: fenrir-agents
+roleRef:
+  kind: Role
+  name: fenrir-agents-job-creator
+  apiGroup: rbac.authorization.k8s.io
