@@ -140,7 +140,7 @@ Using Freya's brief (and Luna's wireframes if applicable), break the work into 1
 Each issue gets one type label (`bug`, `enhancement`, `ux`, `security`) and one
 priority label (`critical`, `high`, `normal`, `low`).
 
-### Step 5 — Create Issues
+### Step 5 — Create Issues via /file-issue
 
 Create each issue sequentially (need the issue number from each to set dependencies on later ones).
 
@@ -149,22 +149,14 @@ Create each issue sequentially (need the issue number from each to set dependenc
 **Body template:** Use the template from `quality/issue-template.md`. Add an
 `## Implementation Notes` section with key files, patterns, and wireframe paths.
 
-**For each issue, run:**
+**For each issue, invoke `/file-issue`** with the title, body, type, and priority.
+`/file-issue` handles: issue creation, label assignment, project board placement,
+and auto-dispatch prompt for bugs.
 
-```bash
-# Create the issue
-gh issue create \
-  --title "Short descriptive title" \
-  --label "<type>,<priority>" \
-  --body "$(cat <<'EOF'
-<issue body from template above>
-EOF
-)"
-
-# Set status to "Up Next" (auto-add action handles board addition)
-SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
-node "$SCRIPT_DIR/pack-status.mjs" --move <issue-number> up-next
-```
+- For `bug` issues, `/file-issue` will prompt Odin to dispatch immediately — **decline
+  the dispatch during planning** (issues should be dispatched via `/fire-next-up` after
+  all issues are filed and dependencies are set).
+- For all other types, `/file-issue` files and boards without prompting.
 
 **After creating all issues:** If any issue references `Blocked by #N`, edit the earlier issue to add a note:
 
@@ -201,7 +193,7 @@ To start execution:
 1. **Max 5 issues per plan** — if the work is bigger, plan in phases
 2. **Each issue must be self-contained** — one branch, one PR, one agent chain
 3. **Labels are mandatory** — every issue gets one type label and one priority label
-4. **Add to project board** — every issue goes to Project #1 via `gh project item-add`, then **immediately set status to "Up Next"** via `pack-status.mjs --move N up-next`
+4. **Use `/file-issue`** — every issue is created via `/file-issue`, which handles labels, board placement, and auto-dispatch prompts
 5. **Sequential creation** — create issues one at a time to capture numbers for dependencies
 6. **No spec files** — the issues ARE the spec. Do not write to `specs/`
 7. **No code** — planning only. Agents do the building via `/fire-next-up`
