@@ -1,0 +1,88 @@
+{
+  "seal": {
+    "headers": [
+      "The shield wall stands unbroken.",
+      "The forge fires burn clean tonight.",
+      "Gleipnir holds fast. The binding is true.",
+      "The Norns smile upon this ledger.",
+      "Every link in the chain has been tested.",
+      "The runes align. The code is worthy.",
+      "No blade passes through this wall.",
+      "The pack runs strong and silent.",
+      "Yggdrasil's roots grow deep here.",
+      "The anvil rings true. The steel holds."
+    ],
+    "verdicts": [
+      "THE SHIELD WALL IS SECURE.",
+      "THE BINDING IS UNBROKEN.",
+      "THE FORGE HAS DONE ITS WORK.",
+      "THE LEDGER IS TRUE.",
+      "THE REALM IS GUARDED.",
+      "GLEIPNIR HOLDS.",
+      "THE CHAIN IS FORGED CLEAN.",
+      "THE PACK STANDS READY."
+    ],
+    "closings": [
+      "The chains hold. The wolf sleeps.",
+      "Fenrir rests. The ledger endures.",
+      "The hearth is warm. The watch is set.",
+      "The runes are carved. The saga continues.",
+      "The storm has passed. The longship holds.",
+      "The mead flows. Tonight, we feast.",
+      "Bifrost stands. The bridge holds true.",
+      "The ice does not crack. Winter will not take us.",
+      "The blood oath is honoured.",
+      "No trickery was needed. The truth was enough."
+    ],
+    "taglines": [
+      "the wolf is bound, the ledger is true",
+      "the chain holds, the saga endures",
+      "Gleipnir's six threads remain unbroken",
+      "the runes speak: all is well",
+      "the Norns have woven a clean thread"
+    ]
+  },
+  "changeOrder": {
+    "headers": [
+      "The shield wall has been inspected and found WANTING.",
+      "The chain has weak links. They must be reforged.",
+      "Gleipnir frays at the edges. Attend to it.",
+      "The watch has gaps. The wolf notices.",
+      "I have seen the cracks. So will the enemy.",
+      "The runes are smudged. The binding wavers.",
+      "This is not the work of warriors. This is the work of thralls.",
+      "The Norns are displeased. The thread tangles.",
+      "The forge fires have gone cold. Relight them.",
+      "The pack limps. Tend the wounded before they fall."
+    ],
+    "verdicts": [
+      "THE SHIELD WALL HAS HOLES.",
+      "THE BINDING IS COMPROMISED.",
+      "THE CHAIN MUST BE REFORGED.",
+      "THE REALM IS EXPOSED.",
+      "GLEIPNIR WEAKENS.",
+      "THE LEDGER CANNOT BE TRUSTED.",
+      "THE FORGE REQUIRES MORE HEAT.",
+      "THE PACK IS NOT READY FOR WINTER."
+    ],
+    "closings": [
+      "The wolf strains against the chain. Strengthen it.",
+      "Fenrir stirs. Do not let him wake fully.",
+      "I do not issue this decree lightly. Act now.",
+      "The next inspection will not be so patient.",
+      "Fix this before Ragnarok finds us unprepared.",
+      "I have seen worse — but not by much.",
+      "Even tricksters know when the joke has gone too far.",
+      "The mead hall is closed until this is resolved.",
+      "Do not make me write this decree twice.",
+      "I am your QA, not your enemy. But test me and see."
+    ],
+    "taglines": [
+      "the wolf strains against the chain",
+      "Gleipnir's threads fray — attend to them",
+      "the Norns weave a warning",
+      "the runes speak: action is required",
+      "the forge fires must be relit"
+    ]
+  }
+}

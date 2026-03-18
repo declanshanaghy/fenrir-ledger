@@ -391,6 +391,16 @@ async function main() {
   const isShieldSecure = isClean && isCoverageHealthy;
   const dateStr = new Date().toISOString().split('T')[0];
 
+  // Load Loki's decree quotes
+  const decreesPath = path.join(__dirname, "templates/decrees.json");
+  const decrees = existsSync(decreesPath) ? JSON.parse(readFileSync(decreesPath, "utf-8")) : null;
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const pool = decrees ? (isShieldSecure ? decrees.seal : decrees.changeOrder) : null;
+  const headerQuote = pool ? pick(pool.headers) : null;
+  const verdictQuote = pool ? pick(pool.verdicts) : null;
+  const closingQuote = pool ? pick(pool.closings) : null;
+  const taglineQuote = pool ? pick(pool.taglines) : null;
+
   L.push(`---`);
   L.push(``);
   L.push(`<br>`);
@@ -413,7 +423,7 @@ async function main() {
     L.push(``);
     L.push(`<br>`);
     L.push(``);
-    L.push(`> *The shield wall stands unbroken.*`);
+    L.push(`> *${headerQuote || 'The shield wall stands unbroken.'}*`);
     L.push(`>`);
     L.push(`> *${totalTests} tests guard the realm. ${totalFiles} files carry the weight.*`);
     L.push(`> *No hollow assertions defile the count.*`);
@@ -426,11 +436,11 @@ async function main() {
     L.push(`| **Hollow Tests** | **0** |`);
     L.push(`| **Test Files** | **${totalFiles}** |`);
     L.push(`| **Test Cases** | **${totalTests}** |`);
-    L.push(`| **Verdict** | **THE SHIELD WALL IS SECURE** |`);
+    L.push(`| **Verdict** | **${verdictQuote || 'THE SHIELD WALL IS SECURE'}** |`);
     L.push(``);
     L.push(`<br>`);
     L.push(``);
-    L.push(`> *The chains hold. The wolf sleeps.*`);
+    L.push(`> *${closingQuote || 'The chains hold. The wolf sleeps.'}*`);
     L.push(`> *No change order is required at this time.*`);
     L.push(``);
     L.push(`<br>`);
@@ -451,7 +461,7 @@ async function main() {
     L.push(`                    ╰─────────────────────────╯`);
     L.push(`\`\`\``);
     L.push(``);
-    L.push(`*ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ — the wolf is bound, the ledger is true*`);
+    L.push(`*ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ — ${taglineQuote || 'the wolf is bound, the ledger is true'}*`);
     L.push(``);
     L.push(`</div>`);
   } else {
@@ -484,7 +494,7 @@ async function main() {
     L.push(``);
     L.push(`<br>`);
     L.push(``);
-    L.push(`> *The shield wall has been inspected and found* ***WANTING.***`);
+    L.push(`> *${headerQuote || 'The shield wall has been inspected and found WANTING.'}*`);
     L.push(``);
     L.push(`<br>`);
     L.push(``);
@@ -508,8 +518,8 @@ async function main() {
     L.push(``);
     L.push(`<br>`);
     L.push(``);
-    L.push(`> *This decree is* ***BINDING*** *until the deficiencies are resolved*`);
-    L.push(`> *and a subsequent quality report issues a Runic Seal of Quality.*`);
+    L.push(`> *${closingQuote || 'This decree is BINDING until the deficiencies are resolved.'}*`);
+    L.push(`> *A subsequent quality report must issue a Runic Seal of Quality.*`);
     L.push(``);
     L.push(`<br>`);
     L.push(``);
@@ -529,7 +539,7 @@ async function main() {
     L.push(`                    ╰─────────────────────────╯`);
     L.push(`\`\`\``);
     L.push(``);
-    L.push(`*ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ — the wolf strains against the chain*`);
+    L.push(`*ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ — ${taglineQuote || 'the wolf strains against the chain'}*`);
     L.push(``);
     L.push(`</div>`);
   }
