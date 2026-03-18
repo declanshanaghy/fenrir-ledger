@@ -44,11 +44,14 @@ secretRefs:
     N8N_ENCRYPTION_KEY: "n8n-encryption-key-placeholder"
 
 # Persistence for SQLite data
+# storageClassName: standard-rwo-retain — reclaimPolicy=Retain prevents data
+# loss if the PVC or namespace is deleted (issue #1338). The StorageClass is
+# created by infrastructure/helm/n8n/templates/storageclass.yaml.
 persistence:
   enabled: true
   accessModes: ["ReadWriteOnce"]
   size: 1Gi
-  storageClassName: standard-rwo
+  storageClassName: standard-rwo-retain
 
 # Resources
 resources:
