@@ -129,7 +129,7 @@ ingress:
     - monitor.fenrirledger.com
   annotations:
     networking.gke.io/managed-certificates: "odin-throne-cert"
-    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.global-static-ip-name: "monitor-ip"
     cloud.google.com/backend-config: '{"default":"odin-throne-ui-backend-config"}'
 
