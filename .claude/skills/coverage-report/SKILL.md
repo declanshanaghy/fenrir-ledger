@@ -252,24 +252,24 @@ genhtml's default classes to target: `coverFile`, `coverBar`, `coverPerHi`
 
 ## How E2E coverage works
 
-1. Next.js production build creates `.next/server/chunks/ssr/*.js` files with
-   inline `sourceMappingURL` comments pointing to sibling `.js.map` files.
-2. Server starts with `NODE_V8_COVERAGE` — Node writes raw V8 coverage JSON to
-   `quality/.coverage-tmp/` on clean exit.
+1. Next.js production build creates `.next/standalone/server.js` (standalone output mode).
+2. Server starts via `node .next/standalone/server.js` with `NODE_V8_COVERAGE` + `PORT=9653`.
+   Node writes raw V8 coverage JSON to `quality/.coverage-tmp/` on clean exit.
 3. SIGTERM → server exits cleanly → coverage files written.
-4. c8 reads V8 JSON, follows source maps to resolve `.next/` paths back to `src/`.
-5. `coverage-combine.mjs` filters `.next/` and `node_modules` entries from the
-   merged LCOV so genhtml only reports on `src/` source files.
+4. c8 reads V8 JSON and produces LCOV with `.next/server/app/` paths (source maps in compiled
+   route files are empty — c8 cannot resolve back to `src/` automatically).
+5. `normalizeLcov()` in `coverage.mjs` post-processes the playwright LCOV:
+   - Remaps `.next/server/app/foo/route.js` → `src/app/foo/route.ts` (extension resolved
+     from disk: `.tsx` → `.ts` → `.js` priority)
+   - Drops `node_modules/` blocks entirely
+6. `coverage-combine.mjs` merges Vitest + Playwright LCOVs — paths now align on `src/`
+   so both sources contribute to the combined report.
 
-### Known limitation: Next.js 16 worker threads
+### Line number accuracy
 
-Next.js 16 uses worker threads for request handling. `NODE_V8_COVERAGE` is
-inherited by workers but the compiled SSR chunks may not produce
-source-mappable coverage depending on the Next.js build configuration. When
-this happens, the E2E playwright report will show low or zero coverage. The
-Vitest report remains the primary coverage source. A future fix would use
-Istanbul build-time instrumentation (babel/swc plugin) instead of V8 runtime
-coverage.
+V8 coverage line numbers reflect the compiled `.js` file, not the TypeScript source.
+File-level and function-level coverage is accurate; line-level detail may be off.
+The combined report shows correct file coverage counts.
 
 ## Notes
 
