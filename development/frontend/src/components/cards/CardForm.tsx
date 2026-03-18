@@ -647,6 +647,19 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="flex items-center gap-2 min-h-[44px]">
+                      <Checkbox
+                        id="bonusMet"
+                        checked={watch("bonusMet")}
+                        onCheckedChange={(checked) =>
+                          setValue("bonusMet", checked === true)
+                        }
+                      />
+                      <Label htmlFor="bonusMet" className="cursor-pointer">
+                        Minimum spend met
+                      </Label>
+                    </div>
                   </fieldset>
                 </div>
               </motion.div>
@@ -713,18 +726,6 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
                         className="min-h-[44px]"
                         {...register("bonusDeadline")}
                       />
-                    </div>
-                    <div className="flex items-center gap-2 min-h-[44px]">
-                      <Checkbox
-                        id="bonusMet"
-                        checked={watch("bonusMet")}
-                        onCheckedChange={(checked) =>
-                          setValue("bonusMet", checked === true)
-                        }
-                      />
-                      <Label htmlFor="bonusMet" className="cursor-pointer">
-                        Minimum spend met
-                      </Label>
                     </div>
                   </fieldset>
                 </div>
