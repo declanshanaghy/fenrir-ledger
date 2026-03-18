@@ -77,13 +77,17 @@ function startServer() {
   // to V8_COVERAGE_DIR when the process exits cleanly (SIGTERM). c8 then reads
   // those files and follows source maps back to src/ to produce LCOV + HTML.
   //
-  // Use the standalone server directly (output: "standalone" in next.config.ts).
-  // `next start` warns when standalone mode is configured — use the built artifact instead.
-  const standaloneServer = path.join(FRONTEND_DIR, ".next/standalone/server.js");
+  // We use `next start` even though next.config.ts has output: "standalone".
+  // The standalone server (node .next/standalone/server.js) does not serve
+  // .next/static/ or public/ assets without manual copying, causing E2E test
+  // failures. `next start` shows a harmless warning but works correctly for
+  // coverage collection. The normalizeLcov() step remaps .next/server/app/
+  // paths to src/ after c8 generates the LCOV.
+  const nextBin = path.join(FRONTEND_DIR, "node_modules", ".bin", "next");
 
   const serverProc = spawn(
     "node",
-    [standaloneServer],
+    [nextBin, "start", "-p", "9653"],
     {
       cwd: FRONTEND_DIR,
       stdio: ["ignore", "pipe", "pipe"],
@@ -91,8 +95,6 @@ function startServer() {
         ...process.env,
         NODE_ENV: "production",
         NODE_V8_COVERAGE: V8_COVERAGE_DIR,
-        PORT: "9653",
-        HOSTNAME: "0.0.0.0",
       },
     },
   );
@@ -221,14 +223,37 @@ function normalizeLcov(lcovPath) {
     if (sf.startsWith(".next/server/app/")) {
       const srcPath = sf.replace(/^\.next\/server\//, "src/");
       const resolved = resolveExtension(srcPath, FRONTEND_DIR);
-      out.push(rec.replace(/^SF:.+$/m, `SF:${resolved}`));
+      // Strip FN/FNA/FNDA lines — their line numbers come from compiled .js, not .ts source.
+      // Vitest owns function coverage with correct line numbers. Playwright contributes
+      // DA (line hits) and branch data only, avoiding duplicate function definition
+      // conflicts when genhtml merges the two LCOVs.
+      const stripped = rec
+        .replace(/^FN:\d+,.+$/gm, "")
+        .replace(/^FNDA:\d+,.+$/gm, "")
+        .replace(/^FNA:.+$/gm, "")
+        .replace(/^FNF:\d+$/gm, "FNF:0")
+        .replace(/^FNH:\d+$/gm, "FNH:0");
+      out.push(stripped.replace(/^SF:.+$/m, `SF:${resolved}`));
       remapped++;
       kept++;
       continue;
     }
 
-    // Keep src/ paths as-is (Vitest paths, in case E2E-only mode is used)
-    if (sf.startsWith("src/")) { out.push(rec); kept++; continue; }
+    // Keep src/ paths as-is — but strip FN* lines. c8 with --all generates src/
+    // entries for all files, but the FN line numbers come from webpack-compiled .js
+    // and differ from the TypeScript source. Vitest owns all function coverage with
+    // correct line numbers; playwright only contributes DA + branch data.
+    if (sf.startsWith("src/")) {
+      const stripped = rec
+        .replace(/^FN:\d+,.+$/gm, "")
+        .replace(/^FNDA:\d+,.+$/gm, "")
+        .replace(/^FNA:.+$/gm, "")
+        .replace(/^FNF:\d+$/gm, "FNF:0")
+        .replace(/^FNH:\d+$/gm, "FNH:0");
+      out.push(stripped);
+      kept++;
+      continue;
+    }
 
     // Drop everything else (.next/server/chunks/, .next/static/, webpack:// etc.)
     dropped++;

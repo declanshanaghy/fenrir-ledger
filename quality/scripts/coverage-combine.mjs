@@ -104,7 +104,9 @@ function main() {
     `genhtml "${mergedLcovPath}"`,
     `--output-directory "${COMBINED_DIR}"`,
     "--quiet",
-    "--ignore-errors inconsistent,corrupt,source,count,category",
+    // genhtml 2.3.x requires each error type twice to fully suppress (promote from fatal → ignored)
+    "--ignore-errors inconsistent,inconsistent,corrupt,corrupt,source,source,count,count,category,category",
+    "--keep-going",
     "--synthesize-missing",
     "--rc max_message_count=0",
     cssFlag,
