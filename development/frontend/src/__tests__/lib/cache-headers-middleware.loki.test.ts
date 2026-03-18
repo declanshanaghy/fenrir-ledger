@@ -69,10 +69,24 @@ describe("middleware — Cache-Control applied on normal HTTPS apex requests", (
 });
 
 // ── 301 redirects must NOT carry Cache-Control ────────────────────────────
+// www.fenrirledger.com is canonical. Apex (fenrirledger.com) → www. HTTP → HTTPS.
+
+/** Build a request to fenrirledger.com (the apex domain) for redirect tests. */
+function apexCanonicalRequest(pathname: string, { http = false } = {}): NextRequest {
+  const proto = http ? "http" : "https";
+  const host = "fenrirledger.com";
+  return new NextRequest(`${proto}://${host}${pathname}`, {
+    method: "GET",
+    headers: {
+      host,
+      ...(http ? { "x-forwarded-proto": "http" } : {}),
+    },
+  });
+}
 
 describe("middleware — 301 redirect responses must NOT carry Cache-Control", () => {
-  it("www → apex redirect has no Cache-Control header", () => {
-    const req = apexRequest("/", { www: true });
+  it("apex → www redirect has no Cache-Control header", () => {
+    const req = apexCanonicalRequest("/");
     const response = middleware(req);
     expect(response.status).toBe(301);
     expect(response.headers.get("Cache-Control")).toBeNull();
@@ -85,8 +99,8 @@ describe("middleware — 301 redirect responses must NOT carry Cache-Control", (
     expect(response.headers.get("Cache-Control")).toBeNull();
   });
 
-  it("www + HTTP combined redirect has no Cache-Control header", () => {
-    const req = apexRequest("/about", { www: true, http: true });
+  it("apex + HTTP combined redirect has no Cache-Control header", () => {
+    const req = apexCanonicalRequest("/about", { http: true });
     const response = middleware(req);
     expect(response.status).toBe(301);
     expect(response.headers.get("Cache-Control")).toBeNull();
