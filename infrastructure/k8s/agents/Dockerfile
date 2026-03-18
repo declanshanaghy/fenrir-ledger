@@ -22,6 +22,13 @@ LABEL description="Fenrir Ledger agent sandbox for Claude Code tasks"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # --------------------------------------------------------------------------
+# Node.js runtime tuning — maximise parallelism in agent sandbox (2 CPUs / 4Gi)
+# These are overridable via pod env vars in job-template.yaml if needed.
+# --------------------------------------------------------------------------
+ENV NODE_OPTIONS="--max-old-space-size=2048" \
+    UV_THREADPOOL_SIZE=8
+
+# --------------------------------------------------------------------------
 # 1. System dependencies — git, curl, jq, plus Playwright's system libs
 # --------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \

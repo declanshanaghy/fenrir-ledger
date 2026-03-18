@@ -145,7 +145,7 @@ run_unit() {
       fi
     fi
 
-    if npx vitest run --coverage; then
+    if npx vitest run --pool threads --poolOptions.threads.maxThreads 4 --coverage; then
       UNIT_TOTAL=$(npx vitest run --reporter=json 2>/dev/null | jq '.numPassedTests // 0' 2>/dev/null || echo "?")
       echo "PASS (coverage → quality/reports/coverage/vitest/)"
     else
@@ -153,7 +153,7 @@ run_unit() {
       echo "FAIL"
     fi
   else
-    if npx vitest run; then
+    if npx vitest run --pool threads --poolOptions.threads.maxThreads 4; then
       echo "PASS"
     else
       ((FAILS++))
