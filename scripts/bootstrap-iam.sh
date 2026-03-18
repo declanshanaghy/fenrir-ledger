@@ -50,6 +50,8 @@ ROLES=(
   "roles/logging.admin"
   "roles/monitoring.admin"
   "roles/certificatemanager.editor"
+  "roles/firebaserules.admin"
+  "roles/compute.storageAdmin"
 )
 
 # --------------------------------------------------------------------------

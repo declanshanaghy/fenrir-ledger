@@ -111,6 +111,7 @@ locals {
     "roles/monitoring.admin",              # Cloud Monitoring config
     "roles/certificatemanager.editor",     # Managed SSL certs
     "roles/firebaserules.admin",           # Firebase Security Rules (Firestore)
+    "roles/compute.storageAdmin",          # Disk snapshot policies (redis-backup.tf)
   ]
 }
 
