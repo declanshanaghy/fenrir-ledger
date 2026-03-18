@@ -9,7 +9,7 @@
  *   node quality/scripts/quality-report-html.mjs
  */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -103,26 +103,33 @@ function gaugeRing(pct, label, size = 100) {
 function lokiSealSvg(dateStr, isSecure) {
   const glowColor = isSecure ? "#4ade80" : "#ef4444";
   const runeGlow = isSecure ? "drop-shadow(0 0 6px #4ade8060)" : "drop-shadow(0 0 6px #ef444460)";
-  return `<svg width="320" height="180" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="320" height="160" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="seal-border" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="#c9920a"/>
-        <stop offset="50%" stop-color="#d4a84f"/>
+        <stop offset="50%" stop-color="#8b6a0a"/>
         <stop offset="100%" stop-color="#c9920a"/>
       </linearGradient>
       <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
-    <rect x="2" y="2" width="316" height="176" rx="8" fill="#07070d" stroke="url(#seal-border)" stroke-width="2"/>
-    <rect x="6" y="6" width="308" height="168" rx="6" fill="none" stroke="#c9920a" stroke-width="0.5" opacity="0.3"/>
-    <line x1="30" y1="48" x2="290" y2="48" stroke="#c9920a" stroke-width="0.5" opacity="0.4"/>
-    <line x1="30" y1="130" x2="290" y2="130" stroke="#c9920a" stroke-width="0.5" opacity="0.2"/>
-    <text x="160" y="36" text-anchor="middle" font-family="serif" font-size="24" letter-spacing="10" fill="#c9920a" filter="url(#glow)">ᛚ ᛟ ᚲ ᛁ</text>
-    <text x="160" y="74" text-anchor="middle" font-family="'Cinzel', serif" font-size="16" fill="#e8e8e0" letter-spacing="2">Loki Laufeyson</text>
-    <text x="160" y="96" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#8b8680">QA Tester &middot; Fenrir Ledger</text>
-    <text x="160" y="118" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="12" fill="#8b8680">${dateStr}</text>
-    <text x="160" y="155" text-anchor="middle" font-family="serif" font-size="13" letter-spacing="5" fill="${glowColor}" opacity="0.7" style="filter: ${runeGlow}">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</text>
-    <text x="160" y="172" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#555" letter-spacing="1">OFFICIAL SEAL</text>
+    <rect x="2" y="2" width="316" height="156" rx="8" fill="#07070d" stroke="url(#seal-border)" stroke-width="1.5"/>
+    <rect x="5" y="5" width="310" height="150" rx="6" fill="none" stroke="#c9920a" stroke-width="0.3" opacity="0.2"/>
+    <line x1="30" y1="42" x2="290" y2="42" stroke="#c9920a" stroke-width="0.4" opacity="0.2"/>
+    <text x="160" y="32" text-anchor="middle" font-family="serif" font-size="20" letter-spacing="10" fill="#c9920a" opacity="0.8" filter="url(#glow)">ᛚ ᛟ ᚲ ᛁ</text>
+    <text x="160" y="64" text-anchor="middle" font-family="serif" font-size="14" fill="#c9920a" opacity="0.9" letter-spacing="2">Loki Laufeyson</text>
+    <text x="160" y="84" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">QA Tester</text>
+    <text x="160" y="104" text-anchor="middle" font-family="monospace" font-size="10" fill="#444">${dateStr}</text>
+    <line x1="30" y1="115" x2="290" y2="115" stroke="#c9920a" stroke-width="0.3" opacity="0.15"/>
+    <text x="160" y="138" text-anchor="middle" font-family="serif" font-size="12" letter-spacing="4" fill="${glowColor}" opacity="0.5" style="filter: ${runeGlow}">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</text>
+    <text x="160" y="153" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#333" letter-spacing="2">OFFICIAL SEAL</text>
   </svg>`;
+}
+
+/** Copy Loki's profile image to reports dir for the HTML report */
+function copyLokiProfile() {
+  const src = path.join(REPO_ROOT, ".claude/agents/profiles/loki-dark.png");
+  const dest = path.join(REPO_ROOT, "quality/reports/loki-dark.png");
+  if (existsSync(src)) copyFileSync(src, dest);
 }
 
 // ── Shield / Sword icon SVGs ──────────────────────────────────────────────────
@@ -135,6 +142,7 @@ const skullIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" s
 
 async function main() {
   log("Generating HTML quality report...");
+  copyLokiProfile();
 
   const vitestFiles = walkDir(FRONTEND_TESTS, [".test.ts", ".test.tsx"]);
   const e2eFiles = walkDir(E2E_TESTS, [".spec.ts", ".spec.tsx"]);
@@ -256,6 +264,8 @@ async function main() {
   .decree-closing { font-style: italic; color: var(--text-dim); margin-top: 1.5rem; }
   .decree-seal { margin-top: 2rem; }
   .decree-tagline { font-size: 0.8rem; color: var(--gold); opacity: 0.5; letter-spacing: 0.1em; margin-top: 0.5rem; }
+  .decree-seal-row { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-top: 2rem; flex-wrap: wrap; }
+  .loki-profile { width: 120px; height: 120px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; opacity: 0.9; box-shadow: 0 0 20px rgba(201, 146, 10, 0.2); }
 
   /* Deficiencies */
   .deficiencies { text-align: left; max-width: 500px; margin: 1.5rem auto; }
@@ -360,10 +370,13 @@ async function main() {
 
     <div class="decree-closing">"${closingQuote}"</div>
 
-    <div class="decree-seal">
-      ${lokiSealSvg(dateStr, isShieldSecure)}
+    <div class="decree-seal-row">
+      <img src="loki-dark.png" alt="Loki Laufeyson" class="loki-profile"/>
+      <div>
+        ${lokiSealSvg(dateStr, isShieldSecure)}
+        <div class="decree-tagline">ᚠᛖᚾᚱᛁᚱ — ${taglineQuote}</div>
+      </div>
     </div>
-    <div class="decree-tagline">ᚠᛖᚾᚱᛁᚱ — ${taglineQuote}</div>
   </div>
 
   <!-- Coverage Gauges -->
