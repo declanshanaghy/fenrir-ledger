@@ -208,149 +208,223 @@ function broadcast(clients: Set<WebSocket>, msg: ServerMessage): void {
 // Per-session log stream handler
 // ---------------------------------------------------------------------------
 
-/** Start streaming logs for sessionId to ws. Returns a cancel function. */
-async function startLogStream(
+/**
+ * How long to wait between retries when a pod is still scheduling.
+ * Kept short enough that users see a quick transition once the pod starts,
+ * but long enough to avoid hammering the K8s API.
+ */
+const PENDING_RETRY_INTERVAL_MS = 3_000;
+
+/**
+ * Start streaming logs for sessionId to ws.
+ *
+ * Returns a cancel function immediately — the actual stream setup runs
+ * asynchronously in the background. This ensures `subscriptions.set` can
+ * capture the cancel function before any async work begins, preventing
+ * duplicate subscriptions for the same session.
+ *
+ * For pending sessions (pod not yet scheduled, or container still starting),
+ * the function retries every PENDING_RETRY_INTERVAL_MS until the pod is ready
+ * or the caller cancels. This fixes the "Awaiting the Norns" stuck state
+ * (issue #1354): the subscription stays alive during the pending → running
+ * transition, so the first log-line clears isConnecting without requiring
+ * a manual re-selection.
+ *
+ * @param getJobs - Getter for the current live job list. Called on each
+ *   retry attempt so the latest pod status is always used (not a stale
+ *   snapshot captured at subscription time).
+ */
+function startLogStream(
   ws: WebSocket,
   sessionId: string,
   namespace: string,
-  cachedJobs: Job[]
-): Promise<() => void> {
-  try {
-    const podName = await findPodForSession(sessionId, namespace);
-    if (!podName) {
-      // Try fixture fallback for local dev
-      const fixture = findFixture(sessionId);
-      if (fixture) {
-        console.log(`[ws] Streaming fixture for ${sessionId}: ${fixture}`);
-        send(ws, { type: "fixture-start", ts: Date.now(), sessionId });
-        const lines = readFileSync(fixture, "utf-8").split("\n").filter((l) => l.trim());
-        const events: unknown[] = [];
-        let cancelled = false;
-        let paused = false;
-        let speed = 1;
-        let lineIndex = 0;
-        let timer: ReturnType<typeof setTimeout> | null = null;
+  getJobs: () => Job[]
+): () => void {
+  let cancelled = false;
+  let cancelInner: (() => void) | null = null;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-        const baseDelay = 200;
+  const cancel = (): void => {
+    cancelled = true;
+    if (retryTimer !== null) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+    cancelInner?.();
+  };
 
-        const streamNext = (): void => {
-          if (cancelled) return;
-          if (paused) return; // will be resumed by set-speed message
-          if (lineIndex >= lines.length) {
-            const verdict = detectVerdict(events as Parameters<typeof detectVerdict>[0]);
+  const scheduleRetry = (): void => {
+    retryTimer = setTimeout(() => {
+      retryTimer = null;
+      void attempt();
+    }, PENDING_RETRY_INTERVAL_MS);
+  };
+
+  const attempt = async (): Promise<void> => {
+    if (cancelled) return;
+
+    try {
+      const podName = await findPodForSession(sessionId, namespace);
+      if (cancelled) return;
+
+      if (!podName) {
+        // Retry only when the job is explicitly pending or running — the pod is
+        // still being scheduled. For terminal / purged jobs (or jobs not in the
+        // list, which means the pod was already cleaned up), fall through to the
+        // TTL-expired error path immediately.
+        const job = getJobs().find((j) => j.sessionId === sessionId);
+        const isPendingOrRunning =
+          job?.status === "pending" || job?.status === "running";
+
+        if (isPendingOrRunning) {
+          // Pod not scheduled yet — retry after delay.
+          // "Awaiting the Norns" remains visible on the client (isConnecting stays true).
+          scheduleRetry();
+          return;
+        }
+
+        // Terminal job (or unknown session) with no pod → TTL expired or cleaned up.
+        // Try fixture fallback for local dev first.
+        const fixture = findFixture(sessionId);
+        if (fixture) {
+          console.log(`[ws] Streaming fixture for ${sessionId}: ${fixture}`);
+          send(ws, { type: "fixture-start", ts: Date.now(), sessionId });
+          const lines = readFileSync(fixture, "utf-8").split("\n").filter((l) => l.trim());
+          const events: unknown[] = [];
+          let fixturePaused = false;
+          let fixtureSpeed = 1;
+          let lineIndex = 0;
+          let timer: ReturnType<typeof setTimeout> | null = null;
+
+          const baseDelay = 200;
+
+          const streamNext = (): void => {
+            if (cancelled) return;
+            if (fixturePaused) return;
+            if (lineIndex >= lines.length) {
+              const verdict = detectVerdict(events as Parameters<typeof detectVerdict>[0]);
+              if (verdict) {
+                send(ws, { type: "verdict", ts: Date.now(), sessionId, result: verdict.pass ? "PASS" : "FAIL" });
+              }
+              send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
+              return;
+            }
+            const line = lines[lineIndex++]!;
+            send(ws, { type: "log-line", ts: Date.now(), sessionId, line });
+            const ev = parseJsonlLine(line);
+            if (ev) events.push(ev);
+            const delay = ev ? baseDelay / fixtureSpeed : 0;
+            timer = setTimeout(streamNext, delay);
+          };
+
+          const onSpeedMessage = (data: unknown): void => {
+            try {
+              const msg = JSON.parse(String(data)) as { type: string; speed?: number; sessionId?: string };
+              if (msg.type === "set-speed" && msg.sessionId === sessionId) {
+                if (msg.speed === 0) {
+                  fixturePaused = true;
+                  if (timer) { clearTimeout(timer); timer = null; }
+                } else {
+                  fixtureSpeed = msg.speed ?? 1;
+                  fixturePaused = false;
+                  if (!timer) streamNext();
+                }
+              }
+            } catch { /* ignore */ }
+          };
+          ws.on("message", onSpeedMessage);
+
+          cancelInner = () => {
+            if (timer) clearTimeout(timer);
+            ws.off("message", onSpeedMessage);
+          };
+
+          streamNext();
+          return;
+        }
+
+        send(ws, {
+          type: "stream-error",
+          ts: Date.now(),
+          sessionId,
+          message: `Pod for session ${sessionId} has been cleaned up (job TTL expired). Logs are no longer available from the cluster.`,
+        });
+        send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
+        return;
+      }
+
+      // Pod found — attempt to open the log stream.
+      const job = getJobs().find((j) => j.sessionId === sessionId);
+      const isCompleted = job?.status === "succeeded" || job?.status === "failed";
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const events: any[] = [];
+
+      let innerCancel: (() => void) | null = null;
+      try {
+        innerCancel = await streamPodLogs(
+          podName,
+          namespace,
+          (rawLine) => {
+            if (cancelled) return;
+            const line = rawLine.replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*/, "");
+            send(ws, { type: "log-line", ts: Date.now(), sessionId, line });
+            const ev = parseJsonlLine(line);
+            if (ev) events.push(ev);
+          },
+          () => {
+            if (cancelled) return;
+            const verdict = detectVerdict(events);
             if (verdict) {
               send(ws, { type: "verdict", ts: Date.now(), sessionId, result: verdict.pass ? "PASS" : "FAIL" });
             }
             send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
-            return;
-          }
-          const line = lines[lineIndex++]!;
-          send(ws, { type: "log-line", ts: Date.now(), sessionId, line });
-          const ev = parseJsonlLine(line);
-          if (ev) events.push(ev);
-          // Non-JSON lines (entrypoint setup) stream instantly, JSON events get delayed
-          const delay = ev ? baseDelay / speed : 0;
-          timer = setTimeout(streamNext, delay);
-        };
-
-        // Listen for speed/pause control messages
-        const onSpeedMessage = (data: unknown): void => {
-          try {
-            const msg = JSON.parse(String(data)) as { type: string; speed?: number; sessionId?: string };
-            if (msg.type === "set-speed" && msg.sessionId === sessionId) {
-              if (msg.speed === 0) {
-                paused = true;
-                if (timer) { clearTimeout(timer); timer = null; }
-              } else {
-                speed = msg.speed ?? 1;
-                paused = false;
-                if (!timer) streamNext(); // resume
-              }
-            }
-          } catch { /* ignore */ }
-        };
-        ws.on("message", onSpeedMessage);
-
-        streamNext();
-        return () => {
-          cancelled = true;
-          if (timer) clearTimeout(timer);
-          ws.off("message", onSpeedMessage);
-        };
-      }
-      send(ws, {
-        type: "stream-error",
-        ts: Date.now(),
-        sessionId,
-        message: `Pod for session ${sessionId} has been cleaned up (job TTL expired). Logs are no longer available from the cluster.`,
-      });
-      send(ws, {
-        type: "stream-end",
-        ts: Date.now(),
-        sessionId,
-        reason: "completed",
-      });
-      return () => {};
-    }
-
-    // Don't follow completed jobs — just dump existing logs
-    const job = cachedJobs.find((j) => j.sessionId === sessionId);
-    const isCompleted = job?.status === "succeeded" || job?.status === "failed";
-
-    // Track JSONL events for verdict detection
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const events: any[] = [];
-
-    const cancel = await streamPodLogs(
-      podName,
-      namespace,
-      (rawLine) => {
-        // Strip K8s ISO timestamp prefix (e.g. "2026-03-15T20:10:19.903085617Z ")
-        // so parseEntrypointLine regexes match fixture format on both live and replay paths.
-        const line = rawLine.replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*/, "");
-        send(ws, { type: "log-line", ts: Date.now(), sessionId, line });
-        const ev = parseJsonlLine(line);
-        if (ev) events.push(ev);
-      },
-      () => {
-        const verdict = detectVerdict(events);
-        if (verdict) {
-          send(ws, {
-            type: "verdict",
-            ts: Date.now(),
-            sessionId,
-            result: verdict.pass ? "PASS" : "FAIL",
-          });
+          },
+          (err) => {
+            if (cancelled) return;
+            const friendly = friendlyK8sError(err.message, sessionId);
+            send(ws, { type: "stream-error", ts: Date.now(), sessionId, message: friendly });
+            send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "failed" });
+          },
+          { follow: !isCompleted }
+        );
+      } catch (streamErr) {
+        if (cancelled) return;
+        const raw = streamErr instanceof Error ? streamErr.message : String(streamErr);
+        if (raw.includes("204")) {
+          send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
+          return;
         }
-        send(ws, {
-          type: "stream-end",
-          ts: Date.now(),
-          sessionId,
-          reason: "completed",
-        });
-      },
-      (err) => {
-        const friendly = friendlyK8sError(err.message, sessionId);
-        send(ws, { type: "stream-error", ts: Date.now(), sessionId, message: friendly });
-        // Always send stream-end so the client unsubscribes and stops retrying
-        send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "failed" });
-      },
-      { follow: !isCompleted }
-    );
+        // Container may not be running yet (e.g. ContainerCreating, init containers).
+        // If the job is still active, retry — the container will start soon.
+        const currentJob = getJobs().find((j) => j.sessionId === sessionId);
+        if (currentJob?.status === "pending" || currentJob?.status === "running") {
+          scheduleRetry();
+          return;
+        }
+        throw streamErr;
+      }
 
-    return cancel;
-  } catch (err) {
-    const raw = err instanceof Error ? err.message : String(err);
-    // HTTP 204 = pod exists but logs are empty/evicted — not an error state
-    if (raw.includes("204")) {
+      if (cancelled) {
+        innerCancel?.();
+      } else {
+        cancelInner = innerCancel;
+      }
+    } catch (err) {
+      if (cancelled) return;
+      const raw = err instanceof Error ? err.message : String(err);
+      if (raw.includes("204")) {
+        send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
+        return;
+      }
+      const friendly = friendlyK8sError(raw, sessionId);
+      send(ws, { type: "stream-error", ts: Date.now(), sessionId, message: friendly });
       send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
-      return () => {};
     }
-    const friendly = friendlyK8sError(raw, sessionId);
-    send(ws, { type: "stream-error", ts: Date.now(), sessionId, message: friendly });
-    send(ws, { type: "stream-end", ts: Date.now(), sessionId, reason: "completed" });
-    return () => {};
-  }
+  };
+
+  void attempt();
+  return cancel;
 }
 
 // ── Heartbeat ───────────────────────────────────────────────────────────────
@@ -451,9 +525,11 @@ export function attachWebSocketServer(
       } else if (msg.type === "subscribe") {
         const { sessionId } = msg;
         if (subscriptions.has(sessionId)) return; // already subscribed
-        void startLogStream(ws, sessionId, namespace, cachedJobs).then((cancel) => {
-          subscriptions.set(sessionId, cancel);
-        });
+        // startLogStream returns a cancel function immediately — async work runs
+        // in the background. Setting subscriptions synchronously prevents duplicate
+        // subscribe messages from spawning parallel streams for the same session.
+        const cancel = startLogStream(ws, sessionId, namespace, () => cachedJobs);
+        subscriptions.set(sessionId, cancel);
       } else if (msg.type === "unsubscribe") {
         const { sessionId } = msg;
         const cancel = subscriptions.get(sessionId);
