@@ -106,6 +106,8 @@ interface UpsellPromptProps {
 
 function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isMyCardsActive = pathname === "/ledger";
   const signInButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -142,6 +144,31 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
       <p className="text-sm text-foreground font-body leading-relaxed">
         Sign in to back up your cards and access them from any device.
       </p>
+      {/* My Cards link — anonymous users can still manage cards via localStorage */}
+      <button
+        type="button"
+        onClick={() => {
+          onClose();
+          router.push("/ledger");
+        }}
+        className={[
+          "flex items-center gap-2 w-full px-1 py-2 text-sm transition-colors font-body border-t border-border relative",
+          isMyCardsActive
+            ? "text-gold font-semibold"
+            : "text-muted-foreground hover:text-foreground",
+        ].join(" ")}
+        style={{ minHeight: 44 }}
+        aria-label="My Cards"
+      >
+        <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden="true" />
+        My Cards
+        {isMyCardsActive && (
+          <span
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-gold"
+            aria-hidden="true"
+          />
+        )}
+      </button>
       {/* Settings link — visible to anonymous users; page handles auth gating */}
       <button
         type="button"
