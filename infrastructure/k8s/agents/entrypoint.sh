@@ -76,15 +76,16 @@ echo "[ok] repository cloned"
 BRANCH="${BRANCH:-main}"
 git fetch origin --prune
 
-if git branch -r | grep -q "origin/${BRANCH}$"; then
-  git checkout "${BRANCH}"
-  git pull origin "${BRANCH}"
+if git ls-remote --exit-code --heads origin "${BRANCH}" >/dev/null 2>&1; then
+  # Branch exists on remote — check it out tracking the remote
+  git checkout -b "${BRANCH}" "origin/${BRANCH}"
   git rebase origin/main || {
     echo "[WARN] rebase conflict — aborting rebase, continuing on branch"
     git rebase --abort || true
   }
   echo "[ok] checked out existing branch: ${BRANCH}"
 else
+  # Branch does not exist on remote — create fresh and push
   git checkout -b "${BRANCH}"
   git push -u origin "${BRANCH}"
   echo "[ok] created new branch: ${BRANCH}"
