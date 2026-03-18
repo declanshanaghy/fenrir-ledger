@@ -144,6 +144,30 @@ function detectBullshit(filePath, content) {
 
 // ── Formatting ────────────────────────────────────────────────────────────────
 
+/**
+ * Generates Loki's signature block as inline SVG.
+ * Renders a gold-bordered seal with runic name, title, and date.
+ */
+function lokiSignatureSvg(dateStr, tagline) {
+  return [
+    `<div align="center">`,
+    ``,
+    `<svg width="280" height="140" viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg">`,
+    `  <rect x="1" y="1" width="278" height="138" rx="6" fill="#07070d" stroke="#c9920a" stroke-width="2"/>`,
+    `  <line x1="20" y1="38" x2="260" y2="38" stroke="#c9920a" stroke-width="0.5" opacity="0.4"/>`,
+    `  <text x="140" y="28" text-anchor="middle" font-family="serif" font-size="20" letter-spacing="8" fill="#c9920a">ᛚ ᛟ ᚲ ᛁ</text>`,
+    `  <text x="140" y="62" text-anchor="middle" font-family="serif" font-size="14" fill="#e8e8e0">Loki Laufeyson</text>`,
+    `  <text x="140" y="84" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8b8680">QA Tester · Fenrir Ledger</text>`,
+    `  <text x="140" y="106" text-anchor="middle" font-family="monospace" font-size="11" fill="#8b8680">${dateStr}</text>`,
+    `  <text x="140" y="130" text-anchor="middle" font-family="serif" font-size="10" letter-spacing="3" fill="#c9920a" opacity="0.6">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</text>`,
+    `</svg>`,
+    ``,
+    `*${tagline}*`,
+    ``,
+    `</div>`,
+  ];
+}
+
 function badge(pct) {
   const n = parseFloat(pct);
   if (n >= 80) return "🟢";
@@ -259,19 +283,7 @@ async function main() {
     L.push(``);
     L.push(`> *${closingQuote || 'The chains hold. The wolf sleeps.'}*`);
     L.push(``);
-    L.push(`<div align="center">`);
-    L.push(``);
-    L.push(`\`\`\``);
-    L.push(`    ╭───────────────────────╮`);
-    L.push(`    │   ᛚ ᛟ ᚲ ᛁ            │`);
-    L.push(`    │   Loki Laufeyson      │`);
-    L.push(`    │   QA · ${dateStr}     │`);
-    L.push(`    ╰───────────────────────╯`);
-    L.push(`\`\`\``);
-    L.push(``);
-    L.push(`*ᚠᛖᚾᚱᛁᚱ — ${taglineQuote || 'the wolf is bound, the ledger is true'}*`);
-    L.push(``);
-    L.push(`</div>`);
+    L.push(...lokiSignatureSvg(dateStr, `ᚠᛖᚾᚱᛁᚱ — ${taglineQuote || 'the wolf is bound, the ledger is true'}`));
   } else {
     const issues = [];
     if (!isClean) issues.push(`**${bullshitFiles.length}** hollow test file${bullshitFiles.length !== 1 ? 's' : ''} (${totalBullshitTests} tests) poisoning the suite`);
@@ -309,19 +321,7 @@ async function main() {
     L.push(``);
     L.push(`> *${closingQuote || 'Fix this before Ragnarok finds us unprepared.'}*`);
     L.push(``);
-    L.push(`<div align="center">`);
-    L.push(``);
-    L.push(`\`\`\``);
-    L.push(`    ╭───────────────────────╮`);
-    L.push(`    │   ᛚ ᛟ ᚲ ᛁ            │`);
-    L.push(`    │   Loki Laufeyson      │`);
-    L.push(`    │   QA · ${dateStr}     │`);
-    L.push(`    ╰───────────────────────╯`);
-    L.push(`\`\`\``);
-    L.push(``);
-    L.push(`*ᚠᛖᚾᚱᛁᚱ — ${taglineQuote || 'the wolf strains against the chain'}*`);
-    L.push(``);
-    L.push(`</div>`);
+    L.push(...lokiSignatureSvg(dateStr, `ᚠᛖᚾᚱᛁᚱ — ${taglineQuote || 'the wolf strains against the chain'}`));
   }
 
   L.push(``);
