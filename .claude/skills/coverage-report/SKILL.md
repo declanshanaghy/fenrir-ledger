@@ -146,7 +146,7 @@ noise that inflates counts, breaks on refactors, and masks real coverage gaps.
 
 - [ ] All listed files deleted
 - [ ] `npx vitest run` still green after deletion
-- [ ] `quality/reports/quality-report.md` regenerated — bullshit count = 0
+- [ ] `quality/reports/quality-report.html` regenerated — bullshit count = 0
 
 ## Why These Were Written
 
