@@ -13,15 +13,6 @@ gcloud container clusters get-credentials fenrir-autopilot \
   --project fenrir-ledger-prod
 ```
 
-## 0. Bootstrap cluster (first-time setup)
-
-Apply namespaces, service accounts, resource quotas, and network policies:
-
-```bash
-helm upgrade --install fenrir-bootstrap ./infrastructure/helm/fenrir-bootstrap \
-  -f ./infrastructure/helm/fenrir-bootstrap/values-prod.yaml
-```
-
 ## 1. Get the Ingress hostname
 
 ```bash

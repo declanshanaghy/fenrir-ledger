@@ -1,2 +1,0 @@
-# NetworkPolicies removed — overly restrictive, caused GCP LB health check failures
-# across multiple namespaces (fenrir-app, fenrir-analytics). Not needed.

@@ -89,7 +89,6 @@ service change requires infrastructure work, FiremanDecko does it — no hand-of
 |------|------|-------------|
 | Terraform | `infrastructure/*.tf` | GCP project, IAM, networking, monitoring |
 | Helm — App | `infrastructure/helm/fenrir-app/` | Main Next.js app chart |
-| Helm — Bootstrap | `infrastructure/helm/fenrir-bootstrap/` | Namespaces, SAs, quotas |
 | Helm — Odin's Throne | `infrastructure/helm/odin-throne/` | Monitor API + UI chart |
 | Helm — Umami | `infrastructure/helm/umami/` | Analytics chart |
 | Helm — n8n | `infrastructure/helm/n8n/` | Marketing engine chart |

@@ -58,7 +58,7 @@ Helm manages Kubernetes workloads. GitHub Actions orchestrates every deployment.
 | `fenrir-analytics` | Umami self-hosted analytics + PostgreSQL | `helm/umami` |
 | `fenrir-monitor` | Odin's Throne monitor backend + UI + oauth2-proxy | `helm/odin-throne` |
 
-Namespaces, service accounts, ResourceQuotas, and NetworkPolicies are created by the **bootstrap chart** (`helm/fenrir-bootstrap`) — deployed first on every CI run.
+Namespaces, service accounts, and ResourceQuotas are created inline by each deploy job in `deploy.yml` — no separate bootstrap step.
 
 ---
 
@@ -67,7 +67,6 @@ Namespaces, service accounts, ResourceQuotas, and NetworkPolicies are created by
 | Layer | Tool | Scope |
 |---|---|---|
 | Cloud infrastructure | Terraform (`*.tf`) | GKE cluster, VPC, DNS, CDN, Firestore, Artifact Registry, IAM |
-| Cluster bootstrap | Helm (`helm/fenrir-bootstrap`) | Namespaces, service accounts, RBAC, resource quotas, network policies |
 | App workloads | Helm (`helm/fenrir-app`) | Next.js app + Redis in `fenrir-app` |
 | Monitor | Helm (`helm/odin-throne`) | Odin's Throne backend + UI in `fenrir-monitor` |
 | Analytics | Helm (`helm/umami`) | Umami + PostgreSQL in `fenrir-analytics` |
@@ -93,13 +92,13 @@ Pods authenticate to GCP services without exported keys via [Workload Identity](
 - `fenrir-app-sa` (K8s) ↔ `fenrir-app-workload@...iam.gserviceaccount.com` (GCP) — Firestore, logging
 - `fenrir-agents-sa` (K8s) ↔ `fenrir-agents-workload@...iam.gserviceaccount.com` (GCP) — Artifact Registry pull, logging
 
-Both are created by `helm/fenrir-bootstrap` and bound by `infrastructure/iam.tf`.
+Both are created by the deploy workflow (`deploy.yml`) and bound by `infrastructure/iam.tf`.
 
 ---
 
 ## Further Reading
 
-- [Helm Charts](helm-charts.md) — all 4 Helm charts documented
+- [Helm Charts](helm-charts.md) — all Helm charts documented
 - [Agent Sandbox](agent-sandbox.md) — how agent GKE Jobs work end-to-end
 - [Terraform](terraform.md) — every `.tf` file explained
 - [Deployment Pipeline](deployment-pipeline.md) — `deploy.yml` change matrix and rollback
