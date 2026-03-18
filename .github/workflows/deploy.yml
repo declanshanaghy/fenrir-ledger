@@ -402,6 +402,7 @@ jobs:
             --namespace=fenrir-agents --dry-run=client -o yaml | kubectl apply -f -
           kubectl annotate serviceaccount fenrir-agents-sa --namespace=fenrir-agents --overwrite \
             iam.gke.io/gcp-service-account=fenrir-agents-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+          kubectl apply -f infrastructure/k8s/agents/rbac.yaml
           cat <<'QUOTA' | kubectl apply -f -
           apiVersion: v1
           kind: ResourceQuota
