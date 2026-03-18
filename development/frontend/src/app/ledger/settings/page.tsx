@@ -3,19 +3,18 @@
 /**
  * Settings Page -- /settings route
  *
- * Central settings hub for the Fenrir Ledger. Contains:
- *   - Subscription management (Stripe) -- left column on desktop
- *   - Trial status section (shown during active trial) -- left column
- *   - Settings controls (Restore Tab Guides, etc.) -- right column on desktop
+ * 3-tab layout: Account | Household | Settings
  *
- * Anonymous-first: accessible without a signed-in session. The settings
- * components handle their own auth/entitlement checks internally.
+ * - URL hash persistence: #account, #household, #settings
+ * - Dynamic subtitle per active tab with aria-live="polite"
+ * - Desktop: horizontal tab bar (WAI-ARIA tabs pattern)
+ * - Mobile (<md): native <select> dropdown
+ * - Karl bling: gold border treatment on tabs for karl/trial tiers
  *
- * Layout: two-column on desktop (md+), single-column stacked on mobile.
- * Mobile-first: 375px minimum, stacked sections with consistent spacing.
+ * Issue: #1367
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StripeSettings } from "@/components/entitlement/StripeSettings";
 import { track } from "@/lib/analytics/track";
 import { TrialSettingsSection } from "@/components/trial/TrialSettingsSection";
@@ -26,6 +25,45 @@ import {
   GleipnirMountainRoots,
   useGleipnirFragment3,
 } from "@/components/cards/GleipnirMountainRoots";
+
+// ---------------------------------------------------------------------------
+// Tab definitions
+// ---------------------------------------------------------------------------
+
+type SettingsTabId = "account" | "household" | "settings";
+
+interface SettingsTab {
+  id: SettingsTabId;
+  label: string;
+  subtitle: string;
+}
+
+const SETTINGS_TABS: SettingsTab[] = [
+  {
+    id: "account",
+    label: "Account",
+    subtitle:
+      "Manage your subscription and trial status. The wolf's chain awaits your command.",
+  },
+  {
+    id: "household",
+    label: "Household",
+    subtitle: "Configure your household and cloud sync. Forge the bonds that bind.",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    subtitle: "Customize your experience. Shape the ledger to your will.",
+  },
+];
+
+const DEFAULT_TAB: SettingsTabId = "account";
+
+function getInitialTab(): SettingsTabId {
+  if (typeof window === "undefined") return DEFAULT_TAB;
+  const hash = window.location.hash.replace("#", "") as SettingsTabId;
+  return SETTINGS_TABS.some((t) => t.id === hash) ? hash : DEFAULT_TAB;
+}
 
 // ---------------------------------------------------------------------------
 // Tab guide localStorage keys
@@ -55,7 +93,7 @@ function countDismissedGuides(): number {
 }
 
 // ---------------------------------------------------------------------------
-// Restore Tab Guides section
+// RestoreTabGuides component
 // ---------------------------------------------------------------------------
 
 /** Duration in ms to show the confirmation message after restoring guides */
@@ -175,41 +213,159 @@ function RestoreTabGuides() {
 /**
  * SettingsPage -- the /settings route.
  *
- * Two-column layout on desktop: subscription management on the left,
- * settings controls on the right. Collapses to single-column on mobile
- * (settings stack below the subscription card).
+ * 3-tab layout: Account | Household | Settings
+ * Refactored from 2-column card layout per issue #1367.
  */
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<SettingsTabId>(DEFAULT_TAB);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Hydrate tab from URL hash on mount
   useEffect(() => {
+    setActiveTab(getInitialTab());
     track("settings-visit");
   }, []);
+
+  const activateTab = useCallback((tabId: SettingsTabId) => {
+    setActiveTab(tabId);
+    history.replaceState(null, "", "#" + tabId);
+    track("settings-tab-switch", { tab: tabId });
+  }, []);
+
+  // Keyboard navigation: ArrowLeft/Right/Home/End
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+      const total = SETTINGS_TABS.length;
+      let nextIndex: number | null = null;
+
+      if (e.key === "ArrowRight") {
+        nextIndex = (index + 1) % total;
+      } else if (e.key === "ArrowLeft") {
+        nextIndex = (index - 1 + total) % total;
+      } else if (e.key === "Home") {
+        nextIndex = 0;
+      } else if (e.key === "End") {
+        nextIndex = total - 1;
+      }
+
+      if (nextIndex !== null) {
+        e.preventDefault();
+        const nextTab = SETTINGS_TABS[nextIndex];
+        activateTab(nextTab.id);
+        tabRefs.current[nextIndex]?.focus();
+      }
+    },
+    [activateTab]
+  );
+
+  const activeTabData = SETTINGS_TABS.find((t) => t.id === activeTab)!;
 
   return (
     <div className="px-6 py-6 max-w-5xl">
       {/* Page heading */}
-      <header className="mb-6 border-b border-border pb-4">
+      <header className="mb-0 border-b border-border pb-4">
         <h1 className="font-display text-2xl text-gold tracking-wide mb-1">
           Settings
         </h1>
-        <p className="text-sm text-muted-foreground mt-2 font-body italic">
-          Forge your preferences. Shape the ledger to your will.
+        <p
+          className="text-sm text-muted-foreground mt-2 font-body italic"
+          aria-live="polite"
+          id="settings-subtitle"
+        >
+          {activeTabData.subtitle}
         </p>
       </header>
 
-      {/* Two-column layout: subscription left, settings right */}
-      <div className="flex flex-col md:grid md:grid-cols-2 gap-6">
-        {/* Left column: Subscription management + trial status + household */}
-        <div className="flex flex-col gap-6">
+      {/* ── Desktop tab bar (hidden on mobile) ── */}
+      <div
+        role="tablist"
+        aria-label="Settings tabs"
+        className="hidden md:flex border-b border-border"
+      >
+        {SETTINGS_TABS.map((tab, index) => {
+          const isSelected = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              ref={(el) => { tabRefs.current[index] = el; }}
+              role="tab"
+              id={`settings-tab-${tab.id}`}
+              aria-selected={isSelected}
+              aria-controls={`settings-panel-${tab.id}`}
+              tabIndex={isSelected ? 0 : -1}
+              onClick={() => activateTab(tab.id)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              className={`karl-bling-tab relative px-5 py-3 text-sm font-heading font-semibold tracking-wide border border-transparent border-b-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                isSelected
+                  ? "border-border border-b-2 border-b-background -mb-px text-foreground bg-background"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Mobile select (visible below md) ── */}
+      <div className="md:hidden pt-4">
+        <label htmlFor="settings-tab-select" className="sr-only">
+          Settings section
+        </label>
+        <select
+          id="settings-tab-select"
+          aria-label="Settings section"
+          value={activeTab}
+          onChange={(e) => activateTab(e.target.value as SettingsTabId)}
+          className="karl-bling-select w-full min-h-[44px] px-3 py-2 text-sm font-heading bg-background border border-border rounded-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {SETTINGS_TABS.map((tab) => (
+            <option key={tab.id} value={tab.id}>
+              {tab.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* ── Tab panels ── */}
+
+      {/* Account panel */}
+      <div
+        role="tabpanel"
+        id="settings-panel-account"
+        aria-labelledby="settings-tab-account"
+        hidden={activeTab !== "account"}
+        className="pt-6"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <StripeSettings />
           <TrialSettingsSection />
-          <HouseholdSettingsSection />
         </div>
+      </div>
 
-        {/* Right column: Sync + settings controls */}
-        <div className="flex flex-col gap-6">
+      {/* Household panel */}
+      <div
+        role="tabpanel"
+        id="settings-panel-household"
+        aria-labelledby="settings-tab-household"
+        hidden={activeTab !== "household"}
+        className="pt-6"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <HouseholdSettingsSection />
           <SyncSettingsSection />
-          <RestoreTabGuides />
         </div>
+      </div>
+
+      {/* Settings panel */}
+      <div
+        role="tabpanel"
+        id="settings-panel-settings"
+        aria-labelledby="settings-tab-settings"
+        hidden={activeTab !== "settings"}
+        className="pt-6"
+      >
+        <RestoreTabGuides />
       </div>
     </div>
   );
