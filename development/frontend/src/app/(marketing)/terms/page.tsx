@@ -59,10 +59,10 @@ export default function TermsPage() {
         Fenrir Ledger is a credit card rewards tracking application operated by
         Declan Shanaghy (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;). The Service is available at{" "}
         <a
-          href="https://fenrirledger.com"
+          href="https://www.fenrirledger.com"
           className="text-gold underline hover:brightness-110 transition-colors"
         >
-          fenrirledger.com
+          www.fenrirledger.com
         </a>
         .
       </p>
