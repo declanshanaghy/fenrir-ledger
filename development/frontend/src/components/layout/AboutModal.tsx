@@ -22,6 +22,8 @@ import {
 } from "@/components/cards/GleipnirWomansBeard";
 import { WolfHungerMeter } from "@/components/shared/WolfHungerMeter";
 
+const GITHUB_REPO = "https://github.com/declanshanaghy/fenrir-ledger";
+
 const ROMAN = ["I", "II", "III", "IV", "V", "VI"] as const;
 
 const TEAM = [
@@ -55,6 +57,53 @@ const INGREDIENTS = [
   "The breath of a fish",
   "The spittle of a bird",
 ] as const;
+
+function BuildInfo() {
+  const rawCommit = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
+  const sha = rawCommit.slice(0, 7) || "unknown";
+  const buildDate = process.env.NEXT_PUBLIC_BUILD_DATE ?? "";
+  const env = process.env.NEXT_PUBLIC_ENV ?? process.env.NODE_ENV ?? "unknown";
+
+  // Version: prefer semver-like string; fall back to first 7 chars of SHA
+  const rawVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
+  const version = rawVersion.match(/^\d+\.\d+/)
+    ? rawVersion
+    : rawVersion.slice(0, 7) || "0.1.0";
+
+  const formattedDate = buildDate
+    ? new Date(buildDate).toUTCString().replace(" GMT", " UTC")
+    : "unknown";
+
+  return (
+    <div
+      className="mt-2 flex flex-col gap-0.5 text-[11px] font-mono text-muted-foreground/60 w-full"
+      data-testid="build-info"
+    >
+      <span>v{version}</span>
+      {sha !== "unknown" ? (
+        <a
+          href={`${GITHUB_REPO}/commit/${rawCommit}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-gold transition-colors truncate"
+          title={rawCommit}
+          data-testid="build-info-commit"
+        >
+          {sha}
+        </a>
+      ) : (
+        <span data-testid="build-info-commit">{sha}</span>
+      )}
+      <span data-testid="build-info-date">{formattedDate}</span>
+      <span
+        className="capitalize"
+        data-testid="build-info-env"
+      >
+        {env}
+      </span>
+    </div>
+  );
+}
 
 interface AboutModalProps {
   open: boolean;
@@ -117,6 +166,9 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
             <p className="font-body text-muted-foreground text-[13px] italic leading-relaxed max-w-[160px]">
               &ldquo;The wolf watches what the issuers hope you forget.&rdquo;
             </p>
+
+            {/* Build info — subtle, small, muted */}
+            <BuildInfo />
           </div>
 
           {/* Vertical divider — desktop only */}

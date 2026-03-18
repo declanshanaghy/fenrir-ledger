@@ -16,6 +16,14 @@ import { CACHE_CONTROL } from "./src/lib/cache-headers";
  */
 
 const nextConfig: NextConfig = {
+  // Inject build-time env vars — available as process.env.NEXT_PUBLIC_* in the browser bundle.
+  // NEXT_PUBLIC_BUILD_DATE is set at build time; runtime env var takes precedence if set.
+  env: {
+    NEXT_PUBLIC_BUILD_DATE:
+      process.env.NEXT_PUBLIC_BUILD_DATE ?? new Date().toISOString(),
+  },
+
+
   // Standalone output for containerized deployment (GKE Autopilot)
   // Produces a self-contained server.js with only required node_modules
   output: "standalone",
