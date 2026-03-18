@@ -1,0 +1,68 @@
+# --------------------------------------------------------------------------
+# n8n Application Helm Values
+# Chart: oci://ghcr.io/8gears/n8n
+# Namespace: fenrir-marketing
+#
+# Deploy:
+#   helm upgrade --install n8n oci://ghcr.io/8gears/n8n \
+#     -n fenrir-marketing \
+#     -f infrastructure/helm/n8n/n8n-app-values.yaml
+# --------------------------------------------------------------------------
+
+n8n:
+  host: "marketing.fenrirledger.com"
+  protocol: "https"
+  port: 5678
+  editorBaseUrl: "https://marketing.fenrirledger.com/"
+  webhookTunnelUrl: "https://marketing.fenrirledger.com/"
+
+db:
+  type: sqlite
+
+env:
+  N8N_HOST: "marketing.fenrirledger.com"
+  N8N_PROTOCOL: "https"
+  N8N_PORT: "5678"
+  N8N_EDITOR_BASE_URL: "https://marketing.fenrirledger.com/"
+  WEBHOOK_URL: "https://marketing.fenrirledger.com/"
+  N8N_USER_FOLDER: "/home/node/.n8n"
+  N8N_DIAGNOSTICS_ENABLED: "false"
+  N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+
+extraEnvFrom:
+  - secretRef:
+      name: n8n-secrets
+
+persistence:
+  enabled: true
+  storageClass: standard-rwo
+  size: 1Gi
+  mountPath: /home/node/.n8n
+  accessModes:
+    - ReadWriteOnce
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+    ephemeral-storage: "128Mi"
+  limits:
+    cpu: "250m"
+    memory: "512Mi"
+    ephemeral-storage: "256Mi"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5678
+
+# Ingress managed by n8n-infra Helm chart (infrastructure/helm/n8n/)
+ingress:
+  enabled: false
+
+replicaCount: 1
+
+image:
+  repository: n8nio/n8n
+  tag: latest
+  pullPolicy: IfNotPresent
