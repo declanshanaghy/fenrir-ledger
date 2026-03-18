@@ -68,9 +68,8 @@ resource "google_dns_record_set" "apex" {
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
-  # TTL lowered to 60s pre-CDN for fast DNS-level rollback.
-  # Raise to 3600s after CDN stability is confirmed (issue #1209).
-  ttl = 60
+  # TTL raised to 3600s — CDN stable post-cutover (issue #1209).
+  ttl = 3600
 
   rrdatas = [google_compute_global_address.apex_redirect_ip.address]
 }
@@ -80,9 +79,8 @@ resource "google_dns_record_set" "www" {
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
-  # TTL lowered to 60s pre-CDN for fast DNS-level rollback.
-  # Raise to 3600s after CDN stability is confirmed (issue #1209).
-  ttl = 60
+  # TTL raised to 3600s — CDN stable post-cutover (issue #1209).
+  ttl = 3600
 
   rrdatas = [google_compute_global_address.app_ip.address]
 }
@@ -109,9 +107,8 @@ resource "google_dns_record_set" "analytics" {
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
-  # TTL lowered to 60s pre-CDN for fast DNS-level rollback.
-  # Raise to 3600s after CDN stability is confirmed (issue #1209).
-  ttl = 60
+  # TTL raised to 3600s — CDN stable post-cutover (issue #1209).
+  ttl = 3600
 
   rrdatas = [google_compute_global_address.umami_ip.address]
 }
@@ -132,7 +129,8 @@ resource "google_dns_record_set" "marketing" {
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
-  ttl          = 60
+  # TTL raised to 3600s — CDN stable post-cutover (issue #1209).
+  ttl = 3600
 
   rrdatas = [google_compute_global_address.marketing_ip.address]
 }
@@ -153,9 +151,8 @@ resource "google_dns_record_set" "monitor" {
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
-  # TTL lowered to 60s pre-CDN for fast DNS-level rollback.
-  # Raise to 3600s after CDN stability is confirmed (issue #1209).
-  ttl = 60
+  # TTL raised to 3600s — CDN stable post-cutover (issue #1209).
+  ttl = 3600
 
   rrdatas = [google_compute_global_address.monitor_ip.address]
 }
