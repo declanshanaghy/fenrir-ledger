@@ -49,7 +49,7 @@ function ThrallUpsellCard({
 }) {
   return (
     <section
-      className="relative border border-border p-5 flex flex-col gap-4"
+      className="relative border border-border p-5 flex flex-col gap-4 karl-bling-card"
       aria-label="Cloud Sync"
     >
       {/* Heading row */}
