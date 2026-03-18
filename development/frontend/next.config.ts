@@ -20,30 +20,6 @@ const nextConfig: NextConfig = {
   // Produces a self-contained server.js with only required node_modules
   output: "standalone",
 
-  // Istanbul coverage instrumentation via SWC plugin.
-  // Activated only when ISTANBUL_COVERAGE=1 is set (coverage builds).
-  // Injects __coverage__ counters into all source files at build time.
-  // Playwright tests read window.__coverage__ to collect E2E coverage.
-  ...(process.env.ISTANBUL_COVERAGE === "1" && {
-    experimental: {
-      swcPlugins: [
-        [
-          "swc-plugin-coverage-instrument",
-          {
-            unstableExclude: [
-              "**/node_modules/**",
-              "**/*.test.ts",
-              "**/*.test.tsx",
-              "**/*.spec.ts",
-              "**/__tests__/**",
-              "**/layout.tsx",
-            ],
-          },
-        ],
-      ],
-    },
-  }),
-
   // Pin the workspace root so Next.js doesn't infer it from stray lockfiles
   // in parent directories. This is the frontend directory itself.
   outputFileTracingRoot: __dirname,
