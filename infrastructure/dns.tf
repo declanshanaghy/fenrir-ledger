@@ -72,7 +72,7 @@ resource "google_dns_record_set" "apex" {
   # Raise to 3600s after CDN stability is confirmed (issue #1209).
   ttl = 60
 
-  rrdatas = [google_compute_global_address.app_ip.address]
+  rrdatas = [google_compute_global_address.apex_redirect_ip.address]
 }
 
 resource "google_dns_record_set" "www" {

@@ -33,18 +33,20 @@ export function middleware(request: NextRequest) {
   const { hostname, protocol, pathname, search } = request.nextUrl;
 
   // -----------------------------------------------------------------------
-  // Canonical domain redirect: apex → www, HTTP → HTTPS
-  // www.fenrirledger.com is canonical. Apex and HTTP requests redirect here.
-  // Skip in development (localhost) and health check endpoint (GCP probes use HTTP)
+  // HTTP → HTTPS redirect (safety net for non-GKE traffic / local dev)
+  // Apex (fenrirledger.com) → www is handled at the GCP LB layer (issue #1318).
+  // GKE terminates SSL and sets x-forwarded-proto: https, so this block will
+  // not fire in production — it exists for non-LB environments only.
+  // Skip health check endpoint (GKE liveness probes use plain HTTP).
   // -----------------------------------------------------------------------
   if (hostname !== "localhost" && hostname !== "127.0.0.1" && pathname !== "/api/health") {
-    const isApex = !hostname.startsWith("www.") && hostname.includes("fenrirledger.com");
-    const isHttp = protocol === "http:" || request.headers.get("x-forwarded-proto") === "http";
+    const rawHost = request.headers.get("host") ?? "";
+    const host = rawHost.split(":")[0];
+    const isHttp =
+      request.headers.get("x-forwarded-proto") === "http" || protocol === "http:";
 
-    if (isApex || isHttp) {
-      const canonicalHost = isApex ? `www.${hostname}` : hostname;
-      const url = `https://${canonicalHost}${pathname}${search}`;
-      return NextResponse.redirect(url, 301);
+    if (isHttp && host !== "localhost" && host !== "127.0.0.1") {
+      return NextResponse.redirect(`https://${host}${pathname}${search}`, 301);
     }
   }
 

@@ -12,6 +12,7 @@
  * - AC5: /api/* routes get Cache-Control: no-store
  * - Edge: 301 redirect responses do NOT carry a Cache-Control header
  * - Edge: /api/health is NOT redirected on HTTP (GKE probe bypass)
+ * - Edge: apex domain (fenrirledger.com) is NOT redirected by middleware (LB handles it — issue #1318)
  */
 
 import { describe, it, expect } from "vitest";
@@ -69,9 +70,10 @@ describe("middleware — Cache-Control applied on normal HTTPS apex requests", (
 });
 
 // ── 301 redirects must NOT carry Cache-Control ────────────────────────────
-// www.fenrirledger.com is canonical. Apex (fenrirledger.com) → www. HTTP → HTTPS.
+// www.fenrirledger.com is canonical. HTTP → HTTPS is the only middleware redirect.
+// Apex (fenrirledger.com) → www is handled at GCP LB layer (issue #1318).
 
-/** Build a request to fenrirledger.com (the apex domain) for redirect tests. */
+/** Build a request to fenrirledger.com (the apex domain). */
 function apexCanonicalRequest(pathname: string, { http = false } = {}): NextRequest {
   const proto = http ? "http" : "https";
   const host = "fenrirledger.com";
@@ -84,14 +86,24 @@ function apexCanonicalRequest(pathname: string, { http = false } = {}): NextRequ
   });
 }
 
-describe("middleware — 301 redirect responses must NOT carry Cache-Control", () => {
-  it("apex → www redirect has no Cache-Control header", () => {
+describe("middleware — apex domain (fenrirledger.com) is NOT redirected by middleware", () => {
+  it("HTTPS apex request passes through (LB handles apex→www, not middleware)", () => {
     const req = apexCanonicalRequest("/");
     const response = middleware(req);
-    expect(response.status).toBe(301);
-    expect(response.headers.get("Cache-Control")).toBeNull();
+    // Middleware must NOT redirect apex HTTPS — GCP LB does this
+    expect(response.status).not.toBe(301);
+    expect(response.status).not.toBe(302);
   });
 
+  it("HTTPS apex request still gets Cache-Control headers", () => {
+    const req = apexCanonicalRequest("/");
+    const response = middleware(req);
+    // Marketing page should get CDN TTL headers
+    expect(response.headers.get("Cache-Control")).toBe("public, s-maxage=300");
+  });
+});
+
+describe("middleware — 301 redirect responses must NOT carry Cache-Control", () => {
   it("HTTP → HTTPS redirect (via x-forwarded-proto) has no Cache-Control header", () => {
     const req = apexRequest("/pricing", { http: true });
     const response = middleware(req);
@@ -100,6 +112,8 @@ describe("middleware — 301 redirect responses must NOT carry Cache-Control", (
   });
 
   it("apex + HTTP combined redirect has no Cache-Control header", () => {
+    // apex domain over HTTP: isHttp fires (x-forwarded-proto: http) → 301 to https://fenrirledger.com
+    // LB then handles apex→www. Middleware must not cache this redirect.
     const req = apexCanonicalRequest("/about", { http: true });
     const response = middleware(req);
     expect(response.status).toBe(301);

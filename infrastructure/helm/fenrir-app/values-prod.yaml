@@ -24,7 +24,6 @@ app:
 ingress:
   enabled: true
   hosts:
-    - fenrirledger.com
     - www.fenrirledger.com
   backendConfig:
     cdn:
