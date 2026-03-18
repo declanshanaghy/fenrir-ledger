@@ -66,18 +66,38 @@ function build() {
     log("Skipping build (--skip-build)");
     return;
   }
-  log("Building Next.js app...");
-  run("npm run build", { cwd: FRONTEND_DIR });
+
+  // Create .babelrc symlink to enable Istanbul instrumentation during build.
+  // Next.js detects .babelrc and switches from SWC to Babel, which allows
+  // babel-plugin-istanbul to instrument all source files with __coverage__ counters.
+  const babelrc = path.join(FRONTEND_DIR, ".babelrc.js");
+  const babelCoverage = path.join(FRONTEND_DIR, "babel.coverage.js");
+  const hadBabelrc = existsSync(babelrc);
+
+  if (existsSync(babelCoverage)) {
+    copyFileSync(babelCoverage, babelrc);
+    log("Istanbul instrumentation enabled (.babelrc.js created from babel.coverage.js)");
+  }
+
+  try {
+    log("Building Next.js app with Istanbul instrumentation...");
+    run("npm run build", { cwd: FRONTEND_DIR });
+  } finally {
+    // Remove .babelrc.js after build so normal dev/prod builds use SWC
+    if (!hadBabelrc && existsSync(babelrc)) {
+      rmSync(babelrc);
+      log("Istanbul .babelrc.js removed (SWC restored for normal builds)");
+    }
+  }
 }
 
 function startServer() {
-  log("Starting Next.js production server with V8 coverage enabled...");
+  log("Starting Next.js production server (Istanbul-instrumented build)...");
 
-  // NODE_V8_COVERAGE tells Node.js to write V8 coverage JSON on clean exit.
-  // Limitation: Next.js 16 spawns worker threads for request handling. Workers
-  // DO inherit NODE_V8_COVERAGE and write their own coverage files. However,
-  // the compiled SSR chunks may not produce source-mappable coverage in all
-  // configurations. c8 resolves what it can via .next/server/ source maps.
+  // The build was compiled with babel-plugin-istanbul. All source files have
+  // __coverage__ counters injected. When pages render in the browser, coverage
+  // data accumulates in window.__coverage__. Playwright tests collect this
+  // after each navigation via the coverage fixture.
   const nextBin = path.join(FRONTEND_DIR, "node_modules", ".bin", "next");
 
   const serverProc = spawn(
@@ -88,7 +108,6 @@ function startServer() {
       stdio: ["ignore", "pipe", "pipe"],
       env: {
         ...process.env,
-        NODE_V8_COVERAGE: V8_COVERAGE_DIR,
         NODE_ENV: "production",
       },
     },
@@ -172,32 +191,25 @@ function stopServer(serverProc) {
 }
 
 function generateReports() {
-  // When running combined mode, output Playwright reports to playwright/ subdirectory
-  // so they don't overwrite Vitest reports and can be merged later
+  // Convert Istanbul browser coverage (window.__coverage__) to LCOV + HTML.
+  // The coverage JSON was collected by Playwright tests via the coverage fixture.
   const reportsDir = combined ? path.join(REPORTS_DIR, "playwright") : REPORTS_DIR;
   mkdirSync(reportsDir, { recursive: true });
 
-  log("Generating Playwright coverage reports via c8...");
+  const browserCoverage = path.join(V8_COVERAGE_DIR, "browser-coverage.json");
+  if (!existsSync(browserCoverage)) {
+    log("No browser coverage data found — E2E tests may not have collected window.__coverage__");
+    log("Hint: ensure Playwright tests call collectCoverage(page) after each navigation");
+    return;
+  }
 
-  // c8 reads V8 coverage JSON and resolves source maps from .next/server/chunks/
-  // back to src/. Do NOT use --all/--src/--include as they prevent source map
-  // resolution — the compiled chunks live under .next/ not src/.
-  // Instead, exclude non-app code and let source maps handle the mapping.
-  const c8Args = [
-    "c8", "report",
-    "--temp-directory", V8_COVERAGE_DIR,
-    "--reporter", "text",
-    "--reporter", "text-summary",
-    "--reporter", "html",
-    "--reporter", "lcov",
-    "--reports-dir", reportsDir,
-    "--exclude", "node_modules/**",
-  ];
+  log("Generating Playwright coverage reports from Istanbul browser data...");
 
+  const collectScript = path.join(__dirname, "collect-browser-coverage.mjs");
   try {
-    run(`npx ${c8Args.join(" ")}`, { cwd: FRONTEND_DIR });
+    run(`node "${collectScript}" --input "${browserCoverage}" --output "${reportsDir}"`, { cwd: REPO_ROOT });
   } catch {
-    log("c8 report generation had warnings (non-zero exit) — reports may still be valid");
+    log("Browser coverage report generation had warnings — reports may still be valid");
   }
 
   const relDir = path.relative(REPO_ROOT, reportsDir);
