@@ -27,7 +27,7 @@ import { createConnection } from "node:net";
 import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { render, Box, Text, useInput, useApp } from "ink";
 
 // ── Stripe ───────────────────────────────────────────────────────────────────
@@ -1365,6 +1365,471 @@ try {
 
 const TUI_TABS = ["Users", "Households"];
 
+// ── Households Tab helpers ────────────────────────────────────────────────────
+
+/** Derive entitlements from tier. */
+function getEntitlements(tier) {
+  return {
+    cloudSync: tier === "karl" || tier === "trial",
+    priorityHowl: tier === "karl",
+    analytics: tier === "karl",
+    hiddenRunes: tier === "karl",
+  };
+}
+
+/** Format a date string short (Month D, YYYY). */
+function fmtDateShort(d) {
+  if (!d) return "—";
+  try { return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+  catch { return String(d); }
+}
+
+/** Format a datetime (Mon D HH:MM). */
+function fmtDatetimeShort(d) {
+  if (!d) return "never";
+  try {
+    const dt = new Date(d);
+    return (
+      dt.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
+      " " +
+      dt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    );
+  } catch { return String(d); }
+}
+
+// ── HouseholdsTab ─────────────────────────────────────────────────────────────
+
+/**
+ * Renders a labelled detail row: "Label:          value"
+ */
+function HDetailRow({ label, value, valueColor }) {
+  return h(Box, { flexDirection: "row" },
+    h(Text, { color: "gray" }, (label + ":").padEnd(18)),
+    h(Text, { color: valueColor || "white" }, value ?? "—")
+  );
+}
+
+/**
+ * A section heading with a dim separator line.
+ */
+function HSectionTitle({ children }) {
+  return h(Box, { marginTop: 1 },
+    h(Text, { color: "yellow", bold: true, dimColor: true }, `── ${children} `)
+  );
+}
+
+/**
+ * Renders the full household detail inside the right panel.
+ */
+function HouseholdDetailView({ detail, confirmState }) {
+  const { hh, members, cardCounts } = detail;
+  const ownerId = hh.ownerId || "";
+  const ent = getEntitlements(hh.tier);
+  const tierLabel = hh.tier === "karl" ? "karl ★" : hh.tier === "trial" ? "trial" : "free";
+  const tierColor = hh.tier === "karl" ? "yellow" : hh.tier === "trial" ? "cyan" : "gray";
+  const inviteExpired = hh.inviteCodeExpiresAt && new Date(hh.inviteCodeExpiresAt) < new Date();
+
+  return h(Box, { flexDirection: "column", flexGrow: 1 },
+    // ── Header ──
+    h(Box, { flexDirection: "row", marginBottom: 1 },
+      h(Text, { color: "yellow", bold: true }, (hh.name || "unnamed").substring(0, 40)),
+      h(Text, null, "  "),
+      h(Text, { color: tierColor, bold: true }, `[${tierLabel}]`)
+    ),
+
+    // ── Household Info ──
+    h(HSectionTitle, null, "Household Info"),
+    h(HDetailRow, { label: "ID", value: shortId(hh.id || ""), valueColor: "cyan" }),
+    h(Box, { flexDirection: "row" },
+      h(Text, { color: "gray" }, "Invite Code:      "),
+      h(Text, { color: inviteExpired ? "red" : "green" }, hh.inviteCode || "—"),
+      h(Text, { color: "gray" }, inviteExpired ? " (expired)" : " (valid)")
+    ),
+    h(Box, { flexDirection: "row" },
+      h(Text, { color: "gray" }, "Owner:            "),
+      h(Text, { color: "yellow" }, "★ "),
+      h(Text, null, members.find(m => m.id === ownerId)?.email || shortId(ownerId || "—"))
+    ),
+    h(HDetailRow, { label: "Tier", value: tierLabel, valueColor: tierColor }),
+
+    // ── Members ──
+    h(HSectionTitle, null, `Members (${members.length})`),
+    h(Box, { flexDirection: "row" },
+      h(Text, { color: "gray" }, "   "),
+      h(Text, { color: "gray" }, "Email".padEnd(32)),
+      h(Text, { color: "gray" }, "Role".padEnd(10)),
+      h(Text, { color: "gray" }, "Cards".padEnd(6)),
+      h(Text, { color: "gray" }, "Joined")
+    ),
+    ...members.map(m =>
+      h(Box, { key: m.id, flexDirection: "row" },
+        h(Text, { color: "yellow" }, m.id === ownerId ? "★  " : "   "),
+        h(Text, null, (m.email || shortId(m.id)).substring(0, 31).padEnd(32)),
+        h(Text, { color: "gray" }, (m.role || "member").padEnd(10)),
+        h(Text, null, String(m.cardCount || 0).padEnd(6)),
+        h(Text, { color: "gray" }, m.joinedDate ? fmtDateShort(m.joinedDate) : fmtDateShort(m.createdAt))
+      )
+    ),
+
+    // ── Entitlements ──
+    h(HSectionTitle, null, "Entitlements"),
+    h(Box, { flexDirection: "row" },
+      h(Text, { color: ent.cloudSync ? "green" : "gray" }, (ent.cloudSync ? "✓" : "✗") + " Cloud Sync       "),
+      h(Text, { color: ent.priorityHowl ? "green" : "gray" }, (ent.priorityHowl ? "✓" : "✗") + " Priority Howl")
+    ),
+    h(Box, { flexDirection: "row" },
+      h(Text, { color: ent.analytics ? "green" : "gray" }, (ent.analytics ? "✓" : "✗") + " Analytics        "),
+      h(Text, { color: ent.hiddenRunes ? "green" : "gray" }, (ent.hiddenRunes ? "✓" : "✗") + " Hidden Runes")
+    ),
+
+    // ── Stripe Subscription (karl only) ──
+    ...(hh.tier === "karl" ? [
+      h(HSectionTitle, null, "Stripe Subscription"),
+      h(HDetailRow, { label: "Sub ID", value: hh.stripeSubId ? shortId(hh.stripeSubId) : "—", valueColor: "cyan" }),
+      h(HDetailRow, { label: "Status",
+        value: hh.subStatus || "—",
+        valueColor: hh.subStatus === "active" ? "green" : hh.subStatus === "past_due" ? "yellow" : "red",
+      }),
+      ...(hh.subAmount ? [h(HDetailRow, { label: "Amount", value: `$${(hh.subAmount / 100).toFixed(2)} / ${hh.subPeriod || "mo"}` })] : []),
+    ] : []),
+
+    // ── Cloud Sync ──
+    h(HSectionTitle, null, "Cloud Sync"),
+    h(HDetailRow, { label: "Last Sync", value: fmtDatetimeShort(hh.lastSync) }),
+    h(HDetailRow, { label: "Sync Count", value: String(hh.syncCount != null ? hh.syncCount : "—") }),
+    h(HDetailRow, {
+      label: "Health",
+      value: hh.syncHealth || "N/A",
+      valueColor: hh.syncHealth === "healthy" ? "green" : hh.syncHealth === "degraded" ? "yellow" : "gray",
+    }),
+
+    // ── Card Summary ──
+    h(HSectionTitle, null, "Card Summary"),
+    h(Box, { flexDirection: "row" },
+      h(Text, null, `Total: ${cardCounts.total}  `),
+      h(Text, { color: "green" }, `Active: ${cardCounts.active}  `),
+      h(Text, { color: "yellow" }, `Attention: ${cardCounts.feeApproaching + cardCounts.promo}  `),
+      h(Text, { color: "gray" }, `Closed: ${cardCounts.closed}`)
+    ),
+
+    // ── Action shortcuts ──
+    h(Box, { marginTop: 1, flexDirection: "row" },
+      h(Text, { color: "cyan" }, "[k]"), h(Text, { color: "gray" }, " Kick  "),
+      h(Text, { color: "cyan" }, "[o]"), h(Text, { color: "gray" }, " Xfer owner  "),
+      h(Text, { color: "cyan" }, "[i]"), h(Text, { color: "gray" }, " Regen invite  "),
+      ...(hh.tier === "karl" ? [
+        h(Text, { color: "cyan" }, "[s]"), h(Text, { color: "gray" }, " Cancel sub  "),
+      ] : []),
+      h(Text, { color: "red" }, "[x]"), h(Text, { color: "gray" }, " Delete HH")
+    ),
+
+    // ── Confirmation bar ──
+    ...(confirmState ? [
+      h(Box, { marginTop: 1, borderStyle: "single", borderColor: "yellow", paddingX: 1, flexDirection: "row" },
+        h(Text, { color: "yellow" }, "⚠  "),
+        h(Text, { color: "white" }, confirmState.message),
+        h(Text, { color: "cyan" },
+          confirmState.onConfirm != null ? "  [y] Confirm  [n/Esc] Cancel" : "  [n/Esc] Close"
+        )
+      ),
+    ] : [])
+  );
+}
+
+/**
+ * Full Households master-detail tab.
+ * Manages its own async state (list + detail) and keyboard input.
+ */
+function HouseholdsTab() {
+  const [listState, setListState] = useState({ items: [], loading: false, loaded: false, error: null });
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [detail, setDetail] = useState({ data: null, loading: false, error: null });
+  const [confirmState, setConfirmState] = useState(null);
+
+  // ── Load household list ──
+  useEffect(() => {
+    if (listState.loaded || listState.loading) return;
+    setListState(s => ({ ...s, loading: true }));
+    getDb()
+      .collection("households")
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get()
+      .then(snap => {
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setListState({ items, loading: false, loaded: true, error: null });
+      })
+      .catch(err => {
+        setListState({ items: [], loading: false, loaded: true, error: err.message });
+      });
+  }, [listState.loaded, listState.loading]);
+
+  // ── Load detail when selectedIdx changes ──
+  useEffect(() => {
+    if (!listState.loaded || listState.items.length === 0) return;
+    const hh = listState.items[selectedIdx];
+    if (!hh) return;
+    setDetail({ data: null, loading: true, error: null });
+    const db = getDb();
+    Promise.all([
+      db.doc(`households/${hh.id}`).get(),
+      db.collection(`households/${hh.id}/cards`).get(),
+    ])
+      .then(async ([hhSnap, cardsSnap]) => {
+        if (!hhSnap.exists) throw new Error("Household not found");
+        const hhData = { id: hhSnap.id, ...hhSnap.data() };
+        const memberIds = hhData.memberIds || [];
+
+        // Load member user docs in parallel
+        const memberDocs = await Promise.all(
+          memberIds.map(uid => db.doc(`users/${uid}`).get().catch(() => null))
+        );
+        const members = memberDocs
+          .filter(Boolean)
+          .map(snap => (snap.exists ? { id: snap.id, ...snap.data() } : null))
+          .filter(Boolean);
+
+        // Card counts by status (non-deleted)
+        const cards = cardsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const live = cards.filter(c => !c.deletedAt);
+
+        // Per-member card counts (if cards have userId field)
+        const cardsByUser = {};
+        for (const c of live) {
+          if (c.userId) cardsByUser[c.userId] = (cardsByUser[c.userId] || 0) + 1;
+        }
+        const membersWithCards = members.map(m => ({
+          ...m,
+          cardCount: cardsByUser[m.id] != null ? cardsByUser[m.id] : null,
+        }));
+
+        setDetail({
+          data: {
+            hh: hhData,
+            members: membersWithCards,
+            cardCounts: {
+              total: live.length,
+              active: live.filter(c => c.status === "active").length,
+              feeApproaching: live.filter(c => c.status === "fee_approaching").length,
+              promo: live.filter(c => c.status === "promo_expiring").length,
+              closed: live.filter(c => c.status === "closed").length,
+            },
+          },
+          loading: false,
+          error: null,
+        });
+      })
+      .catch(err => {
+        setDetail({ data: null, loading: false, error: err.message });
+      });
+  }, [selectedIdx, listState.loaded, listState.items]);
+
+  // ── Keyboard input ──
+  useInput(useCallback((input, key) => {
+    // Confirmation flow: y confirms, n/Escape cancels
+    if (confirmState) {
+      if (input === "y" || input === "Y") {
+        const fn = confirmState.onConfirm;
+        setConfirmState(null);
+        if (fn) fn();
+      } else if (input === "n" || input === "N" || key.escape) {
+        setConfirmState(null);
+      }
+      return;
+    }
+
+    // ^R — reload list
+    if (key.ctrl && input === "r") {
+      setListState({ items: [], loading: false, loaded: false, error: null });
+      setDetail({ data: null, loading: false, error: null });
+      return;
+    }
+
+    // List navigation
+    if (key.upArrow) {
+      setSelectedIdx(i => Math.max(0, i - 1));
+      return;
+    }
+    if (key.downArrow) {
+      setSelectedIdx(i => Math.min(listState.items.length - 1, i + 1));
+      return;
+    }
+
+    // Action shortcuts — only when detail is loaded
+    if (!detail.data) return;
+    const hh = detail.data.hh;
+    const members = detail.data.members;
+
+    if (input === "i") {
+      // Regen invite code
+      setConfirmState({
+        message: `Regen invite code for "${hh.name || "this household"}"?`,
+        onConfirm: () => {
+          const code = generateInviteCode();
+          const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          getDb().doc(`households/${hh.id}`).update({
+            inviteCode: code,
+            inviteCodeExpiresAt: expiresAt,
+            updatedAt: new Date().toISOString(),
+          }).then(() => {
+            // Reload detail
+            setListState(s => ({ ...s, loaded: false }));
+          }).catch(() => {});
+        },
+      });
+      return;
+    }
+
+    if (input === "s" && hh.tier === "karl") {
+      // Cancel Stripe subscription
+      const subId = hh.stripeSubId;
+      if (!subId) return;
+      setConfirmState({
+        message: `Cancel Stripe sub ${shortId(subId)} for "${hh.name}"?`,
+        onConfirm: () => {
+          stripe("DELETE", `/subscriptions/${subId}`).catch(() => {});
+        },
+      });
+      return;
+    }
+
+    if (input === "x") {
+      // Delete household
+      setConfirmState({
+        message: `DELETE household "${hh.name}" + all cards? PERMANENT.`,
+        onConfirm: () => {
+          const db = getDb();
+          db.collection(`households/${hh.id}/cards`).get().then(snap => {
+            const batch = db.batch();
+            snap.docs.forEach(d => batch.delete(d.ref));
+            batch.delete(db.doc(`households/${hh.id}`));
+            return batch.commit();
+          }).then(() => {
+            setListState({ items: [], loading: false, loaded: false, error: null });
+            setDetail({ data: null, loading: false, error: null });
+            setSelectedIdx(0);
+          }).catch(() => {});
+        },
+      });
+      return;
+    }
+
+    if (input === "k") {
+      // Kick member — member selection not yet in TUI; prompt REPL fallback
+      const memberList = members
+        .filter(m => m.id !== hh.ownerId)
+        .map(m => m.email || shortId(m.id))
+        .join(", ") || "(no non-owner members)";
+      setConfirmState({
+        message: `Kick member: ${memberList}. Use REPL delete-member for now.`,
+        onConfirm: null,
+      });
+      return;
+    }
+
+    if (input === "o") {
+      // Transfer owner — member selection not yet in TUI; prompt REPL fallback
+      const memberList = members
+        .filter(m => m.id !== hh.ownerId)
+        .map(m => m.email || shortId(m.id))
+        .join(", ") || "(no other members)";
+      setConfirmState({
+        message: `Transfer owner. Candidates: ${memberList}. Use REPL update-owner for now.`,
+        onConfirm: null,
+      });
+      return;
+    }
+  }, [confirmState, listState.items, detail.data]));
+
+  // ── Render ──
+  const { items, loading: listLoading, loaded, error: listError } = listState;
+
+  // Scrollable window for the list
+  const LIST_WINDOW = 20;
+  const winStart = Math.max(0, Math.min(selectedIdx - Math.floor(LIST_WINDOW / 2), items.length - LIST_WINDOW));
+  const visibleItems = items.slice(winStart, winStart + LIST_WINDOW);
+
+  return h(Box, { flexDirection: "row", flexGrow: 1 },
+    // ── Left panel: household list ──
+    h(Box, {
+      flexDirection: "column",
+      width: 34,
+      borderStyle: "single",
+      borderColor: "gray",
+      flexShrink: 0,
+      paddingX: 1,
+      paddingY: 1,
+    },
+      h(Text, { bold: true, color: "yellow" }, "Households"),
+      loaded && !listError
+        ? h(Text, { color: "gray", dimColor: true }, `${items.length} total`)
+        : null,
+      h(Box, { flexDirection: "column", marginTop: 1 },
+        listLoading
+          ? h(Text, { color: "gray", dimColor: true }, "Loading…")
+          : listError
+          ? h(Text, { color: "red" }, `Error: ${listError}`)
+          : items.length === 0
+          ? h(Text, { color: "gray", dimColor: true }, "No households found")
+          : visibleItems.map((hh, vi) => {
+              const idx = winStart + vi;
+              const isSel = idx === selectedIdx;
+              const memberCount = (hh.memberIds || []).length;
+              const tierColor = hh.tier === "karl" ? "yellow" : hh.tier === "trial" ? "cyan" : "gray";
+              return h(Box, {
+                key: hh.id,
+                flexDirection: "column",
+                backgroundColor: isSel ? "gray" : undefined,
+                paddingX: isSel ? 1 : 0,
+                marginBottom: 0,
+              },
+                h(Box, { flexDirection: "row" },
+                  h(Text, {
+                    color: isSel ? "black" : "white",
+                    bold: isSel,
+                  }, (hh.name || "unnamed").substring(0, 19)),
+                  h(Box, { flexGrow: 1 }),
+                  h(Text, { color: isSel ? "black" : tierColor, bold: true },
+                    hh.tier === "karl" ? "K" : hh.tier === "trial" ? "T" : "F"
+                  )
+                ),
+                h(Text, {
+                  color: isSel ? "black" : "gray",
+                  dimColor: !isSel,
+                }, `${memberCount} member${memberCount !== 1 ? "s" : ""}`)
+              );
+            })
+      )
+    ),
+
+    // ── Right panel: detail ──
+    h(Box, {
+      flexDirection: "column",
+      flexGrow: 1,
+      borderStyle: "single",
+      borderColor: "gray",
+      paddingX: 2,
+      paddingY: 1,
+      overflow: "hidden",
+    },
+      detail.loading
+        ? h(Box, { flexGrow: 1, justifyContent: "center", alignItems: "center" },
+            h(Text, { color: "gray", dimColor: true }, "Loading household…")
+          )
+        : detail.error
+        ? h(Box, { flexGrow: 1, justifyContent: "center", alignItems: "center" },
+            h(Text, { color: "red" }, `Error: ${detail.error}`)
+          )
+        : !detail.data
+        ? h(Box, { flexGrow: 1, justifyContent: "center", alignItems: "center", flexDirection: "column" },
+            h(Text, { color: "gray", dimColor: true }, "Select a household ↑↓"),
+            h(Text, { color: "gray", dimColor: true }, "Enter to drill down")
+          )
+        : h(HouseholdDetailView, { detail: detail.data, confirmState })
+    )
+  );
+}
+
 // h — shorthand for React.createElement (no JSX needed in an .mjs script)
 const h = React.createElement;
 
@@ -1424,8 +1889,12 @@ function HelpOverlay() {
   );
 }
 
-/** Main content area: master-detail split. */
+/** Main content area: master-detail split. Dispatches to per-tab components. */
 function MainContent({ activeTab }) {
+  if (activeTab === 1) {
+    return h(HouseholdsTab, null);
+  }
+  // Tab 0 (Users) and any future tabs: placeholder
   const tabLabel = TUI_TABS[activeTab];
   return h(Box, { flexDirection: "row", flexGrow: 1 },
     // Left panel — list
@@ -1439,7 +1908,7 @@ function MainContent({ activeTab }) {
       paddingY: 1,
     },
       h(Text, { bold: true, color: "yellow" }, tabLabel),
-      h(Text, { color: "gray", dimColor: true }, "(empty — coming soon)")
+      h(Text, { color: "gray", dimColor: true }, "(coming soon)")
     ),
     // Right panel — detail
     h(Box, {
@@ -1450,7 +1919,7 @@ function MainContent({ activeTab }) {
       paddingX: 2,
       paddingY: 1,
     },
-      h(Text, { color: "gray", dimColor: true }, `${tabLabel} tab content — select an item from the list`)
+      h(Text, { color: "gray", dimColor: true }, `${tabLabel} tab — select an item from the list`)
     )
   );
 }
