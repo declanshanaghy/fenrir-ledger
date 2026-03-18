@@ -125,13 +125,36 @@ describe("TrialSettingsSection — Subscribe price button visibility (Issue #103
     expect(container.firstChild).toBeNull();
   });
 
-  // AC: Subscribe button with price shown for Thrall (free) users with no trial
-  it("renders nothing for Thrall users with no trial (none) — section hidden", () => {
+  // AC: Anonymous / no-trial users see the "not started" box (issue #1384)
+  it("renders the anonymous trial-not-started box for status 'none'", () => {
+    setStatus("none");
+    renderSection();
+
+    const section = screen.getByRole("region", { name: "Trial Status" });
+    expect(section).toBeDefined();
+  });
+
+  it("shows Norse-themed 'not started' copy for status 'none'", () => {
     setStatus("none");
     const { container } = renderSection();
 
-    // TrialSettingsSection returns null for none; price button does not appear
-    expect(container.firstChild).toBeNull();
+    expect(container.textContent).toContain("Thy trial hath not yet begun");
+  });
+
+  it("shows sign-in CTA link for status 'none'", () => {
+    setStatus("none");
+    renderSection();
+
+    const cta = screen.getByRole("link", { name: /sign in to begin thy karl trial/i });
+    expect(cta).toBeDefined();
+  });
+
+  it("does not render subscribe price button for status 'none'", () => {
+    setStatus("none");
+    renderSection();
+
+    const priceButton = screen.queryByRole("button", { name: PRICE_BUTTON_ARIA });
+    expect(priceButton).toBeNull();
   });
 
   // AC: Section renders during active trial (section itself not hidden)
