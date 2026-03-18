@@ -302,6 +302,11 @@
     animation: none;
   }
 
+  [data-tier="karl"] .karl-bling-tab:hover,
+  [data-tier="trial"] .karl-bling-tab:hover {
+    animation: none;
+  }
+
   [data-tier="karl"] .karl-bling-btn,
   [data-tier="karl"] .karl-bling-btn:hover,
   [data-tier="trial"] .karl-bling-btn,
@@ -339,6 +344,11 @@
 
   [data-tier="karl"] .karl-bling-btn:hover,
   [data-tier="trial"] .karl-bling-btn:hover {
+    animation: none;
+  }
+
+  [data-tier="karl"] .karl-bling-tab:hover,
+  [data-tier="trial"] .karl-bling-tab:hover {
     animation: none;
   }
 }
@@ -465,6 +475,55 @@
 
 [data-tier="trial"] .trash-rune-corner {
   color: rgba(212, 165, 32, 0.25) !important;
+}
+
+/* ── Karl: tab gold accent ───────────────────────────────────────────────── */
+/*
+ * .karl-bling-tab — settings tab buttons get gold treatment for
+ * Karl and trial tiers. Follows the same cascade as karl-bling-btn.
+ *
+ * Karl:  gold bottom border + hover glow animation
+ * Trial: softer gold treatment (~60% intensity)
+ * Thrall: no bling (default border)
+ *
+ * Issue: #1367
+ */
+
+[data-tier="karl"] .karl-bling-tab[aria-selected="true"] {
+  border-bottom: 2px solid #d4a520;
+  box-shadow: 0 2px 10px rgba(212, 165, 32, 0.35);
+}
+
+[data-tier="karl"] .karl-bling-tab:hover {
+  border-color: rgba(212, 165, 32, 0.55);
+  animation: karl-gold-glow 2.8s ease-in-out infinite;
+}
+
+[data-tier="trial"] .karl-bling-tab[aria-selected="true"] {
+  border-bottom: 2px solid rgba(212, 165, 32, 0.55);
+  box-shadow: 0 2px 8px rgba(212, 165, 32, 0.18);
+}
+
+[data-tier="trial"] .karl-bling-tab:hover {
+  border-color: rgba(212, 165, 32, 0.30);
+  animation: karl-gold-glow-soft 3.2s ease-in-out infinite;
+}
+
+/* ── Karl: mobile select bling ───────────────────────────────────────────── */
+/*
+ * .karl-bling-select — settings section <select> on mobile.
+ * Karl/trial: gold border tint to match tab treatment.
+ *
+ * Issue: #1367
+ */
+
+[data-tier="karl"] .karl-bling-select {
+  border-color: rgba(212, 165, 32, 0.40);
+  box-shadow: var(--karl-shadow-sm);
+}
+
+[data-tier="trial"] .karl-bling-select {
+  border-color: rgba(212, 165, 32, 0.20);
 }
 
 /* ── Karl: status badge gold accent ─────────────────────────────────────── */
