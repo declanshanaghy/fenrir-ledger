@@ -343,11 +343,11 @@ jobs:
       - name: TypeScript check
         run: bash quality/scripts/verify.sh --step tsc
 
-      - name: Unit tests
-        run: bash quality/scripts/verify.sh --step unit
-
       - name: Build check
         run: bash quality/scripts/verify.sh --step build
+
+      - name: Unit tests
+        run: bash quality/scripts/verify.sh --step unit
 
       - name: Upload reports on failure
         if: failure()
