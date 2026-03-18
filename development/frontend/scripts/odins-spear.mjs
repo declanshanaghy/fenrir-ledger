@@ -528,16 +528,16 @@ const commands = {
     printTrial(trial, selectedFp, ttl);
   },
 
-  async shift(args) {
+  async update_trial_dates(args) {
     if (!requireSelected()) return;
     const days = parseInt(args[0], 10);
     if (isNaN(days)) {
-      console.log(`${RED}Usage: shift <days>${RESET}  (e.g., shift -25 for 5 days remaining)`);
+      console.log(`${RED}Usage: update-trial-dates <days>${RESET}  (e.g., update-trial-dates -25 for 5 days remaining)`);
       return;
     }
     const trial = await getTrial(selectedFp);
     if (!trial) {
-      console.log(`${RED}Trial no longer exists.${RESET} Use ${CYAN}reset${RESET} to create one.`);
+      console.log(`${RED}Trial no longer exists.${RESET} Use ${CYAN}update-trial-reset${RESET} to create one.`);
       return;
     }
     const oldDate = trial.startDate;
@@ -551,11 +551,11 @@ const commands = {
     console.log(`  ${STATUS_EMOJI[s.status]} ${s.status} — ${s.remainingDays}d remaining\n`);
   },
 
-  async set(args) {
+  async update_trial_field(args) {
     if (!requireSelected()) return;
     const remaining = parseInt(args[0], 10);
     if (isNaN(remaining) || remaining < 0) {
-      console.log(`${RED}Usage: set <remaining-days>${RESET}  (e.g., set 5 for 5 days left, set 0 for expired)`);
+      console.log(`${RED}Usage: update-trial-field <remaining-days>${RESET}  (e.g., update-trial-field 5 for 5 days left, update-trial-field 0 for expired)`);
       return;
     }
     const trial = await getTrial(selectedFp);
@@ -570,7 +570,7 @@ const commands = {
     console.log(`  ${STATUS_EMOJI[s.status]} ${s.status} — ${s.remainingDays}d remaining\n`);
   },
 
-  async reset() {
+  async update_trial_reset() {
     if (!requireSelected()) return;
     const updated = { startDate: new Date().toISOString() };
     await setTrial(selectedFp, updated);
@@ -579,7 +579,7 @@ const commands = {
     console.log(`  ${STATUS_EMOJI.active} active — ${TRIAL_DURATION_DAYS}d remaining\n`);
   },
 
-  async expire() {
+  async update_trial_expire() {
     if (!requireSelected()) return;
     const trial = await getTrial(selectedFp);
     const expired = new Date(Date.now() - 31 * 86400000).toISOString();
@@ -591,11 +591,11 @@ const commands = {
     console.log(`  ${STATUS_EMOJI.expired} expired — 0d remaining\n`);
   },
 
-  async convert() {
+  async update_trial_convert() {
     if (!requireSelected()) return;
     const trial = await getTrial(selectedFp);
     if (!trial) {
-      console.log(`${RED}No trial exists.${RESET} Use ${CYAN}reset${RESET} to create one first.`);
+      console.log(`${RED}No trial exists.${RESET} Use ${CYAN}update-trial-reset${RESET} to create one first.`);
       return;
     }
     const updated = { ...trial, convertedDate: new Date().toISOString() };
@@ -604,7 +604,7 @@ const commands = {
     console.log(`  Converted at: ${updated.convertedDate}\n`);
   },
 
-  async unconvert() {
+  async update_trial_unconvert() {
     if (!requireSelected()) return;
     const trial = await getTrial(selectedFp);
     if (!trial) {
@@ -684,7 +684,7 @@ const commands = {
     console.log();
   },
 
-  async stripe_customers() {
+  async list_customers() {
     const data = await stripe("GET", "/customers?limit=20");
     if (!data) return;
     if (data.data.length === 0) {
@@ -700,7 +700,7 @@ const commands = {
     console.log();
   },
 
-  async stripe_subs() {
+  async list_subscriptions() {
     const data = await stripe("GET", "/subscriptions?limit=20&status=all");
     if (!data) return;
     if (data.data.length === 0) {
@@ -720,7 +720,7 @@ const commands = {
     const id = args[0];
     if (!id || !id.startsWith("cus_")) {
       console.log(`${RED}Usage: delete-customer <cus_xxx>${RESET}`);
-      console.log(`${DIM}Use "stripe-customers" to list customer IDs.${RESET}`);
+      console.log(`${DIM}Use "list-customers" to list customer IDs.${RESET}`);
       return;
     }
     // Stripe API is source of truth — delete there, webhooks sync Redis
@@ -730,11 +730,11 @@ const commands = {
     console.log(`  ${DIM}Webhooks will clean up Redis entitlements automatically.${RESET}\n`);
   },
 
-  async cancel_sub(args) {
+  async delete_subscription(args) {
     const id = args[0];
     if (!id || !id.startsWith("sub_")) {
-      console.log(`${RED}Usage: cancel-sub <sub_xxx>${RESET}`);
-      console.log(`${DIM}Use "stripe-subs" to list subscription IDs.${RESET}`);
+      console.log(`${RED}Usage: delete-subscription <sub_xxx>${RESET}`);
+      console.log(`${DIM}Use "list-subscriptions" to list subscription IDs.${RESET}`);
       return;
     }
     // Retrieve first to check current status before attempting cancellation
@@ -754,7 +754,7 @@ const commands = {
     console.log(`  ${DIM}Status: ${data.status}. Webhooks will update Redis entitlement.${RESET}\n`);
   },
 
-  async flush_entitlement(args) {
+  async delete_entitlement(args) {
     const id = args[0];
     if (!id) {
       if (selectedFp) {
@@ -770,7 +770,7 @@ const commands = {
         console.log(`  ${DIM}Next auth check will re-fetch from Stripe and rebuild the cache.${RESET}\n`);
         return;
       }
-      console.log(`${RED}Usage: flush-entitlement <key-suffix>${RESET}  or select a trial first.`);
+      console.log(`${RED}Usage: delete-entitlement <key-suffix>${RESET}  or select a trial first.`);
       console.log(`${DIM}Use "entitlements" to list keys. This only clears the Redis cache.${RESET}`);
       return;
     }
@@ -785,7 +785,7 @@ const commands = {
     console.log(`  ${DIM}Stripe subscription unaffected. Cache will rebuild on next auth check.${RESET}\n`);
   },
 
-  async nuke() {
+  async delete_all() {
     if (!requireSelected()) return;
     const trial = await getTrial(selectedFp);
     const entKey = `entitlement:${selectedFp}`;
@@ -970,19 +970,15 @@ const commands = {
     console.log(`\n  ${GREEN}Selected:${RESET} ${selectedHouseholdId}  ${DIM}(${h.name || "unnamed"})${RESET}\n`);
   },
 
-  async select_household(args) {
-    return commands.use_household(args);
-  },
-
-  async kick(args) {
+  async delete_member(args) {
     if (!requireHousehold()) return;
     const userId = args[0];
-    if (!userId) { console.log(`${RED}Usage: kick <clerkUserId>${RESET}`); return; }
+    if (!userId) { console.log(`${RED}Usage: delete-member <clerkUserId>${RESET}`); return; }
     const db = getDb();
     const snap = await db.doc(`households/${selectedHouseholdId}`).get();
     if (!snap.exists) { console.log(`${RED}Household not found.${RESET}`); return; }
     const h = snap.data();
-    if (h.ownerId === userId) { console.log(`${RED}Cannot kick the owner. Use transfer-owner first.${RESET}`); return; }
+    if (h.ownerId === userId) { console.log(`${RED}Cannot remove the owner. Use update-owner first.${RESET}`); return; }
     if (!(h.memberIds || []).includes(userId)) { console.log(`${RED}User ${userId} is not a member of this household.${RESET}`); return; }
     const confirmed = await confirmPrompt(`Remove ${userId} from household ${shortId(selectedHouseholdId)}?`);
     if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
@@ -996,13 +992,13 @@ const commands = {
     if (userSnap.exists) {
       await db.doc(`users/${userId}`).update({ householdId: "", updatedAt: new Date().toISOString() });
     }
-    console.log(`\n  ${RED}Kicked${RESET} ${userId} from household ${shortId(selectedHouseholdId)}\n`);
+    console.log(`\n  ${RED}Removed${RESET} ${userId} from household ${shortId(selectedHouseholdId)}\n`);
   },
 
-  async transfer_owner(args) {
+  async update_owner(args) {
     if (!requireHousehold()) return;
     const userId = args[0];
-    if (!userId) { console.log(`${RED}Usage: transfer-owner <clerkUserId>${RESET}`); return; }
+    if (!userId) { console.log(`${RED}Usage: update-owner <clerkUserId>${RESET}`); return; }
     const db = getDb();
     const snap = await db.doc(`households/${selectedHouseholdId}`).get();
     if (!snap.exists) { console.log(`${RED}Household not found.${RESET}`); return; }
@@ -1022,11 +1018,11 @@ const commands = {
     console.log(`\n  ${GOLD}Ownership transferred${RESET} to ${userId}\n`);
   },
 
-  async set_tier(args) {
+  async update_tier(args) {
     if (!requireHousehold()) return;
     const tier = args[0];
     if (tier !== "free" && tier !== "karl") {
-      console.log(`${RED}Usage: set-tier <free|karl>${RESET}`);
+      console.log(`${RED}Usage: update-tier <free|karl>${RESET}`);
       return;
     }
     const confirmed = await confirmPrompt(`Set tier to "${tier}" for ${shortId(selectedHouseholdId)}?`);
@@ -1039,7 +1035,7 @@ const commands = {
     console.log(`\n  ${GREEN}Tier updated:${RESET} ${badge}\n`);
   },
 
-  async regen_invite() {
+  async update_invite() {
     if (!requireHousehold()) return;
     const code = generateInviteCode();
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -1117,7 +1113,7 @@ const commands = {
     if (!snap.exists) { console.log(`${RED}User not found: ${id}${RESET}`); return; }
     const u = snap.data();
     console.log(`\n  ${RED}${BOLD}WARNING: Deletes user ${id} (${u.email || "unknown email"})${RESET}`);
-    console.log(`  ${DIM}The user's household and cards are NOT deleted — kick them first if needed.${RESET}`);
+    console.log(`  ${DIM}The user's household and cards are NOT deleted — use delete-member first if needed.${RESET}`);
     const confirmed = await confirmPrompt(`Confirm delete user ${id}?`);
     if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
     // Remove from household memberIds if present
@@ -1197,18 +1193,18 @@ const commands = {
     const snap = await db.doc(`households/${selectedHouseholdId}/cards/${id}`).get();
     if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
     const c = snap.data();
-    if (c.deletedAt) { console.log(`${GOLD}Card already soft-deleted.${RESET} Use restore-card to undo, or expunge-card to permanently remove.`); return; }
+    if (c.deletedAt) { console.log(`${GOLD}Card already soft-deleted.${RESET} Use update-card-restore to undo, or delete-card-permanent to permanently remove.`); return; }
     await db.doc(`households/${selectedHouseholdId}/cards/${id}`).update({
       deletedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
-    console.log(`\n  ${RED}Soft-deleted:${RESET} ${c.cardName || id}  ${DIM}(use restore-card ${id} to undo)${RESET}\n`);
+    console.log(`\n  ${RED}Soft-deleted:${RESET} ${c.cardName || id}  ${DIM}(use update-card-restore ${id} to undo)${RESET}\n`);
   },
 
-  async restore_card(args) {
+  async update_card_restore(args) {
     if (!requireHousehold()) return;
     const id = args[0];
-    if (!id) { console.log(`${RED}Usage: restore-card <cardId>${RESET}`); return; }
+    if (!id) { console.log(`${RED}Usage: update-card-restore <cardId>${RESET}`); return; }
     const db = getDb();
     const snap = await db.doc(`households/${selectedHouseholdId}/cards/${id}`).get();
     if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
@@ -1221,22 +1217,22 @@ const commands = {
     console.log(`\n  ${GREEN}Restored:${RESET} ${c.cardName || id}\n`);
   },
 
-  async expunge_card(args) {
+  async delete_card_permanent(args) {
     if (!requireHousehold()) return;
     const id = args[0];
-    if (!id) { console.log(`${RED}Usage: expunge-card <cardId>${RESET}`); return; }
+    if (!id) { console.log(`${RED}Usage: delete-card-permanent <cardId>${RESET}`); return; }
     const db = getDb();
     const snap = await db.doc(`households/${selectedHouseholdId}/cards/${id}`).get();
     if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
     const c = snap.data();
     console.log(`\n  ${RED}${BOLD}WARNING: Permanently deletes "${c.cardName || id}" — cannot be undone.${RESET}`);
-    const confirmed = await confirmPrompt(`Confirm expunge card ${id}?`);
+    const confirmed = await confirmPrompt(`Confirm permanent delete card ${id}?`);
     if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
     await db.doc(`households/${selectedHouseholdId}/cards/${id}`).delete();
     console.log(`\n  ${RED}✗${RESET} Permanently deleted card ${id}\n`);
   },
 
-  async card_count() {
+  async read_card_count() {
     if (!requireHousehold()) return;
     const snap = await getDb().collection(`households/${selectedHouseholdId}/cards`).get();
     const active = snap.docs.filter((d) => !d.data().deletedAt).length;
@@ -1253,16 +1249,16 @@ const commands = {
   ${BOLD}Selected:${RESET} ${GOLD}${shortFp(selectedFp)}${RESET}
   ${DIM}${"─".repeat(50)}${RESET}
 
-  ${CYAN}status${RESET}                 Show trial details
-  ${CYAN}set <days>${RESET}             Set remaining days (e.g., "set 5")
-  ${CYAN}shift <days>${RESET}           Shift start date (e.g., "shift -25")
-  ${CYAN}reset${RESET}                  Fresh 30-day trial
-  ${CYAN}expire${RESET}                 Instantly expire
-  ${CYAN}convert${RESET} / ${CYAN}unconvert${RESET}    Toggle paid conversion
-  ${CYAN}flush-entitlement${RESET}       Clear Redis entitlement cache
-  ${CYAN}nuke${RESET}                   Wipe everything: Stripe + Redis
-  ${CYAN}delete${RESET}                 Delete trial from Redis
-  ${CYAN}list${RESET}                   Switch trial     ${CYAN}quit${RESET}  Exit
+  ${CYAN}status${RESET}                         Show trial details
+  ${CYAN}update-trial-field <days>${RESET}     Set remaining days (e.g., "update-trial-field 5")
+  ${CYAN}update-trial-dates <days>${RESET}     Shift start date (e.g., "update-trial-dates -25")
+  ${CYAN}update-trial-reset${RESET}            Fresh 30-day trial
+  ${CYAN}update-trial-expire${RESET}           Instantly expire
+  ${CYAN}update-trial-convert${RESET} / ${CYAN}update-trial-unconvert${RESET}    Toggle paid conversion
+  ${CYAN}delete-entitlement${RESET}            Clear Redis entitlement cache
+  ${CYAN}delete-all${RESET}                    Wipe everything: Stripe + Redis
+  ${CYAN}delete${RESET}                        Delete trial from Redis
+  ${CYAN}list${RESET}                          Switch trial     ${CYAN}quit${RESET}  Exit
 `);
     } else if (selectedHouseholdId) {
       // Household selected — show all sections including Cards
@@ -1278,36 +1274,36 @@ const commands = {
   ${BOLD}Redis / Stripe${RESET}
   ${CYAN}keys${RESET}                          All Redis key prefixes
   ${CYAN}entitlements${RESET}                   Stripe entitlement cache
-  ${CYAN}stripe-customers${RESET}              Stripe customers
-  ${CYAN}stripe-subs${RESET}                   Stripe subscriptions
-  ${CYAN}delete-customer <cus_xxx>${RESET}      Delete Stripe customer
-  ${CYAN}cancel-sub <sub_xxx>${RESET}           Cancel subscription
-  ${CYAN}reconnect${RESET}                     Reconnect port-forward
+  ${CYAN}list-customers${RESET}                List Stripe customers
+  ${CYAN}list-subscriptions${RESET}           List Stripe subscriptions
+  ${CYAN}delete-customer <cus_xxx>${RESET}    Delete Stripe customer
+  ${CYAN}delete-subscription <sub_xxx>${RESET}  Cancel subscription
+  ${CYAN}reconnect${RESET}                    Reconnect port-forward
 
   ${BOLD}Firestore — Households${RESET}  ${DIM}(selected: ${shortId(selectedHouseholdId)})${RESET}
-  ${CYAN}households${RESET}                    List all households (paginated, 50)
-  ${CYAN}household [id]${RESET}                Show household details
-  ${CYAN}use-household <N|id>${RESET}          Select a household
-  ${CYAN}kick <userId>${RESET}                 Remove member from selected household
-  ${CYAN}transfer-owner <userId>${RESET}       Transfer ownership
-  ${CYAN}set-tier <free|karl>${RESET}          Change subscription tier
-  ${CYAN}regen-invite${RESET}                  Regenerate invite code
-  ${CYAN}delete-household [id]${RESET}         Permanently delete household + cards
+  ${CYAN}households${RESET}                   List all households (paginated, 50)
+  ${CYAN}household [id]${RESET}               Show household details
+  ${CYAN}use-household <N|id>${RESET}         Select a household
+  ${CYAN}delete-member <userId>${RESET}       Remove member from selected household
+  ${CYAN}update-owner <userId>${RESET}        Transfer ownership
+  ${CYAN}update-tier <free|karl>${RESET}      Change subscription tier
+  ${CYAN}update-invite${RESET}               Regenerate invite code
+  ${CYAN}delete-household [id]${RESET}        Permanently delete household + cards
 
   ${BOLD}Firestore — Users${RESET}
-  ${CYAN}users${RESET}                         List all users (paginated, 50)
-  ${CYAN}user <clerkUserId>${RESET}            Show user details
-  ${CYAN}delete-user <clerkUserId>${RESET}     Delete user document
+  ${CYAN}users${RESET}                        List all users (paginated, 50)
+  ${CYAN}user <clerkUserId>${RESET}           Show user details
+  ${CYAN}delete-user <clerkUserId>${RESET}    Delete user document
 
   ${BOLD}Firestore — Cards${RESET}  ${DIM}(household: ${shortId(selectedHouseholdId)})${RESET}
-  ${CYAN}cards${RESET}                         List cards for selected household
-  ${CYAN}card <cardId>${RESET}                 Show card details
-  ${CYAN}card-count${RESET}                    Count active/deleted cards
-  ${CYAN}delete-card <cardId>${RESET}          Soft-delete a card (sets deletedAt)
-  ${CYAN}restore-card <cardId>${RESET}         Restore a soft-deleted card
-  ${CYAN}expunge-card <cardId>${RESET}         Permanently delete a card
+  ${CYAN}cards${RESET}                        List cards for selected household
+  ${CYAN}card <cardId>${RESET}                Show card details
+  ${CYAN}read-card-count${RESET}              Count active/deleted cards
+  ${CYAN}delete-card <cardId>${RESET}         Soft-delete a card (sets deletedAt)
+  ${CYAN}update-card-restore <cardId>${RESET} Restore a soft-deleted card
+  ${CYAN}delete-card-permanent <cardId>${RESET}  Permanently delete a card
 
-  ${CYAN}quit${RESET}                          Exit
+  ${CYAN}quit${RESET}                         Exit
 `);
     } else {
       // No household selected — hide Cards section, prompt to select one
@@ -1323,30 +1319,30 @@ const commands = {
   ${BOLD}Redis / Stripe${RESET}
   ${CYAN}keys${RESET}                          All Redis key prefixes
   ${CYAN}entitlements${RESET}                   Stripe entitlement cache
-  ${CYAN}stripe-customers${RESET}              Stripe customers
-  ${CYAN}stripe-subs${RESET}                   Stripe subscriptions
-  ${CYAN}delete-customer <cus_xxx>${RESET}      Delete Stripe customer
-  ${CYAN}cancel-sub <sub_xxx>${RESET}           Cancel subscription
-  ${CYAN}reconnect${RESET}                     Reconnect port-forward
+  ${CYAN}list-customers${RESET}                List Stripe customers
+  ${CYAN}list-subscriptions${RESET}           List Stripe subscriptions
+  ${CYAN}delete-customer <cus_xxx>${RESET}    Delete Stripe customer
+  ${CYAN}delete-subscription <sub_xxx>${RESET}  Cancel subscription
+  ${CYAN}reconnect${RESET}                    Reconnect port-forward
 
   ${BOLD}Firestore — Households${RESET}
-  ${CYAN}households${RESET}                    List all households (paginated, 50)
-  ${CYAN}household [id]${RESET}                Show household details
-  ${CYAN}use-household <N|id>${RESET}          Select a household
-  ${CYAN}kick <userId>${RESET}                 Remove member from selected household
-  ${CYAN}transfer-owner <userId>${RESET}       Transfer ownership
-  ${CYAN}set-tier <free|karl>${RESET}          Change subscription tier
-  ${CYAN}regen-invite${RESET}                  Regenerate invite code
-  ${CYAN}delete-household [id]${RESET}         Permanently delete household + cards
+  ${CYAN}households${RESET}                   List all households (paginated, 50)
+  ${CYAN}household [id]${RESET}               Show household details
+  ${CYAN}use-household <N|id>${RESET}         Select a household
+  ${CYAN}delete-member <userId>${RESET}       Remove member from selected household
+  ${CYAN}update-owner <userId>${RESET}        Transfer ownership
+  ${CYAN}update-tier <free|karl>${RESET}      Change subscription tier
+  ${CYAN}update-invite${RESET}               Regenerate invite code
+  ${CYAN}delete-household [id]${RESET}        Permanently delete household + cards
 
   ${BOLD}Firestore — Users${RESET}
-  ${CYAN}users${RESET}                         List all users (paginated, 50)
-  ${CYAN}user <clerkUserId>${RESET}            Show user details
-  ${CYAN}delete-user <clerkUserId>${RESET}     Delete user document
+  ${CYAN}users${RESET}                        List all users (paginated, 50)
+  ${CYAN}user <clerkUserId>${RESET}           Show user details
+  ${CYAN}delete-user <clerkUserId>${RESET}    Delete user document
 
   ${DIM}Firestore — Cards: run use-household <N> to unlock card commands${RESET}
 
-  ${CYAN}quit${RESET}                          Exit
+  ${CYAN}quit${RESET}                         Exit
 `);
     }
   },
@@ -1356,19 +1352,19 @@ const commands = {
 
 // Commands that require a household to be selected first
 const CARD_COMMANDS = [
-  "cards", "card", "delete-card", "restore-card", "expunge-card", "card-count",
+  "cards", "card", "delete-card", "update-card-restore", "delete-card-permanent", "read-card-count",
 ];
 
 const BASE_COMMANDS = [
   // Trial / Redis
-  "list", "use", "status", "set", "shift", "reset", "expire",
-  "convert", "unconvert", "create", "delete",
-  "stripe-customers", "stripe-subs", "delete-customer", "cancel-sub",
-  "flush-entitlement", "nuke",
+  "list", "use", "status", "update-trial-field", "update-trial-dates", "update-trial-reset", "update-trial-expire",
+  "update-trial-convert", "update-trial-unconvert", "create", "delete",
+  "list-customers", "list-subscriptions", "delete-customer", "delete-subscription",
+  "delete-entitlement", "delete-all",
   "keys", "entitlements", "identity", "reconnect",
   // Firestore — Household
-  "households", "household", "use-household", "select-household",
-  "kick", "transfer-owner", "set-tier", "regen-invite", "delete-household",
+  "households", "household", "use-household",
+  "delete-member", "update-owner", "update-tier", "update-invite", "delete-household",
   // Firestore — User
   "users", "user", "delete-user",
   // Meta
@@ -1399,8 +1395,8 @@ function completer(line) {
     return [hits, arg];
   }
 
-  // For "use-household" / "select-household", complete with household index numbers
-  if ((cmd === "use-household" || cmd === "select-household") && householdIndex.length > 0) {
+  // For "use-household", complete with household index numbers
+  if (cmd === "use-household" && householdIndex.length > 0) {
     const arg = parts[1] || "";
     const nums = householdIndex.map((_, i) => String(i + 1));
     const hits = nums.filter((n) => n.startsWith(arg));

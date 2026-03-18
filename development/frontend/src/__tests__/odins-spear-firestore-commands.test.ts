@@ -218,7 +218,7 @@ interface MockCard {
   status?: string;
 }
 
-describe("card active/deleted filtering — cards and card_count command logic", () => {
+describe("card active/deleted filtering — cards and read_card_count command logic", () => {
   const cards: MockCard[] = [
     { id: "card-1", cardName: "Chase Sapphire", issuerId: "chase", status: "open" },
     { id: "card-2", cardName: "Amex Gold", issuerId: "amex", status: "open", deletedAt: "2026-03-01T00:00:00.000Z" },
@@ -238,7 +238,7 @@ describe("card active/deleted filtering — cards and card_count command logic",
     expect(deleted.map((c) => c.id)).toEqual(["card-2", "card-4"]);
   });
 
-  it("card_count: active + deleted = total", () => {
+  it("read_card_count: active + deleted = total", () => {
     const active = cards.filter((c) => !c.deletedAt).length;
     const deleted = cards.filter((c) => !!c.deletedAt).length;
     expect(active + deleted).toBe(cards.length);
@@ -268,9 +268,9 @@ describe("card active/deleted filtering — cards and card_count command logic",
   });
 });
 
-// ─── 6. Invite code expiry (regen-invite: 30-day window) ─────────────────────
+// ─── 6. Invite code expiry (update-invite: 30-day window) ────────────────────
 
-describe("regen-invite — 30-day invite code expiry", () => {
+describe("update-invite — 30-day invite code expiry", () => {
   it("generates an expiry timestamp 30 days in the future", () => {
     const before = Date.now();
     const expiresAt = new Date(before + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -308,9 +308,9 @@ describe("regen-invite — 30-day invite code expiry", () => {
   });
 });
 
-// ─── 7. Tier validation — set-tier command ───────────────────────────────────
+// ─── 7. Tier validation — update-tier command ────────────────────────────────
 
-describe("set-tier — tier validation", () => {
+describe("update-tier — tier validation", () => {
   const VALID_TIERS = ["free", "karl"] as const;
   type Tier = (typeof VALID_TIERS)[number];
 
@@ -403,37 +403,37 @@ describe("requireHousehold — selection guard", () => {
   });
 });
 
-// ─── 10. kick — owner cannot be kicked ───────────────────────────────────────
+// ─── 10. delete-member — owner cannot be removed ─────────────────────────────
 
-describe("kick — owner protection invariant", () => {
-  function canKick(
+describe("delete-member — owner protection invariant", () => {
+  function canDeleteMember(
     userId: string,
     ownerId: string,
     memberIds: string[]
   ): { allowed: boolean; reason?: string } {
-    if (ownerId === userId) return { allowed: false, reason: "Cannot kick the owner. Use transfer-owner first." };
+    if (ownerId === userId) return { allowed: false, reason: "Cannot remove the owner. Use update-owner first." };
     if (!memberIds.includes(userId)) return { allowed: false, reason: `User ${userId} is not a member of this household.` };
     return { allowed: true };
   }
 
-  it("blocks kicking the owner", () => {
-    const result = canKick("user_owner", "user_owner", ["user_owner", "user_member"]);
+  it("blocks removing the owner", () => {
+    const result = canDeleteMember("user_owner", "user_owner", ["user_owner", "user_member"]);
     expect(result.allowed).toBe(false);
-    expect(result.reason).toContain("transfer-owner");
+    expect(result.reason).toContain("update-owner");
   });
 
-  it("blocks kicking a non-member", () => {
-    const result = canKick("user_stranger", "user_owner", ["user_owner", "user_member"]);
+  it("blocks removing a non-member", () => {
+    const result = canDeleteMember("user_stranger", "user_owner", ["user_owner", "user_member"]);
     expect(result.allowed).toBe(false);
     expect(result.reason).toContain("not a member");
   });
 
-  it("allows kicking a regular member", () => {
-    const result = canKick("user_member", "user_owner", ["user_owner", "user_member"]);
+  it("allows removing a regular member", () => {
+    const result = canDeleteMember("user_member", "user_owner", ["user_owner", "user_member"]);
     expect(result.allowed).toBe(true);
   });
 
-  it("after kick, memberIds no longer includes the kicked user", () => {
+  it("after delete-member, memberIds no longer includes the removed user", () => {
     const memberIds = ["user_owner", "user_member", "user_guest"];
     const newMembers = memberIds.filter((id) => id !== "user_member");
     expect(newMembers).not.toContain("user_member");
@@ -442,16 +442,16 @@ describe("kick — owner protection invariant", () => {
   });
 });
 
-// ─── 11. transfer-owner — batch semantics ────────────────────────────────────
+// ─── 11. update-owner — batch semantics ──────────────────────────────────────
 
-describe("transfer-owner — ownership transfer invariants", () => {
+describe("update-owner — ownership transfer invariants", () => {
   it("new owner gets role='owner'", () => {
     const updates: Record<string, { role?: string; ownerId?: string }> = {};
     const newOwnerId = "user_new_owner";
     const oldOwnerId = "user_old_owner";
     const householdId = "hh-test";
 
-    // Simulate what transfer_owner does
+    // Simulate what update_owner does
     updates[householdId] = { ownerId: newOwnerId };
     updates[oldOwnerId] = { role: "member" };
     updates[newOwnerId] = { role: "owner" };
@@ -529,9 +529,9 @@ describe("delete-card — idempotency and soft-delete semantics", () => {
   });
 });
 
-// ─── 14. restore_card: FieldValue.delete() semantics ─────────────────────────
+// ─── 14. update_card_restore: FieldValue.delete() semantics ──────────────────
 
-describe("restore-card — FieldValue.delete() semantics", () => {
+describe("update-card-restore — FieldValue.delete() semantics", () => {
   it("restore should be a no-op if card is not soft-deleted", () => {
     const card = { id: "card-active", cardName: "Chase Sapphire" };
     const hasDeletedAt = "deletedAt" in card;
@@ -699,9 +699,9 @@ describe("cards subcollection — document path contracts", () => {
   });
 });
 
-// ─── 18. Mocked Firestore Admin SDK — set_tier command ───────────────────────
+// ─── 18. Mocked Firestore Admin SDK — update_tier command ────────────────────
 
-describe("set_tier — Firestore update interaction (mocked)", () => {
+describe("update_tier — Firestore update interaction (mocked)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -714,7 +714,7 @@ describe("set_tier — Firestore update interaction (mocked)", () => {
     const householdId = "hh-test123";
     const tier = "karl";
 
-    // Simulate set_tier command
+    // Simulate update_tier command
     await mockDb.doc(`households/${householdId}`).update({
       tier,
       updatedAt: new Date().toISOString(),
@@ -740,9 +740,9 @@ describe("set_tier — Firestore update interaction (mocked)", () => {
   });
 });
 
-// ─── 19. Mocked Firestore Admin SDK — regen_invite command ───────────────────
+// ─── 19. Mocked Firestore Admin SDK — update_invite command ──────────────────
 
-describe("regen_invite — Firestore update interaction (mocked)", () => {
+describe("update_invite — Firestore update interaction (mocked)", () => {
   it("updates inviteCode and inviteCodeExpiresAt on the household doc", async () => {
     const mockUpdate = vi.fn().mockResolvedValue(undefined);
     const mockDoc = vi.fn().mockReturnValue({ update: mockUpdate });
@@ -752,7 +752,7 @@ describe("regen_invite — Firestore update interaction (mocked)", () => {
     const code = generateInviteCode();
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Simulate regen_invite command
+    // Simulate update_invite command
     await mockDb.doc(`households/${householdId}`).update({
       inviteCode: code,
       inviteCodeExpiresAt: expiresAt,
@@ -767,9 +767,9 @@ describe("regen_invite — Firestore update interaction (mocked)", () => {
   });
 });
 
-// ─── 20. Mocked Firestore Admin SDK — card_count command ─────────────────────
+// ─── 20. Mocked Firestore Admin SDK — read_card_count command ────────────────
 
-describe("card_count — collection read and split (mocked)", () => {
+describe("read_card_count — collection read and split (mocked)", () => {
   it("reads all cards and splits into active vs deleted", async () => {
     const cardDocs = [
       { data: () => ({ cardName: "Chase Sapphire" }) },
@@ -793,9 +793,9 @@ describe("card_count — collection read and split (mocked)", () => {
   });
 });
 
-// ─── 21. Mocked Firestore Admin SDK — expunge_card command ───────────────────
+// ─── 21. Mocked Firestore Admin SDK — delete_card_permanent command ──────────
 
-describe("expunge_card — permanent deletion (mocked)", () => {
+describe("delete_card_permanent — permanent deletion (mocked)", () => {
   it("calls db.doc(path).delete() for permanent removal", async () => {
     const mockDelete = vi.fn().mockResolvedValue(undefined);
     const mockGet = vi.fn().mockResolvedValue({
@@ -808,7 +808,7 @@ describe("expunge_card — permanent deletion (mocked)", () => {
     const householdId = "hh-expunge-test";
     const cardId = "card-to-expunge";
 
-    // Simulate expunge_card (after confirmation)
+    // Simulate delete_card_permanent (after confirmation)
     const snap = await mockDb.doc(`households/${householdId}/cards/${cardId}`).get();
     expect(snap.exists).toBe(true);
 
