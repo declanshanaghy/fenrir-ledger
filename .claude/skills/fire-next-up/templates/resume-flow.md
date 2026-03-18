@@ -1,5 +1,10 @@
 # Resume Flow (`--resume #N`)
 
+> **SCOPING GUARANTEE:** `--resume #N` is strictly scoped to issue N.
+> It calls `--resume-detect N` and `--chain-status N` only — NOT the full `--status` scan.
+> No other in-progress issues are read, dispatched, or merged as a side effect.
+> If no actionable next step exists for issue N, exit cleanly with a status message.
+
 When a chain is interrupted (session ended, agent failed, context lost), use `--resume #N` to pick up where it left off.
 
 ## Detection Steps

@@ -379,17 +379,56 @@ async function statusDashboard() {
   };
   console.log(JSON.stringify(result, null, 2));
 }
+// Fetches all data needed for a single-issue operation.
+// Scoped strictly to issueNum — does NOT scan the full project board or all open PRs.
+// Used by chainStatus() and resumeDetect() so that --chain-status N and --resume-detect N
+// never read, advance, or dispatch other in-progress issues as a side effect.
+async function fetchScopedIssueData(issueNum) {
+  const [issueJSON, commentsData, openPRsData, refsData] = await Promise.all([
+    restGet(`/repos/${OWNER}/${REPO}/issues/${issueNum}`),
+    restGet(`/repos/${OWNER}/${REPO}/issues/${issueNum}/comments?per_page=50`),
+    // Fetch only recent open PRs — filtered client-side to this issue's branch.
+    // At most 30 PRs are fetched; only those whose head branch contains "issue-N" are kept.
+    restGet(`/repos/${OWNER}/${REPO}/pulls?state=open&per_page=30&sort=updated`).catch(() => []),
+    // Fetch git refs matching this issue's branch name prefix (e.g. fix/issue-N-*).
+    restGet(`/repos/${OWNER}/${REPO}/git/matching-refs/heads/fix/issue-${issueNum}`).catch(() => [])
+  ]);
+
+  const comments = (Array.isArray(commentsData) ? commentsData : []).map((c) => c.body);
+
+  // Strictly filter PRs to branches that belong to this issue only.
+  // No other issue's PRs are included or acted upon.
+  const pullRequests = (Array.isArray(openPRsData) ? openPRsData : [])
+    .filter((pr) => pr.head?.ref?.includes(`issue-${issueNum}`))
+    .map((pr) => ({
+      number: pr.number,
+      title: pr.title,
+      headRefName: pr.head.ref,
+      state: pr.state
+    }));
+
+  const refs = Array.isArray(refsData) ? refsData : [];
+
+  return { issueJSON, comments, pullRequests, refs };
+}
+
 async function chainStatus(issueNum) {
-  const { items, issueComments, pullRequests } = await fetchBoardAndComments();
+  // Scoped to issue #issueNum only — does NOT invoke --status or scan other board items.
+  // Calls fetchScopedIssueData() which limits all queries to issue N.
+  const { issueJSON, comments, pullRequests } = await fetchScopedIssueData(issueNum);
   const jobRuntimes = fetchJobRuntimes();
-  const item = items.find((i) => i.num === issueNum);
-  if (!item) {
-    console.error(`Issue #${issueNum} not found on project board`);
-    process.exit(1);
-  }
+
+  // Build item from issue REST data — avoids a full project-board scan.
+  const item = {
+    num: issueJSON.number,
+    title: issueJSON.title,
+    labels: (issueJSON.labels ?? []).map((l) => l.name)
+  };
+
   const status = analyzeChain(
     item,
-    issueComments[issueNum] ?? [],
+    comments,
+    // pullRequests is already filtered to issue N's branch — no cross-issue PRs present.
     pullRequests,
     null,
     jobRuntimes
@@ -480,43 +519,34 @@ async function moveIssue(issueNum, status) {
   console.log(`Moved #${issueNum} to ${status}`);
 }
 async function resumeDetect(issueNum) {
-  const [boardData, issueJSON, refsData] = await Promise.all([
-    fetchBoardAndComments(),
-    restGet(`/repos/${OWNER}/${REPO}/issues/${issueNum}`),
-    restGet(`/repos/${OWNER}/${REPO}/git/matching-refs/heads/fix/issue-${issueNum}`).catch(() => [])
-  ]);
-  const { items, issueComments, pullRequests } = boardData;
+  // Scoped to issue #issueNum only — does NOT invoke --status or scan other board items.
+  // Uses fetchScopedIssueData() so only issue N's comments and PRs are queried.
+  // No other in-progress chains are read or advanced as a side effect.
+  const { issueJSON, comments: effectiveComments, pullRequests, refs: refsData } =
+    await fetchScopedIssueData(issueNum);
+
   const type = detectType(
     (issueJSON.labels ?? []).map((l) => l.name)
   );
   const chain = chainForType(type);
   let branch = "";
+  // pullRequests is already filtered to issue N's branch by fetchScopedIssueData.
   const matchingPR = pullRequests.find(
     (pr) => pr.headRefName.includes(`issue-${issueNum}`)
   );
   if (matchingPR) {
     branch = matchingPR.headRefName;
-  } else if (Array.isArray(refsData) && refsData.length > 0) {
+  } else if (refsData.length > 0) {
     branch = refsData[0].ref.replace("refs/heads/", "");
   }
-  let effectiveComments = issueComments[issueNum] ?? [];
-  if (effectiveComments.length === 0) {
-    try {
-      const commentsData = await restGet(
-        `/repos/${OWNER}/${REPO}/issues/${issueNum}/comments?per_page=30`
-      );
-      effectiveComments = commentsData.map((c) => c.body);
-    } catch {
-    }
-  }
   const hasLunaHandoff = effectiveComments.some(
-    (c) => c.includes("## Luna \u2192 FiremanDecko Handoff")
+    (c) => c.includes("## Luna → FiremanDecko Handoff")
   );
   const hasDeckoHandoff = effectiveComments.some(
-    (c) => c.includes("## FiremanDecko \u2192 Loki Handoff")
+    (c) => c.includes("## FiremanDecko → Loki Handoff")
   );
   const hasHeimdallHandoff = effectiveComments.some(
-    (c) => c.includes("## Heimdall \u2192 Loki Handoff")
+    (c) => c.includes("## Heimdall → Loki Handoff")
   );
   const hasLokiVerdict = effectiveComments.some(
     (c) => c.includes("## Loki QA Verdict")
@@ -528,7 +558,7 @@ async function resumeDetect(issueNum) {
     (c) => c.includes("## Loki QA Verdict") && /Verdict.*FAIL/.test(c)
   );
   const hasResearchHandoff = effectiveComments.some(
-    (c) => c.includes("## Freya Handoff") || c.includes("## FiremanDecko Handoff") && !c.includes("\u2192 Loki")
+    (c) => c.includes("## Freya Handoff") || c.includes("## FiremanDecko Handoff") && !c.includes("→ Loki")
   );
   let completedSteps = [];
   let nextAgent = "";
