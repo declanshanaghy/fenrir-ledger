@@ -1,15 +1,15 @@
 /**
- * Sync UX — Loki final gap tests (issue #1125)
+ * Sync UX — Loki final gap tests (issue #1125, #1336)
  *
  * Fills gaps not addressed in prior test files:
  *   - SyncIndicator: offline dot opacity-40, syncing dot color, idle dot color
- *   - SyncSettingsSection: Trial error state renders error block + retry/dismiss
+ *   - SyncSettingsSection: Trial always shows upsell card (not error block — issue #1336)
  *   - SyncSettingsSection: error with no errorMessage shows fallback text
  *   - SyncSettingsSection: error with retryIn=null — no countdown shown
  *   - SyncSettingsSection: error state label reads "Last successful sync:"
  *   - SyncSettingsSection: progress bar has motion-reduce:animate-none class
  *
- * Issue #1125
+ * Issue #1125, #1336
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -153,38 +153,35 @@ describe("SyncIndicator — tooltip aria-hidden", () => {
   });
 });
 
-// ── SyncSettingsSection: Trial error state ─────────────────────────────────────
+// ── SyncSettingsSection: Trial always shows upsell (issue #1336) ───────────────
 
-describe("SyncSettingsSection — Trial: error state", () => {
+describe("SyncSettingsSection — Trial: always shows upsell (not sync controls)", () => {
   beforeEach(() => {
     setSettingsTrial();
-    setSettingsError(60);
+    setSettingsError(60); // even with error state set, trial should see upsell
     vi.clearAllMocks();
   });
 
-  it("Trial in error state renders error block with role=alert", () => {
+  it("Trial shows upsell card, not error block", () => {
     render(<SyncSettingsSection />);
-    const alert = screen.getByRole("alert");
-    expect(alert).toBeDefined();
-    expect(alert.textContent).toContain("Last sync failed");
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("Trial in error state renders Retry Now button", () => {
-    render(<SyncSettingsSection />);
-    const btn = screen.getByRole("button", { name: "Retry cloud sync now" });
-    expect(btn).toBeDefined();
-  });
-
-  it("Trial in error state renders Dismiss Error button", () => {
-    render(<SyncSettingsSection />);
-    const btn = screen.getByRole("button", { name: "Dismiss sync error" });
-    expect(btn).toBeDefined();
-  });
-
-  it("Trial error state still shows TRIAL badge", () => {
+  it("Trial shows upsell card with KARL badge", () => {
     render(<SyncSettingsSection />);
     const section = screen.getByRole("region", { name: "Cloud Sync" });
-    expect(section.textContent).toContain("TRIAL");
+    expect(section.textContent).toContain("KARL");
+    expect(section.textContent).not.toContain("TRIAL");
+  });
+
+  it("Trial does not show Retry Now button", () => {
+    render(<SyncSettingsSection />);
+    expect(screen.queryByRole("button", { name: "Retry cloud sync now" })).toBeNull();
+  });
+
+  it("Trial does not show Dismiss Error button", () => {
+    render(<SyncSettingsSection />);
+    expect(screen.queryByRole("button", { name: "Dismiss sync error" })).toBeNull();
   });
 });
 
