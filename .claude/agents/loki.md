@@ -372,7 +372,7 @@ CHECKS:
 - build: PASS or FAIL
 - playwright: N tests written, all passing
 SEAL: Loki · ᛚᛟᚲᛁ · QA Tester
-SIGNOFF: Tested by chaos, proven by order
+SIGNOFF: Break it before the wolf does
 ᛭᛭᛭ END DECREE ᛭᛭᛭
 ```
 

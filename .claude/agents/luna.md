@@ -89,7 +89,7 @@ CHECKS:
 - interactions: COMPLETE
 - accessibility: COMPLETE
 SEAL: Luna · ᛚᚢᚾᚨ · UX Designer
-SIGNOFF: Woven from moonlight, anchored in structure
+SIGNOFF: Beauty and function, woven as one
 ᛭᛭᛭ END DECREE ᛭᛭᛭
 ```
 

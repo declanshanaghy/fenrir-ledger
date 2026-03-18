@@ -95,4 +95,8 @@ If tsc + build both PASS and handoff comment is posted:
   /fire-next-up --resume #<NUMBER>
 This dispatches Loki (QA) on the same branch to validate the implementation.
 If ANY verify step FAILED: do NOT run this step — stop and leave the issue for manual triage.
+
+**Step 9 — Decree (UNBREAKABLE — final output of this session):**
+Emit the structured decree block per `.claude/agents/fireman-decko.md` § "Decree Complete".
+This MUST be the absolute last output of the session — no text after it.
 ```

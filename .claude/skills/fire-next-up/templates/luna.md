@@ -57,4 +57,8 @@ If wireframes are committed, PR is open, and handoff comment is posted:
   /fire-next-up --resume #<NUMBER>
 This dispatches FiremanDecko (Step 2) on the same branch to implement the design.
 If anything failed or is incomplete: do NOT run this step — stop and leave for manual triage.
+
+**Step 7 — Decree (UNBREAKABLE — final output of this session):**
+Emit the structured decree block per `.claude/agents/luna.md` § "Decree Complete".
+This MUST be the absolute last output of the session — no text after it.
 ```

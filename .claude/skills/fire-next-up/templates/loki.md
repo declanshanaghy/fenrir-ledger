@@ -132,6 +132,10 @@ If FAIL: do NOT run this step — leave the issue open for manual triage.
 **Test Standards:** Canonical source is `.claude/agents/loki.md` § "Test Standards (UNBREAKABLE)".
 Read that file at the start of Step 3 — it contains budgets, pyramid enforcement,
 locator rules, data isolation patterns, and all UNBREAKABLE test constraints.
+
+**Step 8 — Decree (UNBREAKABLE — final output of this session):**
+Emit the structured decree block per `.claude/agents/loki.md` § "Decree Complete".
+This MUST be the absolute last output of the session — no text after it.
 ```
 
 ## Mode B: CI Bounce-Back (fix failing CI tests on an existing PR)
@@ -216,4 +220,8 @@ Your job ends after posting the verdict comment (and optionally running chain co
 - You MUST fix ALL failing tests, not just the ones related to this issue.
 - Run the FULL suite after fixing — do not stop until 0 failures.
 - A PASS verdict requires ALL tests green. No exceptions.
+
+**Step 8 — Decree (UNBREAKABLE — final output of this session):**
+Emit the structured decree block per `.claude/agents/loki.md` § "Decree Complete".
+This MUST be the absolute last output of the session — no text after it.
 ```

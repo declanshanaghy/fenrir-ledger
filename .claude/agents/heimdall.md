@@ -78,7 +78,7 @@ CHECKS:
 - requireAuth: PASS or FAIL
 - secrets: PASS or FAIL
 SEAL: Heimdall · ᚺᛖᛁᛗᛞᚨᛚᛚ · Security Specialist
-SIGNOFF: Watched from the rainbow bridge
+SIGNOFF: The bridge holds — none shall pass unvetted
 ᛭᛭᛭ END DECREE ᛭᛭᛭
 ```
 
