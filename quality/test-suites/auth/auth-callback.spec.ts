@@ -200,8 +200,11 @@ test.describe("Auth Callback — Corrupt PKCE Data", () => {
       sessionStorage.setItem("fenrir:pkce", "this-is-not-valid-json{{{{");
     });
 
+    // Use "load" not "networkidle": corrupt PKCE is detected client-side before
+    // the token exchange completes. A fake code causes /api/auth/token to hang
+    // server-side, preventing networkidle from ever settling within 30s.
     await page.goto("/ledger/auth/callback?code=fake_code&state=any-state", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     await expect(
