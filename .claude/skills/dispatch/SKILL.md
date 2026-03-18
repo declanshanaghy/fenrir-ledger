@@ -162,6 +162,10 @@ conditions are met (success verdict) and FORBIDDEN when they are not (failure/pa
 - If verdict is FAIL or any verify step failed: do NOT run chain continuation.
   Stop immediately and leave the issue open for manual triage.
 - Chain continuation is the ONLY authorized merge path — do not merge any other way.
+- **GKE sandbox: NEVER fall back to local worktree.** If `/dispatch` fails inside a GKE job
+  (e.g. dispatch-job.sh path error, kubectl error), post a comment on the issue with the
+  exact error output, then stop. Do NOT spawn an Agent tool with `isolation: "worktree"`.
+  The orchestrator (Odin) will re-dispatch from outside the sandbox.
 ```
 
 ---
@@ -176,7 +180,7 @@ conditions are met (success verdict) and FORBIDDEN when they are not (failure/pa
 Read the agent template (if needed):
 - `TEMPLATE_DIR/<agent-or-override>.md`
 
-Where `TEMPLATE_DIR` = `<repo-root>/.claude/skills/fire-next-up/templates`.
+Where `TEMPLATE_DIR` = `$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/templates`.
 
 ### Phase 2 — Compose + Spawn (single Bash call per issue)
 
@@ -219,8 +223,9 @@ If `--prompt-extra`, append after the issue body:
 #### Remote (default) — GKE Autopilot K8s Job
 
 ```bash
+REPO_ROOT=$(git rev-parse --show-toplevel) && \
 SESSION_ID="issue-<N>-step<S>-<agent>-$(uuidgen | cut -c1-8 | tr A-Z a-z)" && \
-bash "<repo-root>/infrastructure/k8s/agents/dispatch-job.sh" \
+bash "$REPO_ROOT/infrastructure/k8s/agents/dispatch-job.sh" \
   --session-id "$SESSION_ID" \
   --branch "<BRANCH>" \
   --model "<MODEL>" \
@@ -228,7 +233,7 @@ bash "<repo-root>/infrastructure/k8s/agents/dispatch-job.sh" \
 <composed prompt content here>
 PROMPT
 )" && \
-node "<repo-root>/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N> in-progress
+node "$REPO_ROOT/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N> in-progress
 ```
 
 **Key:** Use a `<<'PROMPT'` heredoc (single-quoted delimiter) to avoid all shell expansion issues. The `$(cat ...)` wrapping passes the heredoc content as a single string argument to `--prompt`.
@@ -306,7 +311,8 @@ One report per issue for parallel dispatches. No step-by-step narration.
 | Cannot infer agent | **Error**: use `--agent` |
 | Template missing | **Error** |
 | `kubectl` not configured | **Error**, do NOT fall back to local |
-| `dispatch-job.sh` fails | **Error**, do NOT move board |
+| `dispatch-job.sh` fails | **Error**, do NOT move board, do NOT fall back to local worktree |
+| Running inside GKE sandbox + dispatch fails | **Error** — post GitHub comment with error details and stop. NEVER spawn local Agent tool. |
 | Board move fails | **Warning** (non-fatal) |
 
 ---
@@ -318,3 +324,5 @@ One report per issue for parallel dispatches. No step-by-step narration.
 - GKE Jobs are fire-and-forget: spawn and report, do NOT poll or wait.
 - The orchestrator coordinates — never do an agent's work yourself.
 - Job logs are retrievable via `kubectl logs` or Cloud Logging for debugging.
+- **NEVER fall back to local worktree** when GKE dispatch fails. If `dispatch-job.sh` fails, post a GitHub comment with the exact error, then stop. Do NOT spawn an Agent tool with `isolation: "worktree"`. Local execution is ONLY used when `--local` is explicitly passed by Odin.
+- **Always resolve repo root dynamically** with `REPO_ROOT=$(git rev-parse --show-toplevel)` — never hardcode or use `<repo-root>` as a literal string.
