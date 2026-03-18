@@ -120,6 +120,13 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 <If PASS: Ready for merge — awaiting orchestrator + CI green.>
 <If FAIL: Blocked — see failures above.>"
 
+**Step 7 — Chain continuation (PASS only):**
+If your verdict is PASS (all tests green, tsc + build PASS):
+  gh pr view <BRANCH> --json number --jq '.number'
+  gh pr merge <PR_NUMBER> --squash --delete-branch
+  gh issue close <NUMBER>
+If FAIL: do NOT run this step — leave the issue open for manual triage.
+
 ---
 
 **Test Standards:** Canonical source is `.claude/agents/loki.md` § "Test Standards (UNBREAKABLE)".
@@ -193,9 +200,16 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict (Revised)
 <If all tests pass: All CI failures resolved. Ready for merge — awaiting orchestrator.>
 <If still failing: FAIL — <what is still broken>.>"
 
-**IMPORTANT — DO NOT MERGE:**
-You do NOT have merge authority. Only the orchestrator (via Odin's approval) merges PRs.
-Your job ends after posting the verdict comment. Do NOT run `gh pr merge` or any merge command.
+**Step 7 — Chain continuation (PASS only):**
+If your verdict is PASS (ALL tests green):
+  gh pr view <BRANCH> --json number --jq '.number'
+  gh pr merge <PR_NUMBER> --squash --delete-branch
+  gh issue close <NUMBER>
+If still FAIL: do NOT run this step — leave the issue open for manual triage.
+
+**IMPORTANT — DO NOT MERGE (unless chain continuation above applies):**
+The chain continuation step above is the only authorized merge path. Only run it on a clean PASS.
+Your job ends after posting the verdict comment (and optionally running chain continuation).
 
 **Key reminders:**
 - EVERY bash command must start with cd <REPO_ROOT>.

@@ -51,4 +51,10 @@ gh issue comment <NUMBER> --body "## Luna → FiremanDecko Handoff
 - <Component suggestions, patterns to reuse, edge cases>
 
 Ready for implementation."
+
+**Step 6 — Chain continuation:**
+If wireframes are committed, PR is open, and handoff comment is posted:
+  /fire-next-up --resume #<NUMBER>
+This dispatches FiremanDecko (Step 2) on the same branch to implement the design.
+If anything failed or is incomplete: do NOT run this step — stop and leave for manual triage.
 ```
