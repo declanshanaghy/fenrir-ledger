@@ -1072,12 +1072,12 @@ const commands = {
     const snap = await db.collection("users").orderBy("createdAt", "desc").limit(50).get();
     if (snap.empty) { console.log("\n  No users found in Firestore.\n"); return; }
 
-    console.log(`\n  ${BOLD}  ClerkUserId        Email                          Display name        Role     Household${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(100)}${RESET}`);
+    console.log(`\n  ${BOLD}  ClerkUserId                          Email                          Display name        Role     Household${RESET}`);
+    console.log(`  ${DIM}${"─".repeat(115)}${RESET}`);
     snap.docs.forEach((d) => {
       const u = d.data();
       const roleColor = u.role === "owner" ? GOLD : DIM;
-      console.log(`  ${shortId(d.id).padEnd(20)} ${(u.email || "").substring(0, 30).padEnd(31)} ${(u.displayName || "").substring(0, 18).padEnd(19)} ${roleColor}${(u.role || "").padEnd(8)}${RESET} ${shortId(u.householdId || "")}`);
+      console.log(`  ${d.id.padEnd(36)} ${(u.email || "").substring(0, 30).padEnd(31)} ${(u.displayName || "").substring(0, 18).padEnd(19)} ${roleColor}${(u.role || "").padEnd(8)}${RESET} ${shortId(u.householdId || "")}`);
     });
     console.log(`\n  ${DIM}Total: ${snap.size}${RESET}\n`);
   },
