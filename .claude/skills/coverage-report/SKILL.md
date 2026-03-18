@@ -1,6 +1,6 @@
 ---
 name: coverage-report
-description: "Generate code coverage reports. Supports Vitest (--unit-only), Playwright E2E (default), and combined (--combined) modes. Outputs HTML + text-summary + LCOV reports."
+description: "Generate code coverage reports. Supports Vitest (--unit-only), Playwright E2E (--e2e-only), and combined (default) modes. Outputs HTML + text-summary + LCOV reports."
 ---
 
 # Coverage Report
@@ -10,23 +10,39 @@ Generate code coverage reports via `coverage.mjs` directly.
 ## Usage
 
 ```
-/coverage-report [--unit-only | --combined] [-- playwright args...]
+/coverage-report [--unit-only | --e2e-only] [-- playwright args...]
 ```
 
 ## Modes
+
+### Combined mode (default)
+
+Runs Vitest + Playwright coverage, then merges into a single report.
+**This is the default** — ensures all three report directories always exist.
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT" && node quality/scripts/coverage.mjs --combined [--skip-build]
+# or merge existing reports only:
+cd "$REPO_ROOT" && node quality/scripts/coverage-combine.mjs
+```
+
+Reports:
+- `quality/reports/coverage/vitest/` — unit/integration coverage
+- `quality/reports/coverage/playwright/` — E2E server-side coverage
+- `quality/reports/coverage/combined/` — merged report (HTML via genhtml + LCOV)
 
 ### Unit-only mode (`--unit-only`)
 
 Runs Vitest unit + integration tests with V8 coverage. Fast, no browser needed.
 
 ```bash
-REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT" && node quality/scripts/coverage.mjs --unit-only
 ```
 
 Reports: `quality/reports/coverage/vitest/` (HTML + LCOV + text-summary)
 
-### E2E-only mode (default)
+### E2E-only mode (`--e2e-only`)
 
 Starts the Next.js production server with `NODE_V8_COVERAGE`, runs Playwright
 tests, then sends SIGTERM for a clean exit that flushes V8 coverage files.
@@ -40,21 +56,6 @@ cd "$REPO_ROOT" && node quality/scripts/coverage.mjs
 Reports: `quality/reports/coverage/playwright/` (HTML + LCOV + text-summary)
 
 **Note:** `--skip-build` skips the Next.js build if `.next/` already exists.
-
-### Combined mode (`--combined`)
-
-Runs Vitest + Playwright coverage, then merges into a single report.
-
-```bash
-cd "$REPO_ROOT" && node quality/scripts/coverage.mjs --combined [--skip-build]
-# or merge existing reports only:
-cd "$REPO_ROOT" && node quality/scripts/coverage-combine.mjs
-```
-
-Reports:
-- `quality/reports/coverage/vitest/` — unit/integration coverage
-- `quality/reports/coverage/playwright/` — E2E server-side coverage
-- `quality/reports/coverage/combined/` — merged report (HTML via genhtml + LCOV)
 
 ## Execution
 
