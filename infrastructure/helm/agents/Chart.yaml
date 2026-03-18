@@ -1,0 +1,6 @@
+apiVersion: v2
+name: agents
+description: Fenrir Ledger — Agent sandbox namespace, ServiceAccount, RBAC, and ResourceQuota
+version: 0.1.0
+appVersion: "1.0.0"
+type: application

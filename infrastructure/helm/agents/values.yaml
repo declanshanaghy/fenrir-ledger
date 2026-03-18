@@ -1,0 +1,31 @@
+# --------------------------------------------------------------------------
+# agents Helm Chart — Values
+# Namespace: fenrir-agents
+#
+# Manages the agent sandbox namespace, ServiceAccount (with Workload Identity),
+# RBAC (Role + RoleBinding for job dispatch), and ResourceQuota.
+# --------------------------------------------------------------------------
+
+namespace: fenrir-agents
+
+# -- Workload Identity -------------------------------------------------------
+# GCP project ID is injected at deploy time via --set gcpProjectId=...
+gcpProjectId: ""
+
+serviceAccount:
+  name: fenrir-agents-sa
+  gcpServiceAccount: "fenrir-agents-workload"  # without @project.iam.gserviceaccount.com
+
+# -- RBAC --------------------------------------------------------------------
+rbac:
+  roleName: fenrir-agents-job-creator
+  roleBindingName: fenrir-agents-job-creator-binding
+
+# -- ResourceQuota -----------------------------------------------------------
+resourceQuota:
+  name: agents-quota
+  pods: "8"
+  requestsCpu: "16"
+  requestsMemory: 32Gi
+  limitsCpu: "16"
+  limitsMemory: 32Gi

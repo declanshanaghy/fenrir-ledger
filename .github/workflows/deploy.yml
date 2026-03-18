@@ -397,26 +397,11 @@ jobs:
             --namespace=fenrir-app --dry-run=client -o yaml | kubectl apply -f -
           kubectl annotate serviceaccount fenrir-app-sa --namespace=fenrir-app --overwrite \
             iam.gke.io/gcp-service-account=fenrir-app-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
-          kubectl create namespace fenrir-agents --dry-run=client -o yaml | kubectl apply -f -
-          kubectl create serviceaccount fenrir-agents-sa \
-            --namespace=fenrir-agents --dry-run=client -o yaml | kubectl apply -f -
-          kubectl annotate serviceaccount fenrir-agents-sa --namespace=fenrir-agents --overwrite \
-            iam.gke.io/gcp-service-account=fenrir-agents-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
-          kubectl apply -f infrastructure/k8s/agents/rbac.yaml
-          cat <<'QUOTA' | kubectl apply -f -
-          apiVersion: v1
-          kind: ResourceQuota
-          metadata:
-            name: agents-quota
-            namespace: fenrir-agents
-          spec:
-            hard:
-              pods: "8"
-              requests.cpu: "16"
-              requests.memory: 32Gi
-              limits.cpu: "16"
-              limits.memory: 32Gi
-          QUOTA
+          helm upgrade --install fenrir-agents infrastructure/helm/agents \
+            --namespace fenrir-agents \
+            --create-namespace \
+            --set gcpProjectId=${{ secrets.GCP_PROJECT_ID }} \
+            --wait
 
       - name: Sync app secrets
         run: |
