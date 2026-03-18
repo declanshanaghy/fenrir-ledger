@@ -15,11 +15,11 @@
  *  - /api/auth/token is exempt (token exchange endpoint -- no token exists yet).
  *
  * CSP (Issue #1184 — fix for #1144):
- *  - Hybrid nonce + hash CSP. A per-request nonce covers Next.js RSC inline
- *    scripts (dynamic, can't be pre-hashed). Pre-computed hashes cover known
- *    static inline scripts (next-themes, GA4 init).
- *  - The nonce is set on the request headers so Next.js can read it and attach
- *    it to RSC streaming <script> tags.
+ *  - Uses 'unsafe-inline' for scripts. Nonce-based CSP is incompatible with
+ *    PPR + CDN caching: the pre-rendered shell has no nonces (built before
+ *    middleware runs), and CDN caches the HTML. A per-request nonce in the
+ *    CSP header never matches the nonce-less inline RSC scripts → blank page.
+ *  - Static hashes cover next-themes (predictable script content).
  *  - Non-CSP security headers remain as static headers in next.config.ts.
  *
  * See ADR-005 for the auth architecture. See ADR-008 for API route auth.
@@ -48,27 +48,21 @@ export function middleware(request: NextRequest) {
   }
 
   // -----------------------------------------------------------------------
-  // CSP with per-request nonce — Issue #1184 (fix for #1144)
+  // CSP — Issue #1184 (fix for #1144)
   //
-  // Next.js App Router streams RSC data as inline <script> tags whose content
-  // varies per request. These cannot be pre-hashed. A per-request nonce covers
-  // them. Next.js reads the nonce from the request's Content-Security-Policy
-  // header and attaches it to all inline <script> tags it generates.
+  // Uses 'unsafe-inline' for scripts. Nonce-based CSP is incompatible with
+  // PPR + CDN caching: PPR pre-renders a static HTML shell at build time
+  // (before middleware runs), so inline RSC payload scripts have no nonces.
+  // CDN caches this shell. A per-request nonce in the CSP header never
+  // matches the nonce-less scripts in the cached HTML → CSP violation → blank page.
   //
-  // Known static inline scripts (next-themes, GA4 init) also get hashes so
-  // they work regardless of nonce presence.
+  // 'unsafe-inline' is acceptable here: the app has no user-generated content
+  // displayed back on the page, so XSS injection risk is minimal.
   // -----------------------------------------------------------------------
-  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const cspDirectives = buildCspDirectives(nonce);
+  const cspDirectives = buildCspDirectives();
   const cspHeaderValue = cspDirectives.join("; ");
 
-  // Set CSP on request headers so Next.js can read the nonce
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("Content-Security-Policy", cspHeaderValue);
-
-  const response = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  const response = NextResponse.next();
 
   // Set CSP on response headers for the browser to enforce
   response.headers.set("Content-Security-Policy", cspHeaderValue);
