@@ -22,6 +22,12 @@
  *  - Static hashes cover next-themes (predictable script content).
  *  - Non-CSP security headers remain as static headers in next.config.ts.
  *
+ * Redirects — handled at GCP Load Balancer layer, NOT here:
+ *  - apex (fenrirledger.com) → www: GCP URL map redirect (issue #1318)
+ *  - HTTP → HTTPS: GCP LB frontend policy
+ *  - Middleware must NOT redirect HTTP requests — the GKE managed cert provisioner
+ *    requires port 80 to respond without redirect (causes FailedNotVisible if redirected).
+ *
  * See ADR-005 for the auth architecture. See ADR-008 for API route auth.
  */
 
@@ -30,25 +36,7 @@ import { getCacheControlForPath } from "@/lib/cache-headers";
 import { buildCspDirectives } from "@/lib/csp-headers";
 
 export function middleware(request: NextRequest) {
-  const { hostname, protocol, pathname, search } = request.nextUrl;
-
-  // -----------------------------------------------------------------------
-  // HTTP → HTTPS redirect (safety net for non-GKE traffic / local dev)
-  // Apex (fenrirledger.com) → www is handled at the GCP LB layer (issue #1318).
-  // GKE terminates SSL and sets x-forwarded-proto: https, so this block will
-  // not fire in production — it exists for non-LB environments only.
-  // Skip health check endpoint (GKE liveness probes use plain HTTP).
-  // -----------------------------------------------------------------------
-  if (hostname !== "localhost" && hostname !== "127.0.0.1" && pathname !== "/api/health") {
-    const rawHost = request.headers.get("host") ?? "";
-    const host = rawHost.split(":")[0];
-    const isHttp =
-      request.headers.get("x-forwarded-proto") === "http" || protocol === "http:";
-
-    if (isHttp && host !== "localhost" && host !== "127.0.0.1") {
-      return NextResponse.redirect(`https://${host}${pathname}${search}`, 301);
-    }
-  }
+  const { pathname } = request.nextUrl;
 
   // -----------------------------------------------------------------------
   // CSP — Issue #1184 (fix for #1144)
