@@ -251,8 +251,10 @@ export default function SettingsPage() {
       if (nextIndex !== null) {
         e.preventDefault();
         const nextTab = SETTINGS_TABS[nextIndex];
-        activateTab(nextTab.id);
-        tabRefs.current[nextIndex]?.focus();
+        if (nextTab) {
+          activateTab(nextTab.id);
+          tabRefs.current[nextIndex]?.focus();
+        }
       }
     },
     [activateTab]

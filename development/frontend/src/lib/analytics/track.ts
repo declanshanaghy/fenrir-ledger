@@ -53,6 +53,10 @@ export interface EasterEggProps {
 
 // ── Event map — ties event names to their prop types ─────────────────────────
 
+export interface SettingsTabSwitchProps {
+  tab: "account" | "household" | "settings";
+}
+
 export interface TrackEventMap {
   "card-save": CardSaveProps;
   "sheet-import": SheetImportProps;
@@ -62,6 +66,7 @@ export interface TrackEventMap {
   "auth-login": Record<string, never>;
   "valhalla-visit": Record<string, never>;
   "settings-visit": Record<string, never>;
+  "settings-tab-switch": SettingsTabSwitchProps;
 }
 
 export type TrackEventName = keyof TrackEventMap;
