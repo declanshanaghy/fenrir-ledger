@@ -1,32 +1,12 @@
 /**
  * CSP Headers Builder — Fenrir Ledger
  *
- * Builds security headers with hash-based CSP for CDN compatibility.
- * Hashes are pre-computed at build time by scripts/compute-csp-hashes.mjs.
- *
- * Why hash-based instead of nonce-based? (Issue #1144)
- * Nonce-based CSP generates a unique nonce per request, making the
- * Content-Security-Policy header different on every response. Cloud CDN
- * cannot cache responses with varying headers, defeating CDN caching for HTML
- * pages. Hash-based CSP keeps the header identical across all requests,
- * allowing the CDN to cache HTML while maintaining equivalent security.
+ * Uses 'unsafe-inline' for script-src. Nonce/hash-based CSP is incompatible
+ * with PPR + CDN: the pre-rendered HTML shell has no nonces on RSC inline
+ * scripts (built before middleware runs), and CDN caches the shell. A
+ * per-request nonce in the CSP header never matches → blank page.
  */
 
-import { INLINE_SCRIPT_HASHES } from "./csp-hashes.generated";
-
-/**
- * Google Picker inline-script SHA-256 hashes.
- *
- * The Google Picker API (apis.google.com) injects inline <script> tags that
- * are not under our control.  Rather than falling back to 'unsafe-inline'
- * for all scripts, we allowlist the specific hashes observed in the console
- * (see Issue #527).  If Google changes the inline payload, the hash will
- * fail-closed and we update it here.
- */
-const GOOGLE_PICKER_SCRIPT_HASHES = [
-  // Google Picker bootstrap inline script
-  "'sha256-rty9vSWIkY+k7t72CZmyhd8qbxQ4FpRSyO4E/iy3xcI='",
-];
 
 /**
  * Build CSP directives using pre-computed hashes (no per-request nonce).
@@ -39,34 +19,22 @@ const GOOGLE_PICKER_SCRIPT_HASHES = [
  * - data: URIs for fonts (some Google Fonts use data: encoding)
  * - Google Picker inline scripts via SHA-256 hash allowlist (Issue #527)
  */
-export function buildCspDirectives(nonce?: string): string[] {
+export function buildCspDirectives(): string[] {
   return [
     // Default: only same-origin
     "default-src 'self'",
 
-    // Scripts: self + nonce (for Next.js RSC inline scripts) + hashes (for known
-    // static inline scripts like next-themes) + Google Picker hashes + allowed CDNs.
-    //
-    // Why both nonce AND hashes? (Issue #1184)
-    // Next.js App Router streams RSC data as dynamic inline <script> tags whose
-    // content varies per request — they cannot be pre-hashed. A per-request nonce
-    // covers these. Known static inline scripts (next-themes, GA4 init) use hashes
-    // so they work even if rendered outside middleware (e.g. static generation).
-    //
-    // CDN impact: the nonce makes CSP vary per request, but only for HTML pages.
-    // Static assets (/_next/static/*) bypass middleware and get immutable caching.
-    // Marketing pages get s-maxage via Cache-Control (CDN caches the response body
-    // and strips/replaces CSP on cache hit if configured, or serves origin headers).
+    // Scripts: 'unsafe-inline' required for PPR + CDN compatibility.
+    // PPR pre-renders a static HTML shell at build time containing RSC payload
+    // inline scripts. These scripts have no nonces (middleware doesn't run at
+    // build time) and their hashes change every build. CDN caches the shell.
+    // A per-request nonce or stale hashes → CSP violation → blank page.
     //
     // In development, Next.js HMR / React Fast Refresh requires 'unsafe-eval'.
-    // Google Picker inline script hashes are allowlisted for Issue #527.
     // https://www.googletagmanager.com is required for the external GA4 loader script.
     [
-      "script-src 'self'",
-      ...(nonce ? [`'nonce-${nonce}'`] : []),
-      ...INLINE_SCRIPT_HASHES,
+      "script-src 'self' 'unsafe-inline'",
       ...(process.env.NODE_ENV !== "production" ? ["'unsafe-eval'"] : []),
-      ...GOOGLE_PICKER_SCRIPT_HASHES,
       "https://accounts.google.com",
       "https://apis.google.com",
       "https://js.stripe.com",

@@ -22,13 +22,14 @@ case "${1:-status}" in
     fi
     echo "Starting Next.js dev server on port $PORT..."
     > "$LOG"
-    nohup bash -c "cd '$REPO_ROOT' && npx vercel dev --listen $PORT --yes" >> "$LOG" 2>&1 &
+    nohup bash -c "cd '$FRONTEND_DIR' && npm run dev" >> "$LOG" 2>&1 &
     echo "$PORT" > "$PORT_FILE"
     for _ in $(seq 1 15); do
       grep -q "Ready" "$LOG" 2>/dev/null && break
       sleep 1
     done
     echo "app: running on port $PORT"
+    echo "  → http://localhost:$PORT/"
     ;;
   stop)
     if p=$(pid); then
@@ -42,6 +43,7 @@ case "${1:-status}" in
   status)
     if p=$(pid); then
       echo "app: running (pid $p) on port $PORT"
+      echo "  → http://localhost:$PORT/"
     else
       echo "app: not running"
     fi

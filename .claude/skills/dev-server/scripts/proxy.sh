@@ -49,6 +49,7 @@ case "${1:-status}" in
   status)
     if p=$(pid); then
       echo "proxy: running (pid $p) on port $PORT"
+      echo "  → http://localhost:$PORT/api/v1/namespaces"
     else
       echo "proxy: not running"
     fi
