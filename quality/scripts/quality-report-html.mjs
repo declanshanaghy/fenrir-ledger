@@ -103,17 +103,26 @@ function gaugeRing(pct, label, size = 100) {
 function lokiSealSvg(dateStr, isSecure) {
   const glowColor = isSecure ? "#4ade80" : "#ef4444";
   const runeGlow = isSecure ? "drop-shadow(0 0 6px #4ade8060)" : "drop-shadow(0 0 6px #ef444460)";
-  return `<svg width="320" height="160" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" style="background:#07070d;border-radius:8px">
+  return `<svg width="320" height="160" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" style="background:#0b1f14;border-radius:8px">
     <defs>
       <linearGradient id="seal-border" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#c9920a"/>
-        <stop offset="50%" stop-color="#8b6a0a"/>
-        <stop offset="100%" stop-color="#c9920a"/>
+        <stop offset="0%" stop-color="#2d6b4a"/>
+        <stop offset="35%" stop-color="#4a9e6e"/>
+        <stop offset="50%" stop-color="#7ecfa0"/>
+        <stop offset="65%" stop-color="#4a9e6e"/>
+        <stop offset="100%" stop-color="#2d6b4a"/>
       </linearGradient>
       <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="metallic-sheen" x1="0" y1="0" x2="0.3" y2="1">
+        <stop offset="0%" stop-color="#1e4d32" stop-opacity="0.5"/>
+        <stop offset="30%" stop-color="#133322" stop-opacity="0.15"/>
+        <stop offset="60%" stop-color="#1e4d32" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="#0e2a1a" stop-opacity="0"/>
+      </linearGradient>
     </defs>
-    <rect x="0" y="0" width="320" height="160" rx="8" fill="#07070d"/>
-    <rect x="2" y="2" width="316" height="156" rx="8" fill="#07070d" stroke="url(#seal-border)" stroke-width="1.5"/>
+    <rect x="0" y="0" width="320" height="160" rx="8" fill="#0b1f14"/>
+    <rect x="0" y="0" width="320" height="160" rx="8" fill="url(#metallic-sheen)"/>
+    <rect x="2" y="2" width="316" height="156" rx="8" fill="none" stroke="url(#seal-border)" stroke-width="1.5"/>
     <rect x="5" y="5" width="310" height="150" rx="6" fill="none" stroke="#c9920a" stroke-width="0.3" opacity="0.2"/>
     <line x1="30" y1="42" x2="290" y2="42" stroke="#c9920a" stroke-width="0.4" opacity="0.2"/>
     <text x="160" y="32" text-anchor="middle" font-family="serif" font-size="20" letter-spacing="10" fill="#c9920a" opacity="0.8" filter="url(#glow)">ᛚ ᛟ ᚲ ᛁ</text>
