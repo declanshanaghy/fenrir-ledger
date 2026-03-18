@@ -6,9 +6,9 @@
 #   2. GKE                — Detect changes + build Docker images
 #   3. Namespaces         — Bootstrap cluster (namespaces, SAs, quotas)
 #   4. App + Testing      — Build → unit tests → deploy → E2E (post-deploy)
-#   5. Odin's Throne      — Monitor API + UI deploy
-#   6. Analytics          — Umami self-hosted analytics
-#   7. Marketing Engine   — n8n workflow automation (marketing.fenrirledger.com)
+#   5. Odin's Throne      — Monitor API + UI deploy (fenrir-monitor)
+#   6. Analytics          — Umami self-hosted analytics (fenrir-analytics)
+#   7. Marketing Engine   — n8n workflow automation (fenrir-marketing)
 #
 # Required GitHub Secrets:
 #   GCP_PROJECT_ID, GCP_SA_KEY, GCP_REGION, GCP_ZONE, GKE_CLUSTER_NAME
@@ -75,14 +75,15 @@ jobs:
         working-directory: infrastructure
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up Terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "~> 1.9"
@@ -129,7 +130,8 @@ jobs:
       marketing: ${{ steps.filter.outputs.marketing }}
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
 
@@ -175,19 +177,22 @@ jobs:
       full_image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - uses: google-github-actions/setup-gcloud@v3
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
-      - uses: docker/setup-buildx-action@v4
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push
         id: build
@@ -223,19 +228,22 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - uses: google-github-actions/setup-gcloud@v3
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
-      - uses: docker/setup-buildx-action@v4
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push
         id: build-monitor
@@ -266,19 +274,22 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - uses: google-github-actions/setup-gcloud@v3
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
-      - uses: docker/setup-buildx-action@v4
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push
         id: build-monitor-ui
@@ -303,6 +314,7 @@ jobs:
   # SECTION 3 — NAMESPACES
   # Bootstrap cluster: namespaces, service accounts, resource quotas.
   # Runs on every deploy — idempotent via helm upgrade --install.
+  # Namespaces: fenrir-app, fenrir-agents, fenrir-analytics, fenrir-monitor, fenrir-marketing
   # ============================================================================
 
   namespaces:
@@ -315,14 +327,16 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - uses: google-github-actions/setup-gcloud@v3
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -331,7 +345,8 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - uses: azure/setup-helm@v4
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
         with:
           version: 'v3.20.1'
 
@@ -359,6 +374,7 @@ jobs:
           adopt namespace fenrir-agents
           adopt namespace fenrir-analytics
           adopt namespace fenrir-monitor
+          adopt namespace fenrir-marketing
           adopt serviceaccount fenrir-app-sa    fenrir-app
           adopt serviceaccount fenrir-agents-sa fenrir-agents
           adopt secret         agent-secrets    fenrir-agents
@@ -374,11 +390,13 @@ jobs:
         run: |
           echo "### Namespaces" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get namespaces fenrir-app fenrir-agents fenrir-analytics fenrir-monitor >> $GITHUB_STEP_SUMMARY
+          kubectl get namespaces fenrir-app fenrir-agents fenrir-analytics fenrir-monitor fenrir-marketing 2>/dev/null || \
+            kubectl get namespaces -l app.kubernetes.io/managed-by=Helm >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
   # ============================================================================
   # SECTION 4 — APP + TESTING
+  # Namespace: fenrir-app
   # Pre-deploy: TypeScript check + unit tests + build.
   # Deploy:     Helm rollout to GKE + CDN cache invalidation.
   # Post-deploy: Playwright E2E against the newly deployed version.
@@ -395,9 +413,11 @@ jobs:
       NEXT_PUBLIC_APP_VERSION: ${{ github.sha }}
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -440,14 +460,16 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - uses: google-github-actions/setup-gcloud@v3
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -456,7 +478,7 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Ensure namespaces and workload identity bindings
+      - name: Ensure namespace and workload identity bindings
         run: |
           kubectl create namespace fenrir-app --dry-run=client -o yaml | kubectl apply -f -
           kubectl create serviceaccount fenrir-app-sa \
@@ -511,7 +533,8 @@ jobs:
             echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: azure/setup-helm@v4
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
         with:
           version: 'v3.20.1'
 
@@ -559,9 +582,11 @@ jobs:
       SERVER_URL: https://fenrirledger.com
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -588,6 +613,7 @@ jobs:
 
   # ============================================================================
   # SECTION 5 — ODIN'S THRONE
+  # Namespace: fenrir-monitor
   # Monitor API + UI — job log streaming, K8s agent visibility.
   # ============================================================================
 
@@ -610,14 +636,16 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - uses: google-github-actions/setup-gcloud@v3
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -626,7 +654,7 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Ensure fenrir-monitor namespace
+      - name: Ensure namespace
         run: kubectl create namespace fenrir-monitor --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Sync oauth2-proxy secrets
@@ -667,7 +695,8 @@ jobs:
             echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: azure/setup-helm@v4
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
         with:
           version: 'v3.20.1'
 
@@ -694,6 +723,7 @@ jobs:
 
   # ============================================================================
   # SECTION 6 — ANALYTICS
+  # Namespace: fenrir-analytics
   # Umami self-hosted analytics at analytics.fenrirledger.com.
   # ============================================================================
 
@@ -707,14 +737,16 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - uses: google-github-actions/setup-gcloud@v3
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -723,7 +755,7 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Ensure fenrir-analytics namespace
+      - name: Ensure namespace
         run: kubectl create namespace fenrir-analytics --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Sync Umami secrets
@@ -746,7 +778,8 @@ jobs:
             --from-literal=emails.txt="declanshanaghy@gmail.com" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - uses: azure/setup-helm@v4
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
         with:
           version: 'v3.20.1'
 
@@ -768,8 +801,8 @@ jobs:
 
   # ============================================================================
   # SECTION 7 — MARKETING ENGINE
+  # Namespace: fenrir-marketing
   # n8n workflow automation at marketing.fenrirledger.com.
-  # Namespace: fenrir-marketing (isolated from fenrir-analytics/umami).
   # Two Helm installs:
   #   1. oci://ghcr.io/8gears/n8n   — n8n app (external chart, n8n-app-values.yaml)
   #   2. infrastructure/helm/n8n/   — infra chart (oauth2-proxy, cert, BackendConfig, ingress)
@@ -786,14 +819,16 @@ jobs:
       packages: read
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - uses: google-github-actions/setup-gcloud@v3
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -802,13 +837,11 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - uses: azure/setup-helm@v4
-        with:
-          version: 'v3.20.1'
+      - name: Ensure namespace
+        run: kubectl create namespace fenrir-marketing --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Sync oauth2-proxy secrets
         run: |
-          kubectl create namespace fenrir-marketing --dry-run=client -o yaml | kubectl apply -f -
           kubectl create secret generic n8n-oauth2-proxy-secrets \
             --namespace=fenrir-marketing \
             --from-literal=GOOGLE_CLIENT_ID="${{ secrets.ODINS_THRONE_CLIENT_ID }}" \
@@ -819,6 +852,11 @@ jobs:
             --namespace=fenrir-marketing \
             --from-literal=emails.txt="declanshanaghy@gmail.com" \
             --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.20.1'
 
       - name: Login to GHCR for n8n chart
         run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
