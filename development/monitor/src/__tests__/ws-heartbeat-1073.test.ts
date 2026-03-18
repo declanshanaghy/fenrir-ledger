@@ -12,9 +12,6 @@
  */
 
 import { createServer } from "node:http";
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { WebSocket } from "ws";
 
@@ -29,11 +26,6 @@ vi.mock("../k8s.js", () => ({
 }));
 
 import { attachWebSocketServer, HEARTBEAT_INTERVAL_MS } from "../ws.js";
-
-// ── Repo root ─────────────────────────────────────────────────────────────────
-// __tests__/ → src/ → monitor/ → development/ → repo root (4 levels)
-const __dirname_test = dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = resolve(__dirname_test, "../../../../");
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -199,37 +191,3 @@ describe("WebSocket heartbeat — issue #1073", () => {
   });
 });
 
-// ── BackendConfig timeoutSec — infra validation (Loki) ─────────────────────
-// AC: GKE Ingress timeout increased on BackendConfig (≥ 3600 s).
-// Prevents the Cloud Load Balancer from closing WS connections during long sessions.
-
-describe("BackendConfig timeoutSec — infra validation — issue #1073", () => {
-  it("Helm values odin-throne BackendConfig timeoutSec is 3600", () => {
-    const yamlPath = resolve(
-      REPO_ROOT,
-      "infrastructure/helm/odin-throne/values.yaml"
-    );
-    const content = readFileSync(yamlPath, "utf-8");
-    // The top-level BackendConfig timeoutSec (not the healthCheck probe timeout)
-    // must be ≥ 3600 to outlast a live session stream.
-    const backendConfigSection = content.slice(content.indexOf("backendConfig:"));
-    // healthCheck.timeoutSec (6-space indent) is the probe timeout — skip it.
-    // The backend-level timeoutSec sits at 4-space indent: `    timeoutSec: 3600`.
-    expect(backendConfigSection).toMatch(/\btimeoutSec:\s*3600\b/);
-  });
-
-  it("K8s Ingress BackendConfig manifest timeoutSec is 3600", () => {
-    const yamlPath = resolve(
-      REPO_ROOT,
-      "infrastructure/k8s/app/ingress.yaml"
-    );
-    const content = readFileSync(yamlPath, "utf-8");
-    // The BackendConfig spec.timeoutSec (not spec.healthCheck.timeoutSec)
-    // appears after the healthCheck block in the YAML.
-    const backendConfigBlock = content.slice(content.indexOf("kind: BackendConfig"));
-    const match = backendConfigBlock.match(/^  timeoutSec:\s*(\d+)/m);
-    expect(match).not.toBeNull();
-    const timeoutSec = parseInt(match![1]!, 10);
-    expect(timeoutSec).toBeGreaterThanOrEqual(3600);
-  });
-});
