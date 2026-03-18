@@ -29,6 +29,11 @@
  *   2. Complete Google consent
  *   3. Verify redirect lands on / with user session active
  *   4. Verify anonymous cards are merged (if any existed pre-login)
+ *
+ * Timeout note: assertions use 15000ms. The callback page is a client-side
+ * component in a Suspense boundary — error states only appear after JS bundle
+ * download + React hydration + useEffect execution. On slow CI runners hitting
+ * the remote production server this can exceed 5s. 15s covers P99 CI latency.
  */
 
 import { test, expect } from "../helpers/analytics-block";
@@ -53,7 +58,7 @@ test.describe("Auth Callback — Missing Params", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/ledger/auth/callback", { waitUntil: "load" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     const fatal = errors.filter(
       (e) =>
@@ -68,11 +73,11 @@ test.describe("Auth Callback — Missing Params", () => {
     page,
   }) => {
     // Spec: auth/callback/page.tsx — !code || !stateParam → "Missing code or state in callback URL."
-    await page.goto("/ledger/auth/callback", { waitUntil: "load" });
+    await page.goto("/ledger/auth/callback", { waitUntil: "networkidle" });
 
     await expect(
       page.locator("text=Missing code or state in callback URL.")
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 15000 });
   });
 
   // "The Bifrost trembled" heading — REMOVED (Issue #610): Static copy check.
@@ -90,12 +95,12 @@ test.describe("Auth Callback — Google Error Param", () => {
   }) => {
     // Spec: auth/callback/page.tsx — errorParam → `Google returned: ${errorParam}`
     await page.goto("/ledger/auth/callback?error=access_denied", {
-      waitUntil: "load",
+      waitUntil: "networkidle",
     });
 
     await expect(
       page.locator("text=Google returned: access_denied")
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 15000 });
   });
 
   // "shows error heading when Google returns an error" — REMOVED (Issue #610): Duplicate static copy.
@@ -106,12 +111,12 @@ test.describe("Auth Callback — Google Error Param", () => {
     // Edge case: arbitrary error string from Google should not crash
     await page.goto(
       "/ledger/auth/callback?error=server_error",
-      { waitUntil: "load" }
+      { waitUntil: "networkidle" }
     );
 
     await expect(
       page.locator("text=Google returned: server_error")
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 15000 });
   });
 });
 
@@ -128,14 +133,14 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
     // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
     // Navigate with valid-looking code + state but no PKCE session data
     await page.goto("/ledger/auth/callback?code=fake_code&state=fake_state", {
-      waitUntil: "load",
+      waitUntil: "networkidle",
     });
 
     // Wait for the error message to appear (100ms delay + React render time)
     // Use waitFor with a longer timeout to account for component mount, effect run, and re-render
     await expect(
       page.locator("text=PKCE session data missing")
-    ).toBeVisible({ timeout: 10000 });
+    ).toBeVisible({ timeout: 15000 });
   });
 
   // "'Return to the gate' link when PKCE missing" — REMOVED (Issue #610):
@@ -167,12 +172,12 @@ test.describe("Auth Callback — CSRF State Mismatch", () => {
 
     // Navigate with a DIFFERENT state in the URL — triggers CSRF check
     await page.goto("/ledger/auth/callback?code=fake_code&state=different-state-xyz", {
-      waitUntil: "load",
+      waitUntil: "networkidle",
     });
 
     await expect(
       page.locator("text=State mismatch")
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 15000 });
   });
 });
 
@@ -195,12 +200,12 @@ test.describe("Auth Callback — Corrupt PKCE Data", () => {
     });
 
     await page.goto("/ledger/auth/callback?code=fake_code&state=any-state", {
-      waitUntil: "load",
+      waitUntil: "networkidle",
     });
 
     await expect(
       page.locator("text=Corrupt PKCE session data.")
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 15000 });
   });
 });
 
