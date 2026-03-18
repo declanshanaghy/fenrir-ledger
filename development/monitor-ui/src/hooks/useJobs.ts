@@ -56,7 +56,9 @@ export function useJobs() {
 
   const handleMessage = useCallback((msg: ServerMessage) => {
     if (msg.type === "jobs-snapshot" || msg.type === "jobs-updated") {
-      const live = (msg.jobs || []).map(parseJob);
+      // Exclude purged sessions — their K8s pod is gone so logs are unavailable.
+      // They will be removed from the cluster by TTL shortly; no need to show them.
+      const live = (msg.jobs || []).filter((j) => j.status !== "purged").map(parseJob);
       const liveIds = new Set(live.map((j) => j.sessionId));
       const cached = buildCachedJobs(liveIds);
 
