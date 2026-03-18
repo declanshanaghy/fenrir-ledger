@@ -225,18 +225,20 @@ If `--prompt-extra`, append after the issue body:
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel) && \
 SESSION_ID="issue-<N>-step<S>-<agent>-$(uuidgen | cut -c1-8 | tr A-Z a-z)" && \
+PROMPT_FILE=$(mktemp /tmp/agent-prompt-XXXXXX.md) && \
+cat > "$PROMPT_FILE" <<'AGENT_PROMPT_EOF'
+<composed prompt content here>
+AGENT_PROMPT_EOF
 bash "$REPO_ROOT/infrastructure/k8s/agents/dispatch-job.sh" \
   --session-id "$SESSION_ID" \
   --branch "<BRANCH>" \
   --model "<MODEL>" \
-  --prompt "$(cat <<'PROMPT'
-<composed prompt content here>
-PROMPT
-)" && \
+  --prompt-file "$PROMPT_FILE" && \
 node "$REPO_ROOT/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N> in-progress
+rm -f "$PROMPT_FILE"
 ```
 
-**Key:** Use a `<<'PROMPT'` heredoc (single-quoted delimiter) to avoid all shell expansion issues. The `$(cat ...)` wrapping passes the heredoc content as a single string argument to `--prompt`.
+**Key:** Write the prompt to a temp file with `cat >` and pass via `--prompt-file`. This avoids the heredoc-in-subshell pattern (`$(cat <<'DELIM'...DELIM)`) which silently truncates the prompt if the content happens to contain the delimiter word on its own line. The delimiter `AGENT_PROMPT_EOF` is chosen to be unlikely in prompt content. Single-quoted delimiter (`<<'...'`) prevents shell expansion.
 
 **Job naming:** The dispatch script generates DNS-compatible job names from the session ID.
 
