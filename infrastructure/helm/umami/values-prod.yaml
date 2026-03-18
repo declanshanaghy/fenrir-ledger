@@ -85,7 +85,7 @@ ingress:
     - analytics.fenrirledger.com
   annotations:
     networking.gke.io/managed-certificates: "umami-cert"
-    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.global-static-ip-name: "umami-ip"
     cloud.google.com/backend-config: '{"default":"umami-backend-config"}'
 

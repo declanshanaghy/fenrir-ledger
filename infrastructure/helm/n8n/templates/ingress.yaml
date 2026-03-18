@@ -36,7 +36,7 @@ metadata:
     kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.global-static-ip-name: {{ .Values.staticIpName | quote }}
     networking.gke.io/managed-certificates: "n8n-cert"
-    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.allow-http: "false"
     cloud.google.com/backend-config: '{"default":"n8n-backend-config"}'
 spec:
   rules:
