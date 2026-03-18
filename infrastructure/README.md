@@ -9,7 +9,6 @@ GKE Autopilot infrastructure for Fenrir Ledger: Terraform manages cloud resource
 | What | Tool | Namespace | Files |
 |---|---|---|---|
 | Cloud infrastructure (cluster, DNS, CDN, IAM) | Terraform | — | `*.tf` |
-| Cluster bootstrap (namespaces, RBAC, quotas) | Helm | cluster-wide | `helm/fenrir-bootstrap/` |
 | Next.js app + Redis | Helm | `fenrir-app` | `helm/fenrir-app/` |
 | Odin's Throne monitor | Helm | `fenrir-monitor` | `helm/odin-throne/` |
 | Umami analytics + PostgreSQL | Helm | `fenrir-analytics` | `helm/umami/` |
@@ -22,7 +21,7 @@ GKE Autopilot infrastructure for Fenrir Ledger: Terraform manages cloud resource
 
 - **[Architecture Overview](docs/architecture-overview.md)** — Top-level map: what runs in GKE, what lives in Terraform, namespace layout, and how everything connects.
 
-- **[Helm Charts](docs/helm-charts.md)** — All 4 Helm charts (`fenrir-bootstrap`, `fenrir-app`, `odin-throne`, `umami`): what each deploys, key values, upgrade commands, and how `values-prod.yaml` differs from `values.yaml`.
+- **[Helm Charts](docs/helm-charts.md)** — Helm charts (`fenrir-app`, `odin-throne`, `umami`): what each deploys, key values, upgrade commands, and how `values-prod.yaml` differs from `values.yaml`.
 
 - **[Agent Sandbox](docs/agent-sandbox.md)** — How agent GKE Jobs work: `dispatch-job.sh` flow, the sandbox container, job-template placeholders, secrets, job lifecycle, and log retrieval.
 

@@ -35,7 +35,6 @@ The `detect-changes` job compares `HEAD~1..HEAD` and outputs boolean flags. All 
 | `monitor-ui` | `development/monitor-ui/` |
 | `helm-odin` | `infrastructure/helm/odin-throne/` |
 | `infra` | `infrastructure/*.tf`, `infrastructure/firestore/` |
-| `bootstrap` | `infrastructure/helm/fenrir-bootstrap/` |
 | `umami` | `infrastructure/helm/umami/` |
 
 > **`workflow_dispatch`**: all flags are forced to `true`, deploying everything.
@@ -88,16 +87,9 @@ detect-changes (Job 0)
 - Gates `deploy-fenrir-app` — deploy only runs if tests pass (or are skipped)
 - Test reports uploaded as artifacts on failure
 
-### Job 3a: Deploy Bootstrap
+### Job 3: Deploy Fenrir App
 
-- Runs always (unless `skip_deploy`) — does not gate on change detection
-- Deploys `helm/fenrir-bootstrap` with `values-prod.yaml`
-- Ensures all namespaces, service accounts, and network policies exist before app deploys
-- Idempotent via `helm upgrade --install`
-
-### Job 3b: Deploy Fenrir App
-
-- Needs: `test-app`, `build-and-push`, `detect-changes`, `deploy-bootstrap`
+- Needs: `test-app`, `build-and-push`, `detect-changes`
 - **Secret injection** (before Helm):
   1. Creates/updates `fenrir-app-secrets` with all app env vars (API keys, Stripe, etc.)
   2. Creates/updates `agent-secrets` with `CLAUDE_CODE_OAUTH_TOKEN` + `GH_TOKEN`
@@ -106,7 +98,7 @@ detect-changes (Job 0)
 - **Post-deploy**: Invalidates CDN cache for HTML pages via `gcloud compute url-maps invalidate-cdn-cache`
 - Verifies with `kubectl rollout status deployment/fenrir-app -n fenrir-app --timeout=60s`
 
-### Job 3c: Deploy Umami
+### Job 4: Deploy Umami
 
 - Runs if: `umami == 'true'` AND `!skip_deploy`
 - Secret injection: `umami-secrets` (database URL + app secret) + `umami-oauth2-proxy-secrets` (OAuth)
@@ -195,10 +187,6 @@ For emergency deploys or local testing:
 # Authenticate
 gcloud auth login
 gcloud container clusters get-credentials fenrir-autopilot --region us-central1 --project fenrir-ledger-prod
-
-# Deploy bootstrap first
-helm upgrade --install fenrir-bootstrap ./infrastructure/helm/fenrir-bootstrap \
-  -f ./infrastructure/helm/fenrir-bootstrap/values-prod.yaml --wait
 
 # Deploy app
 helm upgrade --install fenrir-app ./infrastructure/helm/fenrir-app \

@@ -1,6 +1,6 @@
 # Helm Charts — Fenrir Ledger
 
-Fenrir Ledger uses **4 Helm charts** to manage all Kubernetes workloads. Each chart lives under `infrastructure/helm/`.
+Fenrir Ledger uses **3 Helm charts** to manage all Kubernetes workloads. Each chart lives under `infrastructure/helm/`.
 
 Upgrade command pattern:
 ```bash
@@ -15,58 +15,13 @@ helm upgrade --install <release-name> ./infrastructure/helm/<chart> \
 
 | Chart | Release name | Namespace | URL | What it deploys |
 |---|---|---|---|---|
-| `fenrir-bootstrap` | `fenrir-bootstrap` | cluster-wide | — | Namespaces, service accounts, RBAC, NetworkPolicies |
 | `fenrir-app` | `fenrir-app` | `fenrir-app` | `fenrirledger.com` | Next.js app, Redis, Ingress, PDB, warm-node placeholder |
 | `odin-throne` | `odin-throne` | `fenrir-monitor` | `monitor.fenrirledger.com` | Monitor backend + UI + oauth2-proxy |
 | `umami` | `umami` | `fenrir-analytics` | `analytics.fenrirledger.com` | Umami analytics + PostgreSQL |
 
 ---
 
-## 1. `fenrir-bootstrap`
-
-**Path:** `infrastructure/helm/fenrir-bootstrap/`
-
-A cluster-level bootstrap chart that runs **before** all other deployments on every CI pipeline run. It is idempotent — safe to apply repeatedly with `helm upgrade --install`.
-
-### What it deploys
-
-| Template | Resource(s) |
-|---|---|
-| `namespaces.yaml` | `fenrir-app`, `fenrir-agents`, `fenrir-analytics` namespaces |
-| `serviceaccounts.yaml` | `fenrir-app-sa` and `fenrir-agents-sa` with Workload Identity annotations |
-| `resourcequotas.yaml` | `agents-quota` in `fenrir-agents` (8 pods / 16 CPU / 32Gi memory) |
-| `networkpolicies.yaml` | `deny-from-agents`, `agents-egress-only`, `analytics-isolation` |
-| `agent-secrets.yaml` | `agent-secrets` Secret skeleton in `fenrir-agents` (real values injected by CI) |
-
-> **Note:** The `fenrir-monitor` namespace is created imperatively in the `deploy-odin-throne` CI step, not by the bootstrap chart.
-
-### Key values (`values.yaml` / `values-prod.yaml`)
-
-```yaml
-namespaces:
-  app: fenrir-app
-  agents: fenrir-agents
-  analytics: fenrir-analytics
-
-serviceAccounts:
-  app:
-    gcpServiceAccount: fenrir-app-workload@fenrir-ledger-prod.iam.gserviceaccount.com
-  agents:
-    gcpServiceAccount: fenrir-agents-workload@fenrir-ledger-prod.iam.gserviceaccount.com
-```
-
-### Upgrade
-
-```bash
-helm upgrade --install fenrir-bootstrap \
-  ./infrastructure/helm/fenrir-bootstrap \
-  -f ./infrastructure/helm/fenrir-bootstrap/values-prod.yaml \
-  --wait --timeout=3m
-```
-
----
-
-## 2. `fenrir-app`
+## 1. `fenrir-app`
 
 **Path:** `infrastructure/helm/fenrir-app/`
 
@@ -119,7 +74,7 @@ helm upgrade --install fenrir-app \
 
 ---
 
-## 3. `odin-throne`
+## 2. `odin-throne`
 
 **Path:** `infrastructure/helm/odin-throne/`
 
@@ -169,7 +124,7 @@ helm upgrade --install odin-throne \
 
 ---
 
-## 4. `umami`
+## 3. `umami`
 
 **Path:** `infrastructure/helm/umami/`
 

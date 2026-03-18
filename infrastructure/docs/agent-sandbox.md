@@ -121,7 +121,7 @@ The agent container receives two secrets from the `agent-secrets` K8s Secret:
 | `claude-oauth-token` | `CLAUDE_CODE_OAUTH_TOKEN` | Claude Code CLI OAuth subscription token |
 | `gh-token` | `GH_TOKEN` | GitHub fine-grained PAT (contents, PRs, issues, workflows, metadata) |
 
-The `agent-secrets` Secret is **created by the bootstrap chart** (`helm/fenrir-bootstrap`) and **populated with real values by CI** via `kubectl create secret ... --dry-run=client | kubectl apply`. Never commit real values.
+The `agent-secrets` Secret is **created and populated by CI** (`deploy.yml` "Sync agent secrets" step) via `kubectl create secret ... --dry-run=client | kubectl apply`. Never commit real values.
 
 To update secrets manually:
 ```bash

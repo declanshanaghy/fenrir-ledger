@@ -4,11 +4,10 @@
 # Sections:
 #   1. Terraform          — GCP infrastructure (runs when .tf files change)
 #   2. GKE                — Detect changes + build Docker images
-#   3. Namespaces         — Bootstrap cluster (namespaces, SAs, quotas)
-#   4. App + Testing      — Build → unit tests → deploy → E2E (post-deploy)
-#   5. Odin's Throne      — Monitor API + UI deploy (fenrir-monitor)
-#   6. Analytics          — Umami self-hosted analytics (fenrir-analytics)
-#   7. Marketing Engine   — n8n workflow automation (fenrir-marketing)
+#   3. App + Testing      — Build → unit tests → deploy → E2E (post-deploy)
+#   4. Odin's Throne      — Monitor API + UI deploy (fenrir-monitor)
+#   5. Analytics          — Umami self-hosted analytics (fenrir-analytics)
+#   6. Marketing Engine   — n8n workflow automation (fenrir-marketing)
 #
 # Required GitHub Secrets:
 #   GCP_PROJECT_ID, GCP_SA_KEY, GCP_REGION, GCP_ZONE, GKE_CLUSTER_NAME
@@ -125,7 +124,6 @@ jobs:
       monitor-ui: ${{ steps.filter.outputs.monitor-ui }}
       helm-odin: ${{ steps.filter.outputs.helm-odin }}
       infra: ${{ steps.filter.outputs.infra }}
-      bootstrap: ${{ steps.filter.outputs.bootstrap }}
       umami: ${{ steps.filter.outputs.umami }}
       marketing: ${{ steps.filter.outputs.marketing }}
 
@@ -139,7 +137,7 @@ jobs:
         id: filter
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            for key in app k8s-app monitor monitor-ui helm-odin infra bootstrap umami marketing; do
+            for key in app k8s-app monitor monitor-ui helm-odin infra umami marketing; do
               echo "$key=true" >> "$GITHUB_OUTPUT"
             done
             echo "### Manual dispatch — all services will deploy" >> $GITHUB_STEP_SUMMARY
@@ -153,13 +151,12 @@ jobs:
           echo "monitor-ui=$(check '^development/monitor-ui/')"                                              >> "$GITHUB_OUTPUT"
           echo "helm-odin=$(check '^infrastructure/helm/odin-throne/')"                                      >> "$GITHUB_OUTPUT"
           echo "infra=$(check   '^infrastructure/.*\.tf$|^infrastructure/firestore/')"                       >> "$GITHUB_OUTPUT"
-          echo "bootstrap=$(check '^infrastructure/helm/fenrir-bootstrap/')"                                 >> "$GITHUB_OUTPUT"
           echo "umami=$(check   '^infrastructure/helm/umami/')"                                              >> "$GITHUB_OUTPUT"
           echo "marketing=$(check '^infrastructure/helm/n8n/')"                                              >> "$GITHUB_OUTPUT"
           echo "### Changed Services" >> $GITHUB_STEP_SUMMARY
           echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
-          for key in app k8s-app monitor monitor-ui helm-odin infra bootstrap umami marketing; do
+          for key in app k8s-app monitor monitor-ui helm-odin infra umami marketing; do
             val=$(grep "^${key}=" "$GITHUB_OUTPUT" | cut -d= -f2 | tail -1)
             echo "| $key | $val |" >> $GITHUB_STEP_SUMMARY
           done
@@ -311,91 +308,7 @@ jobs:
           echo "- **Digest:** \`${{ steps.build-monitor-ui.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
   # ============================================================================
-  # SECTION 3 — NAMESPACES
-  # Bootstrap cluster: namespaces, service accounts, resource quotas.
-  # Runs on every deploy — idempotent via helm upgrade --install.
-  # Namespaces: fenrir-app, fenrir-agents, fenrir-analytics, fenrir-monitor, fenrir-marketing
-  # ============================================================================
-
-  namespaces:
-    name: "Namespaces: Bootstrap Cluster"
-    needs: [detect-changes]
-    if: ${{ !inputs.skip_deploy }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Setup gcloud CLI
-        uses: google-github-actions/setup-gcloud@v3
-
-      - name: Get GKE credentials
-        uses: google-github-actions/get-gke-credentials@v3
-        with:
-          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GCP_REGION }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Setup Helm
-        uses: azure/setup-helm@v4
-        with:
-          version: 'v3.20.1'
-
-      - name: Pre-adopt bootstrap resources for Helm
-        # Resources created outside Helm lack ownership metadata.
-        # Idempotently annotate so helm upgrade --install succeeds.
-        run: |
-          RELEASE_NAME=fenrir-bootstrap
-          RELEASE_NS=default
-          adopt() {
-            local kind=$1 name=$2 ns=${3:-}
-            local ns_flag=""; [ -n "$ns" ] && ns_flag="-n $ns"
-            if kubectl get "$kind" "$name" $ns_flag &>/dev/null; then
-              kubectl annotate "$kind" "$name" $ns_flag \
-                "meta.helm.sh/release-name=$RELEASE_NAME" \
-                "meta.helm.sh/release-namespace=$RELEASE_NS" --overwrite
-              kubectl label "$kind" "$name" $ns_flag \
-                "app.kubernetes.io/managed-by=Helm" --overwrite
-              echo "✅ adopted $kind/$name${ns:+ in $ns}"
-            else
-              echo "⏭️  $kind/$name${ns:+ in $ns} not found — skipping"
-            fi
-          }
-          adopt namespace fenrir-app
-          adopt namespace fenrir-agents
-          adopt namespace fenrir-analytics
-          adopt namespace fenrir-monitor
-          adopt namespace fenrir-marketing
-          adopt serviceaccount fenrir-app-sa    fenrir-app
-          adopt serviceaccount fenrir-agents-sa fenrir-agents
-          adopt secret         agent-secrets    fenrir-agents
-
-      - name: Deploy bootstrap chart
-        run: |
-          helm upgrade --install fenrir-bootstrap \
-            ./infrastructure/helm/fenrir-bootstrap \
-            -f ./infrastructure/helm/fenrir-bootstrap/values-prod.yaml \
-            --wait --timeout=3m
-
-      - name: Verify namespaces
-        run: |
-          echo "### Namespaces" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get namespaces fenrir-app fenrir-agents fenrir-analytics fenrir-monitor fenrir-marketing 2>/dev/null || \
-            kubectl get namespaces -l app.kubernetes.io/managed-by=Helm >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-  # ============================================================================
-  # SECTION 4 — APP + TESTING
+  # SECTION 3 — APP + TESTING
   # Namespace: fenrir-app
   # Pre-deploy: TypeScript check + unit tests + build.
   # Deploy:     Helm rollout to GKE + CDN cache invalidation.
@@ -446,13 +359,12 @@ jobs:
 
   app-deploy:
     name: "App: Deploy to GKE"
-    needs: [app-pre-deploy-tests, build-app-image, detect-changes, namespaces]
+    needs: [app-pre-deploy-tests, build-app-image, detect-changes]
     if: >-
       always() && !inputs.skip_deploy &&
       (needs.build-app-image.result == 'success' ||
        (needs.build-app-image.result == 'skipped' && needs.detect-changes.outputs.k8s-app == 'true')) &&
       needs.build-app-image.result != 'failure' &&
-      needs.namespaces.result == 'success' &&
       (needs.app-pre-deploy-tests.result == 'success' || needs.app-pre-deploy-tests.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
@@ -478,7 +390,7 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Ensure namespace and workload identity bindings
+      - name: Ensure namespaces, service accounts, and resource quotas
         run: |
           kubectl create namespace fenrir-app --dry-run=client -o yaml | kubectl apply -f -
           kubectl create serviceaccount fenrir-app-sa \
@@ -490,6 +402,20 @@ jobs:
             --namespace=fenrir-agents --dry-run=client -o yaml | kubectl apply -f -
           kubectl annotate serviceaccount fenrir-agents-sa --namespace=fenrir-agents --overwrite \
             iam.gke.io/gcp-service-account=fenrir-agents-workload@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+          cat <<'QUOTA' | kubectl apply -f -
+          apiVersion: v1
+          kind: ResourceQuota
+          metadata:
+            name: agents-quota
+            namespace: fenrir-agents
+          spec:
+            hard:
+              pods: "8"
+              requests.cpu: "16"
+              requests.memory: 32Gi
+              limits.cpu: "16"
+              limits.memory: 32Gi
+          QUOTA
 
       - name: Sync app secrets
         run: |
@@ -613,14 +539,14 @@ jobs:
           retention-days: 7
 
   # ============================================================================
-  # SECTION 5 — ODIN'S THRONE
+  # SECTION 4 — ODIN'S THRONE
   # Namespace: fenrir-monitor
   # Monitor API + UI — job log streaming, K8s agent visibility.
   # ============================================================================
 
   odins-throne:
     name: "Odin's Throne: Deploy Monitor"
-    needs: [build-monitor-image, build-monitor-ui-image, detect-changes, namespaces]
+    needs: [build-monitor-image, build-monitor-ui-image, detect-changes]
     if: >-
       always() && !inputs.skip_deploy &&
       (needs.build-monitor-image.result == 'success' ||
@@ -629,8 +555,7 @@ jobs:
         needs.build-monitor-ui-image.result == 'skipped' &&
         needs.detect-changes.outputs.helm-odin == 'true')) &&
       needs.build-monitor-image.result != 'failure' &&
-      needs.build-monitor-ui-image.result != 'failure' &&
-      needs.namespaces.result == 'success'
+      needs.build-monitor-ui-image.result != 'failure'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -723,15 +648,15 @@ jobs:
           kubectl rollout status deployment/odin-throne-ui -n fenrir-monitor --timeout=60s
 
   # ============================================================================
-  # SECTION 6 — ANALYTICS
+  # SECTION 5 — ANALYTICS
   # Namespace: fenrir-analytics
   # Umami self-hosted analytics at analytics.fenrirledger.com.
   # ============================================================================
 
   analytics:
     name: "Analytics: Deploy Umami"
-    needs: [detect-changes, namespaces]
-    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.umami == 'true' && needs.namespaces.result == 'success' }}
+    needs: [detect-changes]
+    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.umami == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -801,7 +726,7 @@ jobs:
           kubectl rollout status deployment/umami -n fenrir-analytics --timeout=60s
 
   # ============================================================================
-  # SECTION 7 — MARKETING ENGINE
+  # SECTION 6 — MARKETING ENGINE
   # Namespace: fenrir-marketing
   # n8n workflow automation at marketing.fenrirledger.com.
   # Two Helm installs:
@@ -811,8 +736,8 @@ jobs:
 
   marketing-engine:
     name: "Marketing Engine: Deploy n8n"
-    needs: [detect-changes, namespaces]
-    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.marketing == 'true' && needs.namespaces.result == 'success' }}
+    needs: [detect-changes]
+    if: ${{ !inputs.skip_deploy && needs.detect-changes.outputs.marketing == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
