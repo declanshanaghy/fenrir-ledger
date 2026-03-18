@@ -6,6 +6,10 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
+    pool: 'threads',
+    maxWorkers: 4,
+    testTimeout: 10000,
+    hookTimeout: 5000,
     coverage: {
       provider: 'v8',
       reportsDirectory: '../../quality/reports/coverage/vitest',

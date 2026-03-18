@@ -84,6 +84,11 @@ spec:
             # Task prompt is base64-encoded to avoid YAML escaping issues
             - name: TASK_PROMPT
               value: "{{TASK_PROMPT}}"
+            # Node.js runtime tuning — maximise parallelism in agent sandbox (2 CPUs / 4Gi)
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=2048"
+            - name: UV_THREADPOOL_SIZE
+              value: "8"
             # Secrets injected from K8s Secret
             # OAuth subscription token for Claude Code CLI (not API key)
             - name: CLAUDE_CODE_OAUTH_TOKEN
