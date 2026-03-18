@@ -261,6 +261,16 @@ genhtml's default classes to target: `coverFile`, `coverBar`, `coverPerHi`
 5. `coverage-combine.mjs` filters `.next/` and `node_modules` entries from the
    merged LCOV so genhtml only reports on `src/` source files.
 
+### Known limitation: Next.js 16 worker threads
+
+Next.js 16 uses worker threads for request handling. `NODE_V8_COVERAGE` is
+inherited by workers but the compiled SSR chunks may not produce
+source-mappable coverage depending on the Next.js build configuration. When
+this happens, the E2E playwright report will show low or zero coverage. The
+Vitest report remains the primary coverage source. A future fix would use
+Istanbul build-time instrumentation (babel/swc plugin) instead of V8 runtime
+coverage.
+
 ## Notes
 
 - Reports are overwritten on every run (no dated directories)

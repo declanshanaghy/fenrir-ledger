@@ -73,10 +73,13 @@ function build() {
 function startServer() {
   log("Starting Next.js production server with V8 coverage enabled...");
 
-  // NODE_V8_COVERAGE tells Node.js to write V8 coverage JSON files to this
-  // directory when the process exits cleanly. Use node directly (not npx) so
-  // SIGTERM reaches the actual Node process for a clean exit + coverage write.
+  // NODE_V8_COVERAGE tells Node.js to write V8 coverage JSON on clean exit.
+  // Limitation: Next.js 16 spawns worker threads for request handling. Workers
+  // DO inherit NODE_V8_COVERAGE and write their own coverage files. However,
+  // the compiled SSR chunks may not produce source-mappable coverage in all
+  // configurations. c8 resolves what it can via .next/server/ source maps.
   const nextBin = path.join(FRONTEND_DIR, "node_modules", ".bin", "next");
+
   const serverProc = spawn(
     "node",
     [nextBin, "start", "-p", "9653"],
