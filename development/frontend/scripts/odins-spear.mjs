@@ -21,13 +21,14 @@ const require = createRequire(import.meta.url);
 const Redis = require("ioredis").default;
 const { Firestore, FieldValue } = require("@google-cloud/firestore");
 const { GoogleAuth, OAuth2Client } = require("google-auth-library");
-import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
 import { execSync, spawn } from "node:child_process";
 import { createConnection } from "node:net";
 import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import React, { useState } from "react";
+import { render, Box, Text, useInput, useApp } from "ink";
 
 // ── Stripe ───────────────────────────────────────────────────────────────────
 
@@ -419,15 +420,13 @@ function generateInviteCode() {
 }
 
 /**
- * Prompt the user for y/N confirmation. Returns true if they type "y".
- * NOTE: rl must be initialised before this is called (it always is at runtime).
+ * Prompt the user for y/N confirmation.
+ * NOTE: In TUI mode, destructive operations require explicit confirmation via
+ * the command palette (future issue). Stub returns false (safe default).
  */
-async function confirmPrompt(msg) {
-  return new Promise((resolve) => {
-    rl.question(`  ${GOLD}${msg} [y/N]${RESET} `, (ans) => {
-      resolve(ans.trim().toLowerCase() === "y");
-    });
-  });
+async function confirmPrompt(_msg) {
+  // TODO(#1390): wire up TUI command palette confirmation
+  return false;
 }
 
 /** Require a household to be selected; print error and return false if not. */
@@ -1348,126 +1347,165 @@ const commands = {
   },
 };
 
-// ── Tab completion ───────────────────────────────────────────────────────────
+// ── Load initial counts ──────────────────────────────────────────────────────
 
-// Commands that require a household to be selected first
-const CARD_COMMANDS = [
-  "cards", "card", "delete-card", "update-card-restore", "delete-card-permanent", "read-card-count",
-];
+let initialCounts = { users: 0, households: 0 };
+try {
+  const [uSnap, hSnap] = await Promise.all([
+    getDb().collection("users").count().get(),
+    getDb().collection("households").count().get(),
+  ]);
+  initialCounts = {
+    users: uSnap.data().count,
+    households: hSnap.data().count,
+  };
+} catch { /* counts are informational — ignore on error */ }
 
-const BASE_COMMANDS = [
-  // Trial / Redis
-  "list", "use", "status", "update-trial-field", "update-trial-dates", "update-trial-reset", "update-trial-expire",
-  "update-trial-convert", "update-trial-unconvert", "create", "delete",
-  "list-customers", "list-subscriptions", "delete-customer", "delete-subscription",
-  "delete-entitlement", "delete-all",
-  "keys", "entitlements", "identity", "reconnect",
-  // Firestore — Household
-  "households", "household", "use-household",
-  "delete-member", "update-owner", "update-tier", "update-invite", "delete-household",
-  // Firestore — User
-  "users", "user", "delete-user",
-  // Meta
-  "help", "quit", "exit",
-];
+// ── Ink TUI ──────────────────────────────────────────────────────────────────
 
-/** Returns the set of commands valid for the current REPL state. */
-function availableCommands() {
-  return selectedHouseholdId ? [...BASE_COMMANDS, ...CARD_COMMANDS] : BASE_COMMANDS;
+const TUI_TABS = ["Users", "Households"];
+
+// h — shorthand for React.createElement (no JSX needed in an .mjs script)
+const h = React.createElement;
+
+/** Top bar: branding, tab buttons, shortcut hints. */
+function TopBar({ activeTab, onTabChange }) {
+  return h(Box, { flexDirection: "row", alignItems: "center", paddingX: 1, borderStyle: "single", borderColor: "yellow" },
+    h(Text, { color: "yellow", bold: true }, "ODIN'S SPEAR ⚡  "),
+    ...TUI_TABS.map((tab, i) =>
+      h(Text, {
+        key: tab,
+        backgroundColor: activeTab === i ? "yellow" : undefined,
+        color: activeTab === i ? "black" : "gray",
+        bold: activeTab === i,
+      }, ` [${tab}] `)
+    ),
+    h(Box, { flexGrow: 1 }),
+    h(Text, { dimColor: true, color: "gray" }, "  [/] Command  [^R] Reload  [?] Help")
+  );
 }
 
-function completer(line) {
-  const parts = line.trim().split(/\s+/);
-  const cmd = parts[0]?.toLowerCase() || "";
-  const cmds = availableCommands();
-
-  // If typing the first word, complete command names
-  if (parts.length <= 1) {
-    const hits = cmds.filter((c) => c.startsWith(cmd));
-    return [hits.length ? hits : cmds, cmd];
-  }
-
-  // For "use", complete with trial index numbers
-  if (cmd === "use" && trialIndex.length > 0) {
-    const arg = parts[1] || "";
-    const nums = trialIndex.map((_, i) => String(i + 1));
-    const hits = nums.filter((n) => n.startsWith(arg));
-    return [hits, arg];
-  }
-
-  // For "use-household", complete with household index numbers
-  if (cmd === "use-household" && householdIndex.length > 0) {
-    const arg = parts[1] || "";
-    const nums = householdIndex.map((_, i) => String(i + 1));
-    const hits = nums.filter((n) => n.startsWith(arg));
-    return [hits, arg];
-  }
-
-  return [[], line];
+/** Status bar: connection indicators + item count. */
+function StatusBar({ connections, counts }) {
+  return h(Box, { flexDirection: "row", alignItems: "center", paddingX: 1, borderStyle: "single", borderColor: "gray" },
+    h(Text, { color: "gray" }, "Redis "),
+    h(Text, { color: connections.redis ? "green" : "red" }, "●"),
+    h(Text, { color: "gray" }, "  Firestore "),
+    h(Text, { color: connections.firestore ? "green" : "red" }, "●"),
+    h(Text, { color: "gray" }, "  Stripe "),
+    h(Text, { color: connections.stripe ? "green" : "red" }, "●"),
+    h(Box, { flexGrow: 1 }),
+    h(Text, { color: "gray" }, `${counts.users} users  ${counts.households} households`)
+  );
 }
 
-// ── REPL ─────────────────────────────────────────────────────────────────────
-
-function prompt() {
-  const sel = selectedFp ? ` ${GOLD}${shortFp(selectedFp)}${RESET}` : "";
-  const hh = selectedHouseholdId ? ` ${CYAN}hh:${shortId(selectedHouseholdId)}${RESET}` : "";
-  return `${BOLD}spear${RESET}${sel}${hh}${BOLD}>${RESET} `;
+/** Help overlay shown on `?`. */
+function HelpOverlay() {
+  const row = (key, desc) =>
+    h(Box, { key, flexDirection: "row", gap: 2 },
+      h(Text, { color: "cyan", bold: true }, key.padEnd(6)),
+      h(Text, { color: "gray" }, desc)
+    );
+  return h(Box, {
+    flexDirection: "column",
+    borderStyle: "round",
+    borderColor: "yellow",
+    paddingX: 2,
+    paddingY: 1,
+  },
+    h(Text, { bold: true, color: "yellow" }, "Keyboard Shortcuts"),
+    h(Text, {}, " "),
+    row("Tab", "Switch tabs"),
+    row("q", "Quit"),
+    row("?", "Toggle help"),
+    row("^R", "Reload current view"),
+    h(Text, {}, " "),
+    h(Text, { color: "gray", dimColor: true }, "Press any key to close")
+  );
 }
 
-const rl = createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  prompt: prompt(),
-  terminal: true,
-  completer,
-});
+/** Main content area: master-detail split. */
+function MainContent({ activeTab }) {
+  const tabLabel = TUI_TABS[activeTab];
+  return h(Box, { flexDirection: "row", flexGrow: 1 },
+    // Left panel — list
+    h(Box, {
+      flexDirection: "column",
+      width: 32,
+      borderStyle: "single",
+      borderColor: "gray",
+      flexShrink: 0,
+      paddingX: 1,
+      paddingY: 1,
+    },
+      h(Text, { bold: true, color: "yellow" }, tabLabel),
+      h(Text, { color: "gray", dimColor: true }, "(empty — coming soon)")
+    ),
+    // Right panel — detail
+    h(Box, {
+      flexDirection: "column",
+      flexGrow: 1,
+      borderStyle: "single",
+      borderColor: "gray",
+      paddingX: 2,
+      paddingY: 1,
+    },
+      h(Text, { color: "gray", dimColor: true }, `${tabLabel} tab content — select an item from the list`)
+    )
+  );
+}
 
-console.log(`\n  ${BOLD}${GOLD}Fenrir Ledger — Odin's Spear${RESET}`);
-console.log(`  ${DIM}Type "help" for commands, "list" to see all trials. Tab to complete.${RESET}\n`);
-rl.prompt();
+/** Root TUI application. */
+function SpearApp({ connectionStatus, counts }) {
+  const { exit } = useApp();
+  const [activeTab, setActiveTab] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
 
-rl.on("line", async (line) => {
-  const parts = line.trim().split(/\s+/);
-  const cmd = parts[0]?.toLowerCase();
-  const args = parts.slice(1);
+  useInput((input, key) => {
+    // q — quit
+    if (input === "q") {
+      redis.quit().catch(() => {}).finally(() => {
+        cleanupPortForward();
+        exit();
+      });
+      return;
+    }
+    // ? — toggle help
+    if (input === "?") {
+      setShowHelp((v) => !v);
+      return;
+    }
+    // Tab — switch tabs
+    if (key.tab) {
+      setActiveTab((t) => (t + 1) % TUI_TABS.length);
+      return;
+    }
+    // ^R — reload (placeholder)
+    if (key.ctrl && input === "r") {
+      // TODO(#1387/#1388): trigger data reload for active tab
+      return;
+    }
+    // Any key closes help overlay
+    if (showHelp) {
+      setShowHelp(false);
+    }
+  });
 
-  if (!cmd) {
-    rl.setPrompt(prompt());
-    rl.prompt();
-    return;
-  }
+  return h(Box, { flexDirection: "column", height: "100%" },
+    h(TopBar, { activeTab, onTabChange: setActiveTab }),
+    showHelp
+      ? h(HelpOverlay, null)
+      : h(MainContent, { activeTab }),
+    h(StatusBar, { connections: connectionStatus, counts })
+  );
+}
 
-  if (cmd === "quit" || cmd === "exit" || cmd === "q") {
-    console.log(`${DIM}Disconnecting...${RESET}`);
-    await redis.quit();
-    cleanupPortForward();
-    process.exit(0);
-  }
+// ── Start TUI ────────────────────────────────────────────────────────────────
 
-  // Normalize: "delete" → "delete_trial", hyphens → underscores for method lookup
-  let cmdKey = cmd === "delete" ? "delete_trial" : cmd.replace(/-/g, "_");
-  const handler = commands[cmdKey];
+const connectionStatus = {
+  redis: true,      // reached this point means Redis connected
+  firestore: true,  // ensureAuthenticated succeeded
+  stripe: await getStripeKey().then(Boolean).catch(() => false),
+};
 
-  if (!handler) {
-    console.log(`${RED}Unknown command: ${cmd}${RESET}. Type ${CYAN}help${RESET} for available commands.`);
-    rl.setPrompt(prompt());
-    rl.prompt();
-    return;
-  }
-
-  try {
-    await handler(args);
-  } catch (err) {
-    console.error(`${RED}Error: ${err.message}${RESET}`);
-  }
-
-  rl.setPrompt(prompt());
-  rl.prompt();
-});
-
-rl.on("close", async () => {
-  console.log(`\n${DIM}Disconnecting...${RESET}`);
-  await redis.quit();
-  cleanupPortForward();
-  process.exit(0);
-});
+render(h(SpearApp, { connectionStatus, counts: initialCounts }));
