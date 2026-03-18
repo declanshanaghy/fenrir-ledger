@@ -80,6 +80,9 @@ export const TTL_ERROR_PATTERN = /TTL expired|cleaned up/i;
 /** Node-unreachable / kubelet-timeout patterns emitted by friendlyK8sError */
 export const NODE_UNREACHABLE_PATTERN = /Node unreachable|kubelet timeout/i;
 
+/** HTTP 400 / pod-not-yet-ready patterns — pod is initializing, not a real error */
+export const POD_NOT_READY_PATTERN = /HTTP-Code:\s*400|is not running|container.*not running/i;
+
 export function useLogStream() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [activeSessionId, _setActiveSessionId] = useState<string | null>(null);
@@ -92,6 +95,10 @@ export function useLogStream() {
   // the error tablet during the brief connection window (prevents red flash).
   const [isConnecting, _setIsConnecting] = useState(false);
   const isConnectingRef = useRef(false);
+  // isPodStarting: true when HTTP 400 is received (pod not yet ready).
+  // Keeps isConnecting=true and triggers the auto-retry loop in App.tsx.
+  const [isPodStarting, _setIsPodStarting] = useState(false);
+  const isPodStartingRef = useRef(false);
   const replayFromCacheRef = useRef<ReplayFn | null>(null);
   const taskPromptBuffer = useRef<string[]>([]);
   const inTaskPrompt = useRef(false);
@@ -103,6 +110,11 @@ export function useLogStream() {
   const setIsConnecting = useCallback((v: boolean) => {
     isConnectingRef.current = v;
     _setIsConnecting(v);
+  }, []);
+
+  const setIsPodStarting = useCallback((v: boolean) => {
+    isPodStartingRef.current = v;
+    _setIsPodStarting(v);
   }, []);
 
   const setActiveSessionId = useCallback((id: string | null) => {
@@ -120,8 +132,9 @@ export function useLogStream() {
     setStreamError(null);
     setStreamEnded(false);
     setReplayedFromCache(false);
+    setIsPodStarting(false);
     setIsConnecting(true);
-  }, [setIsConnecting]);
+  }, [setIsConnecting, setIsPodStarting]);
 
   /** Expose liveSkipRef setter so callers can set the skip count after replaying cache. */
   const setLiveSkipCount = useCallback((n: number) => {
@@ -399,9 +412,12 @@ export function useLogStream() {
         liveSkipRef.current--;
         return;
       }
-      // First live log-line clears the connecting state
+      // First live log-line clears connecting + pod-starting state
       if (isConnectingRef.current) {
         setIsConnecting(false);
+      }
+      if (isPodStartingRef.current) {
+        setIsPodStarting(false);
       }
       // Persist raw line to localStorage for download / future revisits
       if (activeSessionIdRef.current) {
@@ -410,17 +426,27 @@ export function useLogStream() {
       processRawLogLine(line);
     } else if (msg.type === "stream-error") {
       liveSkipRef.current = 0; // stop skipping on error
-      // Clear connecting state — we now know the stream status
-      if (isConnectingRef.current) {
-        setIsConnecting(false);
-      }
       // If the session has cached data in localStorage, fall back to it immediately
       // rather than showing the error tablet. This handles pinned sessions whose
       // pods have been cleaned up (TTL expired).
       const sessionId = activeSessionIdRef.current;
       if (sessionId && getCachedLog(sessionId)) {
+        if (isConnectingRef.current) {
+          setIsConnecting(false);
+        }
         replayFromCacheRef.current?.(sessionId);
         return;
+      }
+      // HTTP 400: pod is not yet ready — stay in connecting state so the
+      // waiting indicator stays visible. App.tsx will auto-retry the subscribe.
+      if (POD_NOT_READY_PATTERN.test(msg.message)) {
+        // Keep isConnecting=true (don't clear it) so the spinner remains
+        setIsPodStarting(true);
+        return;
+      }
+      // Clear connecting state — we now know the stream status (real error)
+      if (isConnectingRef.current) {
+        setIsConnecting(false);
       }
       setStreamError(msg.message);
       setEntries((prev) => [
@@ -447,7 +473,22 @@ export function useLogStream() {
         { id: nextId(), type: "verdict", verdictResult: msg.result },
       ]);
     }
-  }, [processRawLogLine, setIsConnecting]);
+  }, [processRawLogLine, setIsConnecting, setIsPodStarting]);
+
+  /**
+   * Called by App.tsx after the 2-minute pod-starting timeout.
+   * Clears the waiting state and shows a permanent error.
+   */
+  const showPodStartTimeout = useCallback(() => {
+    setIsPodStarting(false);
+    setIsConnecting(false);
+    const msg = "Agent pod failed to start \u2014 check cluster status";
+    setStreamError(msg);
+    setEntries((prev) => [
+      ...prev,
+      { id: nextId(), type: "error", message: msg },
+    ]);
+  }, [setIsConnecting, setIsPodStarting]);
 
   /**
    * Replay cached JSONL from localStorage for a pinned session (CACHE_PREFIX).
@@ -512,5 +553,7 @@ export function useLogStream() {
     isNodeUnreachable,
     replayedFromCache,
     isConnecting,
+    isPodStarting,
+    showPodStartTimeout,
   };
 }
