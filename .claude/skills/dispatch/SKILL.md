@@ -41,6 +41,7 @@ If issue data + agent template are already in context, that's **1 tool call** (s
 | `--local` | No | Local worktree instead of Depot. |
 | `--parallel` | No | Dispatch multiple issues simultaneously. |
 | `--prompt-extra <text>` | No | Extra context injected after issue body. |
+| `--no-spot` | No | Use on-demand nodes instead of Spot (avoids preemption). Check memory for current default mode. |
 | `--dry-run` | No | Show composed prompt without spawning. |
 | `--skip-board-move` | No | Don't move to In Progress. |
 
@@ -233,12 +234,15 @@ bash "$REPO_ROOT/infrastructure/k8s/agents/dispatch-job.sh" \
   --session-id "$SESSION_ID" \
   --branch "<BRANCH>" \
   --model "<MODEL>" \
-  --prompt-file "$PROMPT_FILE" && \
+  --prompt-file "$PROMPT_FILE" \
+  [--no-spot] && \
 node "$REPO_ROOT/.claude/skills/fire-next-up/scripts/pack-status.mjs" --move <N> in-progress
 rm -f "$PROMPT_FILE"
 ```
 
 **Key:** Write the prompt to a temp file with `cat >` and pass via `--prompt-file`. This avoids the heredoc-in-subshell pattern (`$(cat <<'DELIM'...DELIM)`) which silently truncates the prompt if the content happens to contain the delimiter word on its own line. The delimiter `AGENT_PROMPT_EOF` is chosen to be unlikely in prompt content. Single-quoted delimiter (`<<'...'`) prevents shell expansion.
+
+**Spot vs on-demand:** Default is Spot (cheap, but pods can be preempted). Pass `--no-spot` to use on-demand nodes for stability. Check the `project_agent_spot_mode.md` memory file for the current default — if Odin has switched to on-demand mode, pass `--no-spot` on every dispatch until told otherwise.
 
 **Job naming:** The dispatch script generates DNS-compatible job names from the session ID.
 

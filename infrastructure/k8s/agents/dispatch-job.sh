@@ -24,6 +24,7 @@
 # Optional:
 #   --prompt-file Path to a file containing the task prompt (preferred
 #                 over --prompt — avoids heredoc/shell escaping issues)
+#   --no-spot     Use on-demand nodes instead of Spot (avoids preemption)
 #   --image-tag   Container image tag (default: latest)
 #   --dry-run     Print generated manifest without applying
 # --------------------------------------------------------------------------
@@ -40,6 +41,7 @@ PROMPT_FILE=""
 IMAGE_TAG="latest"
 DRY_RUN=false
 ISSUE_NUMBER=""
+USE_SPOT=true
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -50,6 +52,7 @@ while [[ $# -gt 0 ]]; do
     --prompt-file)   PROMPT_FILE="$2"; shift 2 ;;
     --image-tag)     IMAGE_TAG="$2"; shift 2 ;;
     --issue-number)  ISSUE_NUMBER="$2"; shift 2 ;;
+    --no-spot)       USE_SPOT=false; shift ;;
     --dry-run)       DRY_RUN=true; shift ;;
     *)
       echo "Unknown argument: $1" >&2
@@ -105,6 +108,23 @@ if [ ! -f "$TEMPLATE" ]; then
 fi
 
 # --------------------------------------------------------------------------
+# Build Spot/on-demand config block
+# --------------------------------------------------------------------------
+if [ "$USE_SPOT" = true ]; then
+  SPOT_CONFIG="      # Use Spot/preemptible pods for cost savings (up to 70% cheaper)
+      nodeSelector:
+        cloud.google.com/gke-spot: \"true\"
+      # Tolerate Spot eviction
+      tolerations:
+        - key: cloud.google.com/gke-spot
+          operator: Equal
+          value: \"true\"
+          effect: NoSchedule"
+else
+  SPOT_CONFIG="      # On-demand nodes (no Spot) — stable, no preemption"
+fi
+
+# --------------------------------------------------------------------------
 # Substitute placeholders
 # --------------------------------------------------------------------------
 # Simple placeholders are substituted via sed.
@@ -114,7 +134,18 @@ fi
 PROMPT_B64=$(printf '%s' "$PROMPT" | base64 | tr -d '\n')
 
 TMPFILE=$(mktemp /tmp/agent-job-XXXXXX.yaml)
+SPOT_TMPFILE=$(mktemp /tmp/agent-spot-XXXXXX.yaml)
 
+# First pass: replace {{SPOT_CONFIG}} with the multi-line block (sed can't do this)
+awk -v spot_config="$SPOT_CONFIG" '{
+  if ($0 ~ /\{\{SPOT_CONFIG\}\}/) {
+    print spot_config
+  } else {
+    print
+  }
+}' "$TEMPLATE" > "$SPOT_TMPFILE"
+
+# Second pass: substitute all other placeholders
 awk \
   -v job_name="$JOB_NAME" \
   -v session_id="$SESSION_ID" \
@@ -134,7 +165,9 @@ awk \
     gsub(/\{\{ISSUE_TITLE\}\}/, issue_title)
     gsub(/\{\{PR_TITLE\}\}/, pr_title)
     print
-  }' "$TEMPLATE" > "$TMPFILE"
+  }' "$SPOT_TMPFILE" > "$TMPFILE"
+
+rm -f "$SPOT_TMPFILE"
 
 # --------------------------------------------------------------------------
 # Apply or dry-run
@@ -146,11 +179,13 @@ if [ "$DRY_RUN" = true ]; then
   exit 0
 fi
 
+SPOT_LABEL=$( [ "$USE_SPOT" = true ] && echo "spot" || echo "on-demand" )
 echo "Creating K8s Job: ${JOB_NAME}"
 echo "  Namespace: fenrir-agents"
 echo "  Branch: ${BRANCH}"
 echo "  Model: ${MODEL}"
 echo "  Image: agent-sandbox:${IMAGE_TAG}"
+echo "  Node type: ${SPOT_LABEL}"
 
 kubectl apply -f "$TMPFILE" -n fenrir-agents
 

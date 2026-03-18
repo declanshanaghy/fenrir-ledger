@@ -49,18 +49,7 @@ spec:
     spec:
       serviceAccountName: fenrir-agents-sa
 
-      # Use Spot/preemptible pods for cost savings (up to 70% cheaper)
-      # GKE Autopilot supports Spot via node selector
-      nodeSelector:
-        cloud.google.com/gke-spot: "true"
-
-      # Tolerate Spot eviction
-      tolerations:
-        - key: cloud.google.com/gke-spot
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
-
+{{SPOT_CONFIG}}
       # Grace period for eviction cleanup (commit WIP before pod dies)
       terminationGracePeriodSeconds: 30
 

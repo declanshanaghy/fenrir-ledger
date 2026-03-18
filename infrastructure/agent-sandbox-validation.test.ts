@@ -295,6 +295,11 @@ describe('Agent Sandbox Infrastructure (Issue #681)', () => {
       expect(dispatchScript).toContain('PROMPT_FILE');
     });
 
+    it('should support --no-spot flag for on-demand nodes', () => {
+      expect(dispatchScript).toContain('--no-spot');
+      expect(dispatchScript).toContain('USE_SPOT');
+    });
+
     it('should validate required arguments', () => {
       expect(dispatchScript).toContain('required');
       expect(dispatchScript).toContain('exit 1');
