@@ -31,3 +31,5 @@ ingress:
 
 redis:
   enabled: true
+  persistence:
+    storageClassName: "redis-retain"
