@@ -35,7 +35,6 @@ Thumbs.db
 coverage/
 test-results/
 playwright-report/
-quality/reports/coverage/
 quality/.coverage-tmp/
 quality/.coverage-tmp-pw/
 .playwright-mcp/
