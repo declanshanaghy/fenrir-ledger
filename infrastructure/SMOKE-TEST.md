@@ -276,6 +276,112 @@ kubectl logs statefulset/postgresql -n fenrir-analytics --tail=20
 
 ---
 
+## n8n (Marketing Engine) — Backup & Restore
+
+### Background
+
+Issue #1338: the n8n PVC in `fenrir-marketing` had `reclaimPolicy: Delete` (GKE
+default). Deleting the namespace or PVC would permanently destroy all n8n
+workflows, credentials, and execution history — the same class of vulnerability
+that wiped Umami (#1337).
+
+**Protections now in place:**
+
+1. StorageClass `standard-rwo-retain` (`reclaimPolicy: Retain`) — disk survives PVC deletion.
+2. CI deploys n8n-infra chart (StorageClass) before n8n app chart on every deploy.
+3. CI patches any pre-existing PV to `Retain` on every deploy.
+4. Daily GCP disk snapshots via `infrastructure/n8n-backup.tf` (04:00 UTC, 7-day retention).
+
+---
+
+### Verify PV reclaim policy
+
+```bash
+PV_NAME=$(kubectl get pvc -n fenrir-marketing \
+  -o jsonpath='{.items[0].spec.volumeName}')
+kubectl get pv "$PV_NAME" -o jsonpath='{.spec.persistentVolumeReclaimPolicy}'
+# Expected: Retain
+```
+
+If output is `Delete`, patch it manually:
+
+```bash
+kubectl patch pv "$PV_NAME" \
+  -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
+```
+
+---
+
+### Attach GCP snapshot policy (post initial deploy)
+
+After the PV exists, obtain the underlying GCE disk name and apply Terraform:
+
+```bash
+# 1. Get PV name
+PV_NAME=$(kubectl get pvc -n fenrir-marketing \
+  -o jsonpath='{.items[0].spec.volumeName}')
+
+# 2. Get GCE disk name from the PV (CSI volumeHandle is "projects/.../zones/.../disks/<name>")
+DISK_HANDLE=$(kubectl get pv "$PV_NAME" -o jsonpath='{.spec.csi.volumeHandle}')
+DISK_NAME=$(echo "$DISK_HANDLE" | awk -F'/' '{print $NF}')
+echo "Disk name: $DISK_NAME"
+
+# 3. Apply Terraform to attach the snapshot policy
+cd infrastructure
+terraform apply -var="n8n_disk_name=$DISK_NAME"
+```
+
+---
+
+### Verify snapshot policy is attached
+
+```bash
+DISK_NAME=<disk-name-from-above>
+gcloud compute disks describe "$DISK_NAME" \
+  --zone=us-central1-a \
+  --project=fenrir-ledger-prod \
+  --format='value(resourcePolicies)'
+# Expected: .../resourcePolicies/n8n-daily-snapshot
+```
+
+---
+
+### Restore from GCP snapshot
+
+```bash
+# 1. List available snapshots
+gcloud compute snapshots list \
+  --filter="sourceDisk~n8n" \
+  --project=fenrir-ledger-prod \
+  --sort-by="~creationTimestamp" \
+  --limit=10
+
+# 2. Create a new disk from the desired snapshot
+SNAPSHOT_NAME=<snapshot-name>
+gcloud compute disks create n8n-restored \
+  --source-snapshot="$SNAPSHOT_NAME" \
+  --zone=us-central1-a \
+  --project=fenrir-ledger-prod \
+  --type=pd-balanced
+
+# 3. Scale down n8n deployment
+kubectl scale deployment n8n -n fenrir-marketing --replicas=0
+
+# 4. Delete the existing PVC (PV is Retain — underlying disk is NOT deleted)
+PV_NAME=$(kubectl get pvc -n fenrir-marketing -o jsonpath='{.items[0].spec.volumeName}')
+kubectl delete pvc -n fenrir-marketing --all
+
+# 5. Manually create a PV pointing to the restored disk, then a PVC binding to it.
+#    Patch the PV claimRef to point to the new PVC, then re-scale:
+kubectl scale deployment n8n -n fenrir-marketing --replicas=1
+
+# 6. Verify
+kubectl get pods -n fenrir-marketing
+kubectl logs deployment/n8n -n fenrir-marketing --tail=20
+```
+
+---
+
 ### Re-create Umami admin account (post data-loss recovery only)
 
 If Umami data was lost and the database is empty:
