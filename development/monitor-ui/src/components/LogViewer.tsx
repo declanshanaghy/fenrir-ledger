@@ -525,6 +525,32 @@ function LogLine({ entry, agentKey, agentName, isLastAssistantText, autoScroll, 
   }
 }
 
+/**
+ * Returns true when the text looks like template/instruction boilerplate that
+ * surrounds decree blocks — conditional tags, step instruction headers, test
+ * standard references, etc.  These entries should be suppressed from the log
+ * viewer so they never appear as raw agent bubbles.
+ *
+ * Patterns detected:
+ *  - `<If PASS:…>` / `<If FAIL:…>` conditional template tags
+ *  - `**Step N — Chain continuation…**` / `**Step N — Decree…**` step headers
+ *  - `**Test Standards:**` boilerplate references
+ *
+ * We deliberately keep this narrow (only the patterns known to appear in
+ * agent dispatch prompts) to avoid suppressing legitimate agent output.
+ */
+function isTemplateBoilerplate(text: string): boolean {
+  // Never suppress entries that ARE the structured decree block
+  if (isDecreeBlock(text)) return false;
+  // <If PASS:…> or <If FAIL:…> conditional template tags
+  if (/<If\s+(PASS|FAIL):/i.test(text)) return true;
+  // Step headers that reference decree or chain-continuation steps
+  if (/\*\*Step\s+\d+[^*]*[—\-][^*]*(Chain continuation|Decree)\b/im.test(text)) return true;
+  // Test Standards boilerplate reference
+  if (/\*\*Test Standards:/im.test(text)) return true;
+  return false;
+}
+
 function AgentBubble({
   text,
   agentKey,
@@ -538,6 +564,9 @@ function AgentBubble({
   isLastAssistantText?: boolean;
   onAvatarClick?: (agentKey: string) => void;
 }) {
+  // Suppress template/instruction boilerplate that surrounds decree blocks
+  if (isTemplateBoilerplate(text)) return null;
+
   // Detect agent sign-off decree block — rendered anywhere in the assistant text stream
   if (isDecreeBlock(text)) {
     return (
