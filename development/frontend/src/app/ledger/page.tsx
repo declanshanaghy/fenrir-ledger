@@ -114,6 +114,13 @@ function DashboardPageContent() {
     }
   }, [canImport]);
 
+  // Reload cards when cloud sync writes to localStorage (fenrir:sync fired by setAllCards).
+  // Without this, the dashboard stays empty after migration/pull downloads cards from Firestore.
+  useEffect(() => {
+    window.addEventListener("fenrir:sync", refreshCards);
+    return () => window.removeEventListener("fenrir:sync", refreshCards);
+  }, [refreshCards]);
+
   // Listen for custom event from EmptyState's "Import from Google Sheets" button
   useEffect(() => {
     function handleOpenWizard() {
