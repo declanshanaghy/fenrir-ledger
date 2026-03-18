@@ -81,7 +81,7 @@ function parseDecree(text: string): ParsedDecree {
 
   // Derive agentKey from SEAL line: "FiremanDecko · … · Principal Engineer"
   const agentNameMatch = /^(\w+)/.exec(seal);
-  const agentKey = agentNameMatch ? agentNameMatch[1].toLowerCase() : "";
+  const agentKey = agentNameMatch?.[1]?.toLowerCase() ?? "";
 
   return { issue, verdict, pr, summary, checks, seal, signoff, agentKey };
 }
