@@ -268,6 +268,7 @@ After spawning, query the cluster and job for details. The report MUST include:
 **Agent:** <AgentName> (Step <S>) | **Model:** <MODEL>
 **Branch:** `<BRANCH>`
 **Session:** `<SESSION_ID>`
+**Auto-continue:** enabled — agent will run `--resume #<N>` on completion
 
 **GKE:**
   Cluster: `<kubectl config current-context>`
