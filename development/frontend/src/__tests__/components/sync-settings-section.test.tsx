@@ -3,16 +3,16 @@
  *
  * Verifies tier-gated rendering:
  *   - Thrall: upsell card, "KARL" badge, "Upgrade to Karl" button
- *   - Trial: sync controls, "TRIAL" badge, upgrade nudge
+ *   - Trial: upsell card, "KARL" badge, NO upgrade button (Subscription card has one)
  *   - Karl: full sync controls, rune corners, no badge
  *
- * Verifies per-status rendering for Karl/trial:
+ * Verifies per-status rendering for Karl:
  *   - synced: last synced timestamp + "Sync Now" enabled
  *   - syncing: progress bar + "Sync Now" disabled
  *   - offline: offline message + "Sync Now" disabled
  *   - error: error block + "Retry Now" + "Dismiss Error"
  *
- * Issue #1125
+ * Issue #1125, #1336
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -124,39 +124,42 @@ describe("SyncSettingsSection — Thrall: upsell card", () => {
   });
 });
 
-describe("SyncSettingsSection — Trial: sync controls with TRIAL badge", () => {
+describe("SyncSettingsSection — Trial: upsell card (no upgrade button)", () => {
   beforeEach(() => {
     setTrial();
-    setStatus("synced");
-    mockCloudSync.lastSyncedAt = new Date();
-    mockCloudSync.cardCount = 10;
     vi.clearAllMocks();
   });
 
-  it("renders Cloud Sync section with TRIAL badge", () => {
+  it("renders Cloud Sync section with KARL badge (not TRIAL)", () => {
     render(<SyncSettingsSection />);
     const section = screen.getByRole("region", { name: "Cloud Sync" });
     expect(section).toBeDefined();
-    expect(section.textContent).toContain("TRIAL");
+    expect(section.textContent).toContain("KARL");
+    expect(section.textContent).not.toContain("TRIAL");
   });
 
-  it("renders trial active message", () => {
+  it("does NOT show 'Cloud Sync is active' message", () => {
     render(<SyncSettingsSection />);
-    expect(screen.getByText(/Cloud Sync is active during your trial/)).toBeDefined();
+    expect(screen.queryByText(/Cloud Sync is active during your trial/)).toBeNull();
   });
 
-  it("renders upgrade nudge", () => {
+  it("renders upsell copy explaining local-only storage", () => {
+    render(<SyncSettingsSection />);
+    const section = screen.getByRole("region", { name: "Cloud Sync" });
+    expect(section.textContent).toContain("Back up your ledger to Yggdrasil");
+    expect(section.textContent).toContain("Cloud Sync is a Karl feature");
+  });
+
+  it("does NOT render 'Upgrade to Karl' button (Subscription card has one)", () => {
     render(<SyncSettingsSection />);
     expect(
-      screen.getByText(/Cloud Sync will remain active if you upgrade/)
-    ).toBeDefined();
+      screen.queryByRole("button", { name: "Upgrade to Karl to unlock Cloud Sync" })
+    ).toBeNull();
   });
 
-  it("renders enabled Sync Now button", () => {
+  it("does NOT render Sync Now button", () => {
     render(<SyncSettingsSection />);
-    const btn = screen.getByRole("button", { name: "Sync cards to cloud now" });
-    expect(btn).toBeDefined();
-    expect((btn as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.queryByRole("button", { name: /sync now/i })).toBeNull();
   });
 });
 

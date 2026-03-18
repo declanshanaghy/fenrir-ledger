@@ -5,7 +5,7 @@
  *
  * Tier-gated:
  *   thrall — Karl upsell card with "Upgrade to Karl" CTA
- *   trial  — full sync controls + TRIAL badge + upgrade nudge
+ *   trial  — Karl upsell card WITHOUT upgrade button (Subscription card has one)
  *   karl   — full sync controls (synced / syncing / offline / error states)
  *
  * Placed in the right column of Settings, above RestoreTabGuides.
@@ -42,8 +42,10 @@ function formatTimestamp(date: Date): string {
 
 function ThrallUpsellCard({
   onUpgrade,
+  showUpgradeButton = true,
 }: {
   onUpgrade: () => void;
+  showUpgradeButton?: boolean;
 }) {
   return (
     <section
@@ -70,8 +72,7 @@ function ThrallUpsellCard({
           Back up your ledger to Yggdrasil
         </p>
         <p className="text-[13px] text-foreground/90 font-body leading-relaxed">
-          Cloud Sync is a Karl feature. Upgrade to keep your cards safe across
-          devices and restore them if you clear your browser.
+          Cloud Sync is a Karl feature. Your data is stored locally only.
         </p>
         <ul className="list-none p-0 flex flex-col gap-1 text-xs text-foreground/80 font-body sm:hidden">
           <li className="before:content-['—_']">Automatic cloud backup</li>
@@ -84,19 +85,21 @@ function ThrallUpsellCard({
           <li className="before:content-['—_']">Sync across your household</li>
           <li className="before:content-['—_']">Full sync history in Settings</li>
         </ul>
-        <div>
-          <button
-            type="button"
-            onClick={onUpgrade}
-            className="min-h-[44px] px-5 py-2 border border-border text-sm font-heading font-bold
-                       text-foreground hover:bg-muted/30 transition-colors
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-                       w-full sm:w-auto justify-center inline-flex items-center"
-            aria-label="Upgrade to Karl to unlock Cloud Sync"
-          >
-            Upgrade to Karl
-          </button>
-        </div>
+        {showUpgradeButton && (
+          <div>
+            <button
+              type="button"
+              onClick={onUpgrade}
+              className="min-h-[44px] px-5 py-2 border border-border text-sm font-heading font-bold
+                         text-foreground hover:bg-muted/30 transition-colors
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                         w-full sm:w-auto justify-center inline-flex items-center"
+              aria-label="Upgrade to Karl to unlock Cloud Sync"
+            >
+              Upgrade to Karl
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -321,7 +324,8 @@ function SyncStatusCard({ isTrial }: { isTrial: boolean }) {
 // ---------------------------------------------------------------------------
 
 /**
- * SyncSettingsSection — renders Thrall upsell or Karl/trial sync status card.
+ * SyncSettingsSection — renders upsell (Thrall/trial) or Karl sync status card.
+ * Trial users see upsell without upgrade button — Subscription card above has one.
  * Drop into the right column of the Settings page above RestoreTabGuides.
  */
 export function SyncSettingsSection() {
@@ -335,11 +339,11 @@ export function SyncSettingsSection() {
     void subscribeStripe("/ledger/settings");
   };
 
-  // Thrall (no trial): show upsell
-  if (tier === "thrall" && !isTrial) {
-    return <ThrallUpsellCard onUpgrade={handleUpgrade} />;
+  // Thrall or trial: show upsell (trial hides button — Subscription card has one)
+  if (!isKarl) {
+    return <ThrallUpsellCard onUpgrade={handleUpgrade} showUpgradeButton={!isTrial} />;
   }
 
-  // Karl or trial: show sync status
-  return <SyncStatusCard isTrial={isTrial && !isKarl} />;
+  // Karl only: show sync status
+  return <SyncStatusCard isTrial={false} />;
 }
