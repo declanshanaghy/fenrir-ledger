@@ -513,6 +513,7 @@ jobs:
         run: |
           kubectl create secret generic agent-secrets \
             --namespace=fenrir-agents \
+            --from-literal=anthropic-api-key="${{ secrets.FENRIR_ANTHROPIC_API_KEY }}" \
             --from-literal=claude-oauth-token="${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}" \
             --from-literal=gh-token="${{ secrets.GH_TOKEN_AGENTS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
