@@ -19,6 +19,7 @@ import { MembersList } from "./MembersList";
 import { InviteCodeDisplay } from "./InviteCodeDisplay";
 import { HouseholdFullBanner } from "./HouseholdFullBanner";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import Link from "next/link";
 
 interface HouseholdMember {
   clerkUserId: string;
@@ -49,6 +50,7 @@ export function HouseholdSettingsSection() {
 
   const [data, setData] = useState<HouseholdData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,17 +60,23 @@ export function HouseholdSettingsSection() {
     try {
       const token = await ensureFreshToken();
       if (!token) {
+        setIsSignedIn(false);
         setIsLoading(false);
-        return; // Not signed in — silently hide
+        return;
       }
       const res = await fetch("/api/household/members", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        if (res.status === 401) return; // Not signed in — silently hide
+        if (res.status === 401) {
+          setIsSignedIn(false);
+          setIsLoading(false);
+          return;
+        }
         setError("Could not load household data.");
         return;
       }
+      setIsSignedIn(true);
       const json = (await res.json()) as HouseholdData;
       setData(json);
     } catch {
@@ -129,6 +137,57 @@ export function HouseholdSettingsSection() {
           Household
         </h2>
         <p className="text-xs text-destructive font-body">{error}</p>
+      </section>
+    );
+  }
+
+  if (isSignedIn === false) {
+    return (
+      <section
+        className="relative border border-border p-5 flex flex-col gap-4 karl-bling-card opacity-80"
+        aria-label="Household"
+        data-testid="household-locked"
+      >
+        {/* Karl rune corners */}
+        <span className="karl-rune-corner karl-rune-tl" aria-hidden="true">ᚠ</span>
+        <span className="karl-rune-corner karl-rune-tr" aria-hidden="true">ᚱ</span>
+        <span className="karl-rune-corner karl-rune-bl" aria-hidden="true">ᛁ</span>
+        <span className="karl-rune-corner karl-rune-br" aria-hidden="true">ᚾ</span>
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <h2 className="text-sm font-heading font-bold text-foreground">
+            Household
+          </h2>
+          <span
+            className="border border-border px-2 py-0.5 text-[11px] font-heading text-muted-foreground"
+            aria-label="Household: sign in required"
+          >
+            Locked
+          </span>
+        </div>
+
+        {/* Locked body */}
+        <div
+          className="border border-dashed border-border p-4 flex flex-col gap-3 items-center text-center"
+          role="region"
+          aria-label="Sign in to manage your household"
+        >
+          <span className="text-2xl" aria-hidden="true">ᛜ</span>
+          <p className="text-sm text-foreground/90 font-body">
+            Share and sync cards across your household — up to three members.
+          </p>
+          <p className="text-xs text-muted-foreground font-body">
+            Sign in to manage your household.
+          </p>
+          <Link
+            href="/ledger/sign-in"
+            className="inline-flex items-center justify-center min-h-[44px] px-5 py-2 border-2 border-border text-sm font-heading font-bold text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 karl-bling-btn"
+            aria-label="Sign in to manage your household"
+          >
+            Sign in to get started
+          </Link>
+        </div>
       </section>
     );
   }
