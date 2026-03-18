@@ -71,12 +71,11 @@ function build() {
 }
 
 function startServer() {
-  log("Starting Next.js production server (Istanbul-instrumented build)...");
+  log("Starting Next.js production server with NODE_V8_COVERAGE...");
 
-  // The build was compiled with babel-plugin-istanbul. All source files have
-  // __coverage__ counters injected. When pages render in the browser, coverage
-  // data accumulates in window.__coverage__. Playwright tests collect this
-  // after each navigation via the coverage fixture.
+  // NODE_V8_COVERAGE is set in the env below. Node.js writes V8 coverage JSON files
+  // to V8_COVERAGE_DIR when the process exits cleanly (SIGTERM). c8 then reads
+  // those files and follows source maps back to src/ to produce LCOV + HTML.
   const nextBin = path.join(FRONTEND_DIR, "node_modules", ".bin", "next");
 
   const serverProc = spawn(
@@ -88,6 +87,7 @@ function startServer() {
       env: {
         ...process.env,
         NODE_ENV: "production",
+        NODE_V8_COVERAGE: V8_COVERAGE_DIR,
       },
     },
   );
@@ -174,62 +174,55 @@ function stopServer(serverProc) {
 }
 
 function generateReports() {
-  // Process V8 browser coverage collected by Playwright's page.coverage API.
-  // The fixture writes CDP coverage entries to v8-browser-coverage.json.
-  // We convert these to c8-compatible format and generate LCOV + HTML.
+  // Process V8 server-side coverage written by Node.js when NODE_V8_COVERAGE is set.
+  // Node writes coverage-<timestamp>-<pid>-0.json files to V8_COVERAGE_DIR on clean exit.
+  // c8 reads these files, follows source maps from .next/server/chunks/ back to src/,
+  // and produces LCOV + HTML reports.
   const reportsDir = combined ? path.join(REPORTS_DIR, "playwright") : REPORTS_DIR;
   mkdirSync(reportsDir, { recursive: true });
 
-  const browserCoverage = path.join(V8_COVERAGE_DIR, "v8-browser-coverage.json");
-  if (!existsSync(browserCoverage)) {
-    log("No browser coverage data found — Playwright tests may not have run or collected coverage");
+  // Find V8 coverage files (named coverage-*.json) written by Node.js on SIGTERM exit.
+  const v8Files = existsSync(V8_COVERAGE_DIR)
+    ? readdirSync(V8_COVERAGE_DIR).filter((f) => /^coverage-.+\.json$/.test(f))
+    : [];
+
+  if (v8Files.length === 0) {
+    log("No V8 coverage files found in quality/.coverage-tmp/ — server may not have exited cleanly or NODE_V8_COVERAGE was not set");
+    log("Creating empty LCOV file so combined merge can proceed...");
+    writeFileSync(path.join(reportsDir, "lcov.info"), "");
     return;
   }
 
-  log("Generating Playwright coverage reports from V8 browser data...");
+  log(`Found ${v8Files.length} V8 coverage file(s) — running c8 report...`);
 
-  // Convert Playwright's CDP coverage format to V8 coverage JSON format
-  // that c8 can process. CDP entries have { url, source, functions[] }.
+  const c8Args = [
+    "c8", "report",
+    "--temp-directory", V8_COVERAGE_DIR,
+    "--reporter", "text-summary",
+    "--reporter", "html",
+    "--reporter", "lcov",
+    "--reports-dir", reportsDir,
+    "--all",
+    "--src", "src",
+    "--exclude", "**/*.test.*",
+    "--exclude", "**/*.spec.*",
+    "--exclude", "**/__tests__/**",
+    "--exclude", "**/node_modules/**",
+  ];
+
   try {
-    const entries = JSON.parse(readFileSync(browserCoverage, "utf-8"));
-    // Filter to only app code (not node_modules, extensions, etc.)
-    const appEntries = entries.filter((e) =>
-      e.url && (e.url.includes("/_next/") || e.url.includes("/ledger")) && !e.url.includes("node_modules")
-    );
-
-    if (appEntries.length === 0) {
-      log("No app-relevant coverage entries found in browser data");
-      return;
-    }
-
-    // Write in V8 coverage JSON format for c8
-    const v8Format = { result: appEntries.map((e) => ({
-      scriptId: "0",
-      url: e.url,
-      functions: e.functions || [],
-    }))};
-    const v8File = path.join(V8_COVERAGE_DIR, "coverage-browser-0.json");
-    writeFileSync(v8File, JSON.stringify(v8Format), "utf-8");
-    log(`Converted ${appEntries.length} browser coverage entries to V8 format`);
-
-    const c8Args = [
-      "c8", "report",
-      "--temp-directory", V8_COVERAGE_DIR,
-      "--reporter", "text-summary",
-      "--reporter", "html",
-      "--reporter", "lcov",
-      "--reports-dir", reportsDir,
-      "--exclude", "node_modules/**",
-    ];
     run(`npx ${c8Args.join(" ")}`, { cwd: FRONTEND_DIR });
+    const relDir = path.relative(REPO_ROOT, reportsDir);
+    log(`Reports written to ${reportsDir}`);
+    log(`  - HTML:  ${relDir}/index.html`);
+    log(`  - LCOV:  ${relDir}/lcov.info`);
   } catch (err) {
-    log(`Browser coverage report generation failed: ${err.message}`);
+    log(`c8 report generation failed: ${err.message}`);
+    // Ensure lcov.info exists so combined merge does not error out
+    if (!existsSync(path.join(reportsDir, "lcov.info"))) {
+      writeFileSync(path.join(reportsDir, "lcov.info"), "");
+    }
   }
-
-  const relDir = path.relative(REPO_ROOT, reportsDir);
-  log(`Reports written to ${reportsDir}`);
-  log(`  - HTML:  ${relDir}/index.html`);
-  log(`  - LCOV:  ${relDir}/lcov.info`);
 }
 
 /**

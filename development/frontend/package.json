@@ -56,6 +56,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
     "autoprefixer": "^10.4.20",
+    "c8": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "^16.1.6",
     "happy-dom": "^20.8.3",
