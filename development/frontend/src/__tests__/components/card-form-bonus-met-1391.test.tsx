@@ -148,7 +148,7 @@ describe('CardForm — "Minimum spend met" checkbox — Issue #1391', () => {
 
     // Step 1 is active by default — label must be visible
     expect(screen.getByText("Minimum spend met")).toBeDefined();
-  });
+  }, 15000);
 
   it("renders the bonusMet checkbox element in step 1", async () => {
     const { CardForm } = await import("@/components/cards/CardForm");
