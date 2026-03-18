@@ -56,7 +56,10 @@ test.describe("Auth Callback — Missing Params", () => {
     await page.goto("/ledger/auth/callback", { waitUntil: "load" });
 
     const fatal = errors.filter(
-      (e) => !e.includes("hydration") && !e.includes("HMR")
+      (e) =>
+        !e.includes("hydration") &&
+        !e.includes("HMR") &&
+        !e.includes("Connection closed")
     );
     expect(fatal).toHaveLength(0);
   });

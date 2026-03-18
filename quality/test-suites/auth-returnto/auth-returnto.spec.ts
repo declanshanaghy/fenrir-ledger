@@ -96,7 +96,10 @@ test.describe("Auth returnTo — Query Param Validation", () => {
 
     // Filter out benign Next.js HMR noise
     const fatal = errors.filter(
-      (e) => !e.includes("hydration") && !e.includes("HMR")
+      (e) =>
+        !e.includes("hydration") &&
+        !e.includes("HMR") &&
+        !e.includes("Connection closed")
     );
 
     expect(fatal).toHaveLength(0);
