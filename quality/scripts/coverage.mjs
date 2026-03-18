@@ -66,29 +66,11 @@ function build() {
     log("Skipping build (--skip-build)");
     return;
   }
-
-  // Create .babelrc symlink to enable Istanbul instrumentation during build.
-  // Next.js detects .babelrc and switches from SWC to Babel, which allows
-  // babel-plugin-istanbul to instrument all source files with __coverage__ counters.
-  const babelrc = path.join(FRONTEND_DIR, ".babelrc.js");
-  const babelCoverage = path.join(FRONTEND_DIR, "babel.coverage.js");
-  const hadBabelrc = existsSync(babelrc);
-
-  if (existsSync(babelCoverage)) {
-    copyFileSync(babelCoverage, babelrc);
-    log("Istanbul instrumentation enabled (.babelrc.js created from babel.coverage.js)");
-  }
-
-  try {
-    log("Building Next.js app with Istanbul instrumentation...");
-    run("npm run build", { cwd: FRONTEND_DIR });
-  } finally {
-    // Remove .babelrc.js after build so normal dev/prod builds use SWC
-    if (!hadBabelrc && existsSync(babelrc)) {
-      rmSync(babelrc);
-      log("Istanbul .babelrc.js removed (SWC restored for normal builds)");
-    }
-  }
+  log("Building Next.js app with SWC Istanbul instrumentation (ISTANBUL_COVERAGE=1)...");
+  run("npm run build", {
+    cwd: FRONTEND_DIR,
+    env: { ...process.env, ISTANBUL_COVERAGE: "1" },
+  });
 }
 
 function startServer() {

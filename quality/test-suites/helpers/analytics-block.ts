@@ -1,4 +1,6 @@
 import { test as base } from "@playwright/test";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
 
 /**
  * Extended Playwright test fixture that:
@@ -54,6 +56,28 @@ export const test = base.extend({
     );
 
     await use(page);
+
+    // Collect Istanbul coverage from browser after each test.
+    // swc-plugin-coverage-instrument injects __coverage__ at build time.
+    try {
+      const coverage = await page.evaluate(
+        () => (window as unknown as { __coverage__?: Record<string, unknown> }).__coverage__ ?? null,
+      );
+      if (coverage) {
+        const coverageDir = path.resolve(__dirname, "../../../quality/.coverage-tmp");
+        const coverageFile = path.join(coverageDir, "browser-coverage.json");
+        mkdirSync(coverageDir, { recursive: true });
+
+        let merged: Record<string, unknown> = coverage;
+        if (existsSync(coverageFile)) {
+          try {
+            const existing = JSON.parse(readFileSync(coverageFile, "utf-8"));
+            merged = { ...existing, ...coverage };
+          } catch { /* corrupt — overwrite */ }
+        }
+        writeFileSync(coverageFile, JSON.stringify(merged), "utf-8");
+      }
+    } catch { /* page closed — skip */ }
   },
 });
 
