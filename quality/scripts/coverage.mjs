@@ -23,7 +23,7 @@
  */
 
 import { execSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, readdirSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -203,6 +203,54 @@ function generateReports() {
   log(`  - LCOV:  ${relDir}/lcov.info`);
 }
 
+/**
+ * Post-process Istanbul HTML reports (vitest, playwright) to inject Fenrir theme.
+ * Istanbul generates reports with base.css — we copy our coverage.css alongside
+ * and inject a <link> after base.css in every HTML file.
+ */
+function applyFenrirTheme(reportDir) {
+  const cssSource = path.join(__dirname, "coverage.css");
+  if (!existsSync(cssSource) || !existsSync(reportDir)) return;
+
+  // Copy CSS to the report directory
+  copyFileSync(cssSource, path.join(reportDir, "fenrir-theme.css"));
+
+  // Walk all HTML files and inject the link
+  function walkAndInject(dir) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walkAndInject(fullPath);
+      } else if (entry.name.endsWith(".html")) {
+        let html = readFileSync(fullPath, "utf8");
+        if (html.includes("fenrir-theme.css")) continue; // already injected
+
+        // Compute relative path to the report root where fenrir-theme.css lives
+        const relToRoot = path.relative(dir, reportDir).replace(/\\/g, "/");
+        const cssHref = relToRoot ? `${relToRoot}/fenrir-theme.css` : "fenrir-theme.css";
+
+        // Inject after base.css link (Istanbul pattern)
+        if (html.includes('href="base.css"')) {
+          html = html.replace(
+            /(<link[^>]*href="[^"]*base\.css"[^>]*>)/,
+            `$1\n    <link rel="stylesheet" href="${cssHref}" />`,
+          );
+        } else {
+          // Fallback: inject before </head>
+          html = html.replace(
+            "</head>",
+            `    <link rel="stylesheet" href="${cssHref}" />\n</head>`,
+          );
+        }
+        writeFileSync(fullPath, html);
+      }
+    }
+  }
+
+  walkAndInject(reportDir);
+  log(`Fenrir theme applied to ${path.relative(REPO_ROOT, reportDir)}`);
+}
+
 function runCombine() {
   log("Merging Vitest + Playwright coverage via coverage-combine.mjs...");
   const combineScript = path.join(__dirname, "coverage-combine.mjs");
@@ -247,6 +295,7 @@ function runUnitCoverage() {
   const vitestReportsDir = path.join(REPORTS_DIR, "vitest");
   mkdirSync(vitestReportsDir, { recursive: true });
   run("npm run test:unit:coverage", { cwd: FRONTEND_DIR });
+  applyFenrirTheme(vitestReportsDir);
   log(`Vitest coverage reports written to ${vitestReportsDir}`);
   log("  - HTML:  quality/reports/coverage/vitest/index.html");
   log("  - LCOV:  quality/reports/coverage/vitest/lcov.info");
@@ -282,6 +331,7 @@ async function main() {
       const vitestReportsDir = path.join(REPORTS_DIR, "vitest");
       mkdirSync(vitestReportsDir, { recursive: true });
       run("npm run test:unit:coverage", { cwd: FRONTEND_DIR });
+      applyFenrirTheme(vitestReportsDir);
       log("Vitest coverage complete.");
     }
 
@@ -301,6 +351,7 @@ async function main() {
   }
 
   generateReports();
+  applyFenrirTheme(path.join(REPORTS_DIR, "playwright"));
 
   // Phase 3: Merge coverage reports
   if (combined) {
