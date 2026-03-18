@@ -153,7 +153,7 @@ jobs:
           echo "infra=$(check   '^infrastructure/.*\.tf$|^infrastructure/firestore/')"                       >> "$GITHUB_OUTPUT"
           echo "bootstrap=$(check '^infrastructure/helm/fenrir-bootstrap/')"                                 >> "$GITHUB_OUTPUT"
           echo "umami=$(check   '^infrastructure/helm/umami/')"                                              >> "$GITHUB_OUTPUT"
-          echo "marketing=$(check '^infrastructure/k8s/n8n/')"                                              >> "$GITHUB_OUTPUT"
+          echo "marketing=$(check '^infrastructure/helm/n8n/')"                                              >> "$GITHUB_OUTPUT"
           echo "### Changed Services" >> $GITHUB_STEP_SUMMARY
           echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
@@ -769,8 +769,10 @@ jobs:
   # ============================================================================
   # SECTION 7 — MARKETING ENGINE
   # n8n workflow automation at marketing.fenrirledger.com.
-  # Deployed via external Helm chart (oci://ghcr.io/8gears/n8n) +
-  # supplementary k8s manifests (oauth2-proxy, ingress, managed cert).
+  # Namespace: fenrir-marketing (isolated from fenrir-analytics/umami).
+  # Two Helm installs:
+  #   1. oci://ghcr.io/8gears/n8n   — n8n app (external chart, n8n-app-values.yaml)
+  #   2. infrastructure/helm/n8n/   — infra chart (oauth2-proxy, cert, BackendConfig, ingress)
   # ============================================================================
 
   marketing-engine:
@@ -799,47 +801,44 @@ jobs:
           location: ${{ secrets.GCP_REGION }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Ensure fenrir-analytics namespace
-        run: kubectl create namespace fenrir-analytics --dry-run=client -o yaml | kubectl apply -f -
+      - uses: azure/setup-helm@v4
+        with:
+          version: 'v3.20.1'
 
       - name: Sync oauth2-proxy secrets
-        # n8n-oauth2-proxy-secrets mirrors umami-oauth2-proxy-secrets (same Google OAuth app).
-        # n8n-oauth2-proxy-emails controls who can access marketing.fenrirledger.com.
         run: |
+          kubectl create namespace fenrir-marketing --dry-run=client -o yaml | kubectl apply -f -
           kubectl create secret generic n8n-oauth2-proxy-secrets \
-            --namespace=fenrir-analytics \
+            --namespace=fenrir-marketing \
             --from-literal=GOOGLE_CLIENT_ID="${{ secrets.ODINS_THRONE_CLIENT_ID }}" \
             --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.ODINS_THRONE_CLIENT_SECRET }}" \
             --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.UMAMI_OAUTH2_PROXY_COOKIE_SECRET }}" \
             --dry-run=client -o yaml | kubectl apply -f -
           kubectl create secret generic n8n-oauth2-proxy-emails \
-            --namespace=fenrir-analytics \
+            --namespace=fenrir-marketing \
             --from-literal=emails.txt="declanshanaghy@gmail.com" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - uses: azure/setup-helm@v4
-        with:
-          version: 'v3.20.1'
-
-      - name: Helm deploy n8n
+      - name: Helm deploy n8n app
         run: |
           helm upgrade --install n8n oci://ghcr.io/8gears/n8n \
-            --namespace=fenrir-analytics \
-            -f infrastructure/k8s/n8n/values.yaml \
+            --namespace=fenrir-marketing \
+            --create-namespace \
+            -f infrastructure/helm/n8n/n8n-app-values.yaml \
             --wait --timeout=5m
 
-      - name: Apply supplementary manifests
-        # ManagedCertificate, oauth2-proxy Deployment+Service, GCE Ingress routing
+      - name: Helm deploy n8n infra
         run: |
-          kubectl apply -f infrastructure/k8s/n8n/managed-certificate.yaml -n fenrir-analytics
-          kubectl apply -f infrastructure/k8s/n8n/oauth2-proxy.yaml        -n fenrir-analytics
-          kubectl apply -f infrastructure/k8s/n8n/ingress-patch.yaml       -n fenrir-analytics
+          helm upgrade --install n8n-infra infrastructure/helm/n8n/ \
+            --namespace=fenrir-marketing \
+            --wait --timeout=3m
 
       - name: Verify rollout
         run: |
           echo "### Marketing Engine Deploy" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n fenrir-analytics -l app.kubernetes.io/name=n8n >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n fenrir-analytics -l app.kubernetes.io/name=n8n-oauth2-proxy >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n fenrir-marketing >> $GITHUB_STEP_SUMMARY
+          kubectl get ingress -n fenrir-marketing >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl rollout status deployment/n8n -n fenrir-analytics --timeout=60s || true
+          kubectl rollout status deployment/n8n -n fenrir-marketing --timeout=60s || true
+          kubectl rollout status deployment/n8n-oauth2-proxy -n fenrir-marketing --timeout=60s || true

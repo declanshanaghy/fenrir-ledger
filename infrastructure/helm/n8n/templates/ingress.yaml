@@ -1,0 +1,52 @@
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: n8n-backend-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: marketing
+    app.kubernetes.io/managed-by: Helm
+spec:
+  healthCheck:
+    checkIntervalSec: {{ .Values.backendConfig.checkIntervalSec }}
+    timeoutSec: {{ .Values.backendConfig.timeoutSec }}
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: {{ .Values.backendConfig.healthCheckPath }}
+    port: {{ .Values.backendConfig.healthCheckPort }}
+  timeoutSec: {{ .Values.backendConfig.timeoutSec }}
+  connectionDraining:
+    drainingTimeoutSec: {{ .Values.backendConfig.connectionDrainingTimeoutSec }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: marketing
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: {{ .Values.staticIpName | quote }}
+    networking.gke.io/managed-certificates: "n8n-cert"
+    kubernetes.io/ingress.allow-http: "true"
+    cloud.google.com/backend-config: '{"default":"n8n-backend-config"}'
+spec:
+  rules:
+    - host: {{ .Values.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: n8n-oauth2-proxy
+                port:
+                  number: 4180

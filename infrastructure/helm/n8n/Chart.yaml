@@ -1,0 +1,11 @@
+apiVersion: v2
+name: n8n-infra
+description: >
+  Fenrir Ledger — Marketing Engine infrastructure.
+  Manages the fenrir-marketing namespace, oauth2-proxy, GKE ManagedCertificate,
+  BackendConfig, and GCE Ingress for marketing.fenrirledger.com.
+  The n8n application is deployed separately via oci://ghcr.io/8gears/n8n
+  using n8n-app-values.yaml in this same directory.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

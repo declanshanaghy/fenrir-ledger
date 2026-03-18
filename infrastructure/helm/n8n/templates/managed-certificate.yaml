@@ -1,0 +1,13 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: n8n-cert
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/part-of: fenrir-ledger
+    app.kubernetes.io/component: marketing
+    app.kubernetes.io/managed-by: Helm
+spec:
+  domains:
+    - {{ .Values.host }}

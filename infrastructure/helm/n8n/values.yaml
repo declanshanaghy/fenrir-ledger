@@ -1,0 +1,31 @@
+# --------------------------------------------------------------------------
+# n8n-infra Helm Chart — Values
+# Namespace: fenrir-marketing
+# --------------------------------------------------------------------------
+
+host: marketing.fenrirledger.com
+staticIpName: marketing-ip
+
+oauth2Proxy:
+  image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+  upstream: http://n8n.fenrir-marketing.svc.cluster.local:80
+  redirectUrl: https://marketing.fenrirledger.com/oauth2/callback
+  cookieDomain: marketing.fenrirledger.com
+  secretsSecretName: n8n-oauth2-proxy-secrets
+  emailsSecretName: n8n-oauth2-proxy-emails
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+      ephemeral-storage: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+      ephemeral-storage: "128Mi"
+
+backendConfig:
+  healthCheckPath: /ping
+  healthCheckPort: 4180
+  checkIntervalSec: 15
+  timeoutSec: 5
+  connectionDrainingTimeoutSec: 60
