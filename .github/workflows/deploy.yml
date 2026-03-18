@@ -840,6 +840,20 @@ jobs:
       - name: Ensure namespace
         run: kubectl create namespace fenrir-marketing --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Sync n8n-secrets
+        run: |
+          kubectl create secret generic n8n-secrets \
+            --namespace=fenrir-marketing \
+            --from-literal=N8N_ENCRYPTION_KEY="${{ secrets.N8N_ENCRYPTION_KEY }}" \
+            --from-literal=ANTHROPIC_API_KEY="${{ secrets.FENRIR_ANTHROPIC_API_KEY }}" \
+            --from-literal=N8N_API_KEY="${{ secrets.N8N_API_KEY }}" \
+            --from-literal=GMAIL_CLIENT_ID="${{ secrets.GMAIL_MCP_CLIENT_ID }}" \
+            --from-literal=GMAIL_CLIENT_SECRET="${{ secrets.GMAIL_MCP_CLIENT_SECRET }}" \
+            --from-literal=N8N_HOST="marketing.fenrirledger.com" \
+            --from-literal=N8N_PORT="5678" \
+            --from-literal=N8N_PROTOCOL="https" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Sync oauth2-proxy secrets
         run: |
           kubectl create secret generic n8n-oauth2-proxy-secrets \

@@ -36,9 +36,12 @@ config:
   N8N_DIAGNOSTICS_ENABLED: "false"
   N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
 
-# Secrets from K8s secret
+# Secrets from K8s secret. Only N8N_ENCRYPTION_KEY comes from the secret.
+# Host/port/protocol are set via config (not secrets — they're not sensitive).
 secretRefs:
   existingSecret: "n8n-secrets"
+  env:
+    N8N_ENCRYPTION_KEY: "n8n-encryption-key-placeholder"
 
 # Persistence for SQLite data
 persistence:

@@ -62,11 +62,11 @@ node "$REPO_ROOT/scripts/sync-secrets.mjs" <flag>
 | GitHub Actions Secrets | — | `gh secret set` |
 | K8s `fenrir-app-secrets` | `fenrir-app` | Deploy workflow + this script |
 | K8s `agent-secrets` | `fenrir-agents` | Deploy workflow + this script |
-| K8s `n8n-secrets` | `fenrir-analytics` | This script (manual trigger by Odin) |
+| K8s `n8n-secrets` | `fenrir-marketing` | This script (manual trigger by Odin) |
 
 ### n8n Secrets Manifest
 
-`n8n-secrets` in `fenrir-analytics` namespace — referenced by n8n Helm values via `extraEnvFrom.secretRef`.
+`n8n-secrets` in `fenrir-marketing` namespace — referenced by n8n Helm values via `secretRefs.existingSecret`.
 
 | Key in K8s Secret | Source var in `.env.local` | Purpose |
 |-------------------|---------------------------|---------|

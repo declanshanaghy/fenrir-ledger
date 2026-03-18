@@ -10,7 +10,7 @@
 //   GitHub Actions       — deploy workflow uses these
 //   K8s agent-secrets    — fenrir-agents namespace (agent sandbox)
 //   K8s app-secrets      — fenrir-app namespace (production app)
-//   K8s n8n-secrets      — fenrir-analytics namespace (n8n automation)
+//   K8s n8n-secrets      — fenrir-marketing namespace (n8n automation)
 //
 // Usage:
 //   node scripts/sync-secrets.mjs              # Audit all
@@ -36,7 +36,7 @@ const ENV_FILE = join(REPO_ROOT, "development", "frontend", ".env.local");
 const SECRETS_FILE = join(REPO_ROOT, ".secrets");
 const K8S_AGENTS_NS = "fenrir-agents";
 const K8S_APP_NS = "fenrir-app";
-const K8S_ANALYTICS_NS = "fenrir-analytics";
+const K8S_MARKETING_NS = "fenrir-marketing";
 
 // --------------------------------------------------------------------------
 // Secret definitions — each secret has exactly ONE destination
@@ -74,13 +74,13 @@ const SECRETS = [
   { name: "gh-token",            dest: "k8s-agents", group: "K8s Agent Secrets", secretsVar: "GITHUB_TOKEN_PAT_FINE_GRAINED",  k8sSecret: "agent-secrets" },
   { name: "claude-oauth-token",  dest: "k8s-agents", group: "K8s Agent Secrets", secretsVar: "CLAUDE_CODE_OAUTH_TOKEN",  k8sSecret: "agent-secrets" },
 
-  // --- K8s n8n-secrets (fenrir-analytics namespace) ---
-  { name: "ANTHROPIC_API_KEY",    dest: "k8s-analytics", group: "K8s n8n Secrets", envVar: "FENRIR_ANTHROPIC_API_KEY", k8sSecret: "n8n-secrets" },
-  { name: "GMAIL_CLIENT_ID",      dest: "k8s-analytics", group: "K8s n8n Secrets", secretsVar: "GMAIL_MCP_CLIENT_ID", k8sSecret: "n8n-secrets" },
-  { name: "GMAIL_CLIENT_SECRET",  dest: "k8s-analytics", group: "K8s n8n Secrets", secretsVar: "GMAIL_MCP_CLIENT_SECRET", k8sSecret: "n8n-secrets" },
-  { name: "GMAIL_REFRESH_TOKEN",  dest: "k8s-analytics", group: "K8s n8n Secrets", secretsVar: "GMAIL_REFRESH_TOKEN", k8sSecret: "n8n-secrets" },
-  { name: "N8N_ENCRYPTION_KEY",   dest: "k8s-analytics", group: "K8s n8n Secrets", secretsVar: "N8N_ENCRYPTION_KEY", k8sSecret: "n8n-secrets" },
-  { name: "N8N_API_KEY",          dest: "k8s-analytics", group: "K8s n8n Secrets", secretsVar: "N8N_API_KEY", k8sSecret: "n8n-secrets" },
+  // --- K8s n8n-secrets (fenrir-marketing namespace) ---
+  { name: "ANTHROPIC_API_KEY",    dest: "k8s-marketing", group: "K8s n8n Secrets", envVar: "FENRIR_ANTHROPIC_API_KEY", k8sSecret: "n8n-secrets" },
+  { name: "GMAIL_CLIENT_ID",      dest: "k8s-marketing", group: "K8s n8n Secrets", secretsVar: "GMAIL_MCP_CLIENT_ID", k8sSecret: "n8n-secrets" },
+  { name: "GMAIL_CLIENT_SECRET",  dest: "k8s-marketing", group: "K8s n8n Secrets", secretsVar: "GMAIL_MCP_CLIENT_SECRET", k8sSecret: "n8n-secrets" },
+  { name: "GMAIL_REFRESH_TOKEN",  dest: "k8s-marketing", group: "K8s n8n Secrets", secretsVar: "GMAIL_REFRESH_TOKEN", k8sSecret: "n8n-secrets" },
+  { name: "N8N_ENCRYPTION_KEY",   dest: "k8s-marketing", group: "K8s n8n Secrets", secretsVar: "N8N_ENCRYPTION_KEY", k8sSecret: "n8n-secrets" },
+  { name: "N8N_API_KEY",          dest: "k8s-marketing", group: "K8s n8n Secrets", secretsVar: "N8N_API_KEY", k8sSecret: "n8n-secrets" },
 
   // --- K8s fenrir-app-secrets (fenrir-app namespace) ---
   { name: "FENRIR_ANTHROPIC_API_KEY",  dest: "k8s-app", group: "K8s App Secrets", envVar: "FENRIR_ANTHROPIC_API_KEY", k8sSecret: "fenrir-app-secrets" },
@@ -149,7 +149,7 @@ function audit(envVars, secretsVars) {
   const ghSecrets = new Set(sh(`gh secret list --repo ${REPO}`).split("\n").map(l => l.split("\t")[0]).filter(Boolean));
   const k8sAgentKeys = getK8sSecretData("agent-secrets", K8S_AGENTS_NS);
   const k8sAppKeys = getK8sSecretData("fenrir-app-secrets", K8S_APP_NS);
-  const k8sAnalyticsKeys = getK8sSecretData("n8n-secrets", K8S_ANALYTICS_NS);
+  const k8sAnalyticsKeys = getK8sSecretData("n8n-secrets", K8S_MARKETING_NS);
 
   const groups = {};
   for (const s of SECRETS) {
@@ -174,7 +174,7 @@ function audit(envVars, secretsVars) {
       } else if (s.dest === "k8s-app") {
         remoteValue = k8sAppKeys[s.name] || null;
         present = !!remoteValue;
-      } else if (s.dest === "k8s-analytics") {
+      } else if (s.dest === "k8s-marketing") {
         remoteValue = k8sAnalyticsKeys[s.name] || null;
         present = !!remoteValue;
       }
@@ -262,9 +262,9 @@ function sync(syncable, envVars, secretsVars) {
     } else if (s.dest === "k8s-app" && !k8sGroupsDone.has("k8s-app")) {
       syncK8sSecret("fenrir-app-secrets", K8S_APP_NS, "k8s-app", envVars, secretsVars);
       k8sGroupsDone.add("k8s-app");
-    } else if (s.dest === "k8s-analytics" && !k8sGroupsDone.has("k8s-analytics")) {
-      syncK8sSecret("n8n-secrets", K8S_ANALYTICS_NS, "k8s-analytics", envVars, secretsVars);
-      k8sGroupsDone.add("k8s-analytics");
+    } else if (s.dest === "k8s-marketing" && !k8sGroupsDone.has("k8s-marketing")) {
+      syncK8sSecret("n8n-secrets", K8S_MARKETING_NS, "k8s-marketing", envVars, secretsVars);
+      k8sGroupsDone.add("k8s-marketing");
     }
   }
 }
@@ -296,7 +296,7 @@ function fixAll(envVars, secretsVars) {
   }
   syncK8sSecret("agent-secrets", K8S_AGENTS_NS, "k8s-agents", envVars, secretsVars);
   syncK8sSecret("fenrir-app-secrets", K8S_APP_NS, "k8s-app", envVars, secretsVars);
-  syncK8sSecret("n8n-secrets", K8S_ANALYTICS_NS, "k8s-analytics", envVars, secretsVars);
+  syncK8sSecret("n8n-secrets", K8S_MARKETING_NS, "k8s-marketing", envVars, secretsVars);
 }
 
 // --------------------------------------------------------------------------
@@ -306,7 +306,7 @@ function verify(envVars, secretsVars) {
   console.log(`\n${C.bold}Verifying K8s secrets match local values...${C.r}`);
   const k8sAgentKeys = getK8sSecretData("agent-secrets", K8S_AGENTS_NS);
   const k8sAppKeys = getK8sSecretData("fenrir-app-secrets", K8S_APP_NS);
-  const k8sAnalyticsKeys = getK8sSecretData("n8n-secrets", K8S_ANALYTICS_NS);
+  const k8sAnalyticsKeys = getK8sSecretData("n8n-secrets", K8S_MARKETING_NS);
   let ok = 0, bad = 0;
 
   for (const s of SECRETS) {
@@ -314,7 +314,7 @@ function verify(envVars, secretsVars) {
     const localVal = resolveLocalValue(s, envVars, secretsVars);
     if (!localVal) continue;
     const remoteVal = s.dest === "k8s-agents" ? k8sAgentKeys[s.name]
-      : s.dest === "k8s-analytics" ? k8sAnalyticsKeys[s.name]
+      : s.dest === "k8s-marketing" ? k8sAnalyticsKeys[s.name]
       : k8sAppKeys[s.name];
     if (!remoteVal) {
       console.log(`  ${C.red}✗${C.r} ${s.name} (${s.k8sSecret}) — missing from K8s`);
@@ -369,9 +369,9 @@ function pushOne(keyName, envVars, secretsVars) {
     } else if (s.dest === "k8s-app" && !k8sGroupsDone.has("k8s-app")) {
       syncK8sSecret("fenrir-app-secrets", K8S_APP_NS, "k8s-app", envVars, secretsVars);
       k8sGroupsDone.add("k8s-app");
-    } else if (s.dest === "k8s-analytics" && !k8sGroupsDone.has("k8s-analytics")) {
-      syncK8sSecret("n8n-secrets", K8S_ANALYTICS_NS, "k8s-analytics", envVars, secretsVars);
-      k8sGroupsDone.add("k8s-analytics");
+    } else if (s.dest === "k8s-marketing" && !k8sGroupsDone.has("k8s-marketing")) {
+      syncK8sSecret("n8n-secrets", K8S_MARKETING_NS, "k8s-marketing", envVars, secretsVars);
+      k8sGroupsDone.add("k8s-marketing");
     }
   }
 
