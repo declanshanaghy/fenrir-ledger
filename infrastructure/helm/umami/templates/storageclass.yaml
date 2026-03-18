@@ -1,0 +1,25 @@
+{{- if .Values.postgresql.enabled }}
+# --------------------------------------------------------------------------
+# StorageClass: standard-rwo-retain
+#
+# Identical to the GKE default standard-rwo StorageClass but with
+# reclaimPolicy: Retain so that the underlying GCE PersistentDisk survives
+# PVC or namespace deletion. This prevents analytics data loss if Helm or
+# kubectl uninstall/delete cascades to the namespace.
+#
+# Issue #1337: previously used standard-rwo (reclaimPolicy: Delete) which
+# caused permanent data loss when the fenrir-bootstrap release was removed.
+# --------------------------------------------------------------------------
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard-rwo-retain
+  labels:
+    {{- include "umami.labels" . | nindent 4 }}
+provisioner: pd.csi.storage.gke.io
+parameters:
+  type: pd-balanced
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+{{- end }}

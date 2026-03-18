@@ -720,6 +720,28 @@ jobs:
             -f ./infrastructure/helm/umami/values-prod.yaml \
             --wait --timeout=5m
 
+      - name: Patch PostgreSQL PV reclaim policy to Retain
+        # Belt-and-suspenders: the StorageClass already sets reclaimPolicy=Retain
+        # for new PVCs. This step also patches any pre-existing PV that was
+        # provisioned with the old standard-rwo (Delete) policy — issue #1337.
+        run: |
+          PV_NAME=$(kubectl get pvc postgresql-data-postgresql-0 \
+            -n fenrir-analytics \
+            -o jsonpath='{.spec.volumeName}' 2>/dev/null || true)
+          if [ -n "$PV_NAME" ]; then
+            CURRENT_POLICY=$(kubectl get pv "$PV_NAME" \
+              -o jsonpath='{.spec.persistentVolumeReclaimPolicy}' 2>/dev/null || true)
+            if [ "$CURRENT_POLICY" != "Retain" ]; then
+              echo "Patching PV $PV_NAME: $CURRENT_POLICY → Retain"
+              kubectl patch pv "$PV_NAME" \
+                -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
+            else
+              echo "PV $PV_NAME already has reclaimPolicy=Retain — no patch needed"
+            fi
+          else
+            echo "PVC postgresql-data-postgresql-0 not found yet — skipping PV patch"
+          fi
+
       - name: Verify rollout
         run: |
           echo "### Analytics Deploy" >> $GITHUB_STEP_SUMMARY

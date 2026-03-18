@@ -169,6 +169,123 @@ curl -sk https://fenrirledger.com/api/health | jq .
 
 ---
 
+---
+
+## PostgreSQL (Umami Analytics) — Backup & Restore
+
+### Background
+
+Issue #1337: the `fenrir-bootstrap` Helm release previously owned the
+`fenrir-analytics` namespace. Uninstalling it cascaded and deleted the PVC
+(reclaim policy was `Delete`), permanently destroying the Umami database.
+
+**Protections now in place:**
+
+1. `fenrir-analytics` namespace created imperatively by CI — never owned by Helm.
+2. StorageClass `standard-rwo-retain` (`reclaimPolicy: Retain`) — disk survives PVC deletion.
+3. CI patches any pre-existing PV to `Retain` on every deploy.
+4. Daily GCP disk snapshots via `infrastructure/postgresql-backup.tf` (03:00 UTC, 7-day retention).
+
+---
+
+### Verify PV reclaim policy
+
+```bash
+PV_NAME=$(kubectl get pvc postgresql-data-postgresql-0 \
+  -n fenrir-analytics -o jsonpath='{.spec.volumeName}')
+kubectl get pv "$PV_NAME" -o jsonpath='{.spec.persistentVolumeReclaimPolicy}'
+# Expected: Retain
+```
+
+If output is `Delete`, patch it manually:
+
+```bash
+kubectl patch pv "$PV_NAME" \
+  -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
+```
+
+---
+
+### Attach GCP snapshot policy (post initial deploy)
+
+After the PV exists, obtain the underlying GCE disk name and apply Terraform:
+
+```bash
+# 1. Get PV name
+PV_NAME=$(kubectl get pvc postgresql-data-postgresql-0 \
+  -n fenrir-analytics -o jsonpath='{.spec.volumeName}')
+
+# 2. Get GCE disk name from the PV (CSI volumeHandle is "projects/.../zones/.../disks/<name>")
+DISK_HANDLE=$(kubectl get pv "$PV_NAME" -o jsonpath='{.spec.csi.volumeHandle}')
+# volumeHandle format: projects/PROJECT/zones/ZONE/disks/DISK_NAME
+DISK_NAME=$(echo "$DISK_HANDLE" | awk -F'/' '{print $NF}')
+echo "Disk name: $DISK_NAME"
+
+# 3. Apply Terraform to attach the snapshot policy
+cd infrastructure
+terraform apply -var="postgresql_disk_name=$DISK_NAME"
+```
+
+---
+
+### Verify snapshot policy is attached
+
+```bash
+DISK_NAME=<disk-name-from-above>
+gcloud compute disks describe "$DISK_NAME" \
+  --zone=us-central1-a \
+  --project=fenrir-ledger-prod \
+  --format='value(resourcePolicies)'
+# Expected: .../resourcePolicies/postgresql-daily-snapshot
+```
+
+---
+
+### Restore from GCP snapshot
+
+```bash
+# 1. List available snapshots
+gcloud compute snapshots list \
+  --filter="sourceDisk~postgresql" \
+  --project=fenrir-ledger-prod \
+  --sort-by="~creationTimestamp" \
+  --limit=10
+
+# 2. Create a new disk from the desired snapshot
+SNAPSHOT_NAME=<snapshot-name>
+gcloud compute disks create postgresql-restored \
+  --source-snapshot="$SNAPSHOT_NAME" \
+  --zone=us-central1-a \
+  --project=fenrir-ledger-prod \
+  --type=pd-balanced
+
+# 3. Scale down PostgreSQL StatefulSet
+kubectl scale statefulset postgresql -n fenrir-analytics --replicas=0
+
+# 4. Delete the existing PVC (PV is Retain — underlying disk is NOT deleted)
+kubectl delete pvc postgresql-data-postgresql-0 -n fenrir-analytics
+
+# 5. Manually create a PV pointing to the restored disk, then a PVC binding to it.
+#    Patch the PV claimRef to point to the new PVC, then re-scale:
+kubectl scale statefulset postgresql -n fenrir-analytics --replicas=1
+
+# 6. Verify
+kubectl get pods -n fenrir-analytics
+kubectl logs statefulset/postgresql -n fenrir-analytics --tail=20
+```
+
+---
+
+### Re-create Umami admin account (post data-loss recovery only)
+
+If Umami data was lost and the database is empty:
+
+1. Visit https://analytics.fenrirledger.com/setup
+2. Create the admin account
+3. Re-add tracked sites and copy the tracking scripts
+
+---
+
 ## Troubleshooting
 
 | Symptom | Check |

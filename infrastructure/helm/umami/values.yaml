@@ -86,7 +86,10 @@ postgresql:
   persistence:
     enabled: true
     size: 1Gi
-    storageClass: standard-rwo
+    # standard-rwo-retain is defined in templates/storageclass.yaml.
+    # It matches standard-rwo (pd-balanced) but sets reclaimPolicy: Retain so
+    # the underlying GCE disk survives PVC or namespace deletion (issue #1337).
+    storageClass: standard-rwo-retain
     mountPath: /var/lib/postgresql/data
 
   resources:

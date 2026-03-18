@@ -60,7 +60,8 @@ postgresql:
   persistence:
     enabled: true
     size: 1Gi
-    storageClass: standard-rwo
+    # standard-rwo-retain: reclaimPolicy=Retain — disk survives PVC/NS deletion (issue #1337)
+    storageClass: standard-rwo-retain
 
   resources:
     requests:
