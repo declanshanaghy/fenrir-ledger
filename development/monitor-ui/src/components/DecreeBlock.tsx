@@ -62,8 +62,8 @@ function parseCheckLines(text: string): Array<{ name: string; value: string }> {
   const checkRe = /\b(tsc|build|vitest|playwright|owasp|requireauth|secrets|wireframes|interactions|accessibility|product-brief|acceptance-criteria|backlog)\b[:\s]+([^\n║╝╚╣]+)/gi;
   let m: RegExpExecArray | null;
   while ((m = checkRe.exec(text)) !== null) {
-    const name = m[1].toLowerCase();
-    let rawVal = m[2].trim();
+    const name = m[1]!.toLowerCase();
+    let rawVal = m[2]!.trim();
     // Strip trailing box chars
     rawVal = rawVal.replace(/[║╝╚╣═╗╔╠╬╩╦╟─│┌┐└┘├┤┬┴┼]+/g, "").trim();
     // Normalise emoji indicators to text
@@ -90,11 +90,11 @@ function parseBoxDrawingDecree(text: string): ParsedDecree | null {
 
   // Verdict — strip emoji, normalise
   const verdictM = text.match(/Verdict:?\s*([\w❌✅🔴🟢 ]+)/i);
-  if (verdictM) verdict = normaliseVerdict(verdictM[1]);
+  if (verdictM) verdict = normaliseVerdict(verdictM[1] ?? "");
 
   // PR
   const prM = text.match(/PR:?\s*(https:\/\/\S+|#\d+)/i);
-  if (prM) pr = prM[1];
+  if (prM) pr = prM[1] ?? null;
 
   // Agent from box title
   const agentKey = extractAgentFromBoxTitle(text);
@@ -124,11 +124,11 @@ function parseFreeformDecree(text: string): ParsedDecree | null {
 
   // Verdict — handle bold markdown **PASS**, plain text, etc.
   const verdictM = text.match(/(?:VERDICT|Verdict|STATUS|Status):?\s*\*{0,2}([\w❌✅🔴🟢 ]+)\*{0,2}/i);
-  if (verdictM) verdict = normaliseVerdict(verdictM[1]);
+  if (verdictM) verdict = normaliseVerdict(verdictM[1] ?? "");
 
   // PR
   const prM = text.match(/PR:?\s*(https:\/\/\S+|#\d+)/i);
-  if (prM) pr = prM[1];
+  if (prM) pr = prM[1] ?? null;
 
   // Agent
   const agentKey = extractAgentFromBoxTitle(text);
