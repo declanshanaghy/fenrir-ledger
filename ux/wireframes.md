@@ -157,6 +157,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Chrome — User Menu: Theme Position Reorder (Issue #1483)
+
+| File | Description |
+|------|-------------|
+| [wireframes/chrome/user-menu-theme-position.html](wireframes/chrome/user-menu-theme-position.html) | User dropdown menu reorder — move Theme from position 2 to 2nd-last (before Sign out). 9 sections: (A) current vs expected order side-by-side comparison with position badges, (B) desktop dropdown anatomy in expected order (256px, ProfileDropdown component), (C) mobile 375px layout in expected order, (D) item-by-item change summary table (old position → new position for all 6 items), (E) interaction flow diagram (keyboard/arrow nav, Escape, click-outside unchanged), (F) entitlement variant table (Karl/Trial/Thrall — Theme ungated, reorder applies uniformly), (G) WCAG 2.1 AA accessibility checklist, (H) acceptance criteria mapping (AC1: Theme 2nd-last, AC2: all other items retain relative order, AC3: no visual regressions desktop+mobile), (I) implementation notes for FiremanDecko (single JSX reorder in ProfileDropdown, LedgerTopBar.tsx ~line 270, test files to update). |
+
+---
+
 ## Dashboard Tab Headers, Tooltips, and Empty States
 
 | File | Description |
