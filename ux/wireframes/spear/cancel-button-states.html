@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Odin's Spear: Cancel Button States — Issue #1475</title>
+  <style>
+    /* ── Reset / base ───────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'JetBrains Mono', 'Fira Mono', 'Courier New', monospace;
+      font-size: 14px;
+      background: #0a0a0c;
+      color: #c8c0b4;
+      padding: 2rem;
+      min-width: 375px;
+    }
+
+    /* ── Page scaffolding ───────────────────────────────── */
+    h1 { font-size: 1rem; font-weight: 700; letter-spacing: 0.08em; color: #e8dcc8; margin-bottom: 0.25rem; }
+    .meta { font-size: 0.7rem; color: #706860; margin-bottom: 2.5rem; }
+    h2 { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #a89880; margin: 2.5rem 0 1rem; border-bottom: 1px solid #2a2820; padding-bottom: 0.4rem; }
+    h3 { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #786858; margin: 1.5rem 0 0.75rem; }
+
+    .label {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #504840;
+      margin-bottom: 0.5rem;
+    }
+
+    .state-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+
+    .state-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .divider { height: 1px; background: #1e1c18; margin: 2rem 0; }
+
+    /* ── Annotation callouts ────────────────────────────── */
+    .annotation {
+      font-size: 0.65rem;
+      color: #706050;
+      font-style: italic;
+      margin-top: 0.35rem;
+      max-width: 160px;
+    }
+
+    /* ── SECTION A: Job card (session list row) ─────────── */
+
+    /* Base card frame */
+    .card-frame {
+      width: 260px;
+      background: #111012;
+      border: 1px solid #2a2820;
+      border-radius: 4px;
+      padding: 0.6rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .card-frame.active { border-color: #4a4030; background: #16141a; }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .card-avatar-placeholder {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 1px solid #2a2820;
+      background: #1a1818;
+      flex-shrink: 0;
+    }
+    .card-issue-title {
+      font-size: 0.78rem;
+      color: #c8c0b0;
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Before: icon-only (current state) */
+    .cancel-icon-only {
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      margin-left: auto;
+      color: #e0a020;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: default; /* BUG: no pointer */
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    /* ── After: styled button */
+    .cancel-btn {
+      font-size: 0.72rem;
+      flex-shrink: 0;
+      margin-left: auto;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      border: 1px solid #c05020;
+      color: #e0a020;
+      background: transparent;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .cancel-btn.hover {
+      background: rgba(192, 80, 32, 0.18);
+      border-color: #e06030;
+      color: #f0c040;
+      animation: none;
+    }
+    .cancel-btn.focus {
+      outline: 2px solid #c8a030;
+      outline-offset: 2px;
+      animation: none;
+    }
+    .cancel-btn.active {
+      background: rgba(192, 80, 32, 0.35);
+      border-color: #c05020;
+      color: #e0a020;
+      transform: scale(0.96);
+      animation: none;
+    }
+
+    .card-meta-row {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.65rem;
+      color: #706050;
+      flex-wrap: wrap;
+    }
+    .agent-badge { color: #c8a030; }
+
+    /* ── SECTION B: Session header ───────────────────────── */
+
+    .header-frame {
+      width: 100%;
+      max-width: 720px;
+      background: #111012;
+      border: 1px solid #2a2820;
+      border-radius: 4px 4px 0 0;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .session-title-block { flex: 1; min-width: 0; }
+    .session-title-primary {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #e8dcc8;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    .session-meta-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+      flex-wrap: wrap;
+    }
+    .session-agent-badge { font-size: 0.65rem; color: #c8a030; }
+    .session-step-tag { font-size: 0.65rem; color: #706050; }
+    .session-id-chip {
+      font-size: 0.6rem;
+      color: #504840;
+      border: 1px solid #2a2820;
+      border-radius: 2px;
+      padding: 0.05rem 0.3rem;
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Before: badge-reset (current state) */
+    .job-status-badge-reset {
+      /* class="job-status-badge pulse" but inline style kills the badge: */
+      font-family: inherit;
+      font-size: 0.65rem;
+      color: #e0a020;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: default; /* BUG: no pointer */
+      white-space: nowrap;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    /* ── After: full badge button */
+    .job-status-badge-btn {
+      font-family: inherit;
+      font-size: 0.65rem;
+      color: #e0a020;
+      background: transparent;
+      border: 1px solid #c05020;
+      border-radius: 3px;
+      padding: 0.15rem 0.5rem;
+      white-space: nowrap;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .job-status-badge-btn.hover {
+      background: rgba(192, 80, 32, 0.18);
+      border-color: #e06030;
+      color: #f0c040;
+      animation: none;
+    }
+    .job-status-badge-btn.focus {
+      outline: 2px solid #c8a030;
+      outline-offset: 2px;
+      animation: none;
+    }
+    .job-status-badge-btn.active {
+      background: rgba(192, 80, 32, 0.35);
+      border-color: #c05020;
+      color: #e0a020;
+      transform: scale(0.97);
+      animation: none;
+    }
+    .job-status-badge-btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: #3a3028;
+      animation: none;
+    }
+
+    /* Copy/pin buttons (unchanged reference) */
+    .pin-btn {
+      font-size: 0.65rem; color: #504840; background: none; border: none;
+      cursor: pointer; padding: 0.2rem; border-radius: 2px;
+    }
+
+    /* ── Pulse animation ─────────────────────────────────── */
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    /* ── Colour spec table ───────────────────────────────── */
+    table { border-collapse: collapse; font-size: 0.65rem; width: 100%; max-width: 640px; margin-top: 0.5rem; }
+    th { text-align: left; padding: 0.3rem 0.5rem; background: #16141a; color: #a89880; font-weight: 700; border: 1px solid #2a2820; letter-spacing: 0.06em; }
+    td { padding: 0.3rem 0.5rem; border: 1px solid #1e1c18; color: #c8c0b0; }
+    td:first-child { color: #a89880; font-weight: 600; }
+    tr:nth-child(even) td { background: #0e0d10; }
+
+    .swatch {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      vertical-align: middle;
+      margin-right: 0.3rem;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* ── Annotation column ───────────────────────────────── */
+    .note-block {
+      background: #14121a;
+      border-left: 2px solid #4a4030;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.65rem;
+      color: #907850;
+      margin-top: 0.75rem;
+      max-width: 640px;
+      line-height: 1.6;
+    }
+    .note-block strong { color: #c0a060; }
+
+  </style>
+</head>
+<body>
+
+  <h1>Wireframe — Odin's Spear: Cancel Button States</h1>
+  <div class="meta">Issue #1475 · monitor-ui · Luna UX Design · 2026-03-19</div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION A: JOB CARD (SESSION LIST ROW)
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2>A — Session List Row (JobCard)</h2>
+
+  <h3>A1 — Before (current): icon-only, no pointer, no chrome</h3>
+  <div class="state-grid">
+    <div class="state-block">
+      <div class="label">Normal (current)</div>
+      <div class="card-frame">
+        <div class="card-top">
+          <div class="card-avatar-placeholder"></div>
+          <span class="card-issue-title">#1475 – spear cancel button styling</span>
+          <button class="cancel-icon-only" tabindex="-1" aria-label="Cancel">⚡</button>
+        </div>
+        <div class="card-meta-row">
+          <span class="agent-badge">Luna</span>
+          <span>Step 1</span>
+          <span style="color:#e0a020">Running</span>
+        </div>
+      </div>
+      <div class="annotation">cursor: default — not clickable-looking. No border, no padding.</div>
+    </div>
+  </div>
+
+  <h3>A2 — After (proposed): styled cancel button, all states</h3>
+  <div class="state-grid">
+    <div class="state-block">
+      <div class="label">Normal</div>
+      <div class="card-frame">
+        <div class="card-top">
+          <div class="card-avatar-placeholder"></div>
+          <span class="card-issue-title">#1475 – spear cancel button styling</span>
+          <button class="cancel-btn">⚡ Running</button>
+        </div>
+        <div class="card-meta-row">
+          <span class="agent-badge">Luna</span>
+          <span>Step 1</span>
+        </div>
+      </div>
+      <div class="annotation">Border, padding, text label. Pulsing animation. cursor: pointer.</div>
+    </div>
+
+    <div class="state-block">
+      <div class="label">Hover</div>
+      <div class="card-frame active">
+        <div class="card-top">
+          <div class="card-avatar-placeholder"></div>
+          <span class="card-issue-title">#1475 – spear cancel button styling</span>
+          <button class="cancel-btn hover">⚡ Running</button>
+        </div>
+        <div class="card-meta-row">
+          <span class="agent-badge">Luna</span>
+          <span>Step 1</span>
+        </div>
+      </div>
+      <div class="annotation">Background fill (warm amber/red tint). Border brightens. Pulse pauses.</div>
+    </div>
+
+    <div class="state-block">
+      <div class="label">Focus (keyboard)</div>
+      <div class="card-frame">
+        <div class="card-top">
+          <div class="card-avatar-placeholder"></div>
+          <span class="card-issue-title">#1475 – spear cancel button styling</span>
+          <button class="cancel-btn focus">⚡ Running</button>
+        </div>
+        <div class="card-meta-row">
+          <span class="agent-badge">Luna</span>
+          <span>Step 1</span>
+        </div>
+      </div>
+      <div class="annotation">2px gold outline, 2px offset. Visible on Tab navigation.</div>
+    </div>
+
+    <div class="state-block">
+      <div class="label">Active (press)</div>
+      <div class="card-frame">
+        <div class="card-top">
+          <div class="card-avatar-placeholder"></div>
+          <span class="card-issue-title">#1475 – spear cancel button styling</span>
+          <button class="cancel-btn active">⚡ Running</button>
+        </div>
+        <div class="card-meta-row">
+          <span class="agent-badge">Luna</span>
+          <span>Step 1</span>
+        </div>
+      </div>
+      <div class="annotation">Deeper fill. scale(0.96) depression. Releases → RagnarökDialog opens.</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION B: SESSION HEADER (LOGVIEWER)
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2>B — Session Detail Header (LogViewer → SessionHeader)</h2>
+
+  <h3>B1 — Before (current): badge stripped to plain text via inline styles</h3>
+  <div class="header-frame" style="margin-bottom:0.5rem">
+    <div class="session-title-block">
+      <span class="session-title-primary">Issue #1475 – spear cancel button styling – Step 1</span>
+      <div class="session-meta-row">
+        <span class="session-agent-badge">Luna</span>
+        <span class="session-step-tag">Step 1</span>
+        <span class="session-id-chip"><span style="color:#403830">Session:</span> ab12cd34…</span>
+      </div>
+    </div>
+    <div class="header-badges">
+      <!-- Current: background:none, border:none, padding:0 override the badge -->
+      <button class="job-status-badge-reset" tabindex="-1">⚡ Running</button>
+      <button class="pin-btn">📌</button>
+    </div>
+  </div>
+  <div class="annotation" style="margin-bottom:1.5rem">Inline style strips border + padding. cursor: default. Looks like plain text, not a button.</div>
+
+  <h3>B2 — After (proposed): full badge button, all states</h3>
+  <div class="state-grid" style="flex-direction:column;gap:1rem;">
+
+    <div class="state-block" style="width:100%">
+      <div class="label">Normal</div>
+      <div class="header-frame">
+        <div class="session-title-block">
+          <span class="session-title-primary">Issue #1475 – spear cancel button styling – Step 1</span>
+          <div class="session-meta-row">
+            <span class="session-agent-badge">Luna</span>
+            <span class="session-step-tag">Step 1</span>
+            <span class="session-id-chip"><span style="color:#403830">Session:</span> ab12cd34…</span>
+          </div>
+        </div>
+        <div class="header-badges">
+          <button class="job-status-badge-btn">⚡ Running</button>
+          <button class="pin-btn">📌</button>
+        </div>
+      </div>
+      <div class="annotation">Badge chrome restored. Border visible. cursor: pointer. Pulsing. Title tooltip: "Click to cancel this job".</div>
+    </div>
+
+    <div class="state-block" style="width:100%">
+      <div class="label">Hover</div>
+      <div class="header-frame">
+        <div class="session-title-block">
+          <span class="session-title-primary">Issue #1475 – spear cancel button styling – Step 1</span>
+          <div class="session-meta-row">
+            <span class="session-agent-badge">Luna</span>
+            <span class="session-step-tag">Step 1</span>
+            <span class="session-id-chip"><span style="color:#403830">Session:</span> ab12cd34…</span>
+          </div>
+        </div>
+        <div class="header-badges">
+          <button class="job-status-badge-btn hover">⚡ Running</button>
+          <button class="pin-btn">📌</button>
+        </div>
+      </div>
+      <div class="annotation">Warm fill. Border brightens. Pulse pauses. Distinct from non-interactive badge spans.</div>
+    </div>
+
+    <div class="state-block" style="width:100%">
+      <div class="label">Focus (keyboard Tab)</div>
+      <div class="header-frame">
+        <div class="session-title-block">
+          <span class="session-title-primary">Issue #1475 – spear cancel button styling – Step 1</span>
+          <div class="session-meta-row">
+            <span class="session-agent-badge">Luna</span>
+            <span class="session-step-tag">Step 1</span>
+            <span class="session-id-chip"><span style="color:#403830">Session:</span> ab12cd34…</span>
+          </div>
+        </div>
+        <div class="header-badges">
+          <button class="job-status-badge-btn focus">⚡ Running</button>
+          <button class="pin-btn">📌</button>
+        </div>
+      </div>
+      <div class="annotation">2px gold outline, 2px offset. Enter/Space triggers cancel dialog.</div>
+    </div>
+
+    <div class="state-block" style="width:100%">
+      <div class="label">Active (mousedown / Space)</div>
+      <div class="header-frame">
+        <div class="session-title-block">
+          <span class="session-title-primary">Issue #1475 – spear cancel button styling – Step 1</span>
+          <div class="session-meta-row">
+            <span class="session-agent-badge">Luna</span>
+            <span class="session-step-tag">Step 1</span>
+            <span class="session-id-chip"><span style="color:#403830">Session:</span> ab12cd34…</span>
+          </div>
+        </div>
+        <div class="header-badges">
+          <button class="job-status-badge-btn active">⚡ Running</button>
+          <button class="pin-btn">📌</button>
+        </div>
+      </div>
+      <div class="annotation">Deeper background. Slight scale reduction. On release: RagnarökDialog opens.</div>
+    </div>
+
+    <div class="state-block" style="width:100%">
+      <div class="label">Disabled (non-running job — badge, not button)</div>
+      <div class="header-frame">
+        <div class="session-title-block">
+          <span class="session-title-primary">Issue #1475 – spear cancel button styling – Step 1</span>
+          <div class="session-meta-row">
+            <span class="session-agent-badge">Luna</span>
+            <span class="session-step-tag">Step 1</span>
+            <span class="session-id-chip"><span style="color:#403830">Session:</span> ab12cd34…</span>
+          </div>
+        </div>
+        <div class="header-badges">
+          <!-- Non-running: render as span, not button -->
+          <span class="job-status-badge-btn disabled" role="status" aria-label="Job status: Completed">✓ Completed</span>
+          <button class="pin-btn">📌</button>
+        </div>
+      </div>
+      <div class="annotation">Non-running: rendered as &lt;span&gt; not &lt;button&gt;. No hover. cursor: default. Existing behaviour preserved.</div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       COLOUR / TOKEN REFERENCE
+  ═══════════════════════════════════════════════════════════════ -->
+  <h2>C — Button Token Reference</h2>
+  <p class="label" style="margin-bottom:0.75rem">CSS custom properties to define (or reuse existing vars)</p>
+  <table>
+    <tr>
+      <th>Token</th>
+      <th>Value (suggested)</th>
+      <th>Used on</th>
+    </tr>
+    <tr>
+      <td>--cancel-border</td>
+      <td><span class="swatch" style="background:#c05020"></span>#c05020 (warm red-orange)</td>
+      <td>border-color, normal state</td>
+    </tr>
+    <tr>
+      <td>--cancel-border-hover</td>
+      <td><span class="swatch" style="background:#e06030"></span>#e06030 (brighter)</td>
+      <td>border-color, hover state</td>
+    </tr>
+    <tr>
+      <td>--cancel-bg-hover</td>
+      <td><span class="swatch" style="background:rgba(192,80,32,0.18)"></span>rgba(192,80,32,0.18)</td>
+      <td>background, hover state</td>
+    </tr>
+    <tr>
+      <td>--cancel-bg-active</td>
+      <td><span class="swatch" style="background:rgba(192,80,32,0.35)"></span>rgba(192,80,32,0.35)</td>
+      <td>background, active state</td>
+    </tr>
+    <tr>
+      <td>--cancel-color</td>
+      <td><span class="swatch" style="background:#e0a020"></span>#e0a020 (running amber)</td>
+      <td>text/icon color, all states</td>
+    </tr>
+    <tr>
+      <td>--cancel-color-hover</td>
+      <td><span class="swatch" style="background:#f0c040"></span>#f0c040 (brighter amber)</td>
+      <td>text/icon color, hover state</td>
+    </tr>
+    <tr>
+      <td>--cancel-focus-ring</td>
+      <td><span class="swatch" style="background:#c8a030"></span>var(--gold) / #c8a030</td>
+      <td>outline, focus-visible</td>
+    </tr>
+  </table>
+
+  <div class="note-block">
+    <strong>Sizing note:</strong> Padding 0.15rem 0.45rem (card row) / 0.15rem 0.5rem (header badge) maintains existing height rhythm.
+    The card row variant drops the text label at viewport &lt;480px (icon only, but still button-chrome visible).
+    The header badge always shows text label — it is the primary cancel affordance in the detail view.
+  </div>
+
+</body>
+</html>
