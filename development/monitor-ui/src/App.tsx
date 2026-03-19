@@ -336,6 +336,7 @@ export function App() {
             replayedFromCache={replayedFromCache}
             isConnecting={isConnecting}
             isPodStarting={isPodStarting}
+            onCancelJob={handleOpenCancelDialog}
             onSetSpeed={(speed) => {
               if (activeSessionId) {
                 send({ type: "set-speed", sessionId: activeSessionId, speed });
