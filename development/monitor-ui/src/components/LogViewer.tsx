@@ -92,9 +92,10 @@ interface SessionHeaderProps {
   onTogglePin?: () => void;
   showPin?: boolean;
   replayedFromCache?: boolean;
+  onCancelJob?: (sessionId: string) => void;
 }
 
-function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, replayedFromCache = false }: SessionHeaderProps) {
+function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, replayedFromCache = false, onCancelJob }: SessionHeaderProps) {
   const displayTitle = resolveSessionTitle(job);
   // Truncate session ID to last 8 chars for display
   const shortId = job.sessionId.length > 8
@@ -138,14 +139,26 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
         </div>
       </div>
       <span className="header-badges">
-        <span
-          className={`job-status-badge${job.status === "running" ? " pulse" : ""}`}
-          style={{ color: STATUS_COLORS[job.status] }}
-          title={`Job status: ${job.status}`}
-          aria-label={`Job status: ${STATUS_LABELS[job.status]}`}
-        >
-          {STATUS_ICONS[job.status]} {STATUS_LABELS[job.status]}
-        </span>
+        {job.status === "running" && onCancelJob ? (
+          <button
+            className="job-status-badge pulse"
+            style={{ color: STATUS_COLORS[job.status], cursor: "pointer", background: "none", border: "none", font: "inherit", padding: 0 }}
+            title="Click to cancel this job"
+            aria-label="Cancel running job"
+            onClick={() => onCancelJob(job.sessionId)}
+          >
+            {STATUS_ICONS[job.status]} {STATUS_LABELS[job.status]}
+          </button>
+        ) : (
+          <span
+            className={`job-status-badge${job.status === "running" ? " pulse" : ""}`}
+            style={{ color: STATUS_COLORS[job.status] }}
+            title={`Job status: ${job.status}`}
+            aria-label={`Job status: ${STATUS_LABELS[job.status]}`}
+          >
+            {STATUS_ICONS[job.status]} {STATUS_LABELS[job.status]}
+          </span>
+        )}
         {replayedFromCache && (
           <span
             className="ws-badge replayed-cache"
@@ -204,9 +217,10 @@ interface Props {
   replayedFromCache?: boolean;
   isConnecting?: boolean;
   isPodStarting?: boolean;
+  onCancelJob?: (sessionId: string) => void;
 }
 
-export function LogViewer({ entries, activeJob, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick, replayedFromCache, isConnecting, isPodStarting }: Props) {
+export function LogViewer({ entries, activeJob, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick, replayedFromCache, isConnecting, isPodStarting, onCancelJob }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -307,6 +321,7 @@ export function LogViewer({ entries, activeJob, isFixture, isTtlExpired, isNodeU
           job={activeJob}
           isPinned={isPinned}
           onTogglePin={onTogglePin}
+          onCancelJob={onCancelJob}
         />
         <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} />
       </main>
@@ -322,6 +337,7 @@ export function LogViewer({ entries, activeJob, isFixture, isTtlExpired, isNodeU
           isPinned={isPinned}
           onTogglePin={onTogglePin}
           showPin={false}
+          onCancelJob={onCancelJob}
         />
         <NorseErrorTablet sessionId={activeJob.sessionId} message={streamError} variant="node-unreachable" />
       </main>
@@ -335,6 +351,7 @@ export function LogViewer({ entries, activeJob, isFixture, isTtlExpired, isNodeU
         isPinned={isPinned}
         onTogglePin={onTogglePin}
         replayedFromCache={replayedFromCache}
+        onCancelJob={onCancelJob}
       />
       <div
         className="log-terminal"
