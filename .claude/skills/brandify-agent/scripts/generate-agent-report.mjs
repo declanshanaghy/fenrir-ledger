@@ -13,7 +13,7 @@
  * --regen-assets regenerates shared CSS/JS files in the output directory.
  */
 
-import { readFileSync, writeFileSync, readdirSync, statSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync, statSync, unlinkSync } from "fs";
 import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
 import { createHecklerEngine, AGENT_NAMES } from "../../../../infrastructure/k8s/agents/mayo-heckler.mjs";
@@ -1137,15 +1137,15 @@ if (publishMode) {
   }
 
   function mdxRenderToolInput(tool) {
-    if (tool.name === "Bash") return mdxEsc(sanitizeText(tool.input?.command || ""));
+    if (tool.name === "Bash") return sanitizeText(tool.input?.command || "");
     if (tool.name === "Edit") {
       const parts = [];
       if (tool.input?.file_path) parts.push(`File: ${shortPath(tool.input.file_path)}`);
       if (tool.input?.old_string) parts.push(`--- old\n${tool.input.old_string.slice(0, 500)}`);
       if (tool.input?.new_string) parts.push(`+++ new\n${tool.input.new_string.slice(0, 500)}`);
-      return mdxEsc(sanitizeText(parts.join("\n\n")));
+      return sanitizeText(parts.join("\n\n"));
     }
-    return mdxEsc(sanitizeText(JSON.stringify(tool.input, null, 2)));
+    return sanitizeText(JSON.stringify(tool.input, null, 2));
   }
 
   function mdxRenderToolOutput(tool) {
@@ -1153,7 +1153,7 @@ if (publishMode) {
     const raw = typeof content === "string" ? content : JSON.stringify(content, null, 2);
     // Sanitize before truncating so the truncation limit applies to already-cleaned text
     const sanitized = sanitizeToolOutput(raw, 800);
-    return mdxEsc(sanitized);
+    return sanitized;
   }
 
   // ---------------------------------------------------------------------------
@@ -1298,7 +1298,7 @@ ${decreeBody}
 <span className="heckle-name">${mdxEsc(event.name)}</span>
 <img className="heckle-avatar" src="${avatarSrc}" alt="${mdxEsc(event.name)}" loading="lazy" />
 </div>
-<div className="heckle-text">${mdxEsc(event.text)}</div>
+<div className="heckle-text">{${JSON.stringify(event.text)}}</div>
 </div>\n`;
       } else if (event.type === "mayo-comeback") {
         // Left-aligned Norse agent comeback bubble
@@ -1309,7 +1309,7 @@ ${decreeBody}
 <img className="heckle-avatar" src="${avatarSrc}" alt="${mdxEsc(event.name)}" loading="lazy" />
 <span className="heckle-name">${mdxEsc(aTitle)}</span>
 </div>
-<div className="heckle-text">${mdxEsc(event.text)}</div>
+<div className="heckle-text">{${JSON.stringify(event.text)}}</div>
 </div>\n`;
       } else if (event.type === "mayo-entrance") {
         // Heckler entrance announcement with name + avatar
@@ -1320,11 +1320,11 @@ ${decreeBody}
 <span className="heckle-name">${mdxEsc(eName)}</span>
 <img className="heckle-avatar" src="${avatarSrc}" alt="${mdxEsc(eName)}" loading="lazy" />
 </div>
-<div className="heckle-text">${mdxEsc(event.text)}</div>
+<div className="heckle-text">{${JSON.stringify(event.text)}}</div>
 </div>\n`;
       } else if (event.type === "mayo-explosion") {
         // Full-width explosion with Norse tremble animation (::before/::after rune rows via CSS)
-        out += `<div className="heckle heckle-explosion">⚡ ${mdxEsc(event.text)} ⚡</div>\n`;
+        out += `<div className="heckle heckle-explosion">⚡ {${JSON.stringify(event.text)}} ⚡</div>\n`;
       }
     }
     return out;
@@ -1339,8 +1339,8 @@ ${decreeBody}
 <span className="tool-input-preview">${mdxToolInputPreview(tool)}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">${mdxRenderToolInput(tool)}</pre>
-<pre className="tool-output${tool.is_error ? " error" : ""}">${mdxRenderToolOutput(tool)}</pre>
+<pre className="tool-input">{${JSON.stringify(mdxRenderToolInput(tool))}}</pre>
+<pre className="tool-output${tool.is_error ? " error" : ""}">{${JSON.stringify(mdxRenderToolOutput(tool))}}</pre>
 </div>
 </details>\n`;
   }
@@ -1408,7 +1408,7 @@ ${mergedTools.map(t => mdxRenderToolBlock(t)).join("")}</div>
     // Normal turn with text content — render as left-aligned chat bubble + toolbox
     const hasError = turn.tools.some(t => t.is_error);
     const summary = turn.texts.length
-      ? mdxEsc(turn.texts[0].slice(0, 120))
+      ? `{${JSON.stringify(turn.texts[0].slice(0, 120))}}`
       : turn.tools.map(t => t.name).join(", ");
     const toolBadges = turn.tools
       .map(t => `<span className="tool-badge ${toolBadgeClass(t.name)}">${mdxEsc(t.name)}</span>`)
@@ -1431,11 +1431,11 @@ ${mergedTools.map(t => mdxRenderToolBlock(t)).join("")}</div>
 `;
 
     for (const thinking of turn.thinking) {
-      turnsMarkup += `<div className="thinking">${mdxEsc(thinking.slice(0, 1000))}</div>\n`;
+      turnsMarkup += `<div className="thinking">{${JSON.stringify(thinking.slice(0, 1000))}}</div>\n`;
     }
     for (const text of turn.texts) {
       // Agent text blocks render as left-aligned 60% chat bubbles
-      turnsMarkup += `<div className="text-block">${mdxEsc(text)}</div>\n`;
+      turnsMarkup += `<div className="text-block">{${JSON.stringify(text)}}</div>\n`;
     }
     if (turn.tools.length > 0) {
       turnsMarkup += `<div className="toolbox">\n${turn.tools.map(t => mdxRenderToolBlock(t)).join("")}</div>\n`;
@@ -1480,13 +1480,13 @@ ${[...filesModified].map(f => `<li className="file-mod"><span className="icon">~
     commitsMarkup = `
 <div className="changes-summary">
 <h2>Commits</h2>
-${commits.map(c => `<div className="commit-item"><span className="msg">${mdxEsc(c)}</span></div>`).join("\n")}
+${commits.map(c => `<div className="commit-item"><span className="msg">{${JSON.stringify(c)}}</span></div>`).join("\n")}
 </div>`;
   }
 
   // Victory heckle — full-width explosion
   const mdxVictoryHeckle = hecklerEngine.victoryHeckle();
-  const victoryHeckleMarkup = `<div className="heckle heckle-explosion">⚡ ${mdxEsc(mdxVictoryHeckle.text)} ⚡</div>`;
+  const victoryHeckleMarkup = `<div className="heckle heckle-explosion">⚡ {${JSON.stringify(mdxVictoryHeckle.text)}} ⚡</div>`;
 
   // Verdict markup — uses chronicle.css .verdict classes
   let verdictMarkup = "";
@@ -1494,7 +1494,7 @@ ${commits.map(c => `<div className="commit-item"><span className="msg">${mdxEsc(
     verdictMarkup = `
 <div className="verdict ${verdict.pass ? "pass" : "fail"}">
 <h2>ᛏ ${verdict.pass ? "PASS" : "FAIL"} — QA Verdict</h2>
-<pre>${mdxEsc(verdict.text)}</pre>
+<pre>{${JSON.stringify(verdict.text)}}</pre>
 </div>`;
   }
 
@@ -1660,6 +1660,25 @@ ${mdxCallbackMarkup}
   // Final sanitization pass — catches anything not individually sanitized
   const sanitizedMdx = sanitizeText(mdx);
   writeFileSync(mdxFile, sanitizedMdx);
+
+  // ── Post-generation MDX compile validation ────────────────────────────────
+  // Attempt to compile the generated MDX using @mdx-js/mdx. If it fails,
+  // delete the bad file and exit non-zero to prevent silent bad publishes.
+  try {
+    const mdxJsIndexPath = join(
+      __scriptDir,
+      "../../../../development/frontend/node_modules/@mdx-js/mdx/index.js"
+    );
+    const { compile: mdxCompile } = await import(mdxJsIndexPath);
+    await mdxCompile(sanitizedMdx, { format: "mdx" });
+    console.log(`[ok] MDX compile validation passed`);
+  } catch (validationErr) {
+    console.error(`[FAIL] Generated MDX failed to compile — deleting bad file: ${mdxFile}`);
+    console.error(validationErr.message);
+    try { unlinkSync(mdxFile); } catch { /* ignore */ }
+    process.exit(1);
+  }
+
   console.log(`[ok] chronicle published: ${mdxFile}`);
   console.log(`     slug: ${mdxSlug}`);
   console.log(`     url: /chronicles/${mdxSlug}`);
