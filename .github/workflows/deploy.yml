@@ -439,16 +439,17 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Sync agent secrets
-        # Dual-PAT strategy — see infrastructure/k8s/agents/README.md for token usage table.
-        # gh-token-classic: classic PAT with repo+project scopes — agent write ops
-        # gh-token-fine-grained: fine-grained repo-scoped PAT — read-only / CI checks
+        # GH_TOKEN_AGENTS is the classic PAT with repo+project scopes used for all agent GitHub ops.
+        # gh-token and gh-token-classic both map to GH_TOKEN_AGENTS — entrypoint uses gh-token-classic.
+        # gh-token-fine-grained also uses GH_TOKEN_AGENTS (no separate fine-grained PAT configured).
         run: |
           kubectl create secret generic agent-secrets \
             --namespace=fenrir-agents \
             --from-literal=anthropic-api-key="${{ secrets.FENRIR_ANTHROPIC_API_KEY }}" \
             --from-literal=claude-oauth-token="${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}" \
-            --from-literal=gh-token-classic="${{ secrets.GITHUB_TOKEN_PAT_CLASSIC }}" \
-            --from-literal=gh-token-fine-grained="${{ secrets.GITHUB_TOKEN_PAT_FINE_GRAINED }}" \
+            --from-literal=gh-token="${{ secrets.GH_TOKEN_AGENTS }}" \
+            --from-literal=gh-token-classic="${{ secrets.GH_TOKEN_AGENTS }}" \
+            --from-literal=gh-token-fine-grained="${{ secrets.GH_TOKEN_AGENTS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Resolve image tag
