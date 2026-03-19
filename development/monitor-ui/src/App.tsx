@@ -286,6 +286,7 @@ export function App() {
           jobs={jobs}
           activeSessionId={activeSessionId}
           quote={quote}
+          wsState={wsState}
           onSelectSession={handleSelectSession}
           onAvatarClick={setProfileAgent}
           onOdinClick={() => setProfileAgent("odin")}
@@ -296,7 +297,6 @@ export function App() {
           <LogViewer
             entries={entries}
             activeJob={activeJob}
-            wsState={wsState}
             isFixture={isFixture}
             isTtlExpired={isTtlExpired}
             isNodeUnreachable={isNodeUnreachable}

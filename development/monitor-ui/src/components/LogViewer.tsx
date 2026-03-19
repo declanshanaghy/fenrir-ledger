@@ -78,7 +78,6 @@ function groupConsecutiveEntries(entries: LogEntry[]): DisplayEntry[] {
 
 import type { LogEntry } from "../hooks/useLogStream";
 import type { DisplayJob } from "../lib/types";
-import { StatusBadge } from "./StatusBadge";
 import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscription";
@@ -89,14 +88,13 @@ import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 
 interface SessionHeaderProps {
   job: DisplayJob;
-  wsState: "connecting" | "open" | "closed" | "error";
   isPinned?: boolean;
   onTogglePin?: () => void;
   showPin?: boolean;
   replayedFromCache?: boolean;
 }
 
-function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = true, replayedFromCache = false }: SessionHeaderProps) {
+function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, replayedFromCache = false }: SessionHeaderProps) {
   const displayTitle = resolveSessionTitle(job);
   // Truncate session ID to last 8 chars for display
   const shortId = job.sessionId.length > 8
@@ -148,7 +146,7 @@ function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = 
         >
           {STATUS_ICONS[job.status]} {STATUS_LABELS[job.status]}
         </span>
-        {replayedFromCache ? (
+        {replayedFromCache && (
           <span
             className="ws-badge replayed-cache"
             title="Pod cleaned up — showing cached logs"
@@ -156,8 +154,6 @@ function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = 
           >
             ᛗ replayed from cache
           </span>
-        ) : (
-          <StatusBadge state={wsState} />
         )}
         <CopySessionIdButton sessionId={job.sessionId} />
         {showPin && onTogglePin && (
@@ -197,7 +193,6 @@ function SessionHeader({ job, wsState, isPinned = false, onTogglePin, showPin = 
 interface Props {
   entries: LogEntry[];
   activeJob: DisplayJob | null;
-  wsState: "connecting" | "open" | "closed" | "error";
   isFixture?: boolean;
   isTtlExpired?: boolean;
   isNodeUnreachable?: boolean;
@@ -211,7 +206,7 @@ interface Props {
   isPodStarting?: boolean;
 }
 
-export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick, replayedFromCache, isConnecting, isPodStarting }: Props) {
+export function LogViewer({ entries, activeJob, isFixture, isTtlExpired, isNodeUnreachable, streamError, onSetSpeed, isPinned, onTogglePin, onAvatarClick, replayedFromCache, isConnecting, isPodStarting }: Props) {
   const termRef = useRef<HTMLDivElement>(null);
   const [fixtureSpeed, setFixtureSpeed] = useState(1);
   const [fixturePaused, setFixturePaused] = useState(false);
@@ -310,7 +305,6 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
       <main className="content" aria-label="Log viewer">
         <SessionHeader
           job={activeJob}
-          wsState={wsState}
           isPinned={isPinned}
           onTogglePin={onTogglePin}
         />
@@ -325,7 +319,6 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
       <main className="content" aria-label="Log viewer">
         <SessionHeader
           job={activeJob}
-          wsState={wsState}
           isPinned={isPinned}
           onTogglePin={onTogglePin}
           showPin={false}
@@ -339,7 +332,6 @@ export function LogViewer({ entries, activeJob, wsState, isFixture, isTtlExpired
     <main className="content" aria-label="Log viewer" style={{ position: "relative" }}>
       <SessionHeader
         job={activeJob}
-        wsState={wsState}
         isPinned={isPinned}
         onTogglePin={onTogglePin}
         replayedFromCache={replayedFromCache}
