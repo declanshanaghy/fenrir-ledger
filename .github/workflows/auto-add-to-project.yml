@@ -9,8 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add issue to Fenrir Ledger Triage project
+        # Requires classic PAT — gh project item-add needs project scope (not available on fine-grained PATs)
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN_PAT_CLASSIC }}
         run: |
           gh project item-add 1 \
             --owner declanshanaghy \

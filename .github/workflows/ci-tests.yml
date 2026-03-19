@@ -81,6 +81,9 @@ jobs:
 
       - name: Upsert PR comment with CI results
         if: always() && github.event_name == 'push'
+        # Fine-grained PAT is sufficient for PR comment writes (pull-requests: write)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN_PAT_FINE_GRAINED }}
         uses: actions/github-script@v8
         with:
           script: |
