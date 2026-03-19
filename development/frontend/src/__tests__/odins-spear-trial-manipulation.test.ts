@@ -390,7 +390,9 @@ function computeNewTrialState(
 ): { newStart: string; newStatus: ReturnType<typeof computeStatus> } {
   const days = parseInt(dayInput, 10);
   const baseStart = existing?.startDate ?? new Date().toISOString();
-  const newStart = new Date(new Date(baseStart).getTime() + days * 86400000).toISOString();
+  // +N = age trial by N days (subtract from startDate → older start → fewer remaining)
+  // -N = restore N days (add to startDate → newer start → more remaining)
+  const newStart = new Date(new Date(baseStart).getTime() - days * 86400000).toISOString();
   const newTrial = { startDate: newStart };
   const newStatus = computeStatus(newTrial);
   return { newStart, newStatus };
@@ -404,14 +406,15 @@ describe("handleTrialInputNext — preview computation (issue #1472)", () => {
     expect(newStatus.status).toBe("active");
   });
 
-  it("-5 days on a 20-day-remaining trial → 25 remaining", () => {
+  it("-5 days on a 20-day-remaining trial → 25 remaining (restore 5 days)", () => {
     const startDate = startDateForRemaining(20);
     const { newStatus } = computeNewTrialState({ startDate }, "-5");
     expect(newStatus.remainingDays).toBe(25);
     expect(newStatus.status).toBe("active");
   });
 
-  it("+35 days on a fresh trial → expired", () => {
+  it("+35 days on a fresh trial → expired (age beyond TRIAL_DURATION_DAYS)", () => {
+    // Fresh trial = 30 remaining. +35 ages it 35 days → 30-35 = expired.
     const startDate = startDateForRemaining(TRIAL_DURATION_DAYS);
     const { newStatus } = computeNewTrialState({ startDate }, "35");
     expect(newStatus.status).toBe("expired");
@@ -426,7 +429,8 @@ describe("handleTrialInputNext — preview computation (issue #1472)", () => {
 
   it("handles null existing trial (uses current time as base)", () => {
     const { newStatus } = computeNewTrialState(null, "10");
-    // 10 days forward from now → 20 remaining
+    // baseStart = now; +10 ages trial by 10 days → startDate is now-10 days → 20 remaining
     expect(newStatus.remainingDays).toBe(TRIAL_DURATION_DAYS - 10);
+    expect(newStatus.status).toBe("active");
   });
 });

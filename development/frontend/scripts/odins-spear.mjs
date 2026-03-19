@@ -3583,8 +3583,9 @@ function SpearApp({ connectionStatus, counts }) {
     getTrial(selectedFp).then((trial) => {
       const currentStatus = computeStatus(trial);
       const oldDesc = describeTrialState(currentStatus);
-      // Shifting startDate forward (+days) = trial appears older = fewer days remaining
-      const newStart = new Date(new Date(trial?.startDate ?? Date.now()).getTime() + days * 86400000).toISOString();
+      // User enters +N = "age by N days" → subtract N from startDate (moves it into the past → fewer remaining)
+      // User enters -N = "restore N days" → add N to startDate (moves it toward present → more remaining)
+      const newStart = new Date(new Date(trial?.startDate ?? Date.now()).getTime() - days * 86400000).toISOString();
       const newTrial = { ...(trial || {}), startDate: newStart };
       delete newTrial.convertedDate;
       const newStatus = computeStatus(newTrial);
