@@ -85,7 +85,7 @@ Header: "#<N>"
 Options:
   - "Dispatch" — dispatch via `/dispatch #<N>` immediately
   - "Skip" — leave on Up Next, move to next issue
-  - "Hold" — move to a hold/backlog state, move to next issue
+  - "Hold" — move issue to the "On Hold" column on the project board, continue to next issue
   - "Double check" — verify issue status matches reality before deciding
   - "Stop" — stop processing remaining issues
 ```
@@ -96,7 +96,7 @@ Options:
 |----------|--------|
 | **Dispatch** | Invoke `/dispatch #<N> --agent <inferred-agent> --step 1`. Collect the dispatch report. Continue to next issue. |
 | **Skip** | Do nothing with this issue. Continue to next issue. |
-| **Hold** | Leave issue where it is (no board move). Continue to next issue. |
+| **Hold** | Move issue to the "On Hold" column: `node pack-status.mjs --move N on-hold`. Continue to next issue. |
 | **Double check** | Run a reality check on this issue (see below), then re-present the same issue with updated context. |
 | **Stop** | Immediately stop the loop. Do not process remaining issues. Report what was dispatched so far. |
 
