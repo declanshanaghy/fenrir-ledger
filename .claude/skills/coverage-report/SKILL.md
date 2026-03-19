@@ -1,6 +1,6 @@
 ---
 name: coverage-report
-description: "Generate code coverage reports. Supports Vitest (--unit-only), Playwright E2E (--e2e-only), and combined (default) modes. Outputs HTML + text-summary + LCOV reports."
+description: "Generate code coverage reports. Supports Vitest (--unit-only), Playwright E2E (--e2e-only), and combined (default) modes. Outputs HTML + text-summary + LCOV reports. Includes automatic overlap analysis and coverage gap detection."
 ---
 
 # Coverage Report
@@ -73,7 +73,7 @@ brew install lcov   # macOS
 open quality/reports/coverage/vitest/index.html      # Unit
 open quality/reports/coverage/playwright/index.html  # E2E
 open quality/reports/coverage/combined/index.html    # Combined
-open quality/reports/quality-report.html              # Quality summary
+open quality/reports/quality-report.html              # Quality summary (primary)
 ```
 
 ### Quality report
@@ -83,12 +83,40 @@ Every run automatically generates `quality/reports/quality-report.html` via `qua
 - **Test inventory** — all test files broken down by category (unit, hook, component, API/route, E2E) with file and test counts
 - **Test quality analysis** — bullshit test detection: vacuous assertions, infra-YAML tests, CSS string tests, source file content assertions, static page copy tests
 - **Coverage summary** — lines/functions/branches for Vitest, Playwright, and Combined, parsed directly from LCOV files with correct numbers
+- **Overlapping coverage** — automatically detected loki twin pairs, issue-numbered cluster files, and over-tested sources (BUILT-IN, no manual step needed)
+- **Coverage gaps** — files below 20% coverage with >10 lines, sorted by coverage ascending, with risk labels (BUILT-IN)
 
-Can also be regenerated standalone:
+Can also be regenerated standalone (does NOT re-run tests, uses existing LCOV):
 
 ```bash
 node quality/scripts/quality-report-html.mjs
 ```
+
+---
+
+## Overlap Analysis — Automatic
+
+The HTML report automatically runs overlap analysis on every generation. No extra command needed. It detects:
+
+### Loki Twin Pairs
+Files where `foo.loki.test.ts` exists alongside `foo.test.ts`, both importing the same source module. Loki's edge cases belong in the parent file, not a permanent twin.
+
+**Action:** Merge unique cases from loki twin into parent → delete loki file.
+
+### Issue-Numbered Clusters
+Files named `thing-1234.test.ts` or `thing-1234-loki.test.ts` that share the same base module. These are bug-fix branches that were never consolidated back into a canonical suite.
+
+**Action:** Collapse all files in cluster → one `thing.test.ts` + one `thing-regressions.test.ts`.
+
+### Over-Tested Sources
+Source files with average LCOV hit count > 20× (already saturated by many callers). Every new test that primarily adds coverage here is wasted effort.
+
+**Action:** Do not add more tests to these files.
+
+### Coverage Gaps
+Source files with > 10 lines and < 20% line coverage, sorted by coverage ascending with risk labelling (HIGH/MED/LOW). These are where new tests deliver real value.
+
+**Action:** File issues for HIGH-risk gaps first.
 
 ---
 
@@ -117,11 +145,24 @@ N files · M tests (X% of suite) should be deleted. They do not test behaviour.
 **File an issue to cull all N files in one shot? [yes / no]**
 ```
 
-**3. Wait for Odin's response.**
+**3. Also present the overlap summary** from the HTML report sections:
+
+```
+### 🔀 Overlap Summary
+
+| Problem | Files | Tests |
+|---------|------:|------:|
+| Loki twin pairs | N | ~M redundant |
+| Issue-numbered clusters | N | M excess files |
+
+**File a consolidation issue? [yes / no]**
+```
+
+**4. Wait for Odin's response.**
 
 ---
 
-## If Odin Says YES — Cull Issue + Rule Hardening
+## If Odin Says YES (Bullshit Culls) — Cull Issue + Rule Hardening
 
 Execute all three steps immediately without further prompting.
 
@@ -236,10 +277,49 @@ repo. Future agents will recognise the pattern before writing it.
 
 ---
 
+## If Odin Says YES (Overlap Consolidation) — File Consolidation Issue
+
+```bash
+gh issue create \
+  --title "Consolidate loki twin pairs and issue-numbered cluster files" \
+  --label "chore,normal" \
+  --body "$(cat <<'EOF'
+## Description
+
+The quality report identified overlapping test files that cover already-saturated
+source modules. Consolidating them removes redundant test budget without losing
+coverage.
+
+## Loki Twins to Merge
+
+<!-- List twin pairs: merge edge cases from .loki. file into parent, delete loki file -->
+
+## Issue Clusters to Consolidate
+
+<!-- List cluster files: collapse into canonical base file + regressions file -->
+
+## Acceptance Criteria
+
+- [ ] All loki twin files deleted (unique cases merged into parent)
+- [ ] Issue-numbered files collapsed into canonical files
+- [ ] `npx vitest run` still green after all changes
+- [ ] `quality/reports/quality-report.html` regenerated — overlap twin count = 0
+
+skip-refinement
+
+---
+Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+```
+
+---
+
 ## If Odin Says NO
 
 Acknowledge and move on. The cull list remains in `quality/reports/cull-list.json`
-for the next run. Do not file the issue or modify the agent files.
+and the overlap data remains in `quality/reports/quality-report.html` for the next run.
+Do not file the issue or modify the agent files.
 
 ## Styling the HTML report
 
@@ -280,3 +360,4 @@ The combined report shows correct file coverage counts.
   they also run server-side (RSC, API routes, middleware)
 - `coverage-combine.mjs` can be run standalone to re-merge existing LCOV files
   without re-running tests
+- `quality/reports/quality-report.md` must NOT exist — HTML only

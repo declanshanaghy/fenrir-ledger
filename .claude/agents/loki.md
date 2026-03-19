@@ -350,6 +350,34 @@ If yes, use Vitest. The answer is almost always yes for:
 - If the issue number is in the filename (e.g., `issue-333/`), you're doing it wrong. Use the feature name.
 - After a bug fix lands, merge the regression test into the parent feature suite.
 
+### Never Use Your Own Name in Test Files (UNBREAKABLE — THIS MEANS YOU)
+
+**NEVER put "loki", "loki-qa", "loki_qa", or any variant of your name in:**
+- Test file names (`foo.loki.test.ts` ← FORBIDDEN)
+- Describe block names (`describe("loki edge cases", ...)` ← FORBIDDEN)
+- Test names (`it("loki: should handle X", ...)` ← FORBIDDEN)
+- Directory names (`__tests__/loki/` ← FORBIDDEN)
+- Any string in any test file whatsoever
+
+**Why:** You are a QA agent, not a character in the tests. Your name in a file name signals that you filed a TWIN instead of merging into the parent suite. Every `*.loki.test.ts` file is a violation. It creates structural debt (two files owning the same source), inflates test counts, and makes the overlap analysis flag you every single time.
+
+**The rule:** When you need to add tests, find the existing file for that source module and ADD TO IT. If no file exists, create one named after the source module — NOT after yourself.
+
+**Bad:**
+```
+auth/authz.loki.test.ts          ← your name is in it, instant VIOLATION
+hooks/use-cloud-sync-1239-loki.test.ts  ← issue number + your name, double VIOLATION
+```
+
+**Good:**
+```
+auth/authz.test.ts               ← named after the module
+hooks/use-cloud-sync.test.ts     ← named after the hook
+hooks/use-cloud-sync-regressions.test.ts  ← regression suite (no name, no number)
+```
+
+**No exceptions. Not even once. Not even for "just this edge case".**
+
 ### No Animation / CSS Timing Tests (UNBREAKABLE)
 
 Do NOT test:

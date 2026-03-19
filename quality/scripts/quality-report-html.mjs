@@ -135,6 +135,218 @@ function lokiSealSvg(dateStr, isSecure) {
   </svg>`;
 }
 
+// ── Overlap analysis ──────────────────────────────────────────────────────────
+
+/**
+ * Parse LCOV into per-file hit stats:
+ *   { relPath → { lines, hit, totalHitCount } }
+ */
+function parseLcovPerFile(lcovPath, repoRoot) {
+  if (!existsSync(lcovPath)) return {};
+  const content = readFileSync(lcovPath, "utf-8");
+  const result = {};
+  let cur = null;
+  for (const line of content.split("\n")) {
+    if (line.startsWith("SF:")) {
+      cur = line.slice(3).replace(repoRoot + "/", "").replace(repoRoot + path.sep, "");
+      result[cur] = { lines: 0, hit: 0, totalHitCount: 0 };
+    } else if (line.startsWith("DA:") && cur) {
+      const parts = line.slice(3).split(",");
+      if (parts.length >= 2) {
+        result[cur].lines++;
+        const count = parseInt(parts[1], 10) || 0;
+        if (count > 0) { result[cur].hit++; result[cur].totalHitCount += count; }
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Find loki twin pairs: files where foo.loki.test.ts exists alongside foo.test.ts
+ * Returns [{ base, loki, baseTests, lokiTests }]
+ */
+function findLokiTwins(testFiles) {
+  const byRel = new Map(testFiles.map(f => [f.rel, f]));
+  const twins = [];
+  for (const [rel, f] of byRel) {
+    if (!rel.includes(".loki.test.")) continue;
+    const baseRel = rel.replace(".loki.test.", ".test.");
+    if (byRel.has(baseRel)) {
+      twins.push({ loki: rel, base: baseRel, lokiTests: f.tests, baseTests: byRel.get(baseRel).tests });
+    }
+  }
+  return twins;
+}
+
+/**
+ * Find clusters of test files that share the same base name modulo an issue number.
+ * Pattern: name[-NNNN][-loki].test.ts — groups by normalised base (strip -NNNN, -loki).
+ * Returns [{ base, files: [{ rel, tests }], totalTests }] for clusters with 3+ files.
+ */
+function findIssueClusters(testFiles) {
+  const clusters = new Map();
+  for (const f of testFiles) {
+    const name = path.basename(f.rel)
+      .replace(/\.(loki\.test|test|spec)\.(tsx?|jsx?)$/, "");
+    // strip trailing -NNNN and -loki suffixes to get the canonical base
+    const base = name.replace(/-loki$/, "").replace(/-\d+(-loki)?$/, "");
+    if (base === name) continue; // no issue number or loki suffix — skip
+    const dir = path.dirname(f.rel);
+    const key = `${dir}/${base}`;
+    if (!clusters.has(key)) clusters.set(key, { base: key, files: [] });
+    clusters.get(key).files.push({ rel: f.rel, tests: f.tests });
+  }
+  return [...clusters.values()]
+    .filter(c => c.files.length >= 2)
+    .map(c => ({ ...c, totalTests: c.files.reduce((s, f) => s + f.tests, 0) }))
+    .sort((a, b) => b.files.length - a.files.length);
+}
+
+/**
+ * Find over-tested source files (avg hit count > threshold).
+ */
+function findOverTested(perFile, minAvgHits = 20, minLines = 5) {
+  return Object.entries(perFile)
+    .filter(([, d]) => d.hit >= minLines && d.totalHitCount / d.hit > minAvgHits)
+    .map(([f, d]) => ({ file: f, avgHits: (d.totalHitCount / d.hit).toFixed(0), pct: (d.hit / d.lines * 100).toFixed(1) }))
+    .sort((a, b) => b.avgHits - a.avgHits)
+    .slice(0, 12);
+}
+
+/**
+ * Find low-coverage files (0–20%, >10 lines) — sorted by coverage asc.
+ */
+function findLowCoverage(perFile, maxPct = 20, minLines = 10) {
+  return Object.entries(perFile)
+    .filter(([f, d]) => d.lines >= minLines && !f.includes("node_modules") && !f.includes(".next/"))
+    .map(([f, d]) => ({ file: f, pct: d.lines > 0 ? (d.hit / d.lines * 100) : 0, hit: d.hit, lines: d.lines }))
+    .filter(d => d.pct < maxPct)
+    .sort((a, b) => a.pct - b.pct)
+    .slice(0, 12);
+}
+
+function renderOverlapSection(twins, clusters, overTested, lowCoverage) {
+  const circleIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><circle cx="9" cy="9" r="6"/><circle cx="15" cy="15" r="6"/></svg>`;
+  const warnIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+
+  const subhead = (t) => `<h3 style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.08em;margin:1.5rem 0 0.75rem">${t}</h3>`;
+
+  const twinCullEstimate = twins.reduce((s, t) => s + t.lokiTests, 0);
+
+  // overlap section
+  let overlapHtml = `
+  <div class="section">
+    <div class="section-header">${circleIcon}<h2>Overlapping Coverage</h2></div>
+    <p style="color:var(--stone);font-size:0.85rem;margin-bottom:1rem">Test files fighting the same ground twice. Loki twins, issue-numbered clusters, and directory splits consume redundant test budget on already-covered sources.</p>
+
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat-card ${twins.length > 0 ? 'red' : 'green'}"><div class="value">${twins.length}</div><div class="label">Loki Twin Pairs</div></div>
+      <div class="stat-card ${clusters.length > 0 ? 'red' : 'green'}"><div class="value">${clusters.length}</div><div class="label">Issue Clusters</div></div>
+      <div class="stat-card gold"><div class="value">~${twinCullEstimate}</div><div class="label">Redundant Tests (twins)</div></div>
+      <div class="stat-card gold"><div class="value">${clusters.reduce((s,c)=>s+Math.max(0,c.files.length-1),0)}</div><div class="label">Excess Cluster Files</div></div>
+    </div>`;
+
+  if (twins.length > 0) {
+    overlapHtml += subhead("Loki Twin Pairs — merge edge cases into parent, delete twin");
+    overlapHtml += `<table>
+      <thead><tr><th>Regular File</th><th>Loki Twin</th><th>Reg Tests</th><th>Loki Tests</th><th>Action</th></tr></thead>
+      <tbody>`;
+    for (const t of twins) {
+      const name = path.basename(t.base);
+      overlapHtml += `<tr>
+        <td><code>${name}</code></td>
+        <td><code>${path.basename(t.loki)}</code></td>
+        <td>${t.baseTests}</td>
+        <td class="lo">${t.lokiTests}</td>
+        <td class="med">Merge unique cases → delete twin</td>
+      </tr>`;
+    }
+    overlapHtml += `</tbody></table>`;
+  }
+
+  if (clusters.length > 0) {
+    overlapHtml += subhead("Issue-Numbered Clusters — consolidate into canonical files");
+    overlapHtml += `<table>
+      <thead><tr><th>Base</th><th>Files</th><th>Total Tests</th><th>Action</th></tr></thead>
+      <tbody>`;
+    for (const c of clusters) {
+      overlapHtml += `<tr>
+        <td><code>${path.basename(c.base)}</code></td>
+        <td class="lo">${c.files.length}</td>
+        <td>${c.totalTests}</td>
+        <td class="med">Consolidate → ${Math.max(1, c.files.length - (c.files.length - 1))} canonical file(s)</td>
+      </tr>`;
+      for (const f of c.files) {
+        overlapHtml += `<tr><td colspan="4" style="color:var(--stone);font-size:0.78rem;padding-left:2rem">↳ ${path.basename(f.rel)} (${f.tests} tests)</td></tr>`;
+      }
+    }
+    overlapHtml += `</tbody></table>`;
+  }
+
+  if (overTested.length > 0) {
+    overlapHtml += subhead("Over-Tested Sources — stop adding tests here, focus on gaps");
+    overlapHtml += `<table>
+      <thead><tr><th>Source File</th><th>Avg Hit ×</th><th>Coverage</th><th>Note</th></tr></thead>
+      <tbody>`;
+    for (const f of overTested) {
+      const shortFile = f.file.replace("development/frontend/src/", "");
+      overlapHtml += `<tr>
+        <td><code>${shortFile}</code></td>
+        <td class="lo"><strong>${f.avgHits}×</strong></td>
+        <td class="${parseFloat(f.pct) >= 80 ? 'hi' : 'med'}">${f.pct}%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr>`;
+    }
+    overlapHtml += `</tbody></table>`;
+  }
+
+  overlapHtml += `</div>`;
+
+  // coverage gaps section
+  let gapsHtml = `
+  <div class="section">
+    <div class="section-header">${warnIcon}<h2>Coverage Gaps — Priority Targets</h2></div>
+    <p style="color:var(--stone);font-size:0.85rem;margin-bottom:0.75rem">Files below 20% coverage with &gt;10 lines. Sorted by coverage ascending — these are where new tests deliver real value.</p>`;
+
+  if (lowCoverage.length > 0) {
+    const riskMap = {
+      "AuthContext": "HIGH", "verify-id-token": "HIGH", "refresh-session": "HIGH",
+      "entitlement/cache": "HIGH", "household": "HIGH", "stripe/api": "HIGH",
+      "stripe/webhook": "HIGH", "require-auth": "HIGH",
+      "useDriveToken": "MED", "sheets-api": "MED", "gis": "MED", "pack-status": "MED",
+      "CsvUpload": "MED",
+    };
+    const risk = (f) => {
+      for (const [k, v] of Object.entries(riskMap)) if (f.includes(k)) return v;
+      return "LOW";
+    };
+    const riskCls = { HIGH: "lo", MED: "med", LOW: "hi" };
+    gapsHtml += `<table>
+      <thead><tr><th>Source File</th><th>Lines Hit</th><th>Coverage</th><th>Risk</th></tr></thead>
+      <tbody>`;
+    for (const f of lowCoverage) {
+      const shortFile = f.file.replace("development/frontend/src/", "src/");
+      const r = risk(f.file);
+      gapsHtml += `<tr>
+        <td><code>${shortFile}</code></td>
+        <td>${f.hit}/${f.lines}</td>
+        <td class="lo">${f.pct.toFixed(1)}%</td>
+        <td class="${riskCls[r]}">${r}</td>
+      </tr>`;
+    }
+    gapsHtml += `</tbody></table>`;
+    const highCount = lowCoverage.filter(f => risk(f.file) === "HIGH").length;
+    gapsHtml += `<p style="color:var(--stone);font-size:0.8rem;margin-top:0.75rem">${highCount} HIGH-risk files below 20%. Covering them closes real auth/payment attack surface, not just a number.</p>`;
+  } else {
+    gapsHtml += `<p style="color:var(--green);font-size:0.85rem">No files below 20% coverage. The shield wall holds.</p>`;
+  }
+
+  gapsHtml += `</div>`;
+
+  return overlapHtml + gapsHtml;
+}
+
 /** Copy Loki's profile image to reports dir for the HTML report */
 function copyLokiProfile() {
   const src = path.join(REPO_ROOT, ".claude/agents/profiles/loki-dark.png");
@@ -181,6 +393,15 @@ async function main() {
   const totalTests = fileData.reduce((s, f) => s + f.tests, 0);
   const bullshitFiles = fileData.filter(f => f.bullshit.length > 0);
   const totalBullshitTests = bullshitFiles.reduce((s, f) => s + f.tests, 0);
+
+  // Overlap analysis — run before HTML generation
+  const vitestLcovPath = path.join(COVERAGE_DIR, "vitest/lcov.info");
+  const perFile = parseLcovPerFile(vitestLcovPath, REPO_ROOT);
+  const lokiTwins = findLokiTwins(fileData);
+  const issueClusters = findIssueClusters(fileData);
+  const overTested = findOverTested(perFile);
+  const lowCoverage = findLowCoverage(perFile);
+  const overlapSectionHtml = renderOverlapSection(lokiTwins, issueClusters, overTested, lowCoverage);
 
   const lcovVitest = parseLcov(path.join(COVERAGE_DIR, "vitest/lcov.info"));
   const lcovPlaywright = parseLcov(path.join(COVERAGE_DIR, "playwright/lcov.info"));
@@ -480,6 +701,8 @@ async function main() {
       </tbody>
     </table>
   </div>
+
+  ${overlapSectionHtml}
 
   <!-- Footer -->
   <div class="footer">
