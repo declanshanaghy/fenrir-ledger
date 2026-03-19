@@ -57,6 +57,15 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+// ── Zod resolver — pass all form values through without validation ─────────────
+// This allows tests to focus on business logic (card limit) rather than form UX.
+vi.mock("@hookform/resolvers/zod", () => ({
+  zodResolver: () => async (values: Record<string, unknown>) => ({
+    values,
+    errors: {},
+  }),
+}));
+
 // ── Radix Select — rendered as plain HTML select for testability ──────────────
 
 vi.mock("@/components/ui/select", () => {
@@ -206,12 +215,12 @@ function makeActiveCard(id: string): Card {
 
 /** Fill and submit the CardForm step 1. */
 async function fillAndSubmit(
-  getByTestId: (id: string) => HTMLElement,
+  getAllByTestId: (id: string) => HTMLElement[],
   getByLabelText: (label: string | RegExp) => HTMLElement,
 ) {
-  // Set issuer via mocked select
+  // Set issuer via mocked select — first Select in the form is the issuerId field
   await act(async () => {
-    fireEvent.change(getByTestId("issuer-select"), {
+    fireEvent.change(getAllByTestId("issuer-select")[0]!, {
       target: { value: "chase" },
     });
   });
@@ -254,9 +263,9 @@ describe("CardForm — Thrall card limit enforcement (issue #643 / #1416)", () =
     });
 
     const { CardForm } = await import("@/components/cards/CardForm");
-    const { getByTestId, getByLabelText } = render(<CardForm householdId="hh-test" />);
+    const { getAllByTestId, getByLabelText } = render(<CardForm householdId="hh-test" />);
 
-    await fillAndSubmit(getByTestId, getByLabelText);
+    await fillAndSubmit(getAllByTestId, getByLabelText);
 
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith(
@@ -278,9 +287,9 @@ describe("CardForm — Thrall card limit enforcement (issue #643 / #1416)", () =
     });
 
     const { CardForm } = await import("@/components/cards/CardForm");
-    const { getByTestId, getByLabelText } = render(<CardForm householdId="hh-test" />);
+    const { getAllByTestId, getByLabelText } = render(<CardForm householdId="hh-test" />);
 
-    await fillAndSubmit(getByTestId, getByLabelText);
+    await fillAndSubmit(getAllByTestId, getByLabelText);
 
     // Wait for async effects to settle, then assert saveCard was never called
     await new Promise((r) => setTimeout(r, 100));
@@ -299,9 +308,9 @@ describe("CardForm — Thrall card limit enforcement (issue #643 / #1416)", () =
     });
 
     const { CardForm } = await import("@/components/cards/CardForm");
-    const { getByTestId, getByLabelText } = render(<CardForm householdId="hh-test" />);
+    const { getAllByTestId, getByLabelText } = render(<CardForm householdId="hh-test" />);
 
-    await fillAndSubmit(getByTestId, getByLabelText);
+    await fillAndSubmit(getAllByTestId, getByLabelText);
 
     // saveCard should be called (card was allowed)
     await waitFor(() => {
@@ -323,9 +332,9 @@ describe("CardForm — Thrall card limit enforcement (issue #643 / #1416)", () =
     mockCanAddCard.mockReturnValue({ allowed: true, currentCount: 3, limit: 5 });
 
     const { CardForm } = await import("@/components/cards/CardForm");
-    const { getByTestId, getByLabelText } = render(<CardForm householdId="hh-test" />);
+    const { getAllByTestId, getByLabelText } = render(<CardForm householdId="hh-test" />);
 
-    await fillAndSubmit(getByTestId, getByLabelText);
+    await fillAndSubmit(getAllByTestId, getByLabelText);
 
     await waitFor(() => {
       expect(mockCanAddCard).toHaveBeenCalledWith(
