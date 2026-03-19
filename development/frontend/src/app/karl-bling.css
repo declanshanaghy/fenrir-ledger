@@ -528,6 +528,29 @@
   border-color: rgba(212, 165, 32, 0.20);
 }
 
+/* ── Karl: profile dropdown gold border ─────────────────────────────────── */
+/*
+ * .karl-bling-dropdown — user profile dropdown menu gets a gold border accent
+ * for Karl and trial tiers.
+ *
+ * Karl:  gold border + subtle inset glow
+ * Trial: lighter gold border only
+ * Thrall: no bling (default border)
+ *
+ * Issue: #1392
+ */
+
+[data-tier="karl"] .karl-bling-dropdown {
+  border-color: rgba(212, 165, 32, 0.50);
+  box-shadow:
+    0 0 0 1px rgba(212, 165, 32, 0.18),
+    var(--karl-shadow-sm);
+}
+
+[data-tier="trial"] .karl-bling-dropdown {
+  border-color: rgba(212, 165, 32, 0.28);
+}
+
 /* ── Karl: status badge gold accent ─────────────────────────────────────── */
 /*
  * .karl-bling-badge-status — gold-tinted border + subtle bg for Karl/Trial.
