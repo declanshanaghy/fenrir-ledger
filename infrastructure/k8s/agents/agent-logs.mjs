@@ -37,8 +37,6 @@ import { spawn, execSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { createWriteStream, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { createHecklerEngine, AGENT_NAMES } from "./mayo-heckler.mjs";
-
 // -- Colors (ANSI) — Android messenger style --------------------------------
 const C = {
   reset: "\x1b[0m",
@@ -57,34 +55,16 @@ const C = {
   error: "\x1b[38;5;196m",       // red
   header: "\x1b[38;5;220m",      // gold
   done: "\x1b[38;5;226m",        // yellow
-  mayo: "\x1b[38;5;34m",         // Mayo green
-  mayoBg: "\x1b[48;5;124m",      // Mayo red bg
 };
 
-// -- Mayo heckler (shared engine) -------------------------------------------
-const MAYO_FLAG = "🟢🔴";
-const hecklerEngine = createHecklerEngine();
-
-// Format heckle events from engine into ANSI terminal strings
-function maybeHeckle() {
-  const events = hecklerEngine.maybeHeckle();
-  if (!events) return null;
-  const agentName = hecklerEngine.getAgentName();
-  return events.map(e => {
-    switch (e.type) {
-      case "mayo":
-        return `${C.mayoBg}${C.bold} ${MAYO_FLAG} ${e.name}: ${e.text} ${MAYO_FLAG} ${C.reset}`;
-      case "mayo-comeback":
-        return `${C.agentLabel}${C.bold}  🤖 ${e.name}: ${C.agent}${e.text}${C.reset}`;
-      case "mayo-entrance":
-        return `${C.mayo}${C.bold}${e.text}${C.reset}`;
-      case "mayo-explosion":
-        return `${C.mayoBg}${C.bold} ${e.text} ${C.reset}`;
-      default:
-        return `${C.dim}${JSON.stringify(e)}${C.reset}`;
-    }
-  }).join("\n");
-}
+// -- Agent display names ----------------------------------------------------
+const AGENT_NAMES = {
+  firemandecko: "FiremanDecko",
+  loki: "Loki",
+  luna: "Luna",
+  freya: "Freya",
+  heimdall: "Heimdall",
+};
 
 // -- Parse args --------------------------------------------------------------
 const args = process.argv.slice(2);
@@ -386,7 +366,6 @@ function wrapText(text, maxW) {
 let lastType = "";
 let toolBatch = [];
 let agentDisplayName = "Agent"; // set from streamJob once we know the session ID
-// AGENT_NAMES imported from mayo-heckler.mjs
 
 function flushToolBatch(lines) {
   if (toolBatch.length === 0) return;
@@ -400,8 +379,6 @@ function flushToolBatch(lines) {
   lines.push(...bubbleLines);
   lines.push("");
   toolBatch = [];
-  const h = maybeHeckle();
-  if (h) { lines.push(h); lines.push(""); }
 }
 
 function formatLine(obj) {
@@ -434,8 +411,6 @@ function formatLine(obj) {
         lines.push(...bubbleLines);
         lines.push("");
         lastType = "text";
-        const h = maybeHeckle();
-        if (h) { lines.push(h); lines.push(""); }
       }
       else if (block.type === "tool_use") {
         const summary = toolSummary(block);
@@ -460,9 +435,6 @@ function formatLine(obj) {
       lines.push(`${C.result}      ← ${content}${C.reset}`);
     }
     lastType = "result";
-    // Heckler reacts to EVERY tool result
-    const h = maybeHeckle();
-    if (h) { lines.push(h); lines.push(""); }
   }
 
   else if (obj.type === "result") {
@@ -475,8 +447,6 @@ function formatLine(obj) {
       `Cost: ${cost}  Duration: ${dur}  Turns: ${turns}`,
     ], C.done, C.done, "  ");
     lines.push(...doneLines);
-    const victory = hecklerEngine.victoryHeckle();
-    lines.push(`${C.mayoBg}${C.bold} ${victory.text} ${C.reset}`);
   }
 
   return lines;
@@ -676,9 +646,8 @@ function streamLogs(jobName) {
 async function streamJob(jobName) {
   const { issue, step, agent } = parseSessionId(jobName);
 
-  // Set agent display name for bubble labels + heckler engine
+  // Set agent display name for bubble labels
   agentDisplayName = AGENT_NAMES[agent] || agent || "Agent";
-  hecklerEngine.setAgentName(agent);
 
   // Set tmux pane title for layout detection (stream mode only)
   if (opts.mode === "stream") {
