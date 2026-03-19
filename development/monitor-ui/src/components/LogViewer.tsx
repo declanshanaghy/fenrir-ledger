@@ -97,10 +97,6 @@ interface SessionHeaderProps {
 
 function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, replayedFromCache = false, onCancelJob }: SessionHeaderProps) {
   const displayTitle = resolveSessionTitle(job);
-  // Truncate session ID to last 8 chars for display
-  const shortId = job.sessionId.length > 8
-    ? job.sessionId.slice(-8)
-    : job.sessionId;
   const [confirmingUnpin, setConfirmingUnpin] = useState(false);
 
   // Reset confirmation state when pin state changes externally
@@ -134,7 +130,7 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
             role="text"
             aria-label={`Session ID: ${job.sessionId}`}
           >
-            <span className="session-id-label">Session:</span> {shortId}…
+            <span className="session-id-label">Session:</span> {job.sessionId}
           </span>
         </div>
       </div>
@@ -1043,8 +1039,6 @@ function StartupBlock({ group }: { group: StartupGroup }) {
   const sessionEntry = group.metaEntries.find((e) => /^Session:\s*/.test(e.text ?? ""));
   const model = modelEntry?.text?.replace(/^Model:\s*/, "").trim() ?? "";
   const session = sessionEntry?.text?.replace(/^Session:\s*/, "").trim() ?? "";
-  const shortSession = session.length > 24 ? session.slice(0, 24) + "…" : session;
-
   return (
     <div className={`ep-group ${open ? "open" : ""}`}>
       <div className="ep-group-header" onClick={() => setOpen(!open)} role="button" tabIndex={0} aria-expanded={open} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen((o) => !o); } }}>
@@ -1052,7 +1046,7 @@ function StartupBlock({ group }: { group: StartupGroup }) {
         <span className="ep-group-title">Starting Claude Code</span>
         <span className="ep-group-meta">
           {model && <span className="ep-group-meta-item"><span className="ep-group-meta-key">Model:</span> {model}</span>}
-          {shortSession && <span className="ep-group-meta-item"><span className="ep-group-meta-key">Session:</span> {shortSession}</span>}
+          {session && <span className="ep-group-meta-item"><span className="ep-group-meta-key">Session:</span> {session}</span>}
         </span>
       </div>
       <div className="ep-group-body-wrap">
