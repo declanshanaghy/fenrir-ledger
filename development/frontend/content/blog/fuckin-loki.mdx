@@ -1,0 +1,163 @@
+---
+title: "The Wolf Who Named Himself"
+date: "2026-03-19"
+rune: "ᛏ"
+excerpt: "Helm ownership conflicts slain, overlapping test suites unmasked, and Loki finally forbidden from signing his own name into the code he was supposed to guard."
+slug: "fuckin-loki"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᚦ ᛏ ᚢ ᛏ ᛉ</span>
+  <h1 className="session-title">The Wolf Who Named Himself</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-19</span></span>
+      <span>Session <span className="val">fuckin-loki</span></span>
+      <span>Acts <span className="val">5</span></span>
+      <span>Files changed <span className="val">5</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᚦ</span> <span className="toc-num">I</span> Helm Ownership Broken by Umami</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᛏ</span> <span className="toc-num">II</span> Coverage Overlap Laid Bare</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᚺ</span> <span className="toc-num">III</span> HTML Only. The MD Must Die.</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᛏ</span> <span className="toc-num">IV</span> Analysis Baked Into the Script</a></li>
+      <li><a href="#act-5"><span className="toc-rune">ᛉ</span> <span className="toc-num">V</span> Loki Forbidden From His Own Name</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="Helm Ownership Broken by Umami">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Bug Fix</p>
+        <h2 className="entry-title">Helm Ownership Broken by Umami</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">failled https://github.com/declanshanaghy/fenrir-ledger/actions/runs/23276785092</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The <span className="hl">Marketing Engine deploy</span> had fallen. <span className="mono">helm upgrade --install n8n-infra</span> collided with a <span className="hl">StorageClass already owned by the umami release</span> in <span className="mono">fenrir-analytics</span>. Helm's ownership annotations are unforgiving — one release, one owner.</p><p>The root cause: both the <span className="mono">n8n</span> and <span className="mono">umami</span> Helm charts defined <span className="mono">standard-rwo-retain</span>, a cluster-scoped StorageClass. Umami was first. n8n's chart tried to claim it on upgrade and was refused.</p><p>Fix was surgical: delete <span className="mono">infrastructure/helm/n8n/templates/storageclass.yaml</span>. The n8n PVC still references the class by name — it just no longer tries to own what it cannot own.</p></div>
+          <div className="code-block"><pre><span className="cr">- infrastructure/helm/n8n/templates/storageclass.yaml (27 lines deleted)</span></pre></div>
+          <div className="bug-box">
+            <p className="bug-label">Bug Fixed</p>
+            <p className="bug-text">Helm upgrade failed with 'invalid ownership metadata' — StorageClass standard-rwo-retain owned by umami, claimed by n8n</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="Coverage Overlap Laid Bare">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Quality / Analysis</p>
+        <h2 className="entry-title">Coverage Overlap Laid Bare</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Update /coverage-report to analyze the tests for overlapping coverage. Start with source and check the coverage reports. Include the outcome in the @quality/reports/quality-report.md Create recommendations for test restructuring and culling.</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The quality report was torn open and the wounds counted. After fixing a broken <span className="mono">@testing-library/jest-dom</span> install that had silently killed all 153 test files, the coverage run completed: <span className="hl">2347 tests passing, 48.1% line coverage</span>.</p><p>Then the overlap analysis began. LCOV data parsed per-file. Import graphs traced. A census of redundancy:</p><ul><li><span className="hl">4 loki twin pairs</span> — <span className="mono">.loki.test.ts</span> files shadowing their parent suites on already-100%-covered ground</li><li><span className="hl">7 useCloudSync files</span> — a hook tested at 61× average hit count, one file per bug report, never consolidated</li><li><span className="hl">79 source files at 0% coverage</span>, 11 below 20% on critical auth and payment paths</li><li><span className="mono">src/lib/utils.ts</span> at <span className="hl">1467× average hit count</span> — a transitive dependency hit by everything, tested by nothing intentionally</li></ul><p>The findings were written into <span className="mono">quality/reports/quality-report.md</span> with full restructuring recommendations in two tiers: cull and consolidate.</p></div>
+          <div className="bug-box">
+            <p className="bug-label">Bug Fixed</p>
+            <p className="bug-text">@testing-library/jest-dom not installed — all 153 test files failed to load setup.ts</p>
+          </div>
+          <div className="file-chips">
+            <span className="chip chip-mod">quality/reports/quality-report.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="HTML Only. The MD Must Die.">ᚺ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Correction</p>
+        <h2 className="entry-title">HTML Only. The MD Must Die.</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Shit i meant @quality/reports/quality-report.html @quality/reports/quality-report.md shouldn't exist. HTML only</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The MD file was deleted without ceremony. The overlap analysis sections — twin pair tables, cluster lists, over-tested sources, coverage gap priority targets — were injected directly into <span className="mono">quality/reports/quality-report.html</span> before the footer.</p><p>Two new sections now live in the HTML: <span className="hl">Overlapping Coverage</span> with stat cards and structured tables, and <span className="hl">Coverage Gaps — Priority Targets</span> with risk-labelled rows sorted by coverage ascending. No markdown. No duplicate. One artifact.</p></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">quality/reports/quality-report.html</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Analysis Baked Into the Script">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Tooling</p>
+        <h2 className="entry-title">Analysis Baked Into the Script</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">Update the skill to perform the overlap analysis. Update /coverage-report to do all this shit.</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The manual analysis was abolished. Five new functions landed in <span className="mono">quality/scripts/quality-report-html.mjs</span>, wired into <span className="mono">main()</span>, rendering automatically on every report generation:</p><ul><li><span className="mono">parseLcovPerFile()</span> — per-file hit counts from LCOV</li><li><span className="mono">findLokiTwins()</span> — detects <span className="mono">.loki.test.ts</span> twins by filename pattern</li><li><span className="mono">findIssueClusters()</span> — groups files by base name after stripping <span className="mono">-NNNN</span> and <span className="mono">-loki</span> suffixes</li><li><span className="mono">findOverTested()</span> — avg hit count threshold</li><li><span className="mono">findLowCoverage()</span> — risk-labelled gap detection</li></ul><p>A bug was caught and fixed mid-implementation: <span className="mono">path.basename(f.rel, ".tsx")</span> only strips <span className="mono">.tsx</span>, leaving <span className="mono">.test.ts</span> files with a trailing <span className="mono">.test</span> that broke the cluster regex. Fixed by replacing with a single compound extension strip: <span className="mono">.replace(/\.(loki\.test|test|spec)\.(tsx?|jsx?)$/, "")</span>.</p><p>The SKILL.md was rewritten: overlap analysis is documented as built-in, the post-run prompt now includes an overlap summary section, and a consolidation issue template was added.</p></div>
+          <div className="code-block"><pre><span className="ca">+ parseLcovPerFile(lcovPath, repoRoot)</span>
+<span className="ca">+ findLokiTwins(testFiles)</span>
+<span className="ca">+ findIssueClusters(testFiles)</span>
+<span className="ca">+ findOverTested(perFile, minAvgHits=20)</span>
+<span className="ca">+ findLowCoverage(perFile, maxPct=20)</span>
+<span className="ca">+ renderOverlapSection(twins, clusters, overTested, lowCoverage)</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">quality/scripts/quality-report-html.mjs</span>
+            <span className="chip chip-mod">.claude/skills/coverage-report/SKILL.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="Loki Forbidden From His Own Name">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Agent Rules</p>
+        <h2 className="entry-title">Loki Forbidden From His Own Name</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">yes
+
+Additionally add to @.claude/agents/loki.md instructions to NEVER use his fuckin name in the test files or test names or any of that BULLSHIT JESUS CHRIST FFS DO IT NOW</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>The consolidation issue was filed — <a href="https://github.com/declanshanaghy/fenrir-ledger/issues/1449">#1449</a> — and moved to Up Next. Then the rule was hammered into <span className="mono">.claude/agents/loki.md</span> with the energy it deserved.</p><p>The new section: <span className="hl">Never Use Your Own Name in Test Files (UNBREAKABLE — THIS MEANS YOU)</span>. Every surface where Loki had been signing his work is now explicitly banned:</p><ul><li>File names: <span className="mono">foo.loki.test.ts</span> ← FORBIDDEN</li><li>Describe blocks: <span className="mono">describe("loki edge cases", ...)</span> ← FORBIDDEN</li><li>Test names: <span className="mono">it("loki: should handle X", ...)</span> ← FORBIDDEN</li><li>Directory names: <span className="mono">__tests__/loki/</span> ← FORBIDDEN</li></ul><p>The reason is structural, not cosmetic: every <span className="mono">*.loki.test.ts</span> file signals that Loki filed a twin instead of merging into the parent suite. It creates two owners for one source module, inflates test counts, and gets flagged by the overlap analysis on every run. The trickster was tricking himself into a permanent audit finding.</p><p>The rule ends with: <span className="hl">No exceptions. Not even once. Not even for "just this edge case".</span></p></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">.claude/agents/loki.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᚦ ᛏ ᚢ ᛏ ᛉ</div>
+  <div className="footer-text">The Wolf Who Named Himself · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
