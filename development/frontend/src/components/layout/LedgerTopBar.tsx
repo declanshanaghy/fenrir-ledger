@@ -229,7 +229,20 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
   const { theme, setTheme } = useTheme();
   const isKarlOrTrial = useIsKarlOrTrial();
   const isMyCardsActive = pathname === "/ledger";
-  const isSettingsActive = pathname === "/ledger/settings";
+
+  // Derive per-tab active state from hash so only the current tab is gold.
+  // window.location.hash is safe to read here: the dropdown is only mounted
+  // when open, so it reads the correct hash each time it renders.
+  const currentHash =
+    typeof window !== "undefined"
+      ? window.location.hash.replace("#", "")
+      : "";
+  const onSettingsPage = pathname === "/ledger/settings";
+  // No hash (first visit) defaults to "account" — matches settings page DEFAULT_TAB.
+  const isAccountActive =
+    onSettingsPage && (currentHash === "account" || currentHash === "");
+  const isHouseholdActive = onSettingsPage && currentHash === "household";
+  const isSettingsTabActive = onSettingsPage && currentHash === "settings";
 
   return (
     <div
@@ -287,13 +300,21 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           router.push("/ledger/settings#account");
         }}
         className={[
-          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border",
-          isSettingsActive ? "text-gold" : "text-muted-foreground hover:text-foreground",
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border relative",
+          isAccountActive
+            ? "text-gold font-semibold"
+            : "text-muted-foreground hover:text-foreground",
         ].join(" ")}
         style={{ minHeight: 44 }}
       >
         <User className="h-4 w-4 shrink-0" aria-hidden="true" />
         Account
+        {isAccountActive && (
+          <span
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-gold"
+            aria-hidden="true"
+          />
+        )}
       </button>
       {/* Household link */}
       <button
@@ -304,13 +325,21 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           router.push("/ledger/settings#household");
         }}
         className={[
-          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border",
-          isSettingsActive ? "text-gold" : "text-muted-foreground hover:text-foreground",
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border relative",
+          isHouseholdActive
+            ? "text-gold font-semibold"
+            : "text-muted-foreground hover:text-foreground",
         ].join(" ")}
         style={{ minHeight: 44 }}
       >
         <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
         Household
+        {isHouseholdActive && (
+          <span
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-gold"
+            aria-hidden="true"
+          />
+        )}
       </button>
       {/* Settings link */}
       <button
@@ -321,13 +350,21 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           router.push("/ledger/settings#settings");
         }}
         className={[
-          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border",
-          isSettingsActive ? "text-gold" : "text-muted-foreground hover:text-foreground",
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border relative",
+          isSettingsTabActive
+            ? "text-gold font-semibold"
+            : "text-muted-foreground hover:text-foreground",
         ].join(" ")}
         style={{ minHeight: 44 }}
       >
         <Settings className="h-4 w-4 shrink-0" aria-hidden="true" />
         Settings
+        {isSettingsTabActive && (
+          <span
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-gold"
+            aria-hidden="true"
+          />
+        )}
       </button>
       {/* Sign out */}
       <button
