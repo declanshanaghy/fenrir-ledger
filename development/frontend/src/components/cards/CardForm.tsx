@@ -357,17 +357,21 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           localStorage.setItem(LS_TRIAL_START_TOAST_SHOWN, "true");
 
           // Initialize trial via API (idempotent — safe to call multiple times)
+          // Supports anonymous users — no auth token required (Issue #1413)
           void (async () => {
             try {
-              const token = await ensureFreshToken();
               const fingerprint = await computeFingerprint();
-              if (token && fingerprint) {
+              if (fingerprint) {
+                const token = await ensureFreshToken();
+                const headers: Record<string, string> = {
+                  "Content-Type": "application/json",
+                };
+                if (token) {
+                  headers["Authorization"] = `Bearer ${token}`;
+                }
                 await fetch("/api/trial/init", {
                   method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                  },
+                  headers,
                   body: JSON.stringify({ fingerprint }),
                 });
                 // Clear trial status cache so badge picks up new state

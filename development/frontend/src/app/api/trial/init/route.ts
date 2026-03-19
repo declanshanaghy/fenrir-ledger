@@ -5,7 +5,8 @@
  * (import or manual add). Idempotent — if a trial already exists for this
  * fingerprint, returns the existing trial data without modification.
  *
- * Behind requireAuth (ADR-008).
+ * Supports anonymous access — fingerprint is the sole identifier (Issue #1413).
+ * No Bearer token required; rate-limited by IP to prevent abuse.
  *
  * Request body: { fingerprint: string } (64-char SHA-256 hex)
  *
@@ -15,7 +16,6 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuthz } from "@/lib/auth/authz";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import { isValidFingerprint } from "@/lib/trial-utils";
@@ -41,10 +41,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 429 },
     );
   }
-
-  // Require authentication (ADR-015)
-  const authz = await requireAuthz(request, {});
-  if (!authz.ok) return authz.response;
 
   // Parse and validate body
   let fingerprint: string;

@@ -83,25 +83,25 @@ export function useTrialStatus(): UseTrialStatusReturn {
     }
 
     try {
-      const token = await ensureFreshToken();
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
       const fingerprint = await computeFingerprint();
       if (!fingerprint) {
         setIsLoading(false);
         return;
       }
 
+      // Supports anonymous users — no auth token required (Issue #1413)
+      const token = await ensureFreshToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch("/api/trial/status", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "Cache-Control": "no-cache",
-        },
+        headers,
         body: JSON.stringify({ fingerprint }),
       });
 
