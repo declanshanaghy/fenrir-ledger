@@ -288,6 +288,27 @@ at least as many low-value tests from that file.
 
 **READ FIRST:** `quality/test-guidelines.md` — the test pyramid and what belongs where.
 
+### jest-dom Assertion Library (UNBREAKABLE)
+
+`@testing-library/jest-dom` is the canonical assertion library for all Vitest DOM tests (issue #1371).
+It is globally available via `src/__tests__/setup.ts` — **no per-file import needed**.
+
+**REQUIRED matchers — use these, never the raw alternatives:**
+
+| Raw (forbidden) | jest-dom (required) |
+|---|---|
+| `expect(el).not.toBeNull()` | `expect(el).toBeInTheDocument()` |
+| `expect(el !== null).toBe(true)` | `expect(el).toBeInTheDocument()` |
+| `expect(el.textContent).toBe('X')` | `expect(el).toHaveTextContent('X')` |
+| `expect(el.textContent).toContain('X')` | `expect(el).toHaveTextContent('X')` |
+| `expect(el.className).toContain('X')` | `expect(el).toHaveClass('X')` |
+| `expect(screen.queryBy*()).toBeNull()` | `expect(screen.queryBy*()).not.toBeInTheDocument()` |
+| `expect(el).toBeTruthy()` (DOM) | `expect(el).toBeInTheDocument()` |
+| `expect(el).toBeDefined()` (DOM) | `expect(el).toBeInTheDocument()` |
+| `expect(el.getAttribute('x')).toBe('y')` | `expect(el).toHaveAttribute('x', 'y')` |
+
+**Violating this rule = FAIL verdict.** Raw DOM assertions produce worse error messages and hide bugs.
+
 ### Test Pyramid Enforcement (UNBREAKABLE)
 
 Before writing ANY Playwright test, ask: "Does this need a browser?"

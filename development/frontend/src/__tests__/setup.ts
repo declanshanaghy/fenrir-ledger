@@ -19,6 +19,9 @@ global.console = {
   error: () => {},
 };
 
+// jest-dom — canonical assertion library for Vitest DOM tests (issue #1371)
+import '@testing-library/jest-dom/vitest';
+
 // Clean up DOM after each test (for component render tests)
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
