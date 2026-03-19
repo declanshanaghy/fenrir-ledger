@@ -25,12 +25,13 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { LayoutGrid, Settings, LogOut } from "lucide-react";
+import { LayoutGrid, Settings, LogOut, User, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
 import { TrialBadge } from "@/components/layout/TrialBadge";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
 import { NAV_LINKS, isNavLinkActive, MarketingNavLinks } from "@/components/marketing/MarketingNavLinks";
+import { useIsKarlOrTrial } from "@/hooks/useIsKarlOrTrial";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -226,6 +227,7 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const isKarlOrTrial = useIsKarlOrTrial();
   const isMyCardsActive = pathname === "/ledger";
   const isSettingsActive = pathname === "/ledger/settings";
 
@@ -239,6 +241,7 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
         "w-64 border border-border bg-background/95 backdrop-blur-sm",
         "rounded-sm shadow-lg z-50",
         "flex flex-col",
+        isKarlOrTrial ? "karl-bling-dropdown" : "",
       ].join(" ")}
     >
       {/* My Cards link */}
@@ -275,13 +278,47 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
         <ThemeToggle variant="dropdown-icon" />
         <span className="text-sm text-muted-foreground font-body">Theme</span>
       </button>
+      {/* Account link */}
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          onClose();
+          router.push("/ledger/settings#account");
+        }}
+        className={[
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border",
+          isSettingsActive ? "text-gold" : "text-muted-foreground hover:text-foreground",
+        ].join(" ")}
+        style={{ minHeight: 44 }}
+      >
+        <User className="h-4 w-4 shrink-0" aria-hidden="true" />
+        Account
+      </button>
+      {/* Household link */}
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          onClose();
+          router.push("/ledger/settings#household");
+        }}
+        className={[
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border",
+          isSettingsActive ? "text-gold" : "text-muted-foreground hover:text-foreground",
+        ].join(" ")}
+        style={{ minHeight: 44 }}
+      >
+        <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
+        Household
+      </button>
       {/* Settings link */}
       <button
         type="button"
         role="menuitem"
         onClick={() => {
           onClose();
-          router.push("/ledger/settings");
+          router.push("/ledger/settings#settings");
         }}
         className={[
           "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border",
