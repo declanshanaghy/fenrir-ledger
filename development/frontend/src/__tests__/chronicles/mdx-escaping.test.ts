@@ -85,11 +85,8 @@ describe("JSON.stringify escaping contract for MDX JSX expressions", () => {
 // ---------------------------------------------------------------------------
 
 async function compileMdx(source: string): Promise<void> {
-  const { compile } = await import(
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore — ESM package, resolved at runtime
-    "../../../../node_modules/@mdx-js/mdx/index.js"
-  );
+  // @mdx-js/mdx is an ESM-only package available in development/frontend/node_modules
+  const { compile } = await import("@mdx-js/mdx");
   await compile(source, { format: "mdx" });
 }
 
