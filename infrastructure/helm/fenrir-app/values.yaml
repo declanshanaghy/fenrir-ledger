@@ -25,7 +25,7 @@ app:
     HOSTNAME: "0.0.0.0"
     FIRESTORE_PROJECT_ID: "fenrir-ledger-prod"
     FIRESTORE_DATABASE_ID: "fenrir-ledger-prod"
-    NEXT_PUBLIC_UMAMI_WEBSITE_ID: "ce25059e-57c4-44f9-ad92-389d2bd15e4d"
+    NEXT_PUBLIC_UMAMI_WEBSITE_ID: "2180ab61-a080-45b2-bf85-65ab3bbd0730"
 
   resources:
     requests:
