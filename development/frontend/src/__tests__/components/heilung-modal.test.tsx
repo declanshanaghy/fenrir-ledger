@@ -4,7 +4,7 @@
  * Validates: trigger key, dismiss interactions, Norse content, Wikipedia links,
  * click-to-play video portal, Algiz close button, HEIÐR dismiss, accessibility.
  *
- * Uses standard Vitest + Testing Library matchers (no jest-dom).
+ * Uses @testing-library/jest-dom for DOM assertions (issue #1371).
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -57,13 +57,13 @@ describe("HeilungModal", () => {
 
   it("is hidden by default", () => {
     render(<HeilungModal />);
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("opens on Ctrl+Shift+L", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    expect(screen.getByRole("dialog")).toBeDefined();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("opens on Meta+Shift+L", () => {
@@ -71,14 +71,14 @@ describe("HeilungModal", () => {
     act(() => {
       fireEvent.keyDown(window, { key: "L", shiftKey: true, metaKey: true });
     });
-    expect(screen.getByRole("dialog")).toBeDefined();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("toggles closed on second Ctrl+Shift+L", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     act(() => triggerHeilungKey());
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("closes on Escape key", () => {
@@ -87,21 +87,21 @@ describe("HeilungModal", () => {
     act(() => {
       fireEvent.keyDown(window, { key: "Escape" });
     });
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("closes on Algiz close button (ᛉ)", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     fireEvent.click(screen.getByLabelText("Close — return from the wolf's hall"));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("closes on HEIÐR dismiss button", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     fireEvent.click(screen.getByLabelText("Dismiss — honour given"));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("closes on backdrop click", () => {
@@ -109,14 +109,14 @@ describe("HeilungModal", () => {
     act(() => triggerHeilungKey());
     const dialog = screen.getByRole("dialog");
     fireEvent.click(dialog.parentElement!);
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("does NOT close when clicking inside the modal", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     fireEvent.click(screen.getByRole("dialog"));
-    expect(screen.getByRole("dialog")).toBeDefined();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("does not open when Ctrl+Shift+L is pressed in an INPUT", () => {
@@ -132,7 +132,7 @@ describe("HeilungModal", () => {
         key: "L", shiftKey: true, ctrlKey: true, target: input,
       });
     });
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("does not open when Ctrl+Shift+L is pressed in a TEXTAREA", () => {
@@ -148,7 +148,7 @@ describe("HeilungModal", () => {
         key: "L", shiftKey: true, ctrlKey: true, target: textarea,
       });
     });
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("does not open when Ctrl+Shift+L is pressed in a SELECT", () => {
@@ -164,7 +164,7 @@ describe("HeilungModal", () => {
         key: "L", shiftKey: true, ctrlKey: true, target: select,
       });
     });
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   // ── Content ──────────────────────────────────────────────────────────────
@@ -172,32 +172,32 @@ describe("HeilungModal", () => {
   it("renders Old Norse title 'Heyra Stríðsgaldr'", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    expect(screen.getByText("Heyra Stríðsgaldr")).toBeDefined();
+    expect(screen.getByText("Heyra Stríðsgaldr")).toBeInTheDocument();
   });
 
   it("renders Norse title with correct aria-label (with English translation)", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     const title = screen.getByLabelText("Heyra Stríðsgaldr — Hear the War-Chant");
-    expect(title).toBeDefined();
+    expect(title).toBeInTheDocument();
   });
 
   it("renders HEILUNG · Amplified History subtitle", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    expect(screen.getByText("HEILUNG · Amplified History")).toBeDefined();
+    expect(screen.getByText("HEILUNG · Amplified History")).toBeInTheDocument();
   });
 
   it("renders wolf's invitation copy with Fenrir reference", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    expect(screen.getByText(/Fenrir remembers/)).toBeDefined();
+    expect(screen.getByText(/Fenrir remembers/)).toBeInTheDocument();
   });
 
   it("renders Wolf's invitation section with correct aria-label", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    expect(screen.getByLabelText("Wolf's invitation")).toBeDefined();
+    expect(screen.getByLabelText("Wolf's invitation")).toBeInTheDocument();
   });
 
   it("renders wolf seal inscription with aria-label", () => {
@@ -205,13 +205,13 @@ describe("HeilungModal", () => {
     act(() => triggerHeilungKey());
     expect(
       screen.getByLabelText("Fenrir seal — The wolf remembers what the world forgot")
-    ).toBeDefined();
+    ).toBeInTheDocument();
   });
 
   it("renders HEIÐR dismiss button", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    expect(screen.getByText("HEIÐR")).toBeDefined();
+    expect(screen.getByText("HEIÐR")).toBeInTheDocument();
   });
 
   // ── Wikipedia links ───────────────────────────────────────────────────────
@@ -254,16 +254,16 @@ describe("HeilungModal", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
-    expect(portalBtn).toBeDefined();
-    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
+    expect(portalBtn).toBeInTheDocument();
+    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).not.toBeInTheDocument();
   });
 
   it("shows YouTube thumbnail image in portal state A", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     const img = document.querySelector(".heilung-thumbnail-img") as HTMLImageElement | null;
-    expect(img).not.toBeNull();
-    expect(img!.getAttribute("src")).toContain("QRg_8NNPTD8");
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute("src", expect.stringContaining("QRg_8NNPTD8"));
   });
 
   it("clicking portal thumbnail shows iframe (state B)", () => {
@@ -272,7 +272,7 @@ describe("HeilungModal", () => {
     const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
     act(() => { fireEvent.click(portalBtn); });
     const iframe = screen.getByTitle("Heilung — Krigsgaldr LIFA") as HTMLIFrameElement;
-    expect(iframe).toBeDefined();
+    expect(iframe).toBeInTheDocument();
     expect(iframe.getAttribute("src")).toContain("autoplay=1");
     expect(iframe.getAttribute("src")).toContain("QRg_8NNPTD8");
   });
@@ -282,7 +282,7 @@ describe("HeilungModal", () => {
     act(() => triggerHeilungKey());
     const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
     act(() => { fireEvent.keyDown(portalBtn, { key: "Enter" }); });
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeInTheDocument();
   });
 
   it("Space key on portal thumbnail shows iframe", () => {
@@ -290,7 +290,7 @@ describe("HeilungModal", () => {
     act(() => triggerHeilungKey());
     const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
     act(() => { fireEvent.keyDown(portalBtn, { key: " " }); });
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeInTheDocument();
   });
 
   it("dismissing modal resets video to thumbnail state", () => {
@@ -298,14 +298,14 @@ describe("HeilungModal", () => {
     act(() => triggerHeilungKey());
     const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
     act(() => { fireEvent.click(portalBtn); });
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText("Close — return from the wolf's hall"));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     act(() => triggerHeilungKey());
-    expect(screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube")).toBeDefined();
-    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
+    expect(screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube")).toBeInTheDocument();
+    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).not.toBeInTheDocument();
   });
 
   // ── Accessibility ─────────────────────────────────────────────────────────
@@ -328,6 +328,6 @@ describe("HeilungModal", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
     const btn = screen.getByLabelText("Close — return from the wolf's hall");
-    expect(btn).toBeDefined();
+    expect(btn).toBeInTheDocument();
   });
 });

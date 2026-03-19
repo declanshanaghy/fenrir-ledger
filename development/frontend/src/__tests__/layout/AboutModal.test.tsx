@@ -53,21 +53,21 @@ describe("AboutModal — build info section", () => {
   it("renders the build-info container", () => {
     renderModal();
     const el = document.querySelector("[data-testid='build-info']");
-    expect(el).not.toBeNull();
+    expect(el).toBeInTheDocument();
   });
 
   it("shows 'unknown' commit when NEXT_PUBLIC_APP_VERSION is not set", () => {
     delete process.env.NEXT_PUBLIC_APP_VERSION;
     renderModal();
     const commitEl = document.querySelector("[data-testid='build-info-commit']");
-    expect(commitEl?.textContent).toBe("unknown");
+    expect(commitEl).toHaveTextContent("unknown");
   });
 
   it("truncates NEXT_PUBLIC_APP_VERSION to 7 chars for commit SHA", () => {
     process.env.NEXT_PUBLIC_APP_VERSION = "abcdef1234567890";
     renderModal();
     const commitEl = document.querySelector("[data-testid='build-info-commit']");
-    expect(commitEl?.textContent).toBe("abcdef1");
+    expect(commitEl).toHaveTextContent("abcdef1");
   });
 
   it("commit SHA links to GitHub commit URL", () => {
@@ -82,21 +82,21 @@ describe("AboutModal — build info section", () => {
     delete process.env.NEXT_PUBLIC_BUILD_DATE;
     renderModal();
     const dateEl = document.querySelector("[data-testid='build-info-date']");
-    expect(dateEl?.textContent).toBe("unknown");
+    expect(dateEl).toHaveTextContent("unknown");
   });
 
   it("formats NEXT_PUBLIC_BUILD_DATE as UTC string", () => {
     process.env.NEXT_PUBLIC_BUILD_DATE = "2026-03-18T12:00:00.000Z";
     renderModal();
     const dateEl = document.querySelector("[data-testid='build-info-date']");
-    expect(dateEl?.textContent).toContain("UTC");
+    expect(dateEl).toHaveTextContent("UTC");
   });
 
   it("shows environment from NEXT_PUBLIC_ENV", () => {
     process.env.NEXT_PUBLIC_ENV = "staging";
     renderModal();
     const envEl = document.querySelector("[data-testid='build-info-env']");
-    expect(envEl?.textContent).toBe("staging");
+    expect(envEl).toHaveTextContent("staging");
   });
 
   it("falls back to NODE_ENV when NEXT_PUBLIC_ENV is not set", () => {
@@ -104,21 +104,21 @@ describe("AboutModal — build info section", () => {
     process.env.NODE_ENV = "test";
     renderModal();
     const envEl = document.querySelector("[data-testid='build-info-env']");
-    expect(envEl?.textContent).toBe("test");
+    expect(envEl).toHaveTextContent("test");
   });
 
   it("renders version prefixed with 'v'", () => {
     process.env.NEXT_PUBLIC_APP_VERSION = "1.2.3";
     renderModal();
     const buildInfo = document.querySelector("[data-testid='build-info']");
-    expect(buildInfo?.textContent).toContain("v1.2.3");
+    expect(buildInfo).toHaveTextContent("v1.2.3");
   });
 
   it("falls back to v0.1.0 when NEXT_PUBLIC_APP_VERSION is not set", () => {
     delete process.env.NEXT_PUBLIC_APP_VERSION;
     renderModal();
     const buildInfo = document.querySelector("[data-testid='build-info']");
-    expect(buildInfo?.textContent).toContain("v0.1.0");
+    expect(buildInfo).toHaveTextContent("v0.1.0");
   });
 
   // ── Loki QA additions — gap coverage ─────────────────────────────────────
