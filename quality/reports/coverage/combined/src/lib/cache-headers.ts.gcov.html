@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - src/lib/cache-headers.ts</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory src/lib">src/lib</a> - cache-headers.ts<span style="font-size: 80%;"> (source / <a href="cache-headers.ts.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryMed">82.1&nbsp;%</td>
+            <td class="headerCovTableEntry">67</td>
+            <td class="headerCovTableEntry">55</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-03-18 16:11:20</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span> <span class="tlaGNC">           1 : /**</span></span>
+<span id="L2"><span class="lineNum">       2</span> <span class="tlaGNC">           1 :  * Cache-Control Headers — Fenrir Ledger (Issue #1145)</span></span>
+<span id="L3"><span class="lineNum">       3</span> <span class="tlaGNC">           1 :  *</span></span>
+<span id="L4"><span class="lineNum">       4</span> <span class="tlaGNC">           1 :  * Defines Cache-Control TTL rules for Cloud CDN edge caching.</span></span>
+<span id="L5"><span class="lineNum">       5</span> <span class="tlaGNC">           1 :  * BackendConfig uses USE_ORIGIN_HEADERS cache mode — the CDN respects</span></span>
+<span id="L6"><span class="lineNum">       6</span> <span class="tlaGNC">           1 :  * whatever Cache-Control we set on origin responses.</span></span>
+<span id="L7"><span class="lineNum">       7</span> <span class="tlaGNC">           1 :  *</span></span>
+<span id="L8"><span class="lineNum">       8</span> <span class="tlaGNC">           1 :  * s-maxage: CDN edge TTL (overrides max-age at the edge)</span></span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC">           1 :  * max-age:  browser cache TTL</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">           1 :  */</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">           1 : </span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">           1 : /** Cache-Control header values for each asset/route category. */</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">           3 : export const CACHE_CONTROL = {</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">           1 :   /** /_next/static/* — content-hashed filenames, safe to cache for 1 year */</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">           1 :   STATIC_IMMUTABLE: &quot;public, max-age=31536000, immutable&quot;,</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">           2 : </span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">           2 :   /** /_next/image/* — 24h browser TTL + 24h edge TTL */</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">           1 :   IMAGE: &quot;public, max-age=86400, s-maxage=86400&quot;,</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">           1 : </span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">           1 :   /** Marketing pages — 5 min edge cache, infrequently updated content */</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">           1 :   MARKETING: &quot;public, s-maxage=300&quot;,</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 : </span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaUNC">           0 :   /**</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">           1 :    * App pages (/ledger/*) — 1 min edge cache.</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">           1 :    * Auth is PKCE + localStorage (client-side), so the HTML shell is identical</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">           1 :    * for all users. Safe for short edge caching.</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">           1 :    */</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">           1 :   APP: &quot;public, s-maxage=60&quot;,</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">           1 : </span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">           1 :   /** API routes and health probes — never cache at edge or browser */</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">           1 :   NO_STORE: &quot;no-store&quot;,</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">           1 : </span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">           1 :   /** Root static assets (ico, svg, png) — 1 day browser, 7 days edge */</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">           1 :   STATIC_ASSET: &quot;public, max-age=86400, s-maxage=604800&quot;,</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">           1 : } as const;</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">           1 : </span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">           1 : /** Marketing page routes eligible for 5-min edge cache. */</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">           3 : const MARKETING_PATHS = new Set([&quot;/&quot;, &quot;/features&quot;, &quot;/pricing&quot;, &quot;/about&quot;, &quot;/faq&quot;]);</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">           1 : </span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">           1 : /**</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">           1 :  * Returns the Cache-Control header value for a given request pathname.</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">           1 :  *</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">           1 :  * Used by middleware for routes included in the middleware matcher</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">           1 :  * (pages and API routes). Static asset paths are handled by next.config.ts</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">           1 :  * headers() which runs outside the middleware matcher.</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">           1 :  *</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">           1 :  * Returns null for paths that have no explicit cache policy (e.g. unknown</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">           1 :  * non-marketing, non-ledger routes — Next.js default behaviour applies).</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">           1 :  */</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">           1 : export function getCacheControlForPath(pathname: string): string | null {</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaUNC">           0 :   // API routes — always no-store (includes /api/health and all /api/* sub-paths)</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">          34 :   if (pathname.startsWith(&quot;/api/&quot;)) {</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">          11 :     return CACHE_CONTROL.NO_STORE;</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :   }</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaUNC">           0 : </span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaUNC">           0 :   // Marketing pages — 5 min edge cache</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">          23 :   if (MARKETING_PATHS.has(pathname)) {</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">          10 :     return CACHE_CONTROL.MARKETING;</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaUNC">           0 :   }</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaUNC">           0 : </span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaUNC">           0 :   // App pages — 1 min edge cache</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">          13 :   if (pathname === &quot;/ledger&quot; || pathname.startsWith(&quot;/ledger/&quot;)) {</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">           6 :     return CACHE_CONTROL.APP;</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaUNC">           0 :   }</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaUNC">           0 : </span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">           7 :   return null;</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaUNC">           0 : }</span></span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.3.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

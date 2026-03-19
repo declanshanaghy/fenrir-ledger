@@ -32,7 +32,6 @@ out/
 Thumbs.db
 
 # Testing
-coverage/
 test-results/
 playwright-report/
 quality/.coverage-tmp/
