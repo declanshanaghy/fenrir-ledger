@@ -55,8 +55,24 @@ gh issue comment <NUMBER> --body "## Freya Handoff
 **Summary:** <brief summary of research/findings>"
 
 **Step 7 — Decree (UNBREAKABLE — final output of this session):**
-Emit the structured decree block per `.claude/agents/freya.md` § "Decree Complete".
-This MUST be the absolute last output of the session — no text after it.
+Emit EXACTLY this structure as your absolute last output — no text before or after the delimiters:
+
+᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
+ISSUE: #<NUMBER>
+VERDICT: APPROVED
+PR: N/A
+SUMMARY:
+- <what was decided/produced — 1 bullet per deliverable>
+CHECKS:
+- product-brief: COMPLETE
+- acceptance-criteria: DEFINED
+- backlog: UPDATED
+SEAL: Freya · ᚠᚱᛖᛃᚨ · Product Owner
+SIGNOFF: Vision cast, priorities set
+᛭᛭᛭ END DECREE ᛭᛭᛭
+
+NEVER use box-drawing characters (╔║╗═), emoji, markdown code fences, or any alternative format.
+This structure is MACHINE-PARSED by Odin's Throne. Deviations break the parser.
 ```
 
 ## Mode B: Doc Sync (review, update, clean up owned directory)
@@ -131,6 +147,22 @@ gh issue comment <NUMBER> --body "## Freya → Loki Handoff
 **Build:** Docs-only — no tsc/build needed. Ready for QA."
 
 **Step 7 — Decree (UNBREAKABLE — final output of this session):**
-Emit the structured decree block per `.claude/agents/freya.md` § "Decree Complete".
-This MUST be the absolute last output of the session — no text after it.
+Emit EXACTLY this structure as your absolute last output — no text before or after the delimiters:
+
+᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
+ISSUE: #<NUMBER>
+VERDICT: APPROVED
+PR: N/A
+SUMMARY:
+- <what was decided/produced — 1 bullet per deliverable>
+CHECKS:
+- product-brief: COMPLETE
+- acceptance-criteria: DEFINED
+- backlog: UPDATED
+SEAL: Freya · ᚠᚱᛖᛃᚨ · Product Owner
+SIGNOFF: Vision cast, priorities set
+᛭᛭᛭ END DECREE ᛭᛭᛭
+
+NEVER use box-drawing characters (╔║╗═), emoji, markdown code fences, or any alternative format.
+This structure is MACHINE-PARSED by Odin's Throne. Deviations break the parser.
 ```
