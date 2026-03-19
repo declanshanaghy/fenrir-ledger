@@ -230,14 +230,29 @@ describe("POST /api/trial/status", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Unauthenticated request blocked
+  // Anonymous access — no auth token required (Issue #1413)
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns 401 for unauthenticated request", async () => {
-    authFail();
+  it("allows anonymous request (no Bearer token) with valid fingerprint", async () => {
+    const startDate = daysAgo(0);
+    mockRedis.get.mockResolvedValueOnce(JSON.stringify({ startDate }));
 
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }, ""));
-    expect(res.status).toBe(401);
+    // Request with no Authorization header
+    const req = new NextRequest("http://localhost:9653/api/trial/status", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "127.0.0.1",
+      },
+      body: JSON.stringify({ fingerprint: VALID_FINGERPRINT }),
+    });
+
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.status).toBe("active");
+    expect(body.remainingDays).toBe(30);
   });
 
   // ═══════════════════════════════════════════════════════════════════════
