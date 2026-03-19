@@ -204,6 +204,8 @@ body {
   cursor: default;
   /* min touch target — padding adds area without changing visual size */
   min-width: 44px; min-height: 44px;
+  /* override .ws-badge base: icon variant has no box */
+  border: none; padding: 0; border-radius: 0;
 }
 .ws-badge-icon.connecting { animation: pulse 1.5s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
