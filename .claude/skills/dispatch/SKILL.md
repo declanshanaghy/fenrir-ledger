@@ -251,7 +251,7 @@ rm -f "$PROMPT_FILE"
 
 #### Local (`--local`)
 
-Launch via Agent tool with `isolation: "worktree"`, `run_in_background: true`, using the composed prompt as the agent task.
+Launch via Agent tool with `isolation: "worktree"`, `run_in_background: true`, `mode: "bypassPermissions"`, using the composed prompt as the agent task.
 
 ### Phase 3 — Board Move (MANDATORY)
 
