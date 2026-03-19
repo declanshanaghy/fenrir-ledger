@@ -11,9 +11,10 @@ interface Props {
   isPinned?: boolean;
   onTogglePin?: () => void;
   onCancelJob?: (sessionId: string) => void;
+  collapsed?: boolean;
 }
 
-export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin, onCancelJob }: Props) {
+export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin, onCancelJob, collapsed = false }: Props) {
   const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
   const avatar = AGENT_AVATARS[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
@@ -25,6 +26,42 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
   const cardTitle = job.issueTitle
     ? `#${job.issue} \u2013 ${job.issueTitle}`
     : displayTitle;
+
+  if (collapsed) {
+    return (
+      <div
+        className={`card card--minimal${isActive ? " active" : ""}`}
+        role="listitem"
+        aria-label={`Job: Issue ${job.issue} – ${job.agentName} – ${sLabel}`}
+        onClick={onClick}
+        title={cardTitle}
+      >
+        <span className={`card-status${pulse}`} style={{ color: sColor }} aria-hidden="true">
+          {sIcon}
+        </span>
+        <span className="card-minimal-issue" aria-label={`Issue ${job.issue}`}>
+          #{job.issue}
+        </span>
+        {avatar ? (
+          <button
+            className="card-avatar-btn card-avatar-btn--minimal"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAvatarClick?.(job.agentKey ?? "");
+            }}
+            aria-label={`View ${job.agentName} profile`}
+            title={`View ${job.agentName} profile`}
+          >
+            <img className="card-avatar card-avatar--minimal" src={avatar} alt={job.agentName} />
+          </button>
+        ) : (
+          <span className="card-minimal-agent-initial" style={{ color: agentColor }} aria-label={job.agentName}>
+            {job.agentName?.[0] ?? "?"}
+          </span>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
