@@ -47,8 +47,11 @@ vi.mock("@/components/layout/ThemeToggle", () => ({
   cycleTheme: (t: string) => (t === "dark" ? "light" : "dark"),
 }));
 
+// eslint-disable-next-line prefer-const
+let mockEntitlementCache = vi.fn(() => null);
+
 vi.mock("@/lib/entitlement/cache", () => ({
-  getEntitlementCache: () => null,
+  getEntitlementCache: () => mockEntitlementCache(),
   clearEntitlementCache: vi.fn(),
 }));
 
@@ -177,5 +180,109 @@ describe("LedgerTopBar — Settings visibility (issue #1345)", () => {
 
     const settingsItem = screen.getByRole("menuitem", { name: /settings/i });
     expect(settingsItem).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Loki panel behaviour edge cases (merged from anon-settings-1345-loki.test.tsx)
+// ---------------------------------------------------------------------------
+
+describe("TopBar — upsell panel behaviour (issue #1345)", () => {
+  beforeEach(() => {
+    mockPush.mockReset();
+    mockAuthStatus = "anonymous";
+    mockSession = null;
+    mockEntitlementCache = vi.fn(() => null);
+  });
+
+  it("'Not now' button dismisses the upsell panel", () => {
+    render(<TopBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to sync your data" }));
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /not now/i }));
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).toBeNull();
+  });
+
+  it("Escape key dismisses the upsell panel (keyboard a11y)", () => {
+    render(<TopBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to sync your data" }));
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).not.toBeNull();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).toBeNull();
+  });
+
+  it("Settings click closes the panel before navigating", () => {
+    render(<TopBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to sync your data" }));
+    fireEvent.click(screen.getByRole("button", { name: /settings/i }));
+
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).toBeNull();
+    expect(mockPush).toHaveBeenCalledWith("/ledger/settings");
+  });
+
+  it("Second avatar click toggles the panel closed", () => {
+    render(<TopBar />);
+    const avatarButton = screen.getByRole("button", { name: "Sign in to sync your data" });
+
+    fireEvent.click(avatarButton);
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).not.toBeNull();
+
+    fireEvent.click(avatarButton);
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).toBeNull();
+  });
+});
+
+describe("LedgerTopBar — upsell panel behaviour (issue #1345)", () => {
+  beforeEach(() => {
+    mockPush.mockReset();
+    mockAuthStatus = "anonymous";
+    mockSession = null;
+    mockEntitlementCache = vi.fn(() => null);
+  });
+
+  it("'Not now' button dismisses the upsell panel", () => {
+    render(<LedgerTopBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to sync your data" }));
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /not now/i }));
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).toBeNull();
+  });
+
+  it("Escape key dismisses the upsell panel (keyboard a11y)", () => {
+    render(<LedgerTopBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to sync your data" }));
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).not.toBeNull();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).toBeNull();
+  });
+
+  it("Settings click closes the panel before navigating", () => {
+    render(<LedgerTopBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to sync your data" }));
+    fireEvent.click(screen.getByRole("button", { name: /settings/i }));
+
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).toBeNull();
+    expect(mockPush).toHaveBeenCalledWith("/ledger/settings");
+  });
+
+  it("Second avatar click toggles the panel closed", () => {
+    render(<LedgerTopBar />);
+    const avatarButton = screen.getByRole("button", { name: "Sign in to sync your data" });
+
+    fireEvent.click(avatarButton);
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).not.toBeNull();
+
+    fireEvent.click(avatarButton);
+    expect(screen.queryByRole("dialog", { name: "Sign in to sync" })).toBeNull();
   });
 });
