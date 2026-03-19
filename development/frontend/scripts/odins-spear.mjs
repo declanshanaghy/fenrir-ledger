@@ -80,6 +80,8 @@ async function stripe(method, path, body) {
 
 const TRIAL_DURATION_DAYS = 30;
 const TRIAL_TTL_SECONDS = 60 * 24 * 60 * 60;
+/** Phase boundary mirrors TrialDay15Modal NUDGE_DAY — do not hardcode elsewhere. */
+const TRIAL_NUDGE_DAY = 15;
 const STATUS_EMOJI = { active: "\u001b[32m●\u001b[0m", expired: "\u001b[31m●\u001b[0m", converted: "\u001b[33m★\u001b[0m", none: "\u001b[90m○\u001b[0m" };
 const BOLD = "\u001b[1m";
 const DIM = "\u001b[2m";
@@ -385,6 +387,50 @@ function computeStatus(trial) {
 
 function shortFp(fp) {
   return `${fp.slice(0, 12)}...${fp.slice(-8)}`;
+}
+
+/**
+ * Computes the target remaining days for "trial-progress".
+ * Mirrors phase boundaries from TrialDay15Modal (TRIAL_NUDGE_DAY) and trial-utils (TRIAL_DURATION_DAYS).
+ *
+ * Phase boundaries:
+ *   remaining > TRIAL_NUDGE_DAY  → advance to exactly TRIAL_NUDGE_DAY remaining
+ *   remaining <= TRIAL_NUDGE_DAY and remaining > 0 → advance to 0 (expiry)
+ *   remaining <= 0 → already expired, no phase to progress to
+ *
+ * @param {number} remainingDays - current remaining days
+ * @returns {{ targetRemaining: number, label: string } | null} null if already expired
+ */
+function computeTrialProgressTarget(remainingDays) {
+  if (remainingDays > TRIAL_NUDGE_DAY) {
+    return { targetRemaining: TRIAL_NUDGE_DAY, label: `Day-${TRIAL_NUDGE_DAY} nudge boundary` };
+  }
+  if (remainingDays > 0) {
+    return { targetRemaining: 0, label: "Expiry boundary (day 30)" };
+  }
+  return null; // already expired
+}
+
+/**
+ * Computes the new startDate ISO string to achieve a desired remaining-days value.
+ * @param {number} targetRemaining - desired remaining days
+ * @returns {string} new startDate ISO string
+ */
+function startDateForRemaining(targetRemaining) {
+  const daysAgo = TRIAL_DURATION_DAYS - targetRemaining;
+  return new Date(Date.now() - daysAgo * 86400000).toISOString();
+}
+
+/**
+ * Describes a trial state compactly for display in confirmation dialogs.
+ * @param {{ status: string, remainingDays: number }} state
+ * @returns {string}
+ */
+function describeTrialState(state) {
+  if (state.status === "none") return "no trial";
+  if (state.status === "converted") return "converted (Karl)";
+  if (state.status === "expired") return "expired — 0 days remaining";
+  return `${state.status} — ${state.remainingDays}d remaining`;
 }
 
 function printTrial(trial, fp, ttl) {
@@ -2950,6 +2996,9 @@ const PALETTE_COMMANDS = [
   { name: "delete-household",    desc: "Delete selected household and all members",         category: "Households", destructive: true  },
   { name: "delete-all",          desc: "Delete ALL data for selected user (nuclear option)", category: "Danger",    destructive: true  },
   { name: "reconnect",           desc: "Reconnect to Redis / Firestore / Stripe",           category: "System",     destructive: false },
+  { name: "trial-adjust",        desc: "Shift trial start date by +N / -N days",            category: "Trial",      destructive: false },
+  { name: "trial-complete",      desc: `Expire trial immediately (>${TRIAL_DURATION_DAYS} days ago)`, category: "Trial", destructive: false },
+  { name: "trial-progress",      desc: `Advance to next phase boundary (day ${TRIAL_NUDGE_DAY} or expiry)`, category: "Trial", destructive: false },
 ];
 
 /** Filter PALETTE_COMMANDS by a search query string. */
@@ -3131,6 +3180,123 @@ function ConfirmDialog({ dialog, deleteInput, onDeleteInputChange, onConfirm, on
   );
 }
 
+// ── TrialDialog ───────────────────────────────────────────────────────────────
+
+/**
+ * Two-phase dialog for trial manipulation commands.
+ *
+ * Phase "input"  (trial-adjust only): collects +N/-N day value from user.
+ * Phase "confirm" (all commands): shows old → new trial state, user presses Enter or Esc.
+ *
+ * Props:
+ *   dialog   — { action, phase, dayInput, oldDesc, newDesc, applyFn }
+ *   onConfirm — () => void
+ *   onCancel  — () => void
+ *   onPhaseNext — (dayInput: string) => void  — called when input phase advances
+ *   onDayInputChange — (val: string) => void
+ */
+function TrialDialog({ dialog, onConfirm, onCancel, onPhaseNext, onDayInputChange }) {
+  useInput((input, key) => {
+    if (!dialog) return;
+    if (key.escape) { onCancel(); return; }
+
+    if (dialog.phase === "input") {
+      // Collect day-shift input (allow digits, +, -)
+      if (key.return) {
+        const n = parseInt(dialog.dayInput, 10);
+        if (!isNaN(n) && n !== 0) {
+          onPhaseNext(dialog.dayInput);
+        }
+        return;
+      }
+      if (key.backspace || key.delete) {
+        onDayInputChange(dialog.dayInput.slice(0, -1));
+        return;
+      }
+      if (input && !key.ctrl && !key.meta && /^[0-9+\-]$/.test(input)) {
+        onDayInputChange(dialog.dayInput + input);
+      }
+      return;
+    }
+
+    // Phase "confirm"
+    if (key.return) { onConfirm(); return; }
+  }, { isActive: !!dialog });
+
+  if (!dialog) return null;
+
+  if (dialog.phase === "input") {
+    const n = parseInt(dialog.dayInput, 10);
+    const valid = !isNaN(n) && n !== 0;
+    return h(Box, {
+      flexDirection: "column",
+      flexGrow: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+      h(Box, {
+        flexDirection: "column",
+        borderStyle: "round",
+        borderColor: "cyan",
+        paddingX: 4,
+        paddingY: 2,
+      },
+        h(Box, { marginBottom: 1 },
+          h(Text, { color: "cyan", bold: true }, "Trial Day Adjustment")
+        ),
+        h(Box, { marginBottom: 2 },
+          h(Text, { color: "gray" }, "Enter days to shift (e.g. +5 or -3). Positive = older start = fewer days remaining.")
+        ),
+        h(Box, { flexDirection: "row", marginBottom: 1 },
+          h(Text, { color: "gray" }, "Days:  "),
+          h(Text, { color: "white", bold: true }, dialog.dayInput || ""),
+          h(Text, { color: "gray" }, "█")
+        ),
+        h(Box, { flexDirection: "row", marginTop: 1, gap: 2 },
+          h(Text, { color: "gray" }, "[Esc] Cancel  "),
+          h(Text, {
+            color: valid ? "cyan" : "gray",
+            bold: valid,
+            dimColor: !valid,
+          }, valid ? "[Enter] Preview" : "[Enter] (enter a non-zero number first)")
+        )
+      )
+    );
+  }
+
+  // Phase "confirm" — show old → new state
+  return h(Box, {
+    flexDirection: "column",
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+    h(Box, {
+      flexDirection: "column",
+      borderStyle: "round",
+      borderColor: "cyan",
+      paddingX: 4,
+      paddingY: 2,
+    },
+      h(Box, { marginBottom: 1 },
+        h(Text, { color: "cyan", bold: true }, `Confirm: ${dialog.action}`)
+      ),
+      h(Box, { flexDirection: "row", marginBottom: 1 },
+        h(Text, { color: "gray" }, "Before: "),
+        h(Text, { color: "yellow" }, dialog.oldDesc)
+      ),
+      h(Box, { flexDirection: "row", marginBottom: 2 },
+        h(Text, { color: "gray" }, "After:  "),
+        h(Text, { color: "green", bold: true }, dialog.newDesc)
+      ),
+      h(Box, { flexDirection: "row", marginTop: 1, gap: 2 },
+        h(Text, { color: "gray" }, "[Esc] Cancel  "),
+        h(Text, { color: "cyan", bold: true }, "[Enter] Apply")
+      )
+    )
+  );
+}
+
 /** Top bar: branding, tab buttons, shortcut hints. */
 function TopBar({ activeTab, onTabChange }) {
   return h(Box, { flexDirection: "row", alignItems: "center", paddingX: 1, borderStyle: "single", borderColor: "yellow" },
@@ -3290,6 +3456,10 @@ function SpearApp({ connectionStatus, counts }) {
   const [deleteInput, setDeleteInput]     = useState("");
   const [cmdStatusMsg, setCmdStatusMsg]   = useState("");
 
+  // ── Trial dialog state ──
+  // { action, phase: "input"|"confirm", dayInput, oldDesc, newDesc, applyFn } | null
+  const [trialDialog, setTrialDialog] = useState(null);
+
   // Auto-clear status messages
   React.useEffect(() => {
     if (!cmdStatusMsg) return;
@@ -3321,6 +3491,56 @@ function SpearApp({ connectionStatus, counts }) {
   /** Called when user executes a command from the palette. */
   function handleCmdExecute(cmd) {
     closeCommandPalette();
+
+    // ── Trial commands — open TrialDialog ──
+    if (cmd.name === "trial-adjust") {
+      setTrialDialog({ action: "trial-adjust", phase: "input", dayInput: "", oldDesc: "", newDesc: "", applyFn: null });
+      return;
+    }
+    if (cmd.name === "trial-complete" || cmd.name === "trial-progress") {
+      if (!selectedFp) {
+        setCmdStatusMsg("Error: no trial selected — use list + use <N> first");
+        return;
+      }
+      // Build confirm preview by reading current trial state synchronously from last cached value
+      getTrial(selectedFp).then((trial) => {
+        const currentStatus = computeStatus(trial);
+        const oldDesc = describeTrialState(currentStatus);
+        let newDesc, applyFn;
+        if (cmd.name === "trial-complete") {
+          const expiredStart = new Date(Date.now() - (TRIAL_DURATION_DAYS + 1) * 86400000).toISOString();
+          newDesc = "expired — 0 days remaining";
+          applyFn = async () => {
+            const existing = await getTrial(selectedFp);
+            const updated = { ...(existing || {}), startDate: expiredStart };
+            delete updated.convertedDate;
+            await setTrial(selectedFp, updated);
+          };
+        } else {
+          // trial-progress
+          const target = computeTrialProgressTarget(currentStatus.remainingDays);
+          if (!target) {
+            setCmdStatusMsg("Trial already expired — nothing to progress");
+            return;
+          }
+          const newStart = startDateForRemaining(target.targetRemaining);
+          newDesc = target.targetRemaining === 0
+            ? "expired — 0 days remaining"
+            : `active — ${target.targetRemaining}d remaining (${target.label})`;
+          applyFn = async () => {
+            const existing = await getTrial(selectedFp);
+            const updated = { ...(existing || {}), startDate: newStart };
+            delete updated.convertedDate;
+            await setTrial(selectedFp, updated);
+          };
+        }
+        setTrialDialog({ action: cmd.name, phase: "confirm", dayInput: "", oldDesc, newDesc, applyFn });
+      }).catch(() => {
+        setCmdStatusMsg("Error: failed to read trial state");
+      });
+      return;
+    }
+
     if (cmd.destructive) {
       setDeleteInput("");
       setConfirmDialog({ action: cmd.name, desc: cmd.desc });
@@ -3352,12 +3572,66 @@ function SpearApp({ connectionStatus, counts }) {
     setCmdStatusMsg("Cancelled");
   }
 
+  /** Called when trial-adjust input phase advances (user entered a valid day count). */
+  function handleTrialInputNext(dayInput) {
+    if (!selectedFp) {
+      setTrialDialog(null);
+      setCmdStatusMsg("Error: no trial selected — use list + use <N> first");
+      return;
+    }
+    const days = parseInt(dayInput, 10);
+    getTrial(selectedFp).then((trial) => {
+      const currentStatus = computeStatus(trial);
+      const oldDesc = describeTrialState(currentStatus);
+      // Shifting startDate forward (+days) = trial appears older = fewer days remaining
+      const newStart = new Date(new Date(trial?.startDate ?? Date.now()).getTime() + days * 86400000).toISOString();
+      const newTrial = { ...(trial || {}), startDate: newStart };
+      delete newTrial.convertedDate;
+      const newStatus = computeStatus(newTrial);
+      const newDesc = describeTrialState(newStatus);
+      const applyFn = async () => {
+        const existing = await getTrial(selectedFp);
+        const updated = { ...(existing || {}), startDate: newStart };
+        delete updated.convertedDate;
+        await setTrial(selectedFp, updated);
+      };
+      setTrialDialog((prev) => ({
+        ...prev,
+        phase: "confirm",
+        dayInput,
+        oldDesc,
+        newDesc,
+        applyFn,
+      }));
+    }).catch(() => {
+      setTrialDialog(null);
+      setCmdStatusMsg("Error: failed to read trial state");
+    });
+  }
+
+  /** Called when TrialDialog confirm is accepted. */
+  function handleTrialConfirm() {
+    if (!trialDialog?.applyFn) return;
+    const action = trialDialog.action;
+    setTrialDialog(null);
+    trialDialog.applyFn().then(() => {
+      setCmdStatusMsg(`${action} applied`);
+    }).catch((err) => {
+      setCmdStatusMsg(`Error: ${err?.message ?? "mutation failed"}`);
+    });
+  }
+
+  function handleTrialCancel() {
+    setTrialDialog(null);
+    setCmdStatusMsg("Cancelled");
+  }
+
   useInput((input, key) => {
     // Let the active tab consume input when it has captured focus (e.g. tier prompt)
     if (inputCaptured) return;
 
-    // Command palette and confirm dialog handle their own input via useInput({ isActive })
-    if (showCmdPalette || confirmDialog) return;
+    // Command palette, confirm dialog, and trial dialog handle their own input via useInput({ isActive })
+    if (showCmdPalette || confirmDialog || trialDialog) return;
 
     // q — quit
     if (input === "q") {
@@ -3398,6 +3672,7 @@ function SpearApp({ connectionStatus, counts }) {
   });
 
   // Determine which content to render in the main area
+  // Priority: confirmDialog > trialDialog > showCmdPalette > showHelp > MainContent
   let mainArea;
   if (confirmDialog) {
     mainArea = h(ConfirmDialog, {
@@ -3406,6 +3681,14 @@ function SpearApp({ connectionStatus, counts }) {
       onDeleteInputChange: setDeleteInput,
       onConfirm: handleConfirm,
       onCancel: handleCancelConfirm,
+    });
+  } else if (trialDialog) {
+    mainArea = h(TrialDialog, {
+      dialog: trialDialog,
+      onConfirm: handleTrialConfirm,
+      onCancel: handleTrialCancel,
+      onPhaseNext: handleTrialInputNext,
+      onDayInputChange: (val) => setTrialDialog((prev) => prev ? { ...prev, dayInput: val } : prev),
     });
   } else if (showCmdPalette) {
     mainArea = h(CommandPalette, {
