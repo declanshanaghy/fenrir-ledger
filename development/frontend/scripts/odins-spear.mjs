@@ -28,7 +28,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import React, { useState, useEffect, useCallback } from "react";
-import { render, Box, Text, useInput, useApp } from "ink";
+import { render, Box, Text, useInput, useApp, useStdout } from "ink";
 
 // ── Stripe ───────────────────────────────────────────────────────────────────
 
@@ -3258,6 +3258,24 @@ function MainContent({ activeTab, onJumpToHousehold, setInputCaptured }) {
 /** Root TUI application. */
 function SpearApp({ connectionStatus, counts }) {
   const { exit } = useApp();
+  const { stdout } = useStdout();
+
+  // Track terminal dimensions and reflow on resize
+  const [termSize, setTermSize] = useState({
+    columns: stdout?.columns ?? process.stdout.columns ?? 80,
+    rows:    stdout?.rows    ?? process.stdout.rows    ?? 24,
+  });
+  useEffect(() => {
+    function onResize() {
+      setTermSize({
+        columns: stdout?.columns ?? process.stdout.columns ?? 80,
+        rows:    stdout?.rows    ?? process.stdout.rows    ?? 24,
+      });
+    }
+    process.stdout.on("resize", onResize);
+    return () => process.stdout.off("resize", onResize);
+  }, [stdout]);
+
   const [activeTab, setActiveTab]         = useState(0);
   const [showHelp, setShowHelp]           = useState(false);
   const [inputCaptured, setInputCaptured] = useState(false); // true when a tab holds input (e.g. text prompt)
@@ -3405,7 +3423,7 @@ function SpearApp({ connectionStatus, counts }) {
     mainArea = h(MainContent, { activeTab, onJumpToHousehold, setInputCaptured });
   }
 
-  return h(Box, { flexDirection: "column", height: "100%" },
+  return h(Box, { flexDirection: "column", width: termSize.columns, height: termSize.rows },
     h(TopBar, { activeTab, onTabChange: setActiveTab }),
     mainArea,
     ...(cmdStatusMsg ? [
@@ -3427,7 +3445,7 @@ const connectionStatus = {
   stripe: await getStripeKey().then(Boolean).catch(() => false),
 };
 
-const { waitUntilExit } = render(h(SpearApp, { connectionStatus, counts: initialCounts }));
+const { waitUntilExit } = render(h(SpearApp, { connectionStatus, counts: initialCounts }), { fullscreen: true });
 await waitUntilExit();
 cleanupPortForward();
 await redis.quit().catch(() => {});
