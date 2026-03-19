@@ -23,6 +23,14 @@ spec:
         {{- include "odin-throne.labels" (dict "component" "monitor-ui") | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 15
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: odin-throne
+              app.kubernetes.io/component: monitor-ui
       {{- if .Values.oauth2Proxy.enabled }}
       volumes:
         - name: oauth2-proxy-emails
