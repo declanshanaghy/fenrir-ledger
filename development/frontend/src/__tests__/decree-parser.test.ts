@@ -277,3 +277,172 @@ describe("decree constants", () => {
     expect(DECREE_DELIMITER_CLOSE).toBe("᛭᛭᛭ END DECREE ᛭᛭᛭");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Fallback: box-drawing format (Format 2)
+// ---------------------------------------------------------------------------
+
+import { parseBoxDrawingDecreeBlock, parseFreeformDecreeBlock } from "@/lib/decree-parser";
+
+const BOX_DRAWING_LOKI = `
+╔══════════════════════════════════════════════════════════════════════╗
+║                    LOKI QA DECREE — COMPLETE                         ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  Issue:    #1398                                                     ║
+║  Verdict:  ❌ FAIL                                                    ║
+║  tsc:      ✅ PASS                                                    ║
+║  build:    ✅ PASS                                                    ║
+╚══════════════════════════════════════════════════════════════════════╝
+`;
+
+const BOX_DRAWING_FIREMAN = `
+╔══════════════════════════════════╗
+║  FIREMAN DECKO DECREE — COMPLETE ║
+╠══════════════════════════════════╣
+║  Issue:    #1387                 ║
+║  Verdict:  COMPLETE              ║
+╚══════════════════════════════════╝
+`;
+
+describe("parseBoxDrawingDecreeBlock — Format 2 detection", () => {
+  it("returns non-null for a box-drawing decree", () => {
+    expect(parseBoxDrawingDecreeBlock(BOX_DRAWING_LOKI)).not.toBeNull();
+  });
+
+  it("extracts issue number from box-drawing format", () => {
+    const d = parseBoxDrawingDecreeBlock(BOX_DRAWING_LOKI);
+    expect(d?.issue).toBe("1398");
+  });
+
+  it("strips emoji from FAIL verdict", () => {
+    const d = parseBoxDrawingDecreeBlock(BOX_DRAWING_LOKI);
+    expect(d?.verdict).toBe("FAIL");
+  });
+
+  it("normalises COMPLETE verdict to DONE", () => {
+    const d = parseBoxDrawingDecreeBlock(BOX_DRAWING_FIREMAN);
+    expect(d?.verdict).toBe("DONE");
+  });
+
+  it("extracts tsc and build checks from box-drawing", () => {
+    const d = parseBoxDrawingDecreeBlock(BOX_DRAWING_LOKI);
+    expect(d?.checks.some(c => c.name === "tsc" && c.result === "PASS")).toBe(true);
+    expect(d?.checks.some(c => c.name === "build" && c.result === "PASS")).toBe(true);
+  });
+
+  it("sets format to box-drawing", () => {
+    const d = parseBoxDrawingDecreeBlock(BOX_DRAWING_LOKI);
+    expect(d?.format).toBe("box-drawing");
+  });
+
+  it("returns null for text without ╔ box chars", () => {
+    expect(parseBoxDrawingDecreeBlock("DECREE\nIssue: #1\nVerdict: PASS")).toBeNull();
+  });
+
+  it("returns null when issue and verdict are both absent", () => {
+    expect(parseBoxDrawingDecreeBlock("╔══╗\n║ DECREE ║\n╚══╝")).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fallback: freeform format (Format 3 plain text, Format 4 markdown)
+// ---------------------------------------------------------------------------
+
+const FREEFORM_PLAIN = `
+AGENT: FiremanDecko
+ISSUE: #1409
+STATUS: COMPLETE
+VERDICT: PASS
+tsc: PASS
+build: PASS
+`;
+
+const FREEFORM_MARKDOWN = `
+## FiremanDecko Decree — Issue #1367
+**Verdict:** DONE
+- Changed X
+- Fixed Y
+tsc: PASS
+build: PASS
+`;
+
+describe("parseFreeformDecreeBlock — Format 3/4 detection", () => {
+  it("returns non-null for plain text freeform", () => {
+    expect(parseFreeformDecreeBlock(FREEFORM_PLAIN)).not.toBeNull();
+  });
+
+  it("extracts issue from plain text", () => {
+    const d = parseFreeformDecreeBlock(FREEFORM_PLAIN);
+    expect(d?.issue).toBe("1409");
+  });
+
+  it("extracts PASS verdict from plain text", () => {
+    const d = parseFreeformDecreeBlock(FREEFORM_PLAIN);
+    expect(d?.verdict).toBe("PASS");
+  });
+
+  it("returns non-null for markdown freeform", () => {
+    expect(parseFreeformDecreeBlock(FREEFORM_MARKDOWN)).not.toBeNull();
+  });
+
+  it("extracts issue from markdown format", () => {
+    const d = parseFreeformDecreeBlock(FREEFORM_MARKDOWN);
+    expect(d?.issue).toBe("1367");
+  });
+
+  it("extracts bold verdict from markdown", () => {
+    const d = parseFreeformDecreeBlock(FREEFORM_MARKDOWN);
+    expect(d?.verdict).toBe("DONE");
+  });
+
+  it("extracts tsc check from markdown", () => {
+    const d = parseFreeformDecreeBlock(FREEFORM_MARKDOWN);
+    expect(d?.checks.some(c => c.name === "tsc" && c.result === "PASS")).toBe(true);
+  });
+
+  it("sets format to freeform", () => {
+    const d = parseFreeformDecreeBlock(FREEFORM_PLAIN);
+    expect(d?.format).toBe("freeform");
+  });
+
+  it("returns null when no DECREE keyword is present", () => {
+    expect(parseFreeformDecreeBlock("ISSUE: #1\nVERDICT: PASS")).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseDecreeBlock — fallback cascade
+// ---------------------------------------------------------------------------
+
+describe("parseDecreeBlock — fallback cascade", () => {
+  it("returns canonical format for canonical input", () => {
+    const d = parseDecreeBlock(FULL_FIREMAN_DECREE);
+    expect(d?.format).toBe("canonical");
+  });
+
+  it("falls back to box-drawing for Format 2 input", () => {
+    const d = parseDecreeBlock(BOX_DRAWING_LOKI);
+    expect(d).not.toBeNull();
+    expect(d?.format).toBe("box-drawing");
+    expect(d?.verdict).toBe("FAIL");
+  });
+
+  it("falls back to freeform for Format 3 input", () => {
+    const d = parseDecreeBlock(FREEFORM_PLAIN);
+    expect(d).not.toBeNull();
+    expect(d?.format).toBe("freeform");
+  });
+
+  it("falls back to freeform for Format 4 markdown input", () => {
+    const d = parseDecreeBlock(FREEFORM_MARKDOWN);
+    expect(d).not.toBeNull();
+    expect(d?.format).toBe("freeform");
+  });
+
+  it("canonical still works after adding format field", () => {
+    const d = parseDecreeBlock(FULL_FIREMAN_DECREE);
+    expect(d?.verdict).toBe("DONE");
+    expect(d?.issue).toBe("1077");
+    expect(d?.sealAgent).toBe("FiremanDecko");
+  });
+});

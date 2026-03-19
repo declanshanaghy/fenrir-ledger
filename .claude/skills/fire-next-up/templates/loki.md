@@ -134,8 +134,25 @@ Read that file at the start of Step 3 — it contains budgets, pyramid enforceme
 locator rules, data isolation patterns, and all UNBREAKABLE test constraints.
 
 **Step 8 — Decree (UNBREAKABLE — final output of this session):**
-Emit the structured decree block per `.claude/agents/loki.md` § "Decree Complete".
-This MUST be the absolute last output of the session — no text after it.
+Emit EXACTLY this structure as your absolute last output — no text before or after the delimiters:
+
+᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
+ISSUE: #<NUMBER>
+VERDICT: PASS or FAIL
+PR: <pr-url or N/A>
+SUMMARY:
+- <what was validated — 1 bullet per test area>
+CHECKS:
+- tsc: PASS or FAIL
+- build: PASS or FAIL
+- vitest: <count> tests, all passing (or N failing)
+- playwright: <count> tests (if run)
+SEAL: Loki · ᛚᛟᚲᛁ · QA Tester
+SIGNOFF: Break it before the wolf does
+᛭᛭᛭ END DECREE ᛭᛭᛭
+
+NEVER use box-drawing characters (╔║╗═), emoji, markdown code fences, or any alternative format.
+This structure is MACHINE-PARSED by Odin's Throne. Deviations break the parser.
 ```
 
 ## Mode B: CI Bounce-Back (fix failing CI tests on an existing PR)
@@ -222,6 +239,23 @@ Your job ends after posting the verdict comment (and optionally running chain co
 - A PASS verdict requires ALL tests green. No exceptions.
 
 **Step 8 — Decree (UNBREAKABLE — final output of this session):**
-Emit the structured decree block per `.claude/agents/loki.md` § "Decree Complete".
-This MUST be the absolute last output of the session — no text after it.
+Emit EXACTLY this structure as your absolute last output — no text before or after the delimiters:
+
+᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
+ISSUE: #<NUMBER>
+VERDICT: PASS or FAIL
+PR: <pr-url or N/A>
+SUMMARY:
+- <what was validated — 1 bullet per test area>
+CHECKS:
+- tsc: PASS or FAIL
+- build: PASS or FAIL
+- vitest: <count> tests, all passing (or N failing)
+- playwright: <count> tests (if run)
+SEAL: Loki · ᛚᛟᚲᛁ · QA Tester
+SIGNOFF: Break it before the wolf does
+᛭᛭᛭ END DECREE ᛭᛭᛭
+
+NEVER use box-drawing characters (╔║╗═), emoji, markdown code fences, or any alternative format.
+This structure is MACHINE-PARSED by Odin's Throne. Deviations break the parser.
 ```
