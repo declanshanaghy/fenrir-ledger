@@ -226,6 +226,19 @@ export default function SettingsPage() {
     track("settings-visit");
   }, []);
 
+  // Listen for hash changes so that dropdown nav (router.push("#account") etc.)
+  // switches the active tab when already on the settings page.
+  useEffect(() => {
+    function handleHashChange() {
+      const hash = window.location.hash.replace("#", "") as SettingsTabId;
+      if (SETTINGS_TABS.some((t) => t.id === hash)) {
+        setActiveTab(hash);
+      }
+    }
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
   const activateTab = useCallback((tabId: SettingsTabId) => {
     setActiveTab(tabId);
     history.replaceState(null, "", "#" + tabId);
