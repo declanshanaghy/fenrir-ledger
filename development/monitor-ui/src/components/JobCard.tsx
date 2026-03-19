@@ -47,10 +47,10 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
             className="card-avatar-btn card-avatar-btn--minimal"
             onClick={(e) => {
               e.stopPropagation();
-              onAvatarClick?.(job.agentKey ?? "");
+              onClick();
             }}
-            aria-label={`View ${job.agentName} profile`}
-            title={`View ${job.agentName} profile`}
+            aria-label={`Open session log for ${job.agentName} – Issue ${job.issue}`}
+            title={cardTitle}
           >
             <img className="card-avatar card-avatar--minimal" src={avatar} alt={job.agentName} />
           </button>
