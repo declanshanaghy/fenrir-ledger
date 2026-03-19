@@ -103,6 +103,14 @@ describe("HouseholdSettingsSection — Sign in button gold CTA (issue #1408)", (
       expect(cls).not.toContain("hover:bg-muted");
     });
   });
+
+  it("Sign in link preserves min-h-[44px] touch target", async () => {
+    render(<HouseholdSettingsSection />);
+    await waitFor(() => {
+      const link = screen.getByRole("link", { name: /sign in to manage your household/i });
+      expect((link as HTMLElement).className).toContain("min-h-[44px]");
+    });
+  });
 });
 
 // ── Tests: SyncSettingsSection "Upgrade to Karl" gold CTA ─────────────────────
@@ -139,5 +147,20 @@ describe("SyncSettingsSection — Upgrade to Karl button gold CTA (issue #1408)"
     const cls = (btn as HTMLElement).className;
     expect(cls).toContain("bg-gold");
     expect(cls).not.toContain("hover:bg-muted");
+  });
+
+  it("does NOT render Upgrade to Karl button for trial users", () => {
+    // Trial users see the upsell card but without the upgrade button
+    // (the Subscription card above has its own upgrade button)
+    mockTrialStatus.status = "active";
+    render(<SyncSettingsSection />);
+    const btn = screen.queryByRole("button", { name: "Upgrade to Karl to unlock Cloud Sync" });
+    expect(btn).toBeNull();
+  });
+
+  it("Upgrade to Karl button preserves min-h-[44px] touch target", () => {
+    render(<SyncSettingsSection />);
+    const btn = screen.getByRole("button", { name: "Upgrade to Karl to unlock Cloud Sync" });
+    expect((btn as HTMLElement).className).toContain("min-h-[44px]");
   });
 });
