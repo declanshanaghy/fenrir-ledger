@@ -64,13 +64,17 @@ function normaliseVerdict(raw: string): string {
 /** Extract checks from box-drawing or freeform content */
 function extractFallbackChecks(text: string): DecreeCheck[] {
   const checks: DecreeCheck[] = [];
-  const checkRe = /\b(tsc|build|vitest|playwright|owasp|requireauth|secrets|wireframes|interactions|accessibility|product-brief|acceptance-criteria|backlog)\b[:\s]+([^\n║╝╚╣╔╠╬╩╦╟─│\r]+)/gi;
+  // Pre-normalise: replace emoji with text equivalents, strip box-drawing chars
+  const normalized = text
+    .replace(/✅/g, "PASS")
+    .replace(/❌/g, "FAIL")
+    .replace(/[\u2500-\u257F║╔╗╚╝╠╣╦╩╬═]+/g, " ");
+  // Match "checkname: VALUE" — capture only first non-space token as value
+  const checkRe = /\b(tsc|build|vitest|playwright|owasp|requireauth|secrets|wireframes|interactions|accessibility|product-brief|acceptance-criteria|backlog)\b\s*:\s*(\S+)/gi;
   let m: RegExpExecArray | null;
-  while ((m = checkRe.exec(text)) !== null) {
+  while ((m = checkRe.exec(normalized)) !== null) {
     const name = (m[1] ?? "").toLowerCase();
-    let rawVal = (m[2] ?? "").trim();
-    rawVal = rawVal.replace(/[║╝╚╣═╗╔╠╬╩╦╟─│┌┐└┘├┤┬┴┼]+/g, "").trim();
-    rawVal = rawVal.replace(/✅/g, "PASS").replace(/❌/g, "FAIL").trim();
+    const rawVal = (m[2] ?? "").trim();
     if (rawVal) checks.push({ name, result: rawVal });
   }
   return checks;
@@ -219,16 +223,20 @@ export function parseBoxDrawingDecreeBlock(text: string): DecreeBlock | null {
  * Returns null if this does not look like a freeform decree.
  */
 export function parseFreeformDecreeBlock(text: string): DecreeBlock | null {
-  if (!/(Decree|DECREE)/i.test(text)) return null;
+  // Skip if this looks like a partial canonical decree (has rune delimiter chars)
+  if (/᛭/.test(text)) return null;
+  if (!/(Decree|DECREE|AGENT)/i.test(text)) return null;
   if (!/(VERDICT|Verdict|ISSUE|Issue)/i.test(text)) return null;
 
   // Issue
   const issueM = text.match(/(?:ISSUE|Issue):?\s*#?(\d+)/i);
   const issue: string | null = issueM?.[1] ?? null;
 
-  // Verdict — handle bold markdown **PASS**, plain text, emoji
-  const verdictM = text.match(/(?:VERDICT|Verdict|STATUS|Status):?\s*\*{0,2}([\w❌✅🔴🟢 ]+)\*{0,2}/i);
-  const verdict: string | null = verdictM?.[1] ? normaliseVerdict(verdictM[1]) : null;
+  // Verdict — prefer explicit VERDICT: field; fall back to STATUS: only if absent
+  const verdictExplicit = text.match(/(?:VERDICT|Verdict):?\s*\*{0,2}([\w❌✅🔴🟢 ]+)\*{0,2}/i);
+  const verdictStatus   = text.match(/(?:STATUS|Status):?\s*\*{0,2}([\w❌✅🔴🟢 ]+)\*{0,2}/i);
+  const verdictRaw = (verdictExplicit ?? verdictStatus)?.[1] ?? null;
+  const verdict: string | null = verdictRaw ? normaliseVerdict(verdictRaw) : null;
 
   // PR
   const prM = text.match(/PR:?\s*(https:\/\/\S+|#\d+)/i);
