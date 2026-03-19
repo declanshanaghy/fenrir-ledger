@@ -360,8 +360,7 @@ body {
 .card-minimal-issue {
   font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
   font-weight: 700; color: var(--text-saga);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 56px; text-align: center;
+  white-space: nowrap; text-align: center;
 }
 .card-avatar-btn--minimal {
   padding: 0; border: none; background: transparent; cursor: pointer;
@@ -471,6 +470,7 @@ body {
 .session-id-chip {
   font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
   font-style: italic; color: var(--text-void); cursor: help;
+  word-break: break-all;
 }
 .session-id-label {
   /* Hidden on mobile (≤600px) via responsive rules below */
@@ -751,10 +751,9 @@ body {
   display: flex; gap: 0.75rem; flex-wrap: wrap;
   font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
   color: var(--text-rune); margin-left: 0.5rem;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   flex: 1; min-width: 0;
 }
-.ep-group-meta-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-group-meta-item { white-space: nowrap; }
 .ep-group-meta-key { color: var(--gold); font-weight: 600; margin-right: 0.2rem; }
 .ep-group-error { border-color: var(--error-border-dim); }
 .ep-group-error .ep-group-title { color: var(--error-strong); }
@@ -2674,9 +2673,7 @@ body {
   font-size: 0.8rem;
   color: #c9920a;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
 }
 .rdk-session-id {
   font-size: 0.68rem;
