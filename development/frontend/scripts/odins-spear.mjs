@@ -1445,7 +1445,7 @@ async function loadUsersWithTiers() {
   });
 }
 
-/** Fetch full detail for a selected user: household, cards, Stripe, cloud sync. */
+/** Fetch full detail for a selected user: household, cards, Stripe, cloud sync, trial. */
 async function loadUserDetailData(user) {
   const db = getDb();
   const result = {
@@ -1457,6 +1457,7 @@ async function loadUserDetailData(user) {
       health: user.syncHealth || "unknown",
     } : null,
     cardCount: null,
+    trial: null,      // { fingerprint, startDate, convertedDate?, remainingDays, status }
   };
 
   if (user.householdId) {
@@ -1515,6 +1516,19 @@ async function loadUserDetailData(user) {
     } catch { /* best effort */ }
   }
 
+  // Fetch trial via reverse-lookup index: trial:user:{userId} → fingerprint
+  try {
+    const fp = await redis.get(`trial:user:${user.id}`);
+    if (fp) {
+      const raw = await redis.get(`trial:${fp}`);
+      if (raw) {
+        const t = JSON.parse(raw);
+        const s = computeStatus(t);
+        result.trial = { fingerprint: fp, startDate: t.startDate, convertedDate: t.convertedDate, ...s };
+      }
+    }
+  } catch { /* best effort */ }
+
   return result;
 }
 
@@ -1541,6 +1555,14 @@ function SubStatusBadge({ status }) {
     status === "past_due"  ? "yellow" :
     status === "canceled"  ? "red"    : "gray";
   return h(Text, { color, bold: color !== "gray" }, status.replace(/_/g, " "));
+}
+
+/** Trial status badge. */
+function TrialStatusBadge({ status, remainingDays }) {
+  if (status === "none")      return h(Text, { color: "gray", dimColor: true }, "none");
+  if (status === "converted") return h(Text, { color: "yellow", bold: true }, "★ converted");
+  if (status === "expired")   return h(Text, { color: "red" }, "● expired");
+  return h(Text, { color: "green", bold: true }, `● active — ${remainingDays}d left`);
 }
 
 /** Cloud sync health indicator. */
@@ -1586,13 +1608,14 @@ function UserListRow({ user, selected }) {
 
 /**
  * Right-panel: full detail for selected user.
- * Shows identity, household, Stripe, cloud sync, card count, and action shortcuts.
+ * Shows identity, household, Stripe, cloud sync, card count, trial, and action shortcuts.
  */
 function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusMessage }) {
   const hh = detail?.household ?? null;
   const stripeData = detail?.stripe ?? null;
   const sync = detail?.cloudSync ?? null;
   const cards = detail?.cardCount ?? null;
+  const trial = detail?.trial ?? null;
 
   // ── Action area ──
   let actionArea;
@@ -1614,6 +1637,30 @@ function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusM
       h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
       h(Text, { color: "gray" }, "[Esc] Cancel")
     );
+  } else if (mode === "confirm-trial-reset") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "yellow", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "yellow" }, "Reset trial to today? "),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
+  } else if (mode === "confirm-trial-expire") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "red", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "red" }, "Force-expire trial now? "),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
+  } else if (mode === "confirm-trial-convert") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "yellow", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "yellow" }, "Mark trial as converted? "),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
+  } else if (mode === "confirm-trial-delete") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "red", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "red" }, "Delete trial record entirely? "),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
   } else {
     actionArea = h(Box, { flexDirection: "row", flexWrap: "wrap", borderStyle: "single", borderColor: "gray", paddingX: 1, marginTop: 1 },
       h(Text, { color: "red" }, "[d] Delete  "),
@@ -1621,6 +1668,12 @@ function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusM
       ...(stripeData ? [h(Text, { color: "red" }, "[s] Cancel Sub  ")] : []),
       ...(hh ? [h(Text, { color: "yellow" }, "[h] Household  ")] : []),
       ...(hh ? [h(Text, { color: "cyan" }, "[c] Cards  ")] : []),
+      ...(trial ? [
+        h(Text, { color: "green" }, "[R] Trial Reset  "),
+        h(Text, { color: "red" }, "[E] Trial Expire  "),
+        ...(trial.status !== "converted" ? [h(Text, { color: "yellow" }, "[K] Trial Convert  ")] : []),
+        h(Text, { color: "red" }, "[X] Trial Delete  "),
+      ] : []),
       h(Text, { color: "gray" }, "[Esc] Back")
     );
   }
@@ -1704,6 +1757,31 @@ function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusM
           )
         : h(Text, { color: "gray", dimColor: true }, "  N/A"),
 
+    // ── Trial ──
+    h(SectionHeader, { title: "Trial" }),
+    detailLoading
+      ? h(Text, { color: "gray", dimColor: true }, "  Loading…")
+      : trial
+        ? h(Box, { flexDirection: "column" },
+            h(DetailField, { label: "Status" },
+              h(TrialStatusBadge, { status: trial.status, remainingDays: trial.remainingDays })
+            ),
+            h(DetailField, { label: "Started" },
+              h(Text, {}, new Date(trial.startDate).toLocaleDateString())
+            ),
+            ...(trial.convertedDate ? [
+              h(DetailField, { label: "Converted" },
+                h(Text, { color: "yellow" }, new Date(trial.convertedDate).toLocaleDateString())
+              ),
+            ] : []),
+            h(DetailField, { label: "Fingerprint" },
+              h(Text, { color: "cyan", dimColor: true },
+                trial.fingerprint.slice(0, 8) + "…" + trial.fingerprint.slice(-8)
+              )
+            ),
+          )
+        : h(Text, { color: "gray", dimColor: true }, "  No trial found (not yet linked)"),
+
     // ── Actions ──
     actionArea,
 
@@ -1727,7 +1805,7 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
   const [scrollOffset, setScrollOffset] = useState(0);
   const [detail, setDetail]             = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [mode, setMode]                 = useState("browse"); // browse | confirm-delete | prompt-tier | confirm-cancel-sub
+  const [mode, setMode]                 = useState("browse"); // browse | confirm-delete | prompt-tier | confirm-cancel-sub | confirm-trial-reset | confirm-trial-expire | confirm-trial-convert | confirm-trial-delete
   const [tierInput, setTierInput]       = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [cardView, setCardView]         = useState(false); // true = show CardDrilldownView
@@ -1831,6 +1909,74 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
     })();
   }
 
+  function doTrialReset() {
+    const fp = detail?.trial?.fingerprint;
+    if (!fp) return;
+    (async () => {
+      try {
+        const updated = { startDate: new Date().toISOString() };
+        await redis.set(`trial:${fp}`, JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
+        const s = computeStatus(updated);
+        setDetail((d) => d ? { ...d, trial: { ...d.trial, ...updated, ...s } } : d);
+        setStatusMessage(`Trial reset — ${TRIAL_DURATION_DAYS}d remaining`);
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
+  function doTrialExpire() {
+    const fp = detail?.trial?.fingerprint;
+    if (!fp) return;
+    (async () => {
+      try {
+        const expired = new Date(Date.now() - 31 * 86400000).toISOString();
+        const raw = await redis.get(`trial:${fp}`);
+        const existing = raw ? JSON.parse(raw) : {};
+        const updated = { ...existing, startDate: expired };
+        delete updated.convertedDate;
+        await redis.set(`trial:${fp}`, JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
+        const s = computeStatus(updated);
+        setDetail((d) => d ? { ...d, trial: { ...d.trial, ...updated, ...s } } : d);
+        setStatusMessage("Trial force-expired");
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
+  function doTrialConvert() {
+    const fp = detail?.trial?.fingerprint;
+    if (!fp) return;
+    (async () => {
+      try {
+        const raw = await redis.get(`trial:${fp}`);
+        const existing = raw ? JSON.parse(raw) : {};
+        const updated = { ...existing, convertedDate: new Date().toISOString() };
+        await redis.set(`trial:${fp}`, JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
+        const s = computeStatus(updated);
+        setDetail((d) => d ? { ...d, trial: { ...d.trial, ...updated, ...s } } : d);
+        setStatusMessage("Trial marked as converted");
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
+  function doTrialDelete() {
+    const fp = detail?.trial?.fingerprint;
+    if (!fp) return;
+    (async () => {
+      try {
+        await redis.del(`trial:${fp}`);
+        setDetail((d) => d ? { ...d, trial: null } : d);
+        setStatusMessage("Trial deleted");
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
   // ── Keyboard input ──
 
   useInput((input, key) => {
@@ -1875,6 +2021,26 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
       } else {
         setStatusMessage("Cancelled");
       }
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-trial-reset") {
+      if (input === "y" || input === "Y") doTrialReset(); else setStatusMessage("Cancelled");
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-trial-expire") {
+      if (input === "y" || input === "Y") doTrialExpire(); else setStatusMessage("Cancelled");
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-trial-convert") {
+      if (input === "y" || input === "Y") doTrialConvert(); else setStatusMessage("Cancelled");
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-trial-delete") {
+      if (input === "y" || input === "Y") doTrialDelete(); else setStatusMessage("Cancelled");
       setMode("browse");
       return;
     }
@@ -1927,6 +2093,22 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
       const u = users[selectedIdx];
       setCardContext({ householdId: u.householdId, filterUserId: u.id, ownerEmail: u.email });
       setCardView(true);
+      return;
+    }
+    if ((input === "R") && detail?.trial) {
+      setMode("confirm-trial-reset");
+      return;
+    }
+    if ((input === "E") && detail?.trial) {
+      setMode("confirm-trial-expire");
+      return;
+    }
+    if ((input === "K") && detail?.trial && detail.trial.status !== "converted") {
+      setMode("confirm-trial-convert");
+      return;
+    }
+    if ((input === "X") && detail?.trial) {
+      setMode("confirm-trial-delete");
       return;
     }
   }, { isActive });

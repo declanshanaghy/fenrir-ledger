@@ -3,7 +3,8 @@
  *
  * Stores and retrieves trial records keyed by browser fingerprint.
  *
- * Key format: `trial:{fingerprint}` → StoredTrial
+ * Key format:  `trial:{fingerprint}`     → StoredTrial
+ * Reverse idx: `trial:user:{userId}`     → fingerprint string
  *
  * TTL: 60 days (covers the 30-day trial + 30 days of post-trial data retention).
  *
@@ -24,6 +25,8 @@ export interface StoredTrial {
   startDate: string;
   /** ISO timestamp of when the user converted to Karl (if they did). */
   convertedDate?: string;
+  /** Google OAuth `sub` — set on first authenticated sign-in, absent for anonymous trials. */
+  userId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,6 +48,10 @@ const TRIAL_TTL_SECONDS = 60 * 24 * 60 * 60;
  */
 function trialKey(fingerprint: string): string {
   return `trial:${fingerprint}`;
+}
+
+function userTrialKey(userId: string): string {
+  return `trial:user:${userId}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,33 +86,91 @@ export async function getTrial(fingerprint: string): Promise<StoredTrial | null>
 /**
  * Creates a new trial record in KV. If a record already exists for this
  * fingerprint, this is a no-op — the original start date is preserved.
+ * If `userId` is provided, it is stored on the trial and a reverse-lookup
+ * key `trial:user:{userId}` → fingerprint is written.
  *
  * @param fingerprint - 64-char SHA-256 hex fingerprint
+ * @param userId - Google OAuth `sub` (optional; present when user is signed in)
  * @returns The stored trial record (existing or newly created)
  */
-export async function initTrial(fingerprint: string): Promise<StoredTrial> {
-  log.debug("initTrial called", { fingerprint });
+export async function initTrial(fingerprint: string, userId?: string): Promise<StoredTrial> {
+  log.debug("initTrial called", { fingerprint, hasUserId: !!userId });
+
+  const redis = getRedisClient();
 
   // Check for existing trial first (idempotent)
   const existing = await getTrial(fingerprint);
   if (existing) {
+    // If we now have a userId and the trial doesn't yet, link them.
+    if (userId && !existing.userId) {
+      await linkTrialToUser(fingerprint, userId);
+    }
     log.debug("initTrial returning", { fingerprint, reason: "already_exists", startDate: existing.startDate });
     return existing;
   }
 
   const trial: StoredTrial = {
     startDate: new Date().toISOString(),
+    ...(userId ? { userId } : {}),
   };
 
   try {
-    const redis = getRedisClient();
     await redis.set(trialKey(fingerprint), JSON.stringify(trial), "EX", TRIAL_TTL_SECONDS);
+    if (userId) {
+      await redis.set(userTrialKey(userId), fingerprint, "EX", TRIAL_TTL_SECONDS);
+    }
     log.debug("initTrial returning", { fingerprint, startDate: trial.startDate });
     return trial;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("initTrial failed", { fingerprint, error: message });
     throw err;
+  }
+}
+
+/**
+ * Links an existing anonymous trial to a Google user ID.
+ * Patches the trial record with `userId` and writes the reverse-lookup key.
+ * No-op if the trial is already linked to this user.
+ *
+ * @param fingerprint - 64-char SHA-256 hex fingerprint
+ * @param userId - Google OAuth `sub`
+ */
+export async function linkTrialToUser(fingerprint: string, userId: string): Promise<void> {
+  log.debug("linkTrialToUser called", { fingerprint, userId });
+  try {
+    const redis = getRedisClient();
+    const existing = await getTrial(fingerprint);
+    if (!existing) return;
+    if (existing.userId === userId) return;
+
+    const updated: StoredTrial = { ...existing, userId };
+    await redis.set(trialKey(fingerprint), JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
+    await redis.set(userTrialKey(userId), fingerprint, "EX", TRIAL_TTL_SECONDS);
+    log.debug("linkTrialToUser success", { fingerprint, userId });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("linkTrialToUser failed", { fingerprint, userId, error: message });
+  }
+}
+
+/**
+ * Looks up the trial fingerprint for a given Google user ID via the reverse index.
+ *
+ * @param userId - Google OAuth `sub`
+ * @returns fingerprint string or null if not found
+ */
+export async function getFingerprintByUserId(userId: string): Promise<string | null> {
+  log.debug("getFingerprintByUserId called", { userId });
+  try {
+    const redis = getRedisClient();
+    const fp = await redis.get(userTrialKey(userId));
+    log.debug("getFingerprintByUserId returning", { userId, found: !!fp });
+    return fp;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("getFingerprintByUserId failed", { userId, error: message });
+    return null;
   }
 }
 
