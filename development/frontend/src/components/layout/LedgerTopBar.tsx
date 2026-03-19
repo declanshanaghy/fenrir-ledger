@@ -280,17 +280,6 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           />
         )}
       </button>
-      {/* Theme row — click anywhere to toggle dark ↔ light */}
-      <button
-        type="button"
-        role="menuitem"
-        onClick={() => setTheme(cycleTheme(theme))}
-        className="flex items-center gap-2 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer w-full text-left"
-        style={{ minHeight: 44 }}
-      >
-        <ThemeToggle variant="dropdown-icon" />
-        <span className="text-sm text-muted-foreground font-body">Theme</span>
-      </button>
       {/* Account link */}
       <button
         type="button"
@@ -365,6 +354,17 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
             aria-hidden="true"
           />
         )}
+      </button>
+      {/* Theme row — click anywhere to toggle dark ↔ light */}
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => setTheme(cycleTheme(theme))}
+        className="flex items-center gap-2 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer w-full text-left"
+        style={{ minHeight: 44 }}
+      >
+        <ThemeToggle variant="dropdown-icon" />
+        <span className="text-sm text-muted-foreground font-body">Theme</span>
       </button>
       {/* Sign out */}
       <button
