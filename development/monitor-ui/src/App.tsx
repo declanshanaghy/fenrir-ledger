@@ -9,6 +9,7 @@ import { ErrorBanner } from "./components/ErrorBanner";
 import { Sidebar } from "./components/Sidebar";
 import { LogViewer } from "./components/LogViewer";
 import { AgentProfileModal } from "./components/AgentProfileModal";
+import { RagnarokDialog } from "./components/RagnarokDialog";
 import { useTheme } from "./hooks/useTheme";
 import {
   isPinned as checkIsPinned,
@@ -25,6 +26,7 @@ export function App() {
   const quote = useMemo(() => randomQuote(), []);
   const { theme } = useTheme();
   const [profileAgent, setProfileAgent] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<{ sessionId: string; jobTitle: string } | null>(null);
   const { jobs, handleMessage: handleJobsMessage, refreshCached } = useJobs();
   const {
     entries,
@@ -277,6 +279,32 @@ export function App() {
     handleTogglePinForSession(activeSessionId);
   }, [activeSessionId, handleTogglePinForSession]);
 
+  /** Open Ragnarök confirmation dialog for a running job. */
+  const handleOpenCancelDialog = useCallback(
+    (sessionId: string) => {
+      const job = jobs.find((j) => j.sessionId === sessionId);
+      if (!job || job.status !== "running") return;
+      const jobTitle = job.issueTitle
+        ? `#${job.issue} \u2013 ${job.issueTitle}`
+        : `#${job.issue} \u2013 ${job.agentName} Step ${job.step}`;
+      setCancelTarget({ sessionId, jobTitle });
+    },
+    [jobs]
+  );
+
+  /** Confirmed: call DELETE /api/jobs/:sessionId to kill the K8s job. */
+  const handleConfirmCancel = useCallback(async () => {
+    if (!cancelTarget) return;
+    const res = await fetch(`/api/jobs/${encodeURIComponent(cancelTarget.sessionId)}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({})) as { error?: string };
+      throw new Error(body.error ?? `HTTP ${res.status}`);
+    }
+    setCancelTarget(null);
+  }, [cancelTarget]);
+
   return (
     <ErrorBoundary>
       <ErrorBanner message={wsError} />
@@ -292,6 +320,7 @@ export function App() {
           onOdinClick={() => setProfileAgent("odin")}
           onTogglePinSession={handleTogglePinForSession}
           pinnedSessionIds={pinnedSessionIds}
+          onCancelJob={handleOpenCancelDialog}
         />
         <ErrorBoundary>
           <LogViewer
@@ -320,6 +349,14 @@ export function App() {
           agentKey={profileAgent}
           theme={theme}
           onClose={() => setProfileAgent(null)}
+        />
+      )}
+      {cancelTarget && (
+        <RagnarokDialog
+          sessionId={cancelTarget.sessionId}
+          jobTitle={cancelTarget.jobTitle}
+          onConfirm={handleConfirmCancel}
+          onCancel={() => setCancelTarget(null)}
         />
       )}
     </ErrorBoundary>

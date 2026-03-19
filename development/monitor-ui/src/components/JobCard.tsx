@@ -10,9 +10,10 @@ interface Props {
   onAvatarClick?: (agentKey: string) => void;
   isPinned?: boolean;
   onTogglePin?: () => void;
+  onCancelJob?: (sessionId: string) => void;
 }
 
-export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin }: Props) {
+export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin, onCancelJob }: Props) {
   const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
   const avatar = AGENT_AVATARS[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
@@ -49,14 +50,29 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
         <span className="card-issue-title" title={cardTitle}>
           {cardTitle}
         </span>
-        <span
-          className={`card-status${pulse}`}
-          style={{ color: sColor }}
-          title={sLabel}
-          aria-label={`Status: ${sLabel}`}
-        >
-          {sIcon}
-        </span>
+        {job.status === "running" && onCancelJob ? (
+          <button
+            className={`card-status card-status--clickable${pulse}`}
+            style={{ color: sColor }}
+            title="Invoke Ragnarök — click to cancel this job"
+            aria-label="Cancel running job"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCancelJob(job.sessionId);
+            }}
+          >
+            {sIcon}
+          </button>
+        ) : (
+          <span
+            className={`card-status${pulse}`}
+            style={{ color: sColor }}
+            title={sLabel}
+            aria-label={`Status: ${sLabel}`}
+          >
+            {sIcon}
+          </span>
+        )}
       </div>
       <div className="card-meta-new">
         <span className="card-agent-badge" style={{ color: agentColor }}>
