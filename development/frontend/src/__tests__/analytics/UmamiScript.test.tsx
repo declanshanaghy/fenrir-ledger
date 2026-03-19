@@ -4,7 +4,7 @@
  * Vitest suite for the UmamiScript analytics component — Issue #782.
  * Verifies conditional rendering and correct attribute wiring.
  *
- * Note: @testing-library/jest-dom is not installed; uses native assertions.
+ * Uses @testing-library/jest-dom for DOM assertions (issue #1371).
  */
 
 import { render } from "@testing-library/react";
@@ -82,8 +82,7 @@ describe("UmamiScript", () => {
       <UmamiScript websiteId="test-uuid-1234" />
     );
     // No nonce attribute should be present on the rendered script
-    const nonce = getByTestId("umami-script").getAttribute("nonce");
-    expect(nonce === null || nonce === "").toBe(true);
+    expect(getByTestId("umami-script")).not.toHaveAttribute("nonce");
   });
 });
 
@@ -128,7 +127,7 @@ describe("UmamiScript — Loki augmentation", () => {
     const { container } = render(<UmamiScript websiteId="   " />);
     // Current impl renders (truthy whitespace). Capture the behaviour so a
     // regression is visible if the guard is ever tightened.
-    // If this assertion flips to toBeNull(), the guard was improved — update it.
-    expect(container.firstChild).not.toBeNull();
+    // If this assertion flips to not.toBeInTheDocument(), the guard was improved — update it.
+    expect(container.firstChild).toBeInTheDocument();
   });
 });

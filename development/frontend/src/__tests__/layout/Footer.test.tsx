@@ -8,7 +8,7 @@
  * FiremanDecko already tested LedgerShell renders a Footer — here we test
  * the Footer internals that matter for correctness and easter egg integrity.
  *
- * Note: @testing-library/jest-dom is not installed; uses native assertions.
+ * Uses @testing-library/jest-dom for DOM assertions (issue #1371).
  */
 
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -71,7 +71,7 @@ describe("Footer — Easter Egg #3: Loki Mode", () => {
   it("has a Loki trigger element with data-loki-trigger", () => {
     renderFooter();
     const trigger = document.querySelector("[data-loki-trigger]");
-    expect(trigger).not.toBeNull();
+    expect(trigger).toBeInTheDocument();
   });
 
   it("Loki trigger has accessible aria-label='Loki'", () => {
@@ -132,8 +132,8 @@ describe("Footer — Easter Egg #3: Loki Mode", () => {
     for (let i = 0; i < 7; i++) fireEvent.click(lokiBtn);
 
     const toast = screen.getByRole("status");
-    expect(toast).toBeTruthy();
-    expect(toast.textContent).toContain("Loki was here");
+    expect(toast).toBeInTheDocument();
+    expect(toast).toHaveTextContent("Loki was here");
   });
 });
 
@@ -141,7 +141,7 @@ describe("Footer — Easter Egg #5: Gleipnir Fragment (Breath of a Fish)", () =>
   it("has the © element with data-gleipnir='breath-of-a-fish'", () => {
     renderFooter();
     const copyrightEl = document.querySelector('[data-gleipnir="breath-of-a-fish"]');
-    expect(copyrightEl).not.toBeNull();
+    expect(copyrightEl).toBeInTheDocument();
   });
 
   it("© element has aria-label='Copyright'", () => {
@@ -155,14 +155,14 @@ describe("Footer — copyright line", () => {
   it("shows current year 2026 in the copyright text", () => {
     renderFooter();
     const footer = screen.getByRole("contentinfo");
-    expect(footer.textContent).toContain("2026 Fenrir Ledger");
+    expect(footer).toHaveTextContent("2026 Fenrir Ledger");
   });
 
   it("mentions FiremanDecko, Freya, and Loki in the colophon", () => {
     renderFooter();
     const footer = screen.getByRole("contentinfo");
-    expect(footer.textContent).toContain("FiremanDecko");
-    expect(footer.textContent).toContain("Freya");
-    expect(footer.textContent).toContain("Loki");
+    expect(footer).toHaveTextContent("FiremanDecko");
+    expect(footer).toHaveTextContent("Freya");
+    expect(footer).toHaveTextContent("Loki");
   });
 });

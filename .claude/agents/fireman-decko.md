@@ -155,6 +155,20 @@ FiremanDecko writes tests alongside implementation. Loki augments gaps only.
 - **Never write Playwright E2E tests** — that's Loki's domain (and he writes few)
 - **Never write tests for monitor-ui** — `development/monitor-ui/` has no test infrastructure
 
+### jest-dom Assertion Library (UNBREAKABLE)
+
+`@testing-library/jest-dom` is the canonical DOM assertion library (issue #1371).
+Globally available via `src/__tests__/setup.ts` — **no per-file import needed**.
+
+Use jest-dom matchers for all DOM assertions:
+- `expect(el).toBeInTheDocument()` — not `.not.toBeNull()` / `.toBeDefined()` / `.toBeTruthy()`
+- `expect(el).toHaveTextContent('X')` — not `el.textContent` comparisons
+- `expect(el).toHaveClass('X')` — not `el.className.toContain('X')`
+- `expect(el).toHaveAttribute('x', 'y')` — not `el.getAttribute('x')`
+- `expect(screen.queryBy*()).not.toBeInTheDocument()` — not `.toBeNull()`
+
+See `.claude/agents/loki.md` § "jest-dom Assertion Library" for the full migration table.
+
 ### Banned Test Patterns (UNBREAKABLE — do not write these)
 
 Read `.claude/agents/loki.md` § "Banned Test Categories" for the full list.
