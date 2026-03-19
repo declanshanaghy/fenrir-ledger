@@ -2935,6 +2935,202 @@ function CardDrilldownView({ householdId, filterUserId, ownerEmail, onBack, setI
 // h — shorthand for React.createElement (no JSX needed in an .mjs script)
 const h = React.createElement;
 
+// ── Command Palette — commands registry ───────────────────────────────────────
+
+const PALETTE_COMMANDS = [
+  { name: "delete-user",         desc: "Delete selected user and all their data",          category: "Users",      destructive: true  },
+  { name: "update-tier",         desc: "Change user tier (karl / trial / thrall)",          category: "Users",      destructive: false },
+  { name: "delete-subscription", desc: "Cancel and remove Stripe subscription",             category: "Billing",    destructive: true  },
+  { name: "list-subscriptions",  desc: "List all active Stripe subscriptions",              category: "Billing",    destructive: false },
+  { name: "list-customers",      desc: "List all Stripe customers",                         category: "Billing",    destructive: false },
+  { name: "delete-entitlement",  desc: "Clear Redis entitlement cache for selected user",   category: "Billing",    destructive: true  },
+  { name: "delete-member",       desc: "Remove member from selected household",             category: "Households", destructive: true  },
+  { name: "update-owner",        desc: "Transfer ownership of selected household",          category: "Households", destructive: false },
+  { name: "update-invite",       desc: "Regenerate household invite code",                  category: "Households", destructive: false },
+  { name: "delete-household",    desc: "Delete selected household and all members",         category: "Households", destructive: true  },
+  { name: "delete-all",          desc: "Delete ALL data for selected user (nuclear option)", category: "Danger",    destructive: true  },
+  { name: "reconnect",           desc: "Reconnect to Redis / Firestore / Stripe",           category: "System",     destructive: false },
+];
+
+/** Filter PALETTE_COMMANDS by a search query string. */
+function filterPaletteCommands(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) return PALETTE_COMMANDS;
+  return PALETTE_COMMANDS.filter(
+    (c) => c.name.includes(q) || c.desc.toLowerCase().includes(q) || c.category.toLowerCase().includes(q)
+  );
+}
+
+// ── CommandPalette ────────────────────────────────────────────────────────────
+
+/**
+ * Command palette overlay. Rendered inside SpearApp when `isOpen` is true.
+ * Provides real-time search, category grouping, arrow-key navigation, Enter to execute.
+ */
+function CommandPalette({ isOpen, query, highlight, onClose, onQueryChange, onHighlightChange, onExecute }) {
+  const filtered = filterPaletteCommands(query);
+
+  useInput((input, key) => {
+    if (key.escape) { onClose(); return; }
+    if (key.upArrow) {
+      onHighlightChange(Math.max(0, highlight - 1));
+      return;
+    }
+    if (key.downArrow) {
+      onHighlightChange(Math.min(filtered.length - 1, highlight + 1));
+      return;
+    }
+    if (key.return) {
+      if (filtered[highlight]) onExecute(filtered[highlight]);
+      return;
+    }
+    if (key.backspace || key.delete) {
+      onQueryChange(query.slice(0, -1));
+      onHighlightChange(0);
+      return;
+    }
+    if (input && !key.ctrl && !key.meta && input.length === 1) {
+      onQueryChange(query + input);
+      onHighlightChange(0);
+    }
+  }, { isActive: isOpen });
+
+  if (!isOpen) return null;
+
+  // Group by category for rendering
+  let lastCat = "";
+  const rows = [];
+  filtered.forEach((cmd, i) => {
+    if (cmd.category !== lastCat) {
+      lastCat = cmd.category;
+      rows.push(
+        h(Box, { key: `cat-${cmd.category}`, paddingLeft: 2, marginTop: rows.length === 0 ? 0 : 1 },
+          h(Text, { color: "yellow", dimColor: true, bold: false }, cmd.category.toUpperCase())
+        )
+      );
+    }
+    const isHighlighted = i === highlight;
+    rows.push(
+      h(Box, {
+        key: cmd.name,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        paddingX: 2,
+        backgroundColor: isHighlighted ? "gray" : undefined,
+      },
+        h(Box, { flexDirection: "row", gap: 1 },
+          h(Text, {
+            bold: isHighlighted,
+            color: isHighlighted ? "black" : cmd.destructive ? "red" : "white",
+          }, cmd.name),
+        ),
+        h(Text, {
+          color: isHighlighted ? "black" : "gray",
+          dimColor: !isHighlighted,
+        }, cmd.desc)
+      )
+    );
+  });
+
+  if (filtered.length === 0) {
+    rows.push(
+      h(Box, { key: "empty", paddingX: 2, paddingY: 1 },
+        h(Text, { color: "gray", dimColor: true }, "No matching commands")
+      )
+    );
+  }
+
+  return h(Box, {
+    flexDirection: "column",
+    flexGrow: 1,
+    borderStyle: "round",
+    borderColor: "yellow",
+    paddingY: 0,
+  },
+    // Search input header
+    h(Box, { paddingX: 2, paddingY: 0, borderStyle: "single", borderColor: "gray" },
+      h(Text, { color: "gray", dimColor: true }, "> "),
+      h(Text, { color: "white" }, query || ""),
+      h(Text, { color: "gray", dimColor: true }, query ? "" : "Type to search commands…"),
+      h(Text, { color: "gray", dimColor: true }, "█")
+    ),
+    // Command list
+    h(Box, { flexDirection: "column", flexGrow: 1, paddingY: 1 },
+      ...rows
+    ),
+    // Footer
+    h(Box, { paddingX: 2, borderStyle: "single", borderColor: "gray" },
+      h(Text, { color: "gray", dimColor: true }, "↑↓ navigate   Enter execute   Esc close")
+    )
+  );
+}
+
+// ── ConfirmDialog ─────────────────────────────────────────────────────────────
+
+/**
+ * Inline confirmation dialog for destructive commands.
+ * Requires the user to type "delete" before the confirm button enables.
+ */
+function ConfirmDialog({ dialog, deleteInput, onDeleteInputChange, onConfirm, onCancel }) {
+  const canConfirm = deleteInput.toLowerCase() === "delete";
+
+  useInput((input, key) => {
+    if (key.escape) { onCancel(); return; }
+    if (key.return && canConfirm) { onConfirm(); return; }
+    if (key.backspace || key.delete) {
+      onDeleteInputChange(deleteInput.slice(0, -1));
+      return;
+    }
+    if (input && !key.ctrl && !key.meta && input.length === 1) {
+      onDeleteInputChange(deleteInput + input);
+    }
+  }, { isActive: !!dialog });
+
+  if (!dialog) return null;
+
+  return h(Box, {
+    flexDirection: "column",
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+    h(Box, {
+      flexDirection: "column",
+      borderStyle: "double",
+      borderColor: "red",
+      paddingX: 4,
+      paddingY: 2,
+    },
+      // Warning icon + title
+      h(Box, { flexDirection: "row", marginBottom: 1 },
+        h(Text, { color: "red", bold: true }, "⚠  Confirm: "),
+        h(Text, { color: "red", bold: true }, dialog.action)
+      ),
+      // Description
+      h(Box, { marginBottom: 2 },
+        h(Text, { color: "gray" }, dialog.desc)
+      ),
+      // Type-to-confirm prompt
+      h(Box, { flexDirection: "row", marginBottom: 1 },
+        h(Text, { color: "gray" }, "Type "),
+        h(Text, { color: "red", bold: true }, "delete"),
+        h(Text, { color: "gray" }, " to confirm:  "),
+        h(Text, { color: "white", bold: true }, deleteInput),
+        h(Text, { color: "gray" }, "█")
+      ),
+      // Input bar
+      h(Box, { flexDirection: "row", marginTop: 1, gap: 2 },
+        h(Text, { color: "gray" }, "[Esc] Cancel  "),
+        h(Text, {
+          color: canConfirm ? "red" : "gray",
+          bold: canConfirm,
+          dimColor: !canConfirm,
+        }, canConfirm ? "[Enter] CONFIRM" : "[Enter] (type delete first)")
+      )
+    )
+  );
+}
+
 /** Top bar: branding, tab buttons, shortcut hints. */
 function TopBar({ activeTab, onTabChange }) {
   return h(Box, { flexDirection: "row", alignItems: "center", paddingX: 1, borderStyle: "single", borderColor: "yellow" },
@@ -2966,28 +3162,56 @@ function StatusBar({ connections, counts }) {
   );
 }
 
-/** Help overlay shown on `?`. */
+/** Help overlay shown on `?`. Press Esc or ? to close. */
 function HelpOverlay() {
   const row = (key, desc) =>
-    h(Box, { key, flexDirection: "row", gap: 2 },
-      h(Text, { color: "cyan", bold: true }, key.padEnd(6)),
+    h(Box, { key, flexDirection: "row" },
+      h(Text, { color: "cyan", bold: true }, key.padEnd(10)),
       h(Text, { color: "gray" }, desc)
+    );
+  const section = (title) =>
+    h(Box, { key: title, marginTop: 1 },
+      h(Text, { color: "yellow", dimColor: true }, `── ${title} `)
     );
   return h(Box, {
     flexDirection: "column",
     borderStyle: "round",
     borderColor: "yellow",
-    paddingX: 2,
+    paddingX: 3,
     paddingY: 1,
+    flexGrow: 1,
   },
-    h(Text, { bold: true, color: "yellow" }, "Keyboard Shortcuts"),
-    h(Text, {}, " "),
-    row("Tab", "Switch tabs"),
-    row("q", "Quit"),
-    row("?", "Toggle help"),
-    row("^R", "Reload current view"),
-    h(Text, {}, " "),
-    h(Text, { color: "gray", dimColor: true }, "Press any key to close")
+    h(Text, { bold: true, color: "yellow" }, "Keyboard Shortcuts  —  Odin's Spear"),
+    section("Global"),
+    row("/",       "Open command palette"),
+    row("?",       "Show / hide this help"),
+    row("Tab",     "Switch between Users / Households"),
+    row("^R",      "Reload current view"),
+    row("q",       "Quit"),
+    section("Navigation"),
+    row("↑ / ↓",   "Navigate list items"),
+    row("Enter",   "Select / drill into item"),
+    row("Esc",     "Go back one level / close modal"),
+    section("User actions  (user selected)"),
+    row("d",       "Delete selected user"),
+    row("t",       "Update tier (prompt)"),
+    row("s",       "Cancel Stripe subscription"),
+    row("h",       "Jump to user's household"),
+    row("c",       "Drill into user's cards"),
+    section("Household actions  (household selected)"),
+    row("i",       "Regenerate invite code"),
+    row("o",       "Transfer household ownership"),
+    row("k",       "Kick / remove a member"),
+    row("s",       "Cancel Stripe subscription"),
+    row("c",       "Browse household cards"),
+    row("x",       "Delete household"),
+    section("Card actions  (card selected)"),
+    row("d",       "Soft-delete card"),
+    row("r",       "Restore soft-deleted card"),
+    row("x",       "Expunge card permanently"),
+    h(Box, { marginTop: 1 },
+      h(Text, { color: "gray", dimColor: true }, "Press Esc or ? to close")
+    )
   );
 }
 
@@ -3038,14 +3262,84 @@ function SpearApp({ connectionStatus, counts }) {
   const [showHelp, setShowHelp]           = useState(false);
   const [inputCaptured, setInputCaptured] = useState(false); // true when a tab holds input (e.g. text prompt)
 
+  // ── Command palette state ──
+  const [showCmdPalette, setShowCmdPalette] = useState(false);
+  const [cmdQuery, setCmdQuery]             = useState("");
+  const [cmdHighlight, setCmdHighlight]     = useState(0);
+
+  // ── Confirmation dialog state ──
+  const [confirmDialog, setConfirmDialog] = useState(null); // { action, desc } | null
+  const [deleteInput, setDeleteInput]     = useState("");
+  const [cmdStatusMsg, setCmdStatusMsg]   = useState("");
+
+  // Auto-clear status messages
+  React.useEffect(() => {
+    if (!cmdStatusMsg) return;
+    const tid = setTimeout(() => setCmdStatusMsg(""), 3000);
+    return () => clearTimeout(tid);
+  }, [cmdStatusMsg]);
+
   /** Switch to Households tab — called by UsersTab when user presses [h]. */
   function onJumpToHousehold(_householdId) {
     setActiveTab(1);
   }
 
+  function openCommandPalette() {
+    setShowCmdPalette(true);
+    setCmdQuery("");
+    setCmdHighlight(0);
+  }
+
+  function closeCommandPalette() {
+    setShowCmdPalette(false);
+  }
+
+  function closeCmdPaletteAndConfirm() {
+    setShowCmdPalette(false);
+    setConfirmDialog(null);
+    setDeleteInput("");
+  }
+
+  /** Called when user executes a command from the palette. */
+  function handleCmdExecute(cmd) {
+    closeCommandPalette();
+    if (cmd.destructive) {
+      setDeleteInput("");
+      setConfirmDialog({ action: cmd.name, desc: cmd.desc });
+    } else {
+      // Non-destructive: execute immediately (dispatch via REPL commands object)
+      const fn = commands[cmd.name.replace(/-/g, "_")];
+      if (fn) {
+        fn([]).catch(() => {});
+      }
+      setCmdStatusMsg(`Executed: ${cmd.name}`);
+    }
+  }
+
+  /** Called when user confirms a destructive action (typed "delete" and hit Enter). */
+  function handleConfirm() {
+    if (!confirmDialog) return;
+    const fn = commands[confirmDialog.action.replace(/-/g, "_")];
+    if (fn) {
+      fn([]).catch(() => {});
+    }
+    setCmdStatusMsg(`${confirmDialog.action} executed`);
+    setConfirmDialog(null);
+    setDeleteInput("");
+  }
+
+  function handleCancelConfirm() {
+    setConfirmDialog(null);
+    setDeleteInput("");
+    setCmdStatusMsg("Cancelled");
+  }
+
   useInput((input, key) => {
     // Let the active tab consume input when it has captured focus (e.g. tier prompt)
     if (inputCaptured) return;
+
+    // Command palette and confirm dialog handle their own input via useInput({ isActive })
+    if (showCmdPalette || confirmDialog) return;
 
     // q — quit
     if (input === "q") {
@@ -3055,9 +3349,19 @@ function SpearApp({ connectionStatus, counts }) {
       });
       return;
     }
+    // / — open command palette
+    if (input === "/") {
+      openCommandPalette();
+      return;
+    }
     // ? — toggle help
     if (input === "?") {
       setShowHelp((v) => !v);
+      return;
+    }
+    // Esc — close help overlay
+    if (key.escape && showHelp) {
+      setShowHelp(false);
       return;
     }
     // Tab — switch tabs
@@ -3075,11 +3379,42 @@ function SpearApp({ connectionStatus, counts }) {
     }
   });
 
+  // Determine which content to render in the main area
+  let mainArea;
+  if (confirmDialog) {
+    mainArea = h(ConfirmDialog, {
+      dialog: confirmDialog,
+      deleteInput,
+      onDeleteInputChange: setDeleteInput,
+      onConfirm: handleConfirm,
+      onCancel: handleCancelConfirm,
+    });
+  } else if (showCmdPalette) {
+    mainArea = h(CommandPalette, {
+      isOpen: showCmdPalette,
+      query: cmdQuery,
+      highlight: cmdHighlight,
+      onClose: closeCommandPalette,
+      onQueryChange: setCmdQuery,
+      onHighlightChange: setCmdHighlight,
+      onExecute: handleCmdExecute,
+    });
+  } else if (showHelp) {
+    mainArea = h(HelpOverlay, null);
+  } else {
+    mainArea = h(MainContent, { activeTab, onJumpToHousehold, setInputCaptured });
+  }
+
   return h(Box, { flexDirection: "column", height: "100%" },
     h(TopBar, { activeTab, onTabChange: setActiveTab }),
-    showHelp
-      ? h(HelpOverlay, null)
-      : h(MainContent, { activeTab, onJumpToHousehold, setInputCaptured }),
+    mainArea,
+    ...(cmdStatusMsg ? [
+      h(Box, { paddingX: 2 },
+        h(Text, { color: cmdStatusMsg.includes("Error") || cmdStatusMsg.startsWith("Cancelled") ? "yellow" : "green" },
+          cmdStatusMsg
+        )
+      ),
+    ] : []),
     h(StatusBar, { connections: connectionStatus, counts })
   );
 }
