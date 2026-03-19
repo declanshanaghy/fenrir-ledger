@@ -437,6 +437,19 @@ export async function streamPodLogs(
   }
 }
 
+export async function deleteAgentJob(
+  sessionId: string,
+  namespace = "fenrir-agents"
+): Promise<void> {
+  const api = getBatchApi();
+  const jobName = `agent-${sessionId}`;
+  await api.deleteNamespacedJob({
+    name: jobName,
+    namespace,
+    body: { propagationPolicy: "Background" },
+  });
+}
+
 export async function findPodForSession(
   sessionId: string,
   namespace = "fenrir-agents"
