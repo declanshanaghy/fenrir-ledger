@@ -193,6 +193,7 @@ Determine agent (from `--agent` or inference table), branch (from `--branch` or 
 
 Substitute variables in the template:
 - `{{SANDBOX_PREAMBLE}}` → content of `sandbox-preamble.md`
+- `{{DECREE_TEMPLATE}}` → content of `decree-<agent>.md` (e.g. `decree-firemandecko.md`, `decree-loki.md`)
 - `<NUMBER>` → issue number
 - `<TITLE>` → issue title
 - `<BRANCH>` → branch name
