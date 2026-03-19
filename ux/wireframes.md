@@ -123,6 +123,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Monitor UI — WSS Icon Bare + Wolf-Voice Tooltip (Issue #1443)
+
+| File | Description |
+|------|-------------|
+| [wireframes/monitor-ui/wss-icon-tooltip.html](wireframes/monitor-ui/wss-icon-tooltip.html) | WSS status icon redesign: remove box/border from the icon in the sidebar header; add wolf-voice tooltip per connection state. 9 sections — (A) before/after sidebar header comparison (boxed vs bare icon), (B) tooltip copy for all 3 states (open/connecting/closed+error) with wolf-voice text from Fenrir's perspective, (C) tooltip anatomy (positioning, dimensions, show/hide delays), (D) state×visual×copy matrix (wsState, icon fill, animation, tooltip copy, aria-label, role), (E) CSS change spec (what to remove from `.ws-badge-icon`, tooltip `.wss-tooltip` skeleton), (F) collapsed sidebar behaviour (icon stays hidden — no change), (G) mobile 375px layout (touch target, tap-to-show 3s auto-dismiss), (H) WCAG 2.1 AA accessibility checklist, (I) component change summary (StatusBadge.tsx + index.css). Interaction spec: [wss-icon-tooltip-interaction-spec.md](wireframes/monitor-ui/wss-icon-tooltip-interaction-spec.md). |
+| [wireframes/monitor-ui/wss-icon-tooltip-interaction-spec.md](wireframes/monitor-ui/wss-icon-tooltip-interaction-spec.md) | Interaction spec: full show/hide state machine (hover delay 300ms, hide delay 100ms, mobile tap 3s auto-dismiss), wolf-voice copy table with rationale (Gleipnir chain mythology), CSS remove/retain/add spec for `.ws-badge-icon` and new `.wss-tooltip`, React component structure sketch (WOLF_VOICE map, ARIA_LABEL map, tabIndex/role/aria-describedby), full WCAG 2.1 AA checklist, acceptance criteria mapping table, implementation flexibility notes for FiremanDecko. |
+
+---
+
 ## Monitor UI — Light/Dark Theme Switcher (Issue #964)
 
 | File | Description |

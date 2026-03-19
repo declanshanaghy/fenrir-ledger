@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — WSS Icon Bare + Wolf-Voice Tooltip (Issue #1443)</title>
+  <style>
+    /* ── Layout only — no colors, no fonts, no decoration ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 2rem; max-width: 960px; }
+
+    h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.25rem; }
+    h2 { font-size: 1rem; font-weight: 700; margin: 2rem 0 0.75rem; border-bottom: 1px solid; padding-bottom: 0.25rem; }
+    h3 { font-size: 0.9rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+    p.note { font-size: 0.8rem; font-style: italic; margin: 0.4rem 0; }
+    p.label { font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .meta { font-size: 0.75rem; margin-bottom: 1.5rem; }
+    .meta span { margin-right: 1.5rem; }
+
+    /* ── Sections ── */
+    .section { margin-bottom: 2.5rem; }
+    .subsection { margin-bottom: 1.5rem; }
+
+    /* ── Comparison grid ── */
+    .compare { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .compare-col { flex: 1; min-width: 200px; }
+    .compare-col > p.label { text-align: center; }
+
+    /* ── Sidebar chrome simulation ── */
+    .sidebar-chrome {
+      border: 1px solid;
+      width: 220px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header-sim {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid;
+    }
+    .avatar-stub {
+      width: 32px; height: 32px;
+      border: 1px solid;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .brand-title-stub {
+      font-size: 0.9rem;
+      font-weight: 700;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .collapse-btn-stub {
+      width: 20px; height: 20px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; flex-shrink: 0; cursor: pointer;
+    }
+
+    /* ── BEFORE: boxed icon ── */
+    .wss-icon-boxed {
+      display: flex; align-items: center; justify-content: center;
+      padding: 2px;
+      border: 1px solid;
+      width: 22px; height: 22px;
+      flex-shrink: 0;
+    }
+
+    /* ── AFTER: bare icon — NO border, NO padding container ── */
+    .wss-icon-bare {
+      display: flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+      /* No border. No background. No padding wrapper. */
+    }
+
+    /* ── SVG icon stub ── */
+    .icon-svg-stub {
+      width: 16px; height: 16px;
+      border: 1px dashed; /* dashed = "this is an SVG" annotation */
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px;
+    }
+
+    /* ── Tooltip anatomy ── */
+    .tooltip-demo {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .tooltip-bubble {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 1px solid;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      z-index: 10;
+      min-width: 140px;
+      text-align: center;
+    }
+    .tooltip-bubble::before {
+      content: "";
+      position: absolute;
+      top: -5px; left: 50%;
+      transform: translateX(-50%);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 5px solid;
+    }
+    .tooltip-arrow-note { font-size: 0.65rem; font-style: italic; margin-top: 0.25rem; }
+
+    /* ── State matrix table ── */
+    table { border-collapse: collapse; width: 100%; font-size: 0.8rem; }
+    th, td { border: 1px solid; padding: 0.4rem 0.6rem; vertical-align: top; }
+    th { font-weight: 700; }
+
+    /* ── Mobile frame ── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid;
+    }
+    .mobile-avatar-stub {
+      width: 28px; height: 28px;
+      border: 1px solid;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── ARIA / a11y annotation box ── */
+    .a11y-box {
+      border: 1px solid;
+      padding: 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+    }
+    .a11y-box h4 { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .a11y-box ul { padding-left: 1.2rem; }
+    .a11y-box li { margin-bottom: 0.25rem; }
+
+    /* ── Annotation callout ── */
+    .callout {
+      border: 1px dashed;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      margin: 0.5rem 0;
+    }
+    .callout strong { font-weight: 700; }
+
+    /* ── Spacer ── */
+    .spacer { height: 1rem; }
+  </style>
+</head>
+<body>
+
+<h1>WSS Icon — Bare Style + Wolf-Voice Tooltip</h1>
+<div class="meta">
+  <span><strong>Issue:</strong> #1443</span>
+  <span><strong>Component:</strong> StatusBadge · Sidebar header</span>
+  <span><strong>Author:</strong> Luna · UX Designer</span>
+  <span><strong>Date:</strong> 2026-03-19</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION A — BEFORE / AFTER COMPARISON
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <h2>A. Before / After — Sidebar Header (Desktop, Expanded)</h2>
+  <div class="compare">
+
+    <!-- BEFORE -->
+    <div class="compare-col">
+      <p class="label">BEFORE (current) — boxed icon</p>
+      <div class="sidebar-chrome">
+        <div class="sidebar-header-sim">
+          <div class="avatar-stub"></div>
+          <div class="brand-title-stub">Hlidskjalf</div>
+          <!-- Current: .ws-badge-icon wrapper adds visible border -->
+          <div class="wss-icon-boxed" title="Current: padding + border on .ws-badge-icon">
+            <div class="icon-svg-stub">⚡</div>
+          </div>
+          <div class="collapse-btn-stub">›</div>
+        </div>
+      </div>
+      <p class="note">Current CSS: <code>.ws-badge-icon { padding: 0.15rem; border: 1px solid; }</code></p>
+      <p class="note">State-specific border colors: <code>.open { border-color: #22c55e33; }</code> etc.</p>
+    </div>
+
+    <!-- AFTER -->
+    <div class="compare-col">
+      <p class="label">AFTER (target) — bare icon, no box</p>
+      <div class="sidebar-chrome">
+        <div class="sidebar-header-sim">
+          <div class="avatar-stub"></div>
+          <div class="brand-title-stub">Hlidskjalf</div>
+          <!-- Target: icon floats bare — no border, no padding wrapper -->
+          <div class="wss-icon-bare" title="Target: bare SVG, no container border">
+            <div class="icon-svg-stub">⚡</div>
+          </div>
+          <div class="collapse-btn-stub">›</div>
+        </div>
+      </div>
+      <p class="note">Remove: <code>border</code>, <code>border-color</code>, and <code>padding</code> from <code>.ws-badge-icon</code></p>
+      <p class="note">The icon SVG colour alone communicates state (green/yellow/grey/red fill).</p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION B — TOOLTIP STATES (all three connection states)
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <h2>B. Tooltip — Wolf-Voice Copy per Connection State</h2>
+  <p class="note">Tooltip appears on hover (desktop) and on long-press/focus (touch/keyboard). Positioned below the icon with a pointing caret. Dark background, light text — consistent with Saga Ledger theme.</p>
+  <div class="spacer"></div>
+
+  <div class="compare">
+
+    <!-- State: open -->
+    <div class="compare-col">
+      <p class="label">State: <strong>open</strong> (Connected)</p>
+      <div style="display: flex; justify-content: center; padding: 1rem 0 3rem;">
+        <div class="tooltip-demo">
+          <div class="wss-icon-bare">
+            <div class="icon-svg-stub" title="connected icon">⚡</div>
+          </div>
+          <div class="tooltip-bubble">
+            "The thread holds. Fenrir watches."
+          </div>
+        </div>
+      </div>
+      <p class="note">Icon fill: success/green</p>
+      <p class="note">Copy: calm, watchful, present</p>
+    </div>
+
+    <!-- State: connecting / reconnecting -->
+    <div class="compare-col">
+      <p class="label">State: <strong>connecting</strong> (Reconnecting)</p>
+      <div style="display: flex; justify-content: center; padding: 1rem 0 3rem;">
+        <div class="tooltip-demo">
+          <div class="wss-icon-bare">
+            <div class="icon-svg-stub" title="connecting icon">~⚡</div>
+          </div>
+          <div class="tooltip-bubble">
+            "The Norns weave. Hold fast."
+          </div>
+        </div>
+      </div>
+      <p class="note">Icon fill: warning/gold — may pulse</p>
+      <p class="note">Copy: active fate-weaving, patient tension</p>
+    </div>
+
+    <!-- State: closed / error -->
+    <div class="compare-col">
+      <p class="label">State: <strong>closed / error</strong> (Disconnected)</p>
+      <div style="display: flex; justify-content: center; padding: 1rem 0 3rem;">
+        <div class="tooltip-demo">
+          <div class="wss-icon-bare">
+            <div class="icon-svg-stub" title="disconnected icon">✕</div>
+          </div>
+          <div class="tooltip-bubble">
+            "The chain is broken. Fenrir stirs."
+          </div>
+        </div>
+      </div>
+      <p class="note">Icon fill: error/red (error) or muted/grey (closed)</p>
+      <p class="note">Copy: threat, restlessness, urgency</p>
+    </div>
+
+  </div>
+
+  <div class="callout">
+    <strong>Copy decisions:</strong> Wolf-voice copy is written from Fenrir's perspective — first-person wolf, not system status jargon. The WS connection = Gleipnir's chain. Connected = bound and watching. Disconnected = chain broken, wolf stirs. Reconnecting = the Norns (fate-weavers) are mid-thread. See <code>product/mythology-map.md</code> for canonical references.
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION C — TOOLTIP ANATOMY
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <h2>C. Tooltip Anatomy</h2>
+
+  <div class="subsection">
+    <h3>Positioning</h3>
+    <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
+      <div>
+        <p class="label">Desktop — tooltip below icon</p>
+        <div style="padding: 1rem 2rem 3.5rem; border: 1px solid; display: inline-flex; justify-content: center;">
+          <div class="tooltip-demo">
+            <div class="wss-icon-bare"><div class="icon-svg-stub">⚡</div></div>
+            <div class="tooltip-bubble">"The thread holds. Fenrir watches."</div>
+          </div>
+        </div>
+        <p class="note">6px gap between icon bottom and tooltip top.</p>
+        <p class="note">Horizontally centered on icon. Constrained to viewport edge.</p>
+      </div>
+      <div>
+        <p class="label">Collapsed sidebar — tooltip to the right</p>
+        <div style="padding: 1rem 1rem 1rem 1rem; border: 1px solid; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <div style="border: 1px solid; width: 40px; display: flex; flex-direction: column; align-items: center; padding: 0.5rem 0; gap: 0.5rem;">
+            <div class="wss-icon-bare"><div class="icon-svg-stub">⚡</div></div>
+          </div>
+          <div style="border: 1px solid; padding: 0.3rem 0.5rem; font-size: 0.7rem; white-space: nowrap;">
+            "The thread holds. Fenrir watches."
+            <div class="tooltip-arrow-note">(caret on left side)</div>
+          </div>
+        </div>
+        <p class="note">When sidebar is collapsed, icon is the only element in a narrow column. Tooltip opens to the <strong>right</strong> of the icon to avoid viewport clipping.</p>
+        <p class="note">Implementation note: detect collapsed state via prop or CSS class.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3>Tooltip dimensions and constraints</h3>
+    <table>
+      <tr>
+        <th>Property</th>
+        <th>Value</th>
+        <th>Rationale</th>
+      </tr>
+      <tr>
+        <td>Min-width</td>
+        <td>140px</td>
+        <td>Accommodates longest copy without wrapping</td>
+      </tr>
+      <tr>
+        <td>Max-width</td>
+        <td>220px</td>
+        <td>Allows wrapping on very small viewports</td>
+      </tr>
+      <tr>
+        <td>Font size</td>
+        <td>0.7rem</td>
+        <td>Consistent with other monospace metadata in the UI</td>
+      </tr>
+      <tr>
+        <td>Padding</td>
+        <td>0.3rem 0.5rem</td>
+        <td>Compact — this is ambient, not interactive content</td>
+      </tr>
+      <tr>
+        <td>Show delay</td>
+        <td>300ms</td>
+        <td>Prevents flicker on accidental hover pass-through</td>
+      </tr>
+      <tr>
+        <td>Hide delay</td>
+        <td>100ms</td>
+        <td>Allows cursor to move from icon to tooltip without dismiss</td>
+      </tr>
+      <tr>
+        <td>Z-index</td>
+        <td>Above sidebar (z-index: 200+)</td>
+        <td>Must not clip behind main content panel</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION D — STATE × VISUAL × COPY MATRIX
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <h2>D. State × Visual × Copy Matrix</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>wsState</th>
+        <th>Icon fill</th>
+        <th>Animation</th>
+        <th>Tooltip copy</th>
+        <th>aria-label</th>
+        <th>role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>open</code></td>
+        <td>Success green</td>
+        <td>None</td>
+        <td>"The thread holds. Fenrir watches."</td>
+        <td>WebSocket connected — the thread holds</td>
+        <td>status</td>
+      </tr>
+      <tr>
+        <td><code>connecting</code></td>
+        <td>Warning gold</td>
+        <td>Pulse (existing .pulse keyframe if present, else subtle opacity oscillation)</td>
+        <td>"The Norns weave. Hold fast."</td>
+        <td>WebSocket reconnecting — the Norns weave</td>
+        <td>status</td>
+      </tr>
+      <tr>
+        <td><code>closed</code></td>
+        <td>Muted grey</td>
+        <td>None</td>
+        <td>"The chain is broken. Fenrir stirs."</td>
+        <td>WebSocket closed — the chain is broken</td>
+        <td>alert</td>
+      </tr>
+      <tr>
+        <td><code>error</code></td>
+        <td>Error red</td>
+        <td>None (icon already communicates urgency via color)</td>
+        <td>"The chain is broken. Fenrir stirs."</td>
+        <td>WebSocket error — the chain is broken</td>
+        <td>alert</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Closed and error share the same wolf-voice copy — both mean the connection is severed. The icon color differentiates them visually (grey vs red).</p>
+  <p class="note">Use <code>role="alert"</code> for closed/error states so screen readers announce the loss of connection without the user hovering.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION E — CSS CHANGE SPEC (for FiremanDecko)
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <h2>E. CSS Change Spec</h2>
+
+  <div class="subsection">
+    <h3>Remove from <code>.ws-badge-icon</code></h3>
+    <div class="callout">
+      Remove: <code>padding: 0.15rem</code><br>
+      Remove: <code>border: 1px solid transparent</code><br>
+      Remove: <code>border-radius: 3px</code><br>
+      Remove state-specific border-color rules:<br>
+      &nbsp;&nbsp;<code>.ws-badge-icon.open { border-color: #22c55e33; }</code><br>
+      &nbsp;&nbsp;<code>.ws-badge-icon.connecting { border-color: #eab30833; }</code><br>
+      &nbsp;&nbsp;<code>.ws-badge-icon.closed { border-color: var(--rune-border); }</code><br>
+      &nbsp;&nbsp;<code>.ws-badge-icon.error { border-color: #ef444433; }</code>
+    </div>
+    <p class="note">Keep: <code>display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: default;</code></p>
+    <p class="note">The icon SVG itself provides all visual state encoding via fill color. No wrapper decoration needed.</p>
+  </div>
+
+  <div class="subsection">
+    <h3>Tooltip implementation approach</h3>
+    <div class="callout">
+      <strong>Option A (preferred):</strong> Custom tooltip component in React with <code>onMouseEnter</code> / <code>onMouseLeave</code> / <code>onFocus</code> / <code>onBlur</code> handlers. Render tooltip as sibling in a <code>position: relative</code> wrapper. Uses <code>aria-describedby</code> + <code>role="tooltip"</code>.<br><br>
+      <strong>Option B (fallback):</strong> Native <code>title</code> attribute. Simpler but no styling control and no wolf-voice font rendering. Do NOT use if Option A is feasible within scope.
+    </div>
+    <p class="note">Engineer flexibility: if a shared Tooltip primitive already exists in the codebase, use it. The design only requires the copy and positioning behaviour specified here.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION F — COLLAPSED SIDEBAR STATE
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <h2>F. Collapsed Sidebar — Icon-Only Mode</h2>
+  <p class="note">When the sidebar is collapsed, the WSS icon is currently hidden (conditional render in Sidebar.tsx: <code>{!collapsed && (...)}</code>). The issue does not specify changing this behaviour. Design decision: <strong>keep icon hidden in collapsed mode</strong> — the sidebar is too narrow to safely show a tooltip without overlap.</p>
+  <p class="note">If a future issue wants the icon in collapsed mode, the tooltip should appear to the right of the icon (not below it) to avoid viewport clipping.</p>
+
+  <div class="compare">
+    <div class="compare-col">
+      <p class="label">Collapsed (current + maintained)</p>
+      <div class="sidebar-chrome" style="width: 52px;">
+        <div class="sidebar-header-sim" style="flex-direction: column; align-items: center; gap: 0.4rem; padding: 0.6rem 0;">
+          <div class="avatar-stub" style="width: 28px; height: 28px;"></div>
+          <div class="collapse-btn-stub" style="width: 20px; height: 20px;">‹</div>
+          <!-- WSS icon hidden in collapsed mode — by design -->
+        </div>
+      </div>
+      <p class="note">No WSS icon. No change from current. Icon appears only in expanded mode.</p>
+    </div>
+    <div class="compare-col">
+      <p class="label">Expanded — bare icon + tooltip on hover</p>
+      <div class="sidebar-chrome">
+        <div class="sidebar-header-sim">
+          <div class="avatar-stub"></div>
+          <div class="brand-title-stub">Hlidskjalf</div>
+          <div style="position: relative; display: flex;">
+            <div class="wss-icon-bare"><div class="icon-svg-stub">⚡</div></div>
+            <div class="tooltip-bubble" style="top: calc(100% + 4px); font-size: 0.65rem;">"The thread holds…"</div>
+          </div>
+          <div class="collapse-btn-stub">›</div>
+        </div>
+      </div>
+      <p class="note">Bare icon. Tooltip below on hover. No box. Only SVG colour encodes state.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION G — MOBILE (375px)
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <h2>G. Mobile Viewport (375px)</h2>
+  <p class="note">On mobile, the sidebar stacks vertically and has a max-height of 40vh. The WSS icon should remain accessible via tap (touch equivalent of hover = tap-to-show tooltip, tap elsewhere to dismiss). No long-press needed — a short tap toggles the tooltip for 3s.</p>
+
+  <div class="mobile-frame">
+    <div class="mobile-sidebar-header">
+      <div class="mobile-avatar-stub"></div>
+      <span style="font-size: 0.85rem; font-weight: 700; flex: 1;">Hlidskjalf</span>
+      <!-- Bare WSS icon -->
+      <div class="wss-icon-bare"><div class="icon-svg-stub">⚡</div></div>
+      <div class="collapse-btn-stub" style="width: 18px; height: 18px;">›</div>
+    </div>
+    <div style="padding: 0.5rem 0.75rem; font-size: 0.75rem; font-style: italic; border-bottom: 1px solid;">
+      "Odin bound Fenrir…"
+    </div>
+    <div style="padding: 0.4rem 0.75rem; font-size: 0.7rem; border-bottom: 1px solid;">
+      3 sessions &nbsp;&nbsp; [theme toggle]
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="a11y-box">
+    <h4>Mobile touch behaviour</h4>
+    <ul>
+      <li>Tap icon → tooltip appears for 3 seconds, then auto-dismisses</li>
+      <li>Tap again → dismisses immediately</li>
+      <li>Touch target: min 44×44px (wrap icon in a transparent touch target if SVG is 16×16)</li>
+      <li>No hover on mobile — do not rely on CSS :hover alone</li>
+    </ul>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION H — ACCESSIBILITY
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <h2>H. Accessibility (WCAG 2.1 AA)</h2>
+  <div class="a11y-box">
+    <h4>Requirements</h4>
+    <ul>
+      <li><strong>Keyboard access:</strong> Icon wrapper must be focusable (<code>tabIndex={0}</code> or <code>button</code> element). Tooltip shows on <code>focus</code>, hides on <code>blur</code>.</li>
+      <li><strong>role="tooltip"</strong> on tooltip element. Linked via <code>aria-describedby</code> on the icon wrapper.</li>
+      <li><strong>aria-label</strong> on icon wrapper: technical + mythological hybrid (see matrix, Section D). Do NOT put wolf-voice copy as aria-label — screen readers should convey actual status first.</li>
+      <li><strong>role="status"</strong> or <strong>role="alert"</strong> on the <code>StatusBadge</code> span (see Section D matrix). Status changes should be announced via <code>aria-live="polite"</code> (connected) or <code>aria-live="assertive"</code> (error/closed).</li>
+      <li><strong>prefers-reduced-motion:</strong> Suppress any pulse animation on the icon in <code>connecting</code> state.</li>
+      <li><strong>Touch target:</strong> Wrap icon in a <code>button</code> or <code>span</code> with min <code>44×44px</code> touch target on mobile (use padding or <code>min-width/min-height</code>).</li>
+      <li><strong>Tooltip escape:</strong> Tooltip must dismiss on <code>Escape</code> key press.</li>
+      <li><strong>No color-only distinction:</strong> Icon shape + color together encode state. The SVG plug/signal-arc metaphor is retained — not purely a colour dot. Passes against colour-alone reliance.</li>
+    </ul>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION I — COMPONENT CHANGE SUMMARY
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <h2>I. Component Change Summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>Change</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>development/monitor-ui/src/components/StatusBadge.tsx</code></td>
+        <td>
+          1. Remove box/border wrapper styling from <code>.ws-badge-icon</code> class usage.<br>
+          2. Add tooltip: <code>onMouseEnter/Leave</code> + <code>onFocus/Blur</code> handlers. Show wolf-voice copy per state.<br>
+          3. Update <code>aria-label</code> to use hybrid technical+wolf copy (see Section D).<br>
+          4. Add <code>role="alert"</code> for closed/error states, <code>role="status"</code> for open/connecting.<br>
+          5. Mobile: add tap handler for 3s tooltip display.
+        </td>
+      </tr>
+      <tr>
+        <td><code>development/monitor-ui/src/styles/index.css</code></td>
+        <td>
+          1. Remove <code>border</code>, <code>border-radius</code>, <code>padding</code> from <code>.ws-badge-icon</code>.<br>
+          2. Remove state border-color rules (<code>.ws-badge-icon.open</code>, <code>.connecting</code>, <code>.closed</code>, <code>.error</code>).<br>
+          3. Add <code>.wss-tooltip</code> styles: positioning, dark bg, light text, caret triangle, z-index.<br>
+          4. Add <code>@media (prefers-reduced-motion: reduce)</code> rule to disable pulse on icon.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">No changes required to <code>Sidebar.tsx</code> — the icon visibility in collapsed/expanded mode is unchanged.</p>
+  <p class="note">No changes required to <code>useWebSocket.ts</code> — state values remain the same; only presentation changes.</p>
+</section>
+
+</body>
+</html>
