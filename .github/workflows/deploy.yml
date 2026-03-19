@@ -15,7 +15,7 @@
 #   FENRIR_ANTHROPIC_API_KEY, ENTITLEMENT_ENCRYPTION_KEY
 #   STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID
 #   TF_VAR_BILLING_ACCOUNT_ID, TF_VAR_UPTIME_CHECK_HOST
-#   CLAUDE_CODE_OAUTH_TOKEN, GH_TOKEN_AGENTS
+#   CLAUDE_CODE_OAUTH_TOKEN, GITHUB_TOKEN_PAT_CLASSIC, GITHUB_TOKEN_PAT_FINE_GRAINED
 #   UMAMI_OAUTH2_PROXY_COOKIE_SECRET  — 32-byte cookie secret for Umami oauth2-proxy
 #   MONITOR_OAUTH2_PROXY_COOKIE_SECRET — 32-byte cookie secret for Odin's Throne oauth2-proxy
 #   ODINS_THRONE_CLIENT_ID, ODINS_THRONE_CLIENT_SECRET
@@ -439,12 +439,16 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Sync agent secrets
+        # Dual-PAT strategy — see infrastructure/k8s/agents/README.md for token usage table.
+        # gh-token-classic: classic PAT with repo+project scopes — agent write ops
+        # gh-token-fine-grained: fine-grained repo-scoped PAT — read-only / CI checks
         run: |
           kubectl create secret generic agent-secrets \
             --namespace=fenrir-agents \
             --from-literal=anthropic-api-key="${{ secrets.FENRIR_ANTHROPIC_API_KEY }}" \
             --from-literal=claude-oauth-token="${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}" \
-            --from-literal=gh-token="${{ secrets.GH_TOKEN_AGENTS }}" \
+            --from-literal=gh-token-classic="${{ secrets.GITHUB_TOKEN_PAT_CLASSIC }}" \
+            --from-literal=gh-token-fine-grained="${{ secrets.GITHUB_TOKEN_PAT_FINE_GRAINED }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Resolve image tag

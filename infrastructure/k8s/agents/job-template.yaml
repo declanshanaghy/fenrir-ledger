@@ -96,8 +96,10 @@ spec:
                 secretKeyRef:
                   name: agent-secrets
                   key: claude-oauth-token
+            # Classic PAT — required for write ops: gh pr edit, gh issue comment,
+            # gh project item-add, git push. See infrastructure/k8s/agents/README.md.
             - name: GH_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: agent-secrets
-                  key: gh-token
+                  key: gh-token-classic
