@@ -141,8 +141,8 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
       <span className="header-badges">
         {job.status === "running" && onCancelJob ? (
           <button
-            className="job-status-badge pulse"
-            style={{ color: STATUS_COLORS[job.status], cursor: "pointer", background: "none", border: "none", font: "inherit", padding: 0 }}
+            className="job-status-badge job-status-badge--cancel pulse"
+            style={{ color: STATUS_COLORS[job.status] }}
             title="Click to cancel this job"
             aria-label="Cancel running job"
             onClick={() => onCancelJob(job.sessionId)}
