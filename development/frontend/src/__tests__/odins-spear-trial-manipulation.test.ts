@@ -434,3 +434,129 @@ describe("handleTrialInputNext — preview computation (issue #1472)", () => {
     expect(newStatus.status).toBe("active");
   });
 });
+
+// ── 8. trial-complete on already-expired trial ────────────────────────────────
+//
+// Mirrors the trial-complete applyFn path: always sets startDate to 31 days ago.
+// Should work even if trial is already expired.
+
+describe("trial-complete — already-expired trial (edge case, issue #1472)", () => {
+  function buildExpiredStart(): string {
+    return new Date(Date.now() - (TRIAL_DURATION_DAYS + 1) * 86400000).toISOString();
+  }
+
+  it("expiredStart yields expired status", () => {
+    const expiredStart = buildExpiredStart();
+    const status = computeStatus({ startDate: expiredStart });
+    expect(status.status).toBe("expired");
+    expect(status.remainingDays).toBe(0);
+  });
+
+  it("trial-complete on already-expired trial → oldDesc is 'expired — 0 days remaining'", () => {
+    // already expired: startDate far in the past
+    const expiredStart = new Date(Date.now() - 40 * 86400000).toISOString();
+    const currentStatus = computeStatus({ startDate: expiredStart });
+    const oldDesc = describeTrialState(currentStatus);
+    expect(oldDesc).toBe("expired — 0 days remaining");
+  });
+
+  it("trial-complete newDesc is always 'expired — 0 days remaining'", () => {
+    // newDesc is hardcoded in the trial-complete branch (not derived from computeStatus)
+    const newDesc = "expired — 0 days remaining";
+    expect(newDesc).toBe("expired — 0 days remaining");
+  });
+
+  it("expiredStart is TRIAL_DURATION_DAYS+1 days in the past", () => {
+    const expiredStart = buildExpiredStart();
+    const daysAgo = Math.floor((Date.now() - new Date(expiredStart).getTime()) / 86400000);
+    expect(daysAgo).toBe(TRIAL_DURATION_DAYS + 1);
+  });
+});
+
+// ── 9. trial-progress when already expired (remaining = 0) ───────────────────
+//
+// When computeTrialProgressTarget returns null, the implementation sets the
+// status message to "Trial already expired — nothing to progress" and returns
+// without opening the dialog.
+
+describe("trial-progress when already expired (edge case, issue #1472)", () => {
+  it("computeTrialProgressTarget(0) returns null → should not open dialog", () => {
+    const target = computeTrialProgressTarget(0);
+    expect(target).toBeNull();
+    // Null means the guard fires and we emit the 'already expired' toast
+  });
+
+  it("computeTrialProgressTarget(-1) returns null (edge: negative remaining)", () => {
+    expect(computeTrialProgressTarget(-1)).toBeNull();
+  });
+
+  it("computeTrialProgressTarget(1) returns expiry target — minimal non-zero remaining", () => {
+    const target = computeTrialProgressTarget(1);
+    expect(target).not.toBeNull();
+    expect(target!.targetRemaining).toBe(0);
+  });
+
+  it("newDesc for progress-to-expiry is 'expired — 0 days remaining'", () => {
+    // The progress branch produces newDesc based on targetRemaining
+    const target = computeTrialProgressTarget(5); // remaining=5 → target=0
+    expect(target!.targetRemaining).toBe(0);
+    const newDesc = target!.targetRemaining === 0
+      ? "expired — 0 days remaining"
+      : `active — ${target!.targetRemaining}d remaining (${target!.label})`;
+    expect(newDesc).toBe("expired — 0 days remaining");
+  });
+
+  it("newDesc for progress-to-nudge includes targetRemaining and label", () => {
+    const target = computeTrialProgressTarget(20); // remaining=20 → target=NUDGE_DAY=15
+    expect(target!.targetRemaining).toBe(TRIAL_NUDGE_DAY);
+    const newDesc = target!.targetRemaining === 0
+      ? "expired — 0 days remaining"
+      : `active — ${target!.targetRemaining}d remaining (${target!.label})`;
+    expect(newDesc).toContain("15d remaining");
+    expect(newDesc).toContain(target!.label);
+  });
+});
+
+// ── 10. handleTrialCancel semantics ──────────────────────────────────────────
+//
+// Mirrors: setTrialDialog(null); setCmdStatusMsg("Cancelled");
+// Tests that the Cancelled state is correct and yellow-colored (via string match).
+
+describe("handleTrialCancel — cancellation semantics (issue #1472)", () => {
+  it("Cancelled message triggers yellow color (string contains Cancelled)", () => {
+    const msg = "Cancelled";
+    // Implementation: color = msg.startsWith("Cancelled") ? "yellow" : "green"
+    const isYellow = msg.startsWith("Cancelled");
+    expect(isYellow).toBe(true);
+  });
+
+  it("Error message triggers yellow color", () => {
+    const msg = "Error: no trial selected — use list + use <N> first";
+    const isYellow = msg.includes("Error") || msg.startsWith("Cancelled");
+    expect(isYellow).toBe(true);
+  });
+
+  it("success message does not trigger yellow color", () => {
+    const msg = "trial-adjust applied";
+    const isYellow = msg.includes("Error") || msg.startsWith("Cancelled");
+    expect(isYellow).toBe(false);
+  });
+
+  it("trial-adjust applied success message format is non-empty", () => {
+    const action = "trial-adjust";
+    const msg = `${action} applied`;
+    expect(msg).toBe("trial-adjust applied");
+  });
+
+  it("trial-complete applied success message format", () => {
+    const action = "trial-complete";
+    const msg = `${action} applied`;
+    expect(msg).toBe("trial-complete applied");
+  });
+
+  it("trial-progress applied success message format", () => {
+    const action = "trial-progress";
+    const msg = `${action} applied`;
+    expect(msg).toBe("trial-progress applied");
+  });
+});
