@@ -10,7 +10,7 @@
 namespace: fenrir-monitor
 
 app:
-  replicaCount: 1
+  replicaCount: 2
 
   resources:
     requests:
@@ -23,7 +23,7 @@ app:
       ephemeral-storage: "256Mi"
 
 ui:
-  replicaCount: 1
+  replicaCount: 2
 
 ingress:
   enabled: true
