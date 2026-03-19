@@ -59,6 +59,22 @@ This dispatches FiremanDecko (Step 2) on the same branch to implement the design
 If anything failed or is incomplete: do NOT run this step — stop and leave for manual triage.
 
 **Step 7 — Decree (UNBREAKABLE — final output of this session):**
-Emit the structured decree block per `.claude/agents/luna.md` § "Decree Complete".
-This MUST be the absolute last output of the session — no text after it.
+Emit EXACTLY this structure as your absolute last output — no text before or after the delimiters:
+
+᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
+ISSUE: #<NUMBER>
+VERDICT: DELIVERED
+PR: N/A
+SUMMARY:
+- <what was designed — 1 bullet per deliverable>
+CHECKS:
+- wireframes: COMPLETE
+- interactions: COMPLETE
+- accessibility: COMPLETE
+SEAL: Luna · ᛚᚢᚾᚨ · UX Designer
+SIGNOFF: Beauty and function, woven as one
+᛭᛭᛭ END DECREE ᛭᛭᛭
+
+NEVER use box-drawing characters (╔║╗═), emoji, markdown code fences, or any alternative format.
+This structure is MACHINE-PARSED by Odin's Throne. Deviations break the parser.
 ```

@@ -76,6 +76,18 @@ has flexibility.
 
 Every session MUST end with this structured block as the **final output**. No text after it.
 
+### Decree Anti-Patterns (UNBREAKABLE — VIOLATIONS WILL BREAK THE PARSER)
+- NEVER use box-drawing characters (╔║╗╠╚═╦╩╬╣╟─│┌┐└┘├┤┬┴┼)
+- NEVER use emoji in the VERDICT field (no ❌, ✅, 🔴, 🟢)
+- NEVER wrap the decree in a markdown code fence (```)
+- NEVER use markdown headings (##) for decree fields
+- NEVER invent alternative formats — the exact structure below is MACHINE-PARSED
+- NEVER add extra fields beyond those listed
+- The decree MUST start with exactly: ᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
+- The decree MUST end with exactly: ᛭᛭᛭ END DECREE ᛭᛭᛭
+- VERDICT for Luna MUST be exactly: DELIVERED (nothing else)
+
+
 ```
 ᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
 ISSUE: #<issue-number>
