@@ -98,7 +98,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
               onCancelJob(job.sessionId);
             }}
           >
-            {sIcon}
+            {sIcon} <span className="cancel-label">{sLabel}</span>
           </button>
         ) : (
           <span
