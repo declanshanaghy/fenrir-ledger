@@ -14,6 +14,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mock the k8s module before importing app — avoids real kubeconfig discovery
 vi.mock("../k8s.js", () => ({
   listAgentJobs: vi.fn(),
+  deleteAgentJob: vi.fn(),
 }));
 
 // Mock ws.ts to avoid side effects (ws server binding)
