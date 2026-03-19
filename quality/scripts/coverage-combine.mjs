@@ -44,6 +44,7 @@ const SOURCES = [
 const EXCLUDE_PREFIXES = [
   ".next/",
   "node_modules/",
+  "src/__tests__/",
 ];
 
 function ts() {

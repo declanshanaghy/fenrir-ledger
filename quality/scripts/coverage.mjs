@@ -239,6 +239,9 @@ function normalizeLcov(lcovPath) {
       continue;
     }
 
+    // Drop test files — they should never appear in coverage reports.
+    if (sf.startsWith("src/__tests__/")) { dropped++; continue; }
+
     // Keep src/ paths as-is — but strip FN* lines. c8 with --all generates src/
     // entries for all files, but the FN line numbers come from webpack-compiled .js
     // and differ from the TypeScript source. Vitest owns all function coverage with
