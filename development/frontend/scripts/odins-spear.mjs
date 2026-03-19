@@ -1574,6 +1574,7 @@ function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusM
       h(Text, { color: "cyan" }, "[t] Tier  "),
       ...(stripeData ? [h(Text, { color: "red" }, "[s] Cancel Sub  ")] : []),
       ...(hh ? [h(Text, { color: "yellow" }, "[h] Household  ")] : []),
+      ...(hh ? [h(Text, { color: "cyan" }, "[c] Cards  ")] : []),
       h(Text, { color: "gray" }, "[Esc] Back")
     );
   }
@@ -1683,6 +1684,8 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
   const [mode, setMode]                 = useState("browse"); // browse | confirm-delete | prompt-tier | confirm-cancel-sub
   const [tierInput, setTierInput]       = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const [cardView, setCardView]         = useState(false); // true = show CardDrilldownView
+  const [cardContext, setCardContext]   = useState(null);  // { householdId, filterUserId, ownerEmail }
 
   // Load users on mount
   React.useEffect(() => {
@@ -1874,9 +1877,26 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
       onJumpToHousehold(detail.household.id);
       return;
     }
+    if (input === "c" && detail?.household) {
+      const u = users[selectedIdx];
+      setCardContext({ householdId: u.householdId, filterUserId: u.id, ownerEmail: u.email });
+      setCardView(true);
+      return;
+    }
   }, { isActive });
 
   // ── Render ──
+
+  // Card drill-down takes over when active
+  if (cardView && cardContext) {
+    return h(CardDrilldownView, {
+      householdId: cardContext.householdId,
+      filterUserId: cardContext.filterUserId,
+      ownerEmail: cardContext.ownerEmail,
+      onBack: () => setCardView(false),
+      setInputCaptured,
+    });
+  }
 
   const selectedUser = selectedIdx >= 0 ? users[selectedIdx] : null;
   const visibleUsers = users.slice(scrollOffset, scrollOffset + LIST_HEIGHT);
@@ -2101,6 +2121,7 @@ function HouseholdDetailView({ detail, confirmState }) {
       h(Text, { color: "cyan" }, "[k]"), h(Text, { color: "gray" }, " Kick  "),
       h(Text, { color: "cyan" }, "[o]"), h(Text, { color: "gray" }, " Xfer owner  "),
       h(Text, { color: "cyan" }, "[i]"), h(Text, { color: "gray" }, " Regen invite  "),
+      h(Text, { color: "cyan" }, "[c]"), h(Text, { color: "gray" }, " Cards  "),
       ...(hh.tier === "karl" ? [
         h(Text, { color: "cyan" }, "[s]"), h(Text, { color: "gray" }, " Cancel sub  "),
       ] : []),
@@ -2124,11 +2145,13 @@ function HouseholdDetailView({ detail, confirmState }) {
  * Full Households master-detail tab.
  * Manages its own async state (list + detail) and keyboard input.
  */
-function HouseholdsTab() {
+function HouseholdsTab({ setInputCaptured = () => {} }) {
   const [listState, setListState] = useState({ items: [], loading: false, loaded: false, error: null });
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [detail, setDetail] = useState({ data: null, loading: false, error: null });
   const [confirmState, setConfirmState] = useState(null);
+  const [cardView, setCardView]       = useState(false);
+  const [cardContext, setCardContext] = useState(null); // { householdId, filterUserId, ownerEmail }
 
   // ── Load household list ──
   useEffect(() => {
@@ -2323,9 +2346,27 @@ function HouseholdsTab() {
       });
       return;
     }
+
+    if (input === "c") {
+      setCardContext({ householdId: hh.id, filterUserId: null, ownerEmail: hh.name || shortId(hh.id) });
+      setCardView(true);
+      return;
+    }
   }, [confirmState, listState.items, detail.data]));
 
   // ── Render ──
+
+  // Card drill-down takes over when active
+  if (cardView && cardContext) {
+    return h(CardDrilldownView, {
+      householdId: cardContext.householdId,
+      filterUserId: cardContext.filterUserId,
+      ownerEmail: cardContext.ownerEmail,
+      onBack: () => setCardView(false),
+      setInputCaptured,
+    });
+  }
+
   const { items, loading: listLoading, loaded, error: listError } = listState;
 
   // Scrollable window for the list
@@ -2414,6 +2455,483 @@ function HouseholdsTab() {
   );
 }
 
+// ── Card drill-down helpers ───────────────────────────────────────────────────
+
+/** Status dot + color for each card status value. */
+const CARD_STATUS_DOT = {
+  active:          { dot: "●", color: "green"  },
+  fee_approaching: { dot: "◐", color: "yellow" },
+  promo_expiring:  { dot: "◐", color: "yellow" },
+  closed:          { dot: "○", color: "gray"   },
+};
+
+/** Norse realm name mapped from card status. */
+const CARD_STATUS_REALM = {
+  active:          "Midgard",
+  fee_approaching: "Muspelheim",
+  promo_expiring:  "Niflheim",
+  closed:          "Helheim",
+};
+
+/** Fetch all cards for a household (including soft-deleted). */
+async function loadCardsForHousehold(householdId) {
+  const snap = await getDb().collection(`households/${householdId}/cards`).get();
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/** ASCII spend-progress bar. */
+function SpendProgressBar({ spend, goal }) {
+  const raw = goal > 0 ? Math.min(1, (spend || 0) / goal) : 0;
+  const BAR_WIDTH = 28;
+  const filled = Math.round(raw * BAR_WIDTH);
+  const bar = "█".repeat(filled) + "░".repeat(BAR_WIDTH - filled);
+  const color = raw >= 1 ? "green" : raw >= 0.5 ? "yellow" : "white";
+  return h(Box, { flexDirection: "column", paddingLeft: 2 },
+    h(Box, { flexDirection: "row" },
+      h(Text, { color }, bar),
+      h(Text, { color: "gray" }, `  ${Math.round(raw * 100)}%`)
+    ),
+    h(Text, { color: "gray", dimColor: true },
+      `$${(spend || 0).toLocaleString()} / $${(goal || 0).toLocaleString()}`
+    )
+  );
+}
+
+/** A single row in the card list left-panel. */
+function CardListRow({ card, selected }) {
+  const s = CARD_STATUS_DOT[card.status] || { dot: "○", color: "gray" };
+  const isDeleted = !!card.deletedAt;
+  return h(Box, {
+    flexDirection: "row",
+    paddingX: 1,
+    backgroundColor: selected ? "gray" : undefined,
+  },
+    h(Text, { color: selected ? "black" : s.color }, `${s.dot} `),
+    h(Text, {
+      color: selected ? "black" : isDeleted ? "gray" : "white",
+      dimColor: isDeleted && !selected,
+    }, (card.name || "Unknown").substring(0, 22).padEnd(22)),
+    ...(isDeleted ? [
+      h(Text, { color: selected ? "black" : "gray", dimColor: !selected }, " DEL"),
+    ] : [])
+  );
+}
+
+/** Card detail right-panel. Shows all card fields and action shortcuts. */
+function CardDetailPanel({ card, householdId, ownerEmail, onBack, onCardUpdated, setInputCaptured }) {
+  const [mode, setMode]                 = useState("browse");
+  const [expungeInput, setExpungeInput] = useState("");
+  const [statusMsg, setStatusMsg]       = useState("");
+
+  React.useEffect(() => {
+    if (!statusMsg) return;
+    const tid = setTimeout(() => setStatusMsg(""), 3000);
+    return () => clearTimeout(tid);
+  }, [statusMsg]);
+
+  useInput((input, key) => {
+    // ── Type 'delete' to confirm expunge ──
+    if (mode === "expunge-input") {
+      if (key.return) {
+        if (expungeInput === "delete") {
+          doExpunge();
+        } else {
+          setStatusMsg("Aborted: must type exactly 'delete'");
+        }
+        setExpungeInput("");
+        setMode("browse");
+        setInputCaptured?.(false);
+      } else if (key.escape) {
+        setExpungeInput("");
+        setMode("browse");
+        setInputCaptured?.(false);
+        setStatusMsg("Expunge cancelled");
+      } else if (key.backspace || key.delete) {
+        setExpungeInput((t) => t.slice(0, -1));
+      } else if (input && !key.ctrl && !key.meta && input.length === 1) {
+        setExpungeInput((t) => t + input);
+      }
+      return;
+    }
+    // ── y/n confirmation modes ──
+    if (mode === "confirm-delete") {
+      if (input === "y" || input === "Y") doDelete();
+      else setStatusMsg("Delete cancelled");
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-restore") {
+      if (input === "y" || input === "Y") doRestore();
+      else setStatusMsg("Restore cancelled");
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-expunge") {
+      if (input === "y" || input === "Y") {
+        setMode("expunge-input");
+        setInputCaptured?.(true);
+      } else {
+        setStatusMsg("Expunge cancelled");
+        setMode("browse");
+      }
+      return;
+    }
+    // ── Browse mode ──
+    if (key.escape) { onBack(); return; }
+    if (input === "d" && !card.deletedAt) { setMode("confirm-delete"); return; }
+    if (input === "r" && card.deletedAt)  { setMode("confirm-restore"); return; }
+    if (input === "x")                    { setMode("confirm-expunge"); return; }
+  });
+
+  function doDelete() {
+    (async () => {
+      try {
+        await getDb().doc(`households/${householdId}/cards/${card.id}`).update({
+          deletedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        setStatusMsg(`Deleted: ${card.name}`);
+        onCardUpdated();
+      } catch (err) { setStatusMsg(`Error: ${err.message}`); }
+    })();
+  }
+
+  function doRestore() {
+    (async () => {
+      try {
+        await getDb().doc(`households/${householdId}/cards/${card.id}`).update({
+          deletedAt: FieldValue.delete(),
+          status: "active",
+          updatedAt: new Date().toISOString(),
+        });
+        setStatusMsg(`Restored: ${card.name}`);
+        onCardUpdated();
+      } catch (err) { setStatusMsg(`Error: ${err.message}`); }
+    })();
+  }
+
+  function doExpunge() {
+    (async () => {
+      try {
+        await getDb().doc(`households/${householdId}/cards/${card.id}`).delete();
+        setStatusMsg(`Expunged: ${card.name}`);
+        onCardUpdated();
+      } catch (err) { setStatusMsg(`Error: ${err.message}`); }
+    })();
+  }
+
+  const status    = card.status || "active";
+  const statusDot = CARD_STATUS_DOT[status] || { dot: "○", color: "gray" };
+  const realm     = CARD_STATUS_REALM[status] || "Unknown";
+  const isDeleted = !!card.deletedAt;
+  const spend     = card.spend ?? card.spendAmount ?? 0;
+  const spendGoal = card.spendGoal ?? card.bonusSpendGoal ?? 0;
+
+  // ── Action bar ──
+  let actionArea;
+  if (mode === "confirm-delete") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "red", paddingX: 1, marginTop: 1, flexDirection: "row" },
+      h(Text, { color: "red" }, `Delete "${card.name}"? `),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[any] Cancel")
+    );
+  } else if (mode === "confirm-restore") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "yellow", paddingX: 1, marginTop: 1, flexDirection: "row" },
+      h(Text, { color: "yellow" }, `Restore "${card.name}" to active? `),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[any] Cancel")
+    );
+  } else if (mode === "confirm-expunge") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "red", paddingX: 1, marginTop: 1, flexDirection: "row" },
+      h(Text, { color: "red", bold: true }, "EXPUNGE permanently? "),
+      h(Text, { color: "yellow" }, "[y] Type confirm  "),
+      h(Text, { color: "gray" }, "[any] Cancel")
+    );
+  } else if (mode === "expunge-input") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "red", paddingX: 1, marginTop: 1, flexDirection: "row" },
+      h(Text, { color: "red" }, "Type 'delete' to confirm expunge: "),
+      h(Text, { color: "white", bold: true }, expungeInput),
+      h(Text, { color: "gray" }, "█  [Enter] Confirm  [Esc] Cancel")
+    );
+  } else {
+    actionArea = h(Box, {
+      flexDirection: "row", flexWrap: "wrap",
+      borderStyle: "single", borderColor: "gray",
+      paddingX: 1, marginTop: 1,
+    },
+      ...(!isDeleted ? [h(Text, { color: "red" }, "[d] Delete  ")] : []),
+      ...(isDeleted  ? [h(Text, { color: "yellow" }, "[r] Restore  ")] : []),
+      h(Text, { color: "red" }, "[x] Expunge  "),
+      h(Text, { color: "gray" }, "[Esc] Back")
+    );
+  }
+
+  return h(Box, { flexDirection: "column", flexGrow: 1, paddingX: 2, paddingY: 1 },
+    // ── Breadcrumb ──
+    h(Box, { flexDirection: "row", marginBottom: 1 },
+      h(Text, { color: "gray", dimColor: true }, "← "),
+      h(Text, { color: "cyan" }, ownerEmail || "User"),
+      h(Text, { color: "gray", dimColor: true }, " / Cards / "),
+      h(Text, { color: "yellow" }, card.name || "Card")
+    ),
+    // ── Header ──
+    h(Box, { flexDirection: "row", alignItems: "center", gap: 2, marginBottom: 1,
+             borderStyle: "single", borderColor: "gray", paddingX: 1 },
+      h(Text, { bold: true, color: "yellow" }, card.name || "Unknown Card"),
+      h(Text, { color: statusDot.color }, `  ${statusDot.dot}`),
+      ...(isDeleted ? [h(Text, { color: "red" }, " [DELETED]")] : [])
+    ),
+    // ── Card Info ──
+    h(SectionHeader, { title: "Card Info" }),
+    h(DetailField, { label: "Issuer" },
+      h(Text, {}, card.issuer || "—")
+    ),
+    h(DetailField, { label: "Credit Limit" },
+      h(Text, { color: "cyan" }, card.creditLimit ? `$${Number(card.creditLimit).toLocaleString()}` : "—")
+    ),
+    h(DetailField, { label: "Annual Fee" },
+      h(Text, {}, card.annualFee ? `$${card.annualFee}` : "None")
+    ),
+    h(DetailField, { label: "Fee Due" },
+      h(Text, { color: card.feeDue ? "yellow" : "gray" }, fmtDateShort(card.feeDue))
+    ),
+    h(DetailField, { label: "Opened" },
+      h(Text, {}, fmtDateShort(card.openedDate ?? card.opened))
+    ),
+    h(DetailField, { label: "Status" },
+      h(Box, { flexDirection: "row" },
+        h(Text, { color: statusDot.color }, `${statusDot.dot} `),
+        h(Text, {}, status.replace(/_/g, " ")),
+        h(Text, { color: "yellow" }, `  — ${realm}`)
+      )
+    ),
+    // ── Bonus ──
+    h(SectionHeader, { title: "Bonus" }),
+    h(DetailField, { label: "Status" },
+      card.bonusMet !== undefined
+        ? h(Text, { color: card.bonusMet ? "green" : "yellow" }, card.bonusMet ? "✓ Met" : "◎ In Progress")
+        : h(Text, { color: "gray", dimColor: true }, "—")
+    ),
+    ...(card.bonusAmount ? [
+      h(DetailField, { label: "Bonus Amount" },
+        h(Text, { color: "yellow" }, `$${Number(card.bonusAmount).toLocaleString()}`)
+      ),
+    ] : []),
+    ...(card.bonusDeadline ? [
+      h(DetailField, { label: "Deadline" },
+        h(Text, { color: "yellow" }, fmtDateShort(card.bonusDeadline))
+      ),
+    ] : []),
+    // ── Spend Progress ──
+    ...(spendGoal > 0 ? [
+      h(SectionHeader, { title: "Spend Progress" }),
+      h(SpendProgressBar, { spend, goal: spendGoal }),
+    ] : []),
+    // ── Notes ──
+    ...(card.notes ? [
+      h(SectionHeader, { title: "Notes" }),
+      h(Box, { paddingX: 2 },
+        h(Text, { color: "gray" }, card.notes)
+      ),
+    ] : []),
+    // ── Owner ──
+    h(SectionHeader, { title: "Owner" }),
+    h(DetailField, { label: "User" },
+      h(Text, { color: "cyan" }, ownerEmail || "—")
+    ),
+    h(DetailField, { label: "Card ID" },
+      h(Text, { color: "gray", dimColor: true }, card.id)
+    ),
+    // ── Actions ──
+    actionArea,
+    // ── Status message ──
+    ...(statusMsg ? [
+      h(Box, { marginTop: 1 },
+        h(Text, { color: statusMsg.startsWith("Error") ? "red" : "green" }, statusMsg)
+      ),
+    ] : [])
+  );
+}
+
+/**
+ * Full card drill-down view: left=scrollable card list, right=card detail.
+ * Manages its own async state and keyboard navigation.
+ *
+ * @param {Object}   props
+ * @param {string}   props.householdId
+ * @param {string|null} props.filterUserId  null = show all household cards
+ * @param {string}   props.ownerEmail       shown in breadcrumbs
+ * @param {Function} props.onBack           called on Esc from list view
+ * @param {Function} [props.setInputCaptured]
+ */
+function CardDrilldownView({ householdId, filterUserId, ownerEmail, onBack, setInputCaptured }) {
+  const LIST_HEIGHT = 18;
+
+  const [cards, setCards]               = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [loadError, setLoadError]       = useState(null);
+  const [selectedIdx, setSelectedIdx]   = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [detailOpen, setDetailOpen]     = useState(false);
+
+  function sortCards(arr) {
+    const ORDER = { active: 0, fee_approaching: 1, promo_expiring: 2, closed: 3 };
+    return [...arr].sort((a, b) => {
+      const ao = a.deletedAt ? 99 : (ORDER[a.status] ?? 4);
+      const bo = b.deletedAt ? 99 : (ORDER[b.status] ?? 4);
+      return ao !== bo ? ao - bo : (a.name || "").localeCompare(b.name || "");
+    });
+  }
+
+  function fetchCards() {
+    setLoading(true);
+    loadCardsForHousehold(householdId)
+      .then((all) => {
+        const filtered = filterUserId ? all.filter((c) => c.userId === filterUserId) : all;
+        setCards(sortCards(filtered));
+      })
+      .catch((err) => setLoadError(err.message || String(err)))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(fetchCards, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // List navigation — inactive when detail panel is open (detail handles own input)
+  useInput((input, key) => {
+    if (key.escape) { onBack(); return; }
+    if (key.upArrow) {
+      const ni = Math.max(0, selectedIdx - 1);
+      setSelectedIdx(ni);
+      if (ni < scrollOffset) setScrollOffset(ni);
+      return;
+    }
+    if (key.downArrow) {
+      const ni = Math.min(cards.length - 1, selectedIdx + 1);
+      setSelectedIdx(ni);
+      if (ni >= scrollOffset + LIST_HEIGHT) setScrollOffset(ni - LIST_HEIGHT + 1);
+      return;
+    }
+    if (key.return && cards[selectedIdx]) {
+      setDetailOpen(true);
+      return;
+    }
+  }, { isActive: !detailOpen });
+
+  const visibleCards  = cards.slice(scrollOffset, scrollOffset + LIST_HEIGHT);
+  const canScrollUp   = scrollOffset > 0;
+  const canScrollDown = scrollOffset + LIST_HEIGHT < cards.length;
+  const selectedCard  = cards[selectedIdx] ?? null;
+
+  // ── Left panel (shared between list + detail modes) ──
+  const leftPanel = h(Box, {
+    flexDirection: "column",
+    width: 32,
+    borderStyle: "single",
+    borderColor: detailOpen ? "gray" : "yellow",
+    flexShrink: 0,
+  },
+    h(Box, { paddingX: 1, borderStyle: "single", borderColor: "gray" },
+      h(Text, { bold: true, color: "yellow" },
+        loading ? "Cards (loading…)" :
+        loadError ? "Cards (error)" :
+        `Cards (${cards.length})`
+      )
+    ),
+    canScrollUp && h(Text, { color: "gray", dimColor: true, paddingX: 2 }, "↑ more"),
+    loading
+      ? h(Text, { color: "gray", dimColor: true, paddingX: 2 }, "Loading…")
+      : loadError
+        ? h(Text, { color: "red", paddingX: 2 }, `Error: ${loadError}`)
+        : cards.length === 0
+          ? h(Text, { color: "gray", dimColor: true, paddingX: 2 }, "No cards found")
+          : visibleCards.map((c, i) =>
+              h(CardListRow, {
+                key: c.id,
+                card: c,
+                selected: scrollOffset + i === selectedIdx,
+              })
+            ),
+    canScrollDown && h(Text, { color: "gray", dimColor: true, paddingX: 2 }, "↓ more"),
+    h(Box, { flexGrow: 1 }),
+    h(Text, { color: "gray", dimColor: true, paddingX: 1 },
+      detailOpen ? "Esc back to list" : "↑/↓ Enter  Esc back"
+    )
+  );
+
+  // ── Detail mode: left list + right detail panel ──
+  if (detailOpen && selectedCard) {
+    return h(Box, { flexDirection: "row", flexGrow: 1 },
+      leftPanel,
+      h(CardDetailPanel, {
+        card: selectedCard,
+        householdId,
+        ownerEmail,
+        onBack: () => setDetailOpen(false),
+        onCardUpdated: () => { fetchCards(); setDetailOpen(false); },
+        setInputCaptured,
+      })
+    );
+  }
+
+  // ── List mode: left list + right preview ──
+  return h(Box, { flexDirection: "row", flexGrow: 1 },
+    leftPanel,
+    selectedCard
+      ? h(Box, {
+          flexDirection: "column",
+          flexGrow: 1,
+          paddingX: 2,
+          paddingY: 1,
+          borderStyle: "single",
+          borderColor: "gray",
+        },
+          // breadcrumb
+          h(Box, { flexDirection: "row", marginBottom: 1 },
+            h(Text, { color: "gray", dimColor: true }, "← "),
+            h(Text, { color: "cyan" }, ownerEmail || "User"),
+            h(Text, { color: "gray", dimColor: true }, " / Cards")
+          ),
+          // card header
+          h(Box, { flexDirection: "row", alignItems: "center", marginBottom: 1,
+                   borderStyle: "single", borderColor: "gray", paddingX: 1 },
+            h(Text, { bold: true, color: "yellow" }, selectedCard.name || "Unknown Card"),
+            h(Text, { color: (CARD_STATUS_DOT[selectedCard.status] || { color: "gray" }).color },
+              `  ${(CARD_STATUS_DOT[selectedCard.status] || { dot: "○" }).dot}  `),
+            h(Text, { color: "gray" }, (selectedCard.status || "active").replace(/_/g, " "))
+          ),
+          h(DetailField, { label: "Issuer" },
+            h(Text, {}, selectedCard.issuer || "—")
+          ),
+          h(DetailField, { label: "Credit Limit" },
+            h(Text, { color: "cyan" }, selectedCard.creditLimit
+              ? `$${Number(selectedCard.creditLimit).toLocaleString()}` : "—")
+          ),
+          h(DetailField, { label: "Annual Fee" },
+            h(Text, {}, selectedCard.annualFee ? `$${selectedCard.annualFee}` : "None")
+          ),
+          h(DetailField, { label: "Opened" },
+            h(Text, {}, fmtDateShort(selectedCard.openedDate ?? selectedCard.opened))
+          ),
+          h(Box, { marginTop: 1 },
+            h(Text, { color: "gray", dimColor: true }, "Enter to view full detail")
+          )
+        )
+      : h(Box, {
+          flexGrow: 1,
+          borderStyle: "single",
+          borderColor: "gray",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 1,
+        },
+          h(Text, { color: "yellow", dimColor: true }, "ᚱ"),
+          h(Text, { color: "gray" }, "Select a card"),
+          h(Text, { color: "gray", dimColor: true }, "↑/↓ navigate   Enter drill down")
+        )
+  );
+}
+
 // h — shorthand for React.createElement (no JSX needed in an .mjs script)
 const h = React.createElement;
 
@@ -2483,7 +3001,7 @@ function MainContent({ activeTab, onJumpToHousehold, setInputCaptured }) {
     });
   }
   if (activeTab === 1) {
-    return h(HouseholdsTab, null);
+    return h(HouseholdsTab, { setInputCaptured });
   }
   // Other tabs: placeholder
   const tabLabel = TUI_TABS[activeTab];
