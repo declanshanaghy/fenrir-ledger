@@ -50,10 +50,31 @@ Also accept Depot URLs: `https://depot.dev/orgs/.../claude/<session-id>` — ext
 When multiple issue numbers are passed (`#N1 #N2 #N3 ...`), the orchestrator runs an
 interactive review loop instead of batch-dispatching blindly:
 
-**Phase 1 — Gather and sort:**
-1. Fetch all listed issues: `gh issue view <N> --json number,title,body,labels` for each.
-2. Sort by priority: `critical` → `high` → `normal` → `low`. Within the same priority,
-   preserve the order Odin listed them.
+**Phase 1 — Pre-fetch everything in parallel (LOOP OPTIMIZATION):**
+
+Do ALL of the following in a single parallel batch BEFORE starting the interactive loop.
+This eliminates all per-issue latency during the loop — every AskUserQuestion response
+can be acted on immediately without any additional I/O.
+
+1. **Fetch all issues in parallel:** fire one `gh issue view <N> --json number,title,body,labels`
+   per issue simultaneously. Do NOT fetch them one at a time.
+
+2. **Pre-read all needed agent templates:** from the `--peek` output, each issue has a `chain`
+   field (e.g. `"FiremanDecko → Loki"`, `"Luna → FiremanDecko → Loki"`). Collect the unique
+   Step-1 agents across the entire queue (e.g. `firemandecko`, `luna`, `heimdall`) and read
+   ALL their template files in parallel. This means every dispatch in the loop is a single
+   tool call (just the spawn) rather than read-then-spawn.
+
+3. **Pre-resolve all blockers:** scan each issue body for `Blocked by #N` patterns. For every
+   blocker found, fetch `gh issue view <N> --json number,state` in parallel. Cache the results
+   so blocked issues can be flagged immediately when presented in the loop (no per-issue fetch).
+
+4. **Sort:** `critical` → `high` → `normal` → `low`. Within the same priority, preserve the
+   order Odin listed them (or peek order for the default Up Next queue).
+
+5. **Pre-compose all prompts:** with all issue data and templates already in context, compose
+   every agent prompt before entering the loop. Store them keyed by issue number. Dispatch
+   becomes a single `bash dispatch-job.sh` call — no compose step inside the loop.
 
 **Phase 2 — Interactive loop (one issue at a time):**
 For each issue in priority order, present via `AskUserQuestion`:
@@ -264,16 +285,17 @@ Read the deliverable file(s) from the merged PR, then present to Odin:
 ### Step 1 — Select the Issue(s)
 
 **Default (no flag):** Run `--peek` to get ALL Up Next items sorted by priority. Then run
-the **Multi-Issue Review Loop** over the entire queue — presenting each issue via
-`AskUserQuestion` with dispatch/skip/hold/stop options.
+Phase 1 of the **Multi-Issue Review Loop** (parallel pre-fetch) before entering the loop.
 
 **Single issue (`#N`):** Use that issue directly — skip to Step 2 refinement.
 
-**Multi-issue (`#N1 #N2 ...`):** Fetch listed issues, sort by priority, run the review loop.
+**Multi-issue (`#N1 #N2 ...`):** Run Phase 1 of the Multi-Issue Review Loop (parallel
+pre-fetch of all issues, templates, and blockers), then enter the loop.
 
-```bash
-gh issue view <NUMBER> --json number,title,body,labels
-```
+> **Loop mode:** When the queue has 2+ issues, ALL issue fetches, agent template reads,
+> blocker checks, and prompt composition happen in Phase 1 before any `AskUserQuestion`
+> is shown. See **Multi-Issue Review Loop → Phase 1** for the full pre-fetch spec.
+> For single-issue dispatch, fetch the issue and read the template before Step 2.
 
 Before dispatching, check body for `Blocked by #N` — if blocking issue is open, warn and ask (single) or skip (batch).
 
