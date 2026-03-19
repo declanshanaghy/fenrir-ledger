@@ -189,6 +189,15 @@ These patterns were found and deleted from this repo (issue #1253):
 `chronicles/chronicle-agent-css.test.ts` (CSS string), `gke/gke-api-routes.test.ts` (vacuous),
 `components/marketing-navbar.test.tsx` (static copy), `chronicles/chronicle-1050-mdx-heckler.test.ts` (CSS string).
 
+### Over-Tested Sources — Do Not Add Tests (UNBREAKABLE)
+
+See `.claude/agents/loki.md` § "Over-Tested Sources — Do Not Add Tests" for the full list
+of 12 files with 37×+ average LCOV hit count.
+
+If your new Vitest test primarily exercises a file in that list, stop. Redirect coverage
+effort to zero/low-coverage code instead. Test budget is finite — do not waste it on
+already-saturated files. The rule is absolute: no new tests targeting those files.
+
 ## GitHub Actions Authoring
 
 FiremanDecko owns the CI/CD implementation. When writing or modifying `.github/workflows/` files:

@@ -109,6 +109,30 @@ All tests are for the main frontend app (`development/frontend/`) only.
 
 **Rule of thumb:** If the test breaks when someone edits a config file, copy, infrastructure template, or refactors a script — it should NOT exist. Only test code that RUNS.
 
+### Over-Tested Sources — Do Not Add Tests (UNBREAKABLE)
+
+The following 12 files have an average LCOV hit count exceeding 37× — already saturated by
+existing tests. **If your new test primarily exercises any file in this list, stop.**
+Redirect coverage effort to zero/low-coverage files instead.
+
+| File | Avg Hit × | Coverage |
+|------|----------:|---------|
+| `src/components/marketing/MarketingNavLinks.tsx` | 274× | 87.5% |
+| `src/app/api/sync/route.ts` | 214× | 100.0% |
+| `src/lib/firebase/firestore-types.ts` | 145× | 88.2% |
+| `src/lib/sync/sync-engine.ts` | 67× | 100.0% |
+| `src/components/ui/button.tsx` | 62× | 100.0% |
+| `src/components/easter-eggs/HeilungModal.tsx` | 61× | 97.1% |
+| `src/hooks/useCloudSync.ts` | 61× | 92.6% |
+| `src/lib/trial-utils.ts` | 60× | 81.3% |
+| `src/lib/realm-utils.ts` | 56× | 50.0% |
+| `src/components/layout/LedgerTopBar.tsx` | 52× | 82.1% |
+| `src/app/ledger/settings/page.tsx` | 46× | 97.0% |
+| `src/lib/chronicles.ts` | 37× | 100.0% |
+
+These files are transitive deps or have multiple test owners — they are covered by proxy.
+Adding direct tests here is noise, not signal. Test budget must go toward uncovered code.
+
 ### Banned Pattern Examples (learned from cull — do NOT recreate)
 
 The following pattern types were found in this repo and deleted (issue #1253). If you are about
