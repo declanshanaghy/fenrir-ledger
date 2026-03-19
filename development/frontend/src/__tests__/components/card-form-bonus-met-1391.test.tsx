@@ -106,6 +106,10 @@ vi.mock("@/lib/issuer-utils", () => ({
   getIssuerRune: vi.fn().mockReturnValue("ᚠ"),
 }));
 
+// ── Component under test ──────────────────────────────────────────────────────
+
+import { CardForm } from "@/components/cards/CardForm";
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 import type { Card } from "@/lib/types";
@@ -142,24 +146,21 @@ describe('CardForm — "Minimum spend met" checkbox — Issue #1391', () => {
     vi.clearAllMocks();
   });
 
-  it("renders the 'Minimum spend met' label in step 1 (wizard mode)", async () => {
-    const { CardForm } = await import("@/components/cards/CardForm");
+  it("renders the 'Minimum spend met' label in step 1 (wizard mode)", () => {
     render(<CardForm householdId="hh-1" />);
 
     // Step 1 is active by default — label must be visible
     expect(screen.getByText("Minimum spend met")).toBeDefined();
   }, 15000);
 
-  it("renders the bonusMet checkbox element in step 1", async () => {
-    const { CardForm } = await import("@/components/cards/CardForm");
+  it("renders the bonusMet checkbox element in step 1", () => {
     render(<CardForm householdId="hh-1" />);
 
     const checkbox = screen.getByRole("checkbox", { name: /minimum spend met/i });
     expect(checkbox).toBeDefined();
   });
 
-  it("bonusMet checkbox defaults to unchecked for new cards", async () => {
-    const { CardForm } = await import("@/components/cards/CardForm");
+  it("bonusMet checkbox defaults to unchecked for new cards", () => {
     render(<CardForm householdId="hh-1" />);
 
     const checkbox = screen.getByRole("checkbox", { name: /minimum spend met/i });
@@ -169,7 +170,6 @@ describe('CardForm — "Minimum spend met" checkbox — Issue #1391', () => {
   });
 
   it("shows step 2 without 'Minimum spend met' checkbox after clicking More Details", async () => {
-    const { CardForm } = await import("@/components/cards/CardForm");
     render(<CardForm householdId="hh-1" />);
 
     // Fill required fields: issuerId via Select (simulated via fireEvent change on hidden input),
@@ -193,8 +193,7 @@ describe('CardForm — "Minimum spend met" checkbox — Issue #1391', () => {
     expect(screen.getByText("Minimum spend met")).toBeDefined();
   });
 
-  it("step 2 Sign-up Bonus section only contains 'Bonus deadline' (not bonusMet)", async () => {
-    const { CardForm } = await import("@/components/cards/CardForm");
+  it("step 2 Sign-up Bonus section only contains 'Bonus deadline' (not bonusMet)", () => {
     render(<CardForm householdId="hh-1" />);
 
     // Navigate to step 2 via Back button simulation: use goToStep by clicking Back
@@ -211,8 +210,7 @@ describe('CardForm — "Minimum spend met" checkbox — Issue #1391', () => {
     expect(bonusDeadlineInputs.length).toBe(0);
   });
 
-  it("renders bonusMet checkbox as checked when initialValues has met=true (edit mode)", async () => {
-    const { CardForm } = await import("@/components/cards/CardForm");
+  it("renders bonusMet checkbox as checked when initialValues has met=true (edit mode)", () => {
     const card = makeCardWithBonus(true);
     render(<CardForm householdId="hh-1" initialValues={card} />);
 
@@ -223,8 +221,7 @@ describe('CardForm — "Minimum spend met" checkbox — Issue #1391', () => {
     expect(ariaChecked === "true" || (checkbox as HTMLInputElement).checked === true).toBe(true);
   });
 
-  it("renders bonusMet checkbox as unchecked when initialValues has met=false (edit mode)", async () => {
-    const { CardForm } = await import("@/components/cards/CardForm");
+  it("renders bonusMet checkbox as unchecked when initialValues has met=false (edit mode)", () => {
     const card = makeCardWithBonus(false);
     render(<CardForm householdId="hh-1" initialValues={card} />);
 
