@@ -133,6 +133,17 @@ let portForwardProc = null; // track child process so we can kill on exit
 let pfManagedByUs = false;  // true if we started the port-forward (vs user-managed)
 let reconnecting = false;   // prevent concurrent reconnect attempts
 
+/**
+ * Route port-forward / Redis async log messages to TUI once it's running,
+ * or fall through to console before render() is called.
+ * SpearApp registers _tuiLog on mount and clears it on unmount.
+ */
+let _tuiLog = null;
+function pfLog(msg, isError = false) {
+  if (_tuiLog) { _tuiLog(msg); return; }
+  if (isError) console.error(msg); else console.log(msg);
+}
+
 /** Check if localhost:6379 is accepting connections. */
 function isPortOpen(port, host = "127.0.0.1", timeoutMs = 1000) {
   return new Promise((resolve) => {
@@ -175,8 +186,8 @@ async function startPortForward() {
   portForwardProc.stderr.on("data", (chunk) => { stderrBuf += chunk.toString(); });
   portForwardProc.on("exit", (code) => {
     if (code && code !== 0) {
-      console.error(`${RED}Port-forward exited with code ${code}${RESET}`);
-      if (stderrBuf.trim()) console.error(`${DIM}${stderrBuf.trim()}${RESET}`);
+      pfLog(`Port-forward exited with code ${code}`, true);
+      if (stderrBuf.trim()) pfLog(stderrBuf.trim(), true);
     }
     portForwardProc = null;
     // Auto-reconnect if we managed the port-forward and it dropped unexpectedly
@@ -189,12 +200,12 @@ async function startPortForward() {
   for (let i = 0; i < 20; i++) {
     await new Promise((r) => setTimeout(r, 500));
     if (await isPortOpen(PF_LOCAL_PORT)) {
-      console.log(`${GREEN}Port-forward established${RESET} ${DIM}(localhost:${PF_LOCAL_PORT} → ${PF_SERVICE})${RESET}`);
+      pfLog(`Port-forward established (localhost:${PF_LOCAL_PORT} → ${PF_SERVICE})`);
       return true;
     }
   }
 
-  console.error(`${RED}Port-forward timed out after 10s${RESET}`);
+  pfLog("Port-forward timed out after 10s", true);
   portForwardProc?.kill();
   portForwardProc = null;
   return false;
@@ -209,7 +220,7 @@ async function reconnectPortForward() {
   const delays = [1000, 3000, 5000];
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    console.log(`${GOLD}Port-forward dropped — reconnecting (attempt ${attempt}/${MAX_ATTEMPTS})...${RESET}`);
+    pfLog(`Port-forward dropped — reconnecting (attempt ${attempt}/${MAX_ATTEMPTS})...`);
     await new Promise((r) => setTimeout(r, delays[attempt - 1]));
 
     const ok = await startPortForward();
@@ -220,8 +231,7 @@ async function reconnectPortForward() {
   }
 
   reconnecting = false;
-  console.error(`${RED}Port-forward reconnect failed after ${MAX_ATTEMPTS} attempts.${RESET}`);
-  console.error(`${DIM}Commands will fail until the connection is restored. Try "reconnect" or restart the REPL.${RESET}`);
+  pfLog(`Port-forward reconnect failed after ${MAX_ATTEMPTS} attempts. Use / → reconnect to retry.`, true);
 }
 
 /** Clean up port-forward on exit. */
@@ -264,8 +274,7 @@ const redis = new Redis(redisUrl, {
   maxRetriesPerRequest: 1,
   retryStrategy(times) {
     if (times > 3) {
-      console.error(`${RED}Redis connection lost. Reconnect failed after ${times} attempts.${RESET}`);
-      console.error(`${DIM}Port-forward may have dropped. Restart the REPL to reconnect.${RESET}`);
+      pfLog(`Redis: reconnect failed after ${times} attempts — port-forward may have dropped`, true);
       return null; // stop retrying
     }
     return Math.min(times * 500, 2000);
@@ -275,9 +284,9 @@ const redis = new Redis(redisUrl, {
 // Suppress "Unhandled error event" noise from ioredis reconnect attempts
 redis.on("error", (err) => {
   if (err.code === "ECONNREFUSED" || err.code === "ECONNRESET") {
-    console.error(`${RED}Redis connection error${RESET} ${DIM}(${err.code} — port-forward may have dropped)${RESET}`);
+    pfLog(`Redis connection error (${err.code} — port-forward may have dropped)`, true);
   } else {
-    console.error(`${RED}Redis error: ${err.message}${RESET}`);
+    pfLog(`Redis error: ${err.message}`, true);
   }
 });
 
@@ -375,6 +384,7 @@ let selectedFp = null;           // trial fingerprint — set when Users tab loa
 let selectedHouseholdId = null;  // Firestore household ID — set when Households tab selects a household
 let _selectedUserId = null;      // Firestore user ID — set when Users tab selects a user
 let _selectedUserEmail = null;   // email for display in confirm dialogs
+let _selectedSubId = null;       // Stripe subscription ID — set when user detail loads
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -599,6 +609,7 @@ async function doDeleteSubscription(subId) {
   if (sub.status === "canceled") return `Subscription ${subId} is already canceled.`;
   const data = await stripe("DELETE", `/subscriptions/${subId}`);
   if (!data) return "Stripe request failed.";
+  _selectedSubId = null;
   return `Canceled subscription ${subId} (status: ${data.status}).`;
 }
 
@@ -783,6 +794,7 @@ async function loadUserDetailData(user) {
   _selectedUserId = user.id;
   _selectedUserEmail = user.email || null;
   selectedFp = result.trial?.fingerprint ?? null;
+  _selectedSubId = result.stripe?.subId ?? null;
 
   return result;
 }
@@ -2963,10 +2975,16 @@ function SpearApp({ connectionStatus, counts }) {
   // { action, phase: "input"|"confirm", dayInput, oldDesc, newDesc, applyFn } | null
   const [trialDialog, setTrialDialog] = useState(null);
 
+  // Register TUI log sink so port-forward/Redis async callbacks don't write to stdout
+  React.useEffect(() => {
+    _tuiLog = (msg) => setCmdStatusMsg(msg);
+    return () => { _tuiLog = null; };
+  }, []);
+
   // Auto-clear status messages
   React.useEffect(() => {
     if (!cmdStatusMsg) return;
-    const tid = setTimeout(() => setCmdStatusMsg(""), 3000);
+    const tid = setTimeout(() => setCmdStatusMsg(""), 5000);
     return () => clearTimeout(tid);
   }, [cmdStatusMsg]);
 
@@ -3089,11 +3107,7 @@ function SpearApp({ connectionStatus, counts }) {
         case "delete-household":   return doDeleteHousehold();
         case "delete-all":         return doDeleteAll();
         case "delete-entitlement": return doDeleteEntitlement();
-        case "delete-subscription": {
-          // subId comes from the selected user's stripe detail — best effort
-          const msg = await doDeleteSubscription(null);
-          return msg;
-        }
+        case "delete-subscription": return doDeleteSubscription(_selectedSubId);
         default: return `Unknown destructive action: ${action}`;
       }
     };
