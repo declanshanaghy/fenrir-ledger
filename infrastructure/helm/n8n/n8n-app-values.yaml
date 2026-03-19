@@ -25,16 +25,23 @@ redis:
   useExternal: false
 
 # n8n configuration
+# config.timezone and config.extraEnv are the chart-native fields.
+# Other flat keys (N8N_HOST, etc.) are NOT processed by the chart template —
+# they were historically injected via secretRefs. See secretRefs section below.
 config:
   timezone: UTC
-  N8N_HOST: "marketing.fenrirledger.com"
-  N8N_PROTOCOL: "https"
-  N8N_PORT: "5678"
-  N8N_EDITOR_BASE_URL: "https://marketing.fenrirledger.com/"
-  WEBHOOK_URL: "https://marketing.fenrirledger.com/"
-  N8N_USER_FOLDER: "/home/node/.n8n"
-  N8N_DIAGNOSTICS_ENABLED: "false"
-  N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+  # config.extraEnv injects env vars into the n8n main container.
+  # N8N_EDITOR_BASE_URL and WEBHOOK_URL fix the OAuth redirect URL so n8n
+  # does NOT append the internal port (:5678). Without these, n8n generates:
+  #   https://marketing.fenrirledger.com:5678/rest/oauth2-credential/callback
+  # (unreachable — port 5678 is internal only, ingress terminates on 443).
+  extraEnv:
+    - name: N8N_PUBLIC_API_DISABLED
+      value: "false"
+    - name: N8N_EDITOR_BASE_URL
+      value: "https://marketing.fenrirledger.com/"
+    - name: WEBHOOK_URL
+      value: "https://marketing.fenrirledger.com/"
 
 # Secrets from K8s secret. Only N8N_ENCRYPTION_KEY comes from the secret.
 # Host/port/protocol are set via config (not secrets — they're not sensitive).
