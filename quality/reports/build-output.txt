@@ -1,18 +1,20 @@
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
 ▲ Next.js 16.1.6 (Turbopack)
-- Environments: .env.local
 
 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
   Creating an optimized production build ...
-(node:9830) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
-(Use `node --trace-warnings ...` to show where the warning was created)
-✓ Compiled successfully in 24.6s
+✓ Compiled successfully in 31.3s
   Running TypeScript ...
-  Collecting page data using 7 workers ...
-  Generating static pages using 7 workers (0/68) ...
-  Generating static pages using 7 workers (17/68) 
-  Generating static pages using 7 workers (34/68) 
-  Generating static pages using 7 workers (51/68) 
-✓ Generating static pages using 7 workers (68/68) in 3.0s
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/69) ...
+  Generating static pages using 15 workers (17/69) 
+  Generating static pages using 15 workers (34/69) 
+  Generating static pages using 15 workers (51/69) 
+✓ Generating static pages using 15 workers (69/69) in 5.2s
   Finalizing page optimization ...
 
 Route (app)
@@ -45,7 +47,7 @@ Route (app)
 │ ├ /chronicles/agent-issue-1036-step1-firemandecko-28367630
 │ ├ /chronicles/agent-issue-800-firemandecko-readme-redesign
 │ ├ /chronicles/agent-issue-839-step1-firemandecko-08287a1f
-│ └ [+24 more paths]
+│ └ [+25 more paths]
 ├ ○ /faq
 ├ ○ /features
 ├ ○ /free-trial
