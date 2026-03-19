@@ -1,20 +1,23 @@
 /**
- * k8s.ts unit tests — issue #963
+ * k8s.ts unit tests — issue #963, #1404
  *
- * Validates that pod phase is correctly mapped to Job status so the monitor
- * UI can transition from "pending" to "running" once a pod starts executing.
+ * Validates that:
+ * - Pod phase is correctly mapped to Job status (issue #963)
+ * - deleteAgentJob calls BatchV1Api with correct job name and propagation policy (issue #1404)
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock the k8s client — avoids real kubeconfig discovery and network calls.
-// The functions under test (podPhaseToStatus, mapAgentJobToJob) don't call
-// the K8s API; they only use static types from the module.
+const mockDeleteNamespacedJob = vi.fn();
+
 vi.mock("@kubernetes/client-node", () => ({
   KubeConfig: vi.fn(() => ({
     loadFromCluster: vi.fn(),
     loadFromDefault: vi.fn(),
-    makeApiClient: vi.fn(),
+    makeApiClient: vi.fn(() => ({
+      deleteNamespacedJob: mockDeleteNamespacedJob,
+    })),
   })),
   BatchV1Api: vi.fn(),
   CoreV1Api: vi.fn(),
@@ -22,7 +25,7 @@ vi.mock("@kubernetes/client-node", () => ({
   Log: vi.fn(),
 }));
 
-import { podPhaseToStatus, mapAgentJobToJob } from "../k8s.js";
+import { podPhaseToStatus, mapAgentJobToJob, deleteAgentJob } from "../k8s.js";
 import type { AgentJob } from "../k8s.js";
 
 // ── podPhaseToStatus ──────────────────────────────────────────────────────────
@@ -149,5 +152,68 @@ describe("status lifecycle (pending → running → succeeded)", () => {
     // Pod reports Running — should now show running
     const jobPhase = podPhaseToStatus("Running");
     expect(jobPhase).toBe("running");
+  });
+});
+
+// ── deleteAgentJob (#1404 — Ragnarök cancel) ──────────────────────────────────
+
+describe("deleteAgentJob", () => {
+  beforeEach(() => {
+    mockDeleteNamespacedJob.mockReset();
+  });
+
+  it("calls deleteNamespacedJob with agent-<sessionId> job name", async () => {
+    mockDeleteNamespacedJob.mockResolvedValueOnce({});
+
+    await deleteAgentJob("issue-1404-step1-fireman");
+
+    expect(mockDeleteNamespacedJob).toHaveBeenCalledOnce();
+    const call = mockDeleteNamespacedJob.mock.calls[0][0] as {
+      name: string;
+      namespace: string;
+      body: Record<string, unknown>;
+    };
+    expect(call.name).toBe("agent-issue-1404-step1-fireman");
+  });
+
+  it("uses Background propagation policy to cascade pod deletion", async () => {
+    mockDeleteNamespacedJob.mockResolvedValueOnce({});
+
+    await deleteAgentJob("issue-1404-step1-fireman");
+
+    const call = mockDeleteNamespacedJob.mock.calls[0][0] as {
+      body: Record<string, unknown>;
+    };
+    expect(call.body).toMatchObject({ propagationPolicy: "Background" });
+  });
+
+  it("uses the default fenrir-agents namespace", async () => {
+    mockDeleteNamespacedJob.mockResolvedValueOnce({});
+
+    await deleteAgentJob("issue-1404-step1-fireman");
+
+    const call = mockDeleteNamespacedJob.mock.calls[0][0] as {
+      namespace: string;
+    };
+    expect(call.namespace).toBe("fenrir-agents");
+  });
+
+  it("accepts a custom namespace override", async () => {
+    mockDeleteNamespacedJob.mockResolvedValueOnce({});
+
+    await deleteAgentJob("issue-1404-step1-fireman", "custom-ns");
+
+    const call = mockDeleteNamespacedJob.mock.calls[0][0] as {
+      namespace: string;
+    };
+    expect(call.namespace).toBe("custom-ns");
+  });
+
+  it("propagates k8s API errors to the caller", async () => {
+    mockDeleteNamespacedJob.mockRejectedValueOnce(new Error("403 Forbidden"));
+
+    await expect(deleteAgentJob("issue-1404-step1-fireman")).rejects.toThrow(
+      "403 Forbidden"
+    );
   });
 });

@@ -157,3 +157,67 @@ describe("Session gate middleware removed", () => {
     expect(health.headers.get("set-cookie")).toBeNull();
   });
 });
+
+// ── DELETE /api/jobs/:sessionId — Ragnarök cancel endpoint (#1404) ────────────
+
+import { deleteAgentJob } from "../k8s.js";
+
+const mockDeleteAgentJob = vi.mocked(deleteAgentJob);
+
+describe("DELETE /api/jobs/:sessionId", () => {
+  it("returns 200 with ok:true on successful deletion", async () => {
+    mockDeleteAgentJob.mockResolvedValueOnce(undefined);
+
+    const res = await app.request("/api/jobs/issue-1404-step1-fireman", {
+      method: "DELETE",
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as { ok: boolean; sessionId: string };
+    expect(body.ok).toBe(true);
+    expect(body.sessionId).toBe("issue-1404-step1-fireman");
+  });
+
+  it("calls deleteAgentJob with the session ID from the URL", async () => {
+    mockDeleteAgentJob.mockResolvedValueOnce(undefined);
+
+    await app.request("/api/jobs/issue-42-step2-loki", { method: "DELETE" });
+
+    expect(mockDeleteAgentJob).toHaveBeenCalledOnce();
+    expect(mockDeleteAgentJob).toHaveBeenCalledWith(
+      "issue-42-step2-loki",
+      expect.any(String)
+    );
+  });
+
+  it("returns 500 with ok:false and error message when k8s throws", async () => {
+    mockDeleteAgentJob.mockRejectedValueOnce(new Error("Job not found"));
+
+    const res = await app.request("/api/jobs/issue-1404-step1-fireman", {
+      method: "DELETE",
+    });
+    expect(res.status).toBe(500);
+    const body = await res.json() as { ok: boolean; error: string };
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe("Job not found");
+  });
+
+  it("returns 500 with 'Unknown error' for non-Error throws", async () => {
+    mockDeleteAgentJob.mockRejectedValueOnce("string-error");
+
+    const res = await app.request("/api/jobs/issue-1404-step1-fireman", {
+      method: "DELETE",
+    });
+    expect(res.status).toBe(500);
+    const body = await res.json() as { ok: boolean; error: string };
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe("Unknown error");
+  });
+
+  it("does not call listAgentJobs — uses deleteAgentJob exclusively", async () => {
+    mockDeleteAgentJob.mockResolvedValueOnce(undefined);
+
+    await app.request("/api/jobs/some-session", { method: "DELETE" });
+
+    expect(mockListAgentJobs).not.toHaveBeenCalled();
+  });
+});
