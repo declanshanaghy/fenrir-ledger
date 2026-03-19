@@ -33,7 +33,7 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 | `--local` | Force local worktree execution instead of Depot. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
 | `#N1 #N2 #N3 ...` | **Multi-issue review loop.** Fetch all listed issues, sort by priority (critical → high → normal → low), then present each one-by-one via `AskUserQuestion`. See **Multi-Issue Review Loop** below. |
-| *(no flag)* | Default: pick the top item and start the agent chain via Depot. |
+| *(no flag)* | **Default: Up Next review loop.** Fetch ALL items from the Up Next column (via `--peek`), sort by priority, then run the **Multi-Issue Review Loop** over the entire queue. Same interactive dispatch/skip/hold/stop flow as multi-issue mode. |
 
 ### Session ID Parsing
 
@@ -232,9 +232,15 @@ Read the deliverable file(s) from the merged PR, then present to Odin:
 
 ## Dispatch Flow
 
-### Step 1 — Select the Issue
+### Step 1 — Select the Issue(s)
 
-For default dispatch: run `--peek`, pick top item. For `#N`: use that issue directly.
+**Default (no flag):** Run `--peek` to get ALL Up Next items sorted by priority. Then run
+the **Multi-Issue Review Loop** over the entire queue — presenting each issue via
+`AskUserQuestion` with dispatch/skip/hold/stop options.
+
+**Single issue (`#N`):** Use that issue directly — skip to Step 2 refinement.
+
+**Multi-issue (`#N1 #N2 ...`):** Fetch listed issues, sort by priority, run the review loop.
 
 ```bash
 gh issue view <NUMBER> --json number,title,body,labels
