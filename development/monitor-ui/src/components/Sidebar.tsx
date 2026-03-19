@@ -2,11 +2,13 @@ import type { DisplayJob } from "../lib/types";
 import { useTheme } from "../hooks/useTheme";
 import { JobCard } from "./JobCard";
 import { ThemeSwitcher } from "./ThemeSwitcher";
+import { StatusBadge } from "./StatusBadge";
 
 interface Props {
   jobs: DisplayJob[];
   activeSessionId: string | null;
   quote: string;
+  wsState: "connecting" | "open" | "closed" | "error";
   onSelectSession: (sessionId: string) => void;
   onAvatarClick?: (agentKey: string) => void;
   onOdinClick?: () => void;
@@ -14,7 +16,7 @@ interface Props {
   pinnedSessionIds?: Set<string>;
 }
 
-export function Sidebar({ jobs, activeSessionId, quote, onSelectSession, onAvatarClick, onOdinClick, onTogglePinSession, pinnedSessionIds }: Props) {
+export function Sidebar({ jobs, activeSessionId, quote, wsState, onSelectSession, onAvatarClick, onOdinClick, onTogglePinSession, pinnedSessionIds }: Props) {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -33,6 +35,9 @@ export function Sidebar({ jobs, activeSessionId, quote, onSelectSession, onAvata
             />
           </button>
           <h1>Hlidskjalf</h1>
+          <span className="brand-wss-badge">
+            <StatusBadge state={wsState} />
+          </span>
         </div>
         <div className="quote" role="note">
           &ldquo;{quote}&rdquo;

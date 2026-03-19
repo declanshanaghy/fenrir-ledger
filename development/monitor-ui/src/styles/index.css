@@ -195,6 +195,19 @@ body {
 .sidebar-header .brand {
   display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;
 }
+.brand-wss-badge {
+  margin-left: auto; display: flex; align-items: center;
+}
+.ws-badge-icon {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0.15rem; border-radius: 3px;
+  border: 1px solid transparent; flex-shrink: 0;
+  cursor: default;
+}
+.ws-badge-icon.open    { border-color: #22c55e33; }
+.ws-badge-icon.connecting { border-color: #eab30833; }
+.ws-badge-icon.closed  { border-color: var(--rune-border); }
+.ws-badge-icon.error   { border-color: #ef444433; }
 .sidebar-header img {
   width: 40px; height: 40px; border-radius: 50%;
   border: 2px solid var(--gold);
@@ -1426,7 +1439,7 @@ body {
   html, body { overflow: auto; }
   /* Mobile session header: hide WS badge label and "Session:" text prefix */
   .session-id-label { display: none; }
-  .ws-badge { display: none; }
+  .ws-badge:not(.ws-badge-icon) { display: none; }
 }
 
 /* ── Norse Error Tablet ────────────────────────────────────────────────────── */
