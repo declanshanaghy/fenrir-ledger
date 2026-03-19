@@ -72,6 +72,8 @@ function filterLcov(lcov) {
   return { lcov: filtered.map((r) => r + "end_of_record").join("\n"), kept, dropped };
 }
 
+export { filterLcov, EXCLUDE_PREFIXES };
+
 function main() {
   log("Combining coverage reports...");
 
@@ -165,4 +167,7 @@ function generateTextSummary(lcovContent) {
   console.log("================================================================================");
 }
 
-main();
+// Only run when executed directly (not imported for testing)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main();
+}
