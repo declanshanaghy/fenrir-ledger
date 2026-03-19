@@ -65,6 +65,7 @@ Options:
   - "Dispatch" — dispatch via `/dispatch #<N>` immediately
   - "Skip" — leave on Up Next, move to next issue
   - "Hold" — move to a hold/backlog state, move to next issue
+  - "Double check" — verify issue status matches reality before deciding
   - "Stop" — stop processing remaining issues
 ```
 
@@ -75,7 +76,35 @@ Options:
 | **Dispatch** | Invoke `/dispatch #<N> --agent <inferred-agent> --step 1`. Collect the dispatch report. Continue to next issue. |
 | **Skip** | Do nothing with this issue. Continue to next issue. |
 | **Hold** | Leave issue where it is (no board move). Continue to next issue. |
+| **Double check** | Run a reality check on this issue (see below), then re-present the same issue with updated context. |
 | **Stop** | Immediately stop the loop. Do not process remaining issues. Report what was dispatched so far. |
+
+#### Double Check — Reality Verification
+
+When Odin selects "Double check", run these checks before re-presenting the issue:
+
+1. **Branch check:** `git ls-remote --heads origin | grep <issue-number>` — does a branch already exist?
+2. **PR check:** `gh pr list --search "<issue-number>" --state all --json number,title,state,headRefName` — any open/merged PRs?
+3. **Agent dispatch check:** `kubectl get jobs -n fenrir-agents -l issue=<issue-number> --no-headers 2>/dev/null` and check `--chain-status <N>` — was an agent already dispatched?
+4. **Issue comments:** `gh issue view <N> --json comments` — any handoff/verdict comments already posted?
+5. **Board position:** Confirm the issue is actually in the column pack-status says it is.
+
+Present findings as a brief status block before re-asking the same question:
+
+```
+**Double check #<N>:**
+- Branch: `fix/issue-<N>-...` exists / none found
+- PR: #<PR> (open/merged/none)
+- Agent: dispatched step 1 FiremanDecko (running/succeeded/none)
+- Handoff: FiremanDecko → Loki posted / none
+- Verdict: PASS / FAIL / none
+- Board: Up Next (confirmed)
+
+→ Re-presenting for decision...
+```
+
+Then re-present the same `AskUserQuestion` with the same options. This lets Odin
+make an informed dispatch/skip/hold decision after seeing the real state.
 
 **Phase 4 — Summary report:**
 After the loop completes (or is stopped), output a single summary:
