@@ -207,3 +207,96 @@ describe("GET /api/sync/pull — response", () => {
     expect(body.error).toBe("internal_error");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Loki IDOR fix invariants (merged from pull.route.loki.test.ts — issue #1192)
+// ---------------------------------------------------------------------------
+
+import type { FirestoreUser } from "@/lib/firebase/firestore-types";
+
+const LOKI_FIRESTORE_USER: FirestoreUser = {
+  clerkUserId: "google-sub-karl",
+  email: "karl@fenrir.dev",
+  displayName: "Karl the Worthy",
+  householdId: "hh-resolved",
+  role: "owner",
+  createdAt: "2024-01-01T00:00:00Z",
+  updatedAt: "2024-01-01T00:00:00Z",
+};
+
+function lokiAuthzSuccess(householdId = "hh-resolved") {
+  mockRequireAuthz.mockResolvedValue({
+    ok: true,
+    user: { sub: "google-sub-karl", email: "karl@fenrir.dev" },
+    firestoreUser: { ...LOKI_FIRESTORE_USER, householdId },
+  });
+}
+
+describe("GET /api/sync/pull — Loki IDOR fix invariants (issue #1192)", () => {
+  it("passes the query-param householdId AND tier:karl to requireAuthz — IDOR check cannot be silently skipped", async () => {
+    // CRITICAL: The IDOR fix depends on requireAuthz receiving the caller-supplied
+    // householdId so it can compare against firestoreUser.householdId.
+    // If the route ever calls requireAuthz without householdId, the membership
+    // check is skipped and any Karl user can read any household's cards again.
+    lokiAuthzSuccess("hh-resolved");
+    const req = new NextRequest(
+      "http://localhost/api/sync/pull?householdId=hh-victim",
+      { method: "GET", headers: { Authorization: "Bearer test-token" } },
+    );
+
+    await GET(req);
+
+    expect(mockRequireAuthz).toHaveBeenCalledWith(req, {
+      householdId: "hh-victim",
+      tier: "karl",
+    });
+  });
+
+  it("sets Cache-Control: no-store on successful 200 response", async () => {
+    // Card data (including tombstones) is sensitive PII.
+    // It must never be stored by browsers, CDNs, or proxy caches.
+    lokiAuthzSuccess("hh-resolved");
+    const card: Partial<Card> = {
+      id: "card-1",
+      householdId: "hh-resolved",
+      issuerId: "chase",
+      cardName: "Chase Sapphire",
+      openDate: "2025-01-01T00:00:00.000Z",
+      creditLimit: 500000,
+      annualFee: 9500,
+      annualFeeDate: "",
+      promoPeriodMonths: 0,
+      signUpBonus: null,
+      status: "active",
+      notes: "",
+      createdAt: "2025-01-01T00:00:00.000Z",
+      updatedAt: "2025-01-01T00:00:00.000Z",
+    };
+    mockGetAllFirestoreCards.mockResolvedValue([card]);
+
+    const res = await GET(
+      new NextRequest("http://localhost/api/sync/pull?householdId=hh-resolved", {
+        method: "GET",
+        headers: { Authorization: "Bearer test-token" },
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+  });
+
+  it("calls requireAuthz exactly once per request — no bypass or double-auth race", async () => {
+    // Calling requireAuthz twice would introduce a TOCTOU window; skipping it
+    // entirely would bypass auth. Exactly-once is the correct invariant.
+    lokiAuthzSuccess("hh-resolved");
+
+    await GET(
+      new NextRequest("http://localhost/api/sync/pull?householdId=hh-resolved", {
+        method: "GET",
+        headers: { Authorization: "Bearer test-token" },
+      }),
+    );
+
+    expect(mockRequireAuthz).toHaveBeenCalledTimes(1);
+  });
+});
