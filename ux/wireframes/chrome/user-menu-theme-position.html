@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — User Menu: Theme Position (Issue #1483)</title>
+  <style>
+    /* Layout CSS only — no colors, no fonts beyond sans-serif, no decorative styling */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; }
+
+    h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    h2 { font-size: 15px; font-weight: 700; margin-bottom: 12px; border-bottom: 2px solid; padding-bottom: 6px; }
+    h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+
+    .page-header { margin-bottom: 32px; }
+    .page-header p { margin-top: 6px; font-size: 13px; }
+    .issue-ref { font-weight: 700; }
+
+    .section { margin-bottom: 48px; }
+
+    /* Two-column comparison layout */
+    .comparison { display: flex; gap: 40px; flex-wrap: wrap; }
+    .comparison-col { flex: 1; min-width: 220px; }
+    .comparison-col h3 { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+
+    /* Menu anatomy */
+    .menu {
+      display: flex;
+      flex-direction: column;
+      width: 256px;
+      border: 1px solid;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid;
+      min-height: 44px;
+      font-size: 14px;
+    }
+    .menu-item:last-child { border-bottom: none; }
+
+    .menu-item .icon {
+      width: 16px;
+      height: 16px;
+      border: 1px solid;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .menu-item .label { flex: 1; }
+
+    /* Highlight wrong/right position */
+    .item-wrong { border-left: 4px solid; }
+    .item-correct { border-left: 4px solid; font-weight: 700; }
+
+    /* Position badge */
+    .pos-badge {
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid;
+      padding: 1px 5px;
+      min-width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* Annotation notes */
+    p.note {
+      font-size: 12px;
+      border-left: 3px solid;
+      padding: 6px 10px;
+      margin-top: 8px;
+    }
+
+    /* Change summary table */
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid; padding: 8px 12px; text-align: left; font-size: 13px; }
+    th { font-weight: 700; }
+
+    /* Acceptance criteria checklist */
+    .ac-list { list-style: none; padding: 0; }
+    .ac-list li { padding: 6px 0; border-bottom: 1px dashed; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
+    .ac-list li:last-child { border-bottom: none; }
+    .ac-check { width: 14px; height: 14px; border: 1px solid; display: inline-block; flex-shrink: 0; margin-top: 1px; }
+
+    /* Responsive: mobile simulation */
+    .viewport-label {
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid;
+      display: inline-block;
+      padding: 2px 8px;
+      margin-bottom: 10px;
+    }
+
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      padding: 12px 0;
+    }
+
+    .mobile-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px 12px;
+      border-bottom: 1px solid;
+      min-height: 48px;
+    }
+
+    .topbar-logo { font-size: 13px; font-weight: 700; }
+    .topbar-avatar { width: 28px; height: 28px; border: 1px solid; border-radius: 50%; }
+
+    .mobile-dropdown {
+      width: 100%;
+    }
+
+    .spacer { height: 24px; }
+
+    /* Flow diagram */
+    .flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .flow-step { border: 1px solid; padding: 6px 12px; font-size: 12px; }
+    .flow-arrow { font-size: 14px; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>User Menu — Theme Position Reorder</h1>
+  <p><span class="issue-ref">Issue #1483</span> — Move Theme to 2nd-last position (before Sign out) in the user dropdown</p>
+  <p>Component: <code>ProfileDropdown</code> in <code>LedgerTopBar.tsx</code> — affects desktop and mobile viewports</p>
+</header>
+
+<!-- ─────────────────────────────────────────────────────────────
+     SECTION A: Current vs Expected Menu Order
+     ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2>A — Current Order vs Expected Order</h2>
+  <p class="note">Theme is currently 2nd (immediately after My Cards), giving it false prominence for an infrequent preference. It should move to 2nd-last (before Sign out), grouped with lower-frequency utility actions.</p>
+
+  <div class="spacer"></div>
+
+  <div class="comparison">
+    <!-- CURRENT (wrong) -->
+    <div class="comparison-col">
+      <h3>Current Order — WRONG</h3>
+      <div class="viewport-label">ProfileDropdown (current)</div>
+      <nav class="menu" role="menu" aria-label="User menu (current — wrong order)">
+        <div class="menu-item">
+          <span class="pos-badge">1</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">My Cards</span>
+        </div>
+        <!-- Theme is 2nd — wrong position, highlighted -->
+        <div class="menu-item item-wrong" aria-label="Theme — wrong position">
+          <span class="pos-badge">2</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Theme ← WRONG (too prominent)</span>
+        </div>
+        <div class="menu-item">
+          <span class="pos-badge">3</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Account</span>
+        </div>
+        <div class="menu-item">
+          <span class="pos-badge">4</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Household</span>
+        </div>
+        <div class="menu-item">
+          <span class="pos-badge">5</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Settings</span>
+        </div>
+        <div class="menu-item">
+          <span class="pos-badge">6</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Sign out</span>
+        </div>
+      </nav>
+      <p class="note">Theme sits at position 2, immediately after My Cards. This elevates a low-frequency preference above navigation items (Account, Household, Settings) that users access far more often.</p>
+    </div>
+
+    <!-- EXPECTED (correct) -->
+    <div class="comparison-col">
+      <h3>Expected Order — CORRECT</h3>
+      <div class="viewport-label">ProfileDropdown (expected)</div>
+      <nav class="menu" role="menu" aria-label="User menu (expected — correct order)">
+        <div class="menu-item">
+          <span class="pos-badge">1</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">My Cards</span>
+        </div>
+        <div class="menu-item">
+          <span class="pos-badge">2</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Account</span>
+        </div>
+        <div class="menu-item">
+          <span class="pos-badge">3</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Household</span>
+        </div>
+        <div class="menu-item">
+          <span class="pos-badge">4</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Settings</span>
+        </div>
+        <!-- Theme is 2nd-last — correct position, highlighted -->
+        <div class="menu-item item-correct" aria-label="Theme — correct position">
+          <span class="pos-badge">5</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Theme ← 2nd-last (CORRECT)</span>
+        </div>
+        <div class="menu-item">
+          <span class="pos-badge">6</span>
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Sign out</span>
+        </div>
+      </nav>
+      <p class="note">Theme sits at position 5 (2nd-last), just above Sign out. Both are infrequent-use or destructive-ish actions that belong at the bottom of the menu. Navigation destinations (Account, Household, Settings) now occupy the more prominent mid-section.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────
+     SECTION B: Desktop Dropdown Anatomy (expected order)
+     ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2>B — Desktop Dropdown Anatomy (Expected Order, 1024px+)</h2>
+  <p class="note">No visual change to any item — only the DOM/render order changes. All existing styles, icons, active-state indicators, and karl-bling-dropdown class are preserved.</p>
+
+  <div class="spacer"></div>
+
+  <div style="display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start;">
+
+    <!-- Topbar trigger context -->
+    <div>
+      <h3>Trigger (avatar button, right side of topbar)</h3>
+      <div style="border: 1px solid; display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; min-height: 44px;">
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+          <span style="font-size: 13px; font-weight: 700;">User Name</span>
+          <span style="font-size: 11px;">user@email.com</span>
+        </div>
+        <div style="width: 28px; height: 28px; border: 1px solid; border-radius: 50%;"></div>
+      </div>
+      <p class="note">aria-expanded="true" when dropdown is open.<br/>aria-controls="user-menu"</p>
+    </div>
+
+    <!-- Full dropdown -->
+    <div>
+      <h3>Dropdown (role="menu", id="user-menu")</h3>
+      <nav class="menu" role="menu" aria-label="User menu" id="user-menu-anatomy-preview" style="width: 256px;">
+        <!-- 1. My Cards -->
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true" title="LayoutGrid icon"></span>
+          <span class="label">My Cards</span>
+          <!-- Active indicator: small dot, right-aligned, visible only on /ledger -->
+          <span style="width: 6px; height: 6px; border: 1px solid; border-radius: 50%; flex-shrink: 0;" aria-hidden="true" title="active dot (visible only when /ledger is current route)"></span>
+        </div>
+        <!-- 2. Account -->
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true" title="User icon"></span>
+          <span class="label">Account</span>
+        </div>
+        <!-- 3. Household -->
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true" title="Users icon"></span>
+          <span class="label">Household</span>
+        </div>
+        <!-- 4. Settings -->
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true" title="Settings icon"></span>
+          <span class="label">Settings</span>
+        </div>
+        <!-- 5. Theme — 2nd last -->
+        <div class="menu-item item-correct">
+          <span class="icon" aria-hidden="true" title="ThemeToggle dropdown-icon variant"></span>
+          <span class="label">Theme</span>
+          <!-- ThemeToggle component (variant="dropdown-icon") renders inline here -->
+        </div>
+        <!-- 6. Sign out -->
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true" title="LogOut icon"></span>
+          <span class="label">Sign out</span>
+        </div>
+      </nav>
+      <p class="note">Position: absolute right-0 top-full mt-2. Width: 256px (w-64).<br/>
+        Border: 1px solid border-border. Backdrop-blur preserved.<br/>
+        Karl/trial users: karl-bling-dropdown class applied to wrapper — no change needed.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────
+     SECTION C: Mobile Dropdown (375px)
+     ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2>C — Mobile Viewport (375px) — Expected Order</h2>
+  <p class="note">The ProfileDropdown is also rendered on mobile. It uses the same absolute-positioned component — no separate mobile implementation. Same reorder applies.</p>
+
+  <div class="spacer"></div>
+
+  <div class="mobile-frame" style="width: 375px;">
+    <!-- Simulated topbar -->
+    <div class="mobile-topbar">
+      <div class="topbar-logo">ᛟ FL</div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <!-- On mobile, name/email are hidden (hidden sm:flex) — avatar only -->
+        <div class="topbar-avatar" title="Avatar button"></div>
+      </div>
+    </div>
+
+    <!-- Dropdown overlay — on mobile it still drops from avatar, may overflow viewport edge -->
+    <div class="mobile-dropdown">
+      <nav class="menu" role="menu" aria-label="User menu (mobile)" style="width: 100%; border-top: none;">
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">My Cards</span>
+        </div>
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Account</span>
+        </div>
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Household</span>
+        </div>
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Settings</span>
+        </div>
+        <div class="menu-item item-correct">
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Theme</span>
+        </div>
+        <div class="menu-item">
+          <span class="icon" aria-hidden="true"></span>
+          <span class="label">Sign out</span>
+        </div>
+      </nav>
+    </div>
+  </div>
+  <p class="note" style="max-width: 375px;">On mobile (&lt;=768px), the name+email cluster is hidden (hidden sm:flex). Only the avatar button is shown. Tapping it opens ProfileDropdown — same component, same reorder. Minimum touch target: 44px per item (minHeight: 44 preserved).</p>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────
+     SECTION D: Item-by-Item Change Summary
+     ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2>D — Item Change Summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Menu Item</th>
+        <th>Old Position</th>
+        <th>New Position</th>
+        <th>Change</th>
+        <th>Style / Behavior Change</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>My Cards</td>
+        <td>1</td>
+        <td>1</td>
+        <td>None</td>
+        <td>No change</td>
+      </tr>
+      <tr>
+        <td>Theme</td>
+        <td>2</td>
+        <td>5</td>
+        <td>Moved down 3 positions</td>
+        <td>No style change — same button, same ThemeToggle component, same click handler</td>
+      </tr>
+      <tr>
+        <td>Account</td>
+        <td>3</td>
+        <td>2</td>
+        <td>Moved up 1 position</td>
+        <td>No change</td>
+      </tr>
+      <tr>
+        <td>Household</td>
+        <td>4</td>
+        <td>3</td>
+        <td>Moved up 1 position</td>
+        <td>No change</td>
+      </tr>
+      <tr>
+        <td>Settings</td>
+        <td>5</td>
+        <td>4</td>
+        <td>Moved up 1 position</td>
+        <td>No change</td>
+      </tr>
+      <tr>
+        <td>Sign out</td>
+        <td>6</td>
+        <td>6</td>
+        <td>None (remains last)</td>
+        <td>No change</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Implementation is a pure JSX reorder — move the Theme button block from between My Cards and Account to between Settings and Sign out. No new components. No style changes. No data changes.</p>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────
+     SECTION E: Interaction Flow
+     ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2>E — Interaction Flow (unchanged behavior)</h2>
+  <p class="note">Reordering does not alter any interaction — Tab/arrow key traversal order updates automatically because it follows DOM order. All keyboard nav (arrow keys, Home/End, Escape) continues to work per existing implementation.</p>
+
+  <div class="flow">
+    <div class="flow-step">User taps avatar</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">ProfileDropdown opens (panelOpen = true)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">User tabs/arrows through items: My Cards → Account → Household → Settings → Theme → Sign out</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">User selects Theme (cycles dark/light)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Dropdown remains open (no onClose called on theme toggle)</div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-step">Escape key</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Dropdown closes, focus returns to avatar trigger</div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-step">Click outside</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">onMouseDown outside panelRef → setPanelOpen(false)</div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────
+     SECTION F: Entitlement Variants (Karl / Trial / Thrall)
+     ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2>F — Entitlement Variants</h2>
+  <p class="note">The Theme item is not gated by entitlement — it appears for all auth states (Karl, Trial, Thrall). The reorder applies uniformly across all tiers.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tier</th>
+        <th>Theme item visible?</th>
+        <th>Position change needed?</th>
+        <th>karl-bling-dropdown class</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Karl (paid)</td>
+        <td>Yes</td>
+        <td>Yes — same reorder</td>
+        <td>Applied to wrapper div — no change to item order logic</td>
+      </tr>
+      <tr>
+        <td>Trial</td>
+        <td>Yes</td>
+        <td>Yes — same reorder</td>
+        <td>Applied to wrapper div — no change to item order logic</td>
+      </tr>
+      <tr>
+        <td>Thrall (free/anon)</td>
+        <td>Yes (no entitlement gate on Theme)</td>
+        <td>Yes — same reorder</td>
+        <td>Not applied (isKarlOrTrial = false)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────
+     SECTION G: Accessibility Checklist (WCAG 2.1 AA)
+     ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2>G — Accessibility Checklist (WCAG 2.1 AA)</h2>
+  <ul class="ac-list">
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      role="menu" on dropdown wrapper — unchanged
+    </li>
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      role="menuitem" on each button — unchanged
+    </li>
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      Tab order follows DOM order — reorder updates tab sequence correctly (My Cards → Account → Household → Settings → Theme → Sign out)
+    </li>
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      Arrow key navigation: Down/Up traverses items in new DOM order — no code change required
+    </li>
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      All touch targets remain minimum 44px (minHeight: 44 preserved on all items)
+    </li>
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      ThemeToggle dropdown-icon variant includes aria-hidden="true" on its icon — unchanged
+    </li>
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      Escape closes dropdown and returns focus to avatar trigger — unchanged
+    </li>
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      aria-expanded on trigger button reflects open state — unchanged
+    </li>
+  </ul>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────
+     SECTION H: Acceptance Criteria Mapping
+     ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2>H — Acceptance Criteria Mapping</h2>
+  <ul class="ac-list">
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      <span><strong>AC1:</strong> Theme menu item is rendered as the 2nd-last entry (before Sign out) — See Section A and B: Theme at position 5, Sign out at position 6.</span>
+    </li>
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      <span><strong>AC2:</strong> All other items retain their relative order — See Section D: My Cards (1→1), Account (3→2), Household (4→3), Settings (5→4), Sign out (6→6).</span>
+    </li>
+    <li>
+      <span class="ac-check" aria-hidden="true"></span>
+      <span><strong>AC3:</strong> No visual regressions on desktop and mobile — Section B (desktop, 1024px+) and Section C (mobile, 375px) both show same item anatomy with only position changed.</span>
+    </li>
+  </ul>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────
+     SECTION I: Implementation Notes for FiremanDecko
+     ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2>I — Implementation Notes (FiremanDecko)</h2>
+  <p class="note">This is the simplest possible change: move one JSX block within a single component. No new files, no new props, no logic changes.</p>
+
+  <h3>File to change</h3>
+  <p style="font-size: 13px; margin: 8px 0;"><code>development/frontend/src/components/layout/LedgerTopBar.tsx</code></p>
+  <p style="font-size: 13px; margin: 8px 0;">Component: <code>ProfileDropdown</code> (line ~226)</p>
+
+  <h3 style="margin-top: 16px;">Change</h3>
+  <p style="font-size: 13px; margin: 8px 0;">Move the Theme button block (currently between My Cards and Account comments) to between the Settings button block and the Sign out button block.</p>
+
+  <h3 style="margin-top: 16px;">New JSX render order in ProfileDropdown</h3>
+  <ol style="font-size: 13px; padding-left: 20px; line-height: 2;">
+    <li>My Cards button (unchanged)</li>
+    <li>Account button (unchanged)</li>
+    <li>Household button (unchanged)</li>
+    <li>Settings button (unchanged)</li>
+    <li>Theme button &lt;-- move here (was position 2)</li>
+    <li>Sign out button (unchanged)</li>
+  </ol>
+
+  <h3 style="margin-top: 16px;">Tests to check</h3>
+  <p style="font-size: 13px; margin: 8px 0;">Update any snapshot or order-sensitive tests in:</p>
+  <ul style="font-size: 13px; padding-left: 20px; line-height: 2;">
+    <li><code>__tests__/components/ledger-topbar.test.tsx</code></li>
+    <li><code>__tests__/components/app-shell.test.tsx</code></li>
+    <li><code>__tests__/components/ledger-shell.test.tsx</code></li>
+    <li><code>__tests__/karl-bling/dropdown-bling-1392.test.tsx</code></li>
+  </ul>
+</section>
+
+</body>
+</html>
