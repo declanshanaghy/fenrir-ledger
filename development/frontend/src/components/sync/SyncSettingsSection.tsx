@@ -90,10 +90,10 @@ function ThrallUpsellCard({
             <button
               type="button"
               onClick={onUpgrade}
-              className="min-h-[44px] px-5 py-2 border border-border text-sm font-heading font-bold
-                         text-foreground hover:bg-muted/30 transition-colors
+              className="min-h-[44px] px-5 py-2 text-sm font-heading font-bold
+                         bg-gold text-primary-foreground border-2 border-gold hover:bg-primary hover:brightness-110 transition-colors
                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-                         w-full sm:w-auto justify-center inline-flex items-center"
+                         w-full sm:w-auto justify-center inline-flex items-center karl-bling-btn"
               aria-label="Upgrade to Karl to unlock Cloud Sync"
             >
               Upgrade to Karl
