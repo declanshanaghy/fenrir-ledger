@@ -1,0 +1,72 @@
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+(node:9830) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✓ Compiled successfully in 24.6s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/68) ...
+  Generating static pages using 7 workers (17/68) 
+  Generating static pages using 7 workers (34/68) 
+  Generating static pages using 7 workers (51/68) 
+✓ Generating static pages using 7 workers (68/68) in 3.0s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /about
+├ ○ /admin
+├ ƒ /api/admin/pack-status
+├ ƒ /api/auth/token
+├ ƒ /api/config/picker
+├ ƒ /api/health
+├ ƒ /api/household/invite
+├ ƒ /api/household/invite/validate
+├ ƒ /api/household/join
+├ ƒ /api/household/members
+├ ƒ /api/sheets/import
+├ ƒ /api/stripe/checkout
+├ ƒ /api/stripe/membership
+├ ƒ /api/stripe/portal
+├ ƒ /api/stripe/unlink
+├ ƒ /api/stripe/webhook
+├ ƒ /api/sync
+├ ƒ /api/sync/pull
+├ ƒ /api/sync/push
+├ ƒ /api/trial/convert
+├ ƒ /api/trial/init
+├ ƒ /api/trial/status
+├ ○ /chronicles
+├ ● /chronicles/[slug]
+│ ├ /chronicles/agent-issue-1036-step1-firemandecko-28367630
+│ ├ /chronicles/agent-issue-800-firemandecko-readme-redesign
+│ ├ /chronicles/agent-issue-839-step1-firemandecko-08287a1f
+│ └ [+24 more paths]
+├ ○ /faq
+├ ○ /features
+├ ○ /free-trial
+├ ○ /home
+├ ○ /icon.svg
+├ ○ /ledger
+├ ○ /ledger/auth/callback
+├ ƒ /ledger/cards/[id]/edit
+├ ○ /ledger/cards/new
+├ ○ /ledger/join
+├ ○ /ledger/settings
+├ ○ /ledger/sign-in
+├ ○ /ledger/valhalla
+├ ○ /pricing
+├ ○ /privacy
+└ ○ /terms
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
