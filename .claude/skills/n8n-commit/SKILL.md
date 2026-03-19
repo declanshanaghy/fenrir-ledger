@@ -19,7 +19,7 @@ copies them into `infrastructure/n8n/workflows/`, commits any changes, and opens
 ### Step 1 — Find the n8n pod
 
 ```bash
-N8N_POD=$(kubectl get pods -n fenrir-marketing -l app=n8n -o jsonpath='{.items[0].metadata.name}')
+N8N_POD=$(kubectl get pods -n fenrir-marketing -l app.kubernetes.io/name=n8n,app.kubernetes.io/component=main -o jsonpath='{.items[0].metadata.name}')
 echo "Pod: $N8N_POD"
 ```
 
@@ -29,19 +29,33 @@ If no pod is found (empty output), stop and report:
 ### Step 2 — Export workflows from the pod
 
 ```bash
-kubectl exec -n fenrir-marketing "$N8N_POD" -- mkdir -p /tmp/n8n-export && \
-kubectl exec -n fenrir-marketing "$N8N_POD" -- n8n export:workflow --all --output=/tmp/n8n-export/
+kubectl exec -n fenrir-marketing "$N8N_POD" -- n8n export:workflow --all --output=/tmp/n8n-export.json
 ```
 
 If the export command fails, stop and report the error.
 
-### Step 3 — Copy exported files to the repo
+### Step 3 — Copy exported file to local and split into individual workflow files
 
 ```bash
-kubectl cp "fenrir-marketing/$N8N_POD:/tmp/n8n-export/" infrastructure/n8n/workflows/
+kubectl cp "fenrir-marketing/$N8N_POD:/tmp/n8n-export.json" /tmp/n8n-export.json
 ```
 
-This copies all exported JSON workflow files into `infrastructure/n8n/workflows/`.
+n8n exports all workflows as a JSON array. Split into individual files named by workflow id:
+
+```bash
+# Count workflows in the export
+COUNT=$(jq 'length' /tmp/n8n-export.json)
+echo "Exported $COUNT workflows"
+
+# Split array into individual files, named by id field (kebab-case)
+for i in $(seq 0 $((COUNT - 1))); do
+  ID=$(jq -r ".[$i].id" /tmp/n8n-export.json)
+  jq ".[$i]" /tmp/n8n-export.json > "infrastructure/n8n/workflows/${ID}.json"
+  echo "  → infrastructure/n8n/workflows/${ID}.json"
+done
+```
+
+This writes each workflow as a separate JSON file in `infrastructure/n8n/workflows/`.
 
 ### Step 4 — Check for changes
 
