@@ -8,7 +8,7 @@
   </tr>
   <tr>
     <td colspan="4">
-      <a href="https://app.fenrirledger.com"><img src="https://img.shields.io/badge/Production-GKE-c9920a?style=for-the-badge&logo=googlecloud&logoColor=white&labelColor=07070d" alt="Production"></a>
+      <a href="https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/deploy.yml"><img src="https://github.com/declanshanaghy/fenrir-ledger/actions/workflows/deploy.yml/badge.svg?branch=main" alt="Production: GKE"></a>
     </td>
   </tr>
   <tr>
