@@ -200,14 +200,9 @@ body {
 }
 .ws-badge-icon {
   display: flex; align-items: center; justify-content: center;
-  padding: 0.15rem; border-radius: 3px;
-  border: 1px solid transparent; flex-shrink: 0;
-  cursor: default;
+  border: none; padding: 0; border-radius: 0;
+  flex-shrink: 0; cursor: default;
 }
-.ws-badge-icon.open    { border-color: #22c55e33; }
-.ws-badge-icon.connecting { border-color: #eab30833; }
-.ws-badge-icon.closed  { border-color: var(--rune-border); }
-.ws-badge-icon.error   { border-color: #ef444433; }
 .sidebar-header img {
   width: 40px; height: 40px; border-radius: 50%;
   border: 2px solid var(--gold);

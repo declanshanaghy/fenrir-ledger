@@ -54,7 +54,7 @@ export function StatusBadge({ state }: Props) {
   const color = STATE_COLORS[state];
   return (
     <span
-      className={`ws-badge ws-badge-icon ${state}`}
+      className={`ws-badge-icon ${state}`}
       title={`WebSocket: ${state}`}
       aria-label={`WebSocket: ${state}`}
       role="status"
