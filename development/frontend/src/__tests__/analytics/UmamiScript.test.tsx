@@ -87,6 +87,27 @@ describe("UmamiScript", () => {
   });
 });
 
+// ── Issue #1411 — production website ID updated after Umami re-provision ──────
+
+describe("UmamiScript — Issue #1411 production website ID", () => {
+  const PROD_WEBSITE_ID = "2180ab61-a080-45b2-bf85-65ab3bbd0730";
+
+  it("renders the script tag with the production website ID", () => {
+    const { getByTestId } = render(
+      <UmamiScript websiteId={PROD_WEBSITE_ID} />
+    );
+    expect(
+      getByTestId("umami-script").getAttribute("data-website-id")
+    ).toBe(PROD_WEBSITE_ID);
+  });
+
+  it("production website ID is a valid UUID v4 format", () => {
+    const UUID_RE =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    expect(PROD_WEBSITE_ID).toMatch(UUID_RE);
+  });
+});
+
 // ── Loki augmentation — coverage gaps identified during QA (issue #782) ───────
 
 describe("UmamiScript — Loki augmentation", () => {
