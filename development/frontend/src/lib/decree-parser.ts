@@ -40,7 +40,43 @@ export interface DecreeBlock {
   sealTitle: string | null;
   /** SIGNOFF quote */
   signoff: string | null;
+  /** Format that was detected: "canonical" | "box-drawing" | "freeform" */
+  format?: "canonical" | "box-drawing" | "freeform";
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Strip emoji from a string */
+function stripEmoji(s: string): string {
+  return s
+    .replace(/[❌✅🔴🟢⚠️🚫✔️❎]/g, "")
+    .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
+    .trim();
+}
+
+/** Normalise verdict: map legacy deviations to canonical values */
+function normaliseVerdict(raw: string): string {
+  const cleaned = stripEmoji(raw).toUpperCase().trim();
+  if (cleaned === "COMPLETE" || cleaned === "SUCCESS") return "DONE";
+  return cleaned;
+}
+
+/** Extract checks from box-drawing or freeform content */
+function extractFallbackChecks(text: string): DecreeCheck[] {
+  const checks: DecreeCheck[] = [];
+  const checkRe = /\b(tsc|build|vitest|playwright|owasp|requireauth|secrets|wireframes|interactions|accessibility|product-brief|acceptance-criteria|backlog)\b[:\s]+([^\n║╝╚╣╔╠╬╩╦╟─│\r]+)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = checkRe.exec(text)) !== null) {
+    const name = (m[1] ?? "").toLowerCase();
+    let rawVal = (m[2] ?? "").trim();
+    rawVal = rawVal.replace(/[║╝╚╣═╗╔╠╬╩╦╟─│┌┐└┘├┤┬┴┼]+/g, "").trim();
+    rawVal = rawVal.replace(/✅/g, "PASS").replace(/❌/g, "FAIL").trim();
+    if (rawVal) checks.push({ name, result: rawVal });
+  }
+  return checks;
+}
+
+// ── Canonical parser (Format 1: rune-delimited) ───────────────────────────────
 
 /**
  * Parse a DECREE COMPLETE block from raw agent text output.
@@ -53,6 +89,23 @@ export interface DecreeBlock {
 export function parseDecreeBlock(text: string | null | undefined): DecreeBlock | null {
   if (!text || typeof text !== "string") return null;
 
+  // Try canonical rune-delimited block first (Format 1)
+  const canonical = parseCanonicalDecreeBlock(text);
+  if (canonical) return canonical;
+
+  // Try box-drawing format (Format 2: ╔...╚)
+  const boxDrawing = parseBoxDrawingDecreeBlock(text);
+  if (boxDrawing) return boxDrawing;
+
+  // Try freeform format (Format 3/4: plain text or markdown)
+  const freeform = parseFreeformDecreeBlock(text);
+  if (freeform) return freeform;
+
+  return null;
+}
+
+/** Parse canonical rune-delimited decree (Format 1) */
+function parseCanonicalDecreeBlock(text: string): DecreeBlock | null {
   // Match rune-delimited block (flexible whitespace/newlines around delimiters)
   const blockRe = /᛭᛭᛭\s*DECREE COMPLETE\s*᛭᛭᛭([\s\S]*?)᛭᛭᛭\s*END DECREE\s*᛭᛭᛭/;
   const match = text.match(blockRe);
@@ -119,5 +172,83 @@ export function parseDecreeBlock(text: string | null | undefined): DecreeBlock |
   // Require at least issue or verdict to be a valid decree
   if (!issue && !verdict) return null;
 
-  return { issue, verdict, pr, summary, checks, sealAgent, sealRunes, sealTitle, signoff };
+  return { issue, verdict, pr, summary, checks, sealAgent, sealRunes, sealTitle, signoff, format: "canonical" };
+}
+
+/**
+ * Parse box-drawing format decree (Format 2: ╔...╚).
+ * Extracts ISSUE, VERDICT, PR, and CHECKS where available.
+ * Returns null if this does not look like a box-drawing decree.
+ */
+export function parseBoxDrawingDecreeBlock(text: string): DecreeBlock | null {
+  if (!/╔/.test(text) || !/DECREE/i.test(text)) return null;
+
+  // Issue
+  const issueM = text.match(/Issue:?\s*#?(\d+)/i);
+  const issue: string | null = issueM?.[1] ?? null;
+
+  // Verdict — strip emoji, normalise
+  const verdictM = text.match(/Verdict:?\s*([\w❌✅🔴🟢 ]+)/i);
+  const verdict: string | null = verdictM?.[1] ? normaliseVerdict(verdictM[1]) : null;
+
+  // PR
+  const prM = text.match(/PR:?\s*(https:\/\/\S+|#\d+)/i);
+  const pr: string | null = prM?.[1] ?? null;
+
+  // Checks
+  const checks = extractFallbackChecks(text);
+
+  if (!issue && !verdict) return null;
+
+  return {
+    issue,
+    verdict,
+    pr,
+    summary: [],
+    checks,
+    sealAgent: null,
+    sealRunes: null,
+    sealTitle: null,
+    signoff: null,
+    format: "box-drawing",
+  };
+}
+
+/**
+ * Parse freeform decree (Format 3: plain key-value, Format 4: markdown).
+ * Returns null if this does not look like a freeform decree.
+ */
+export function parseFreeformDecreeBlock(text: string): DecreeBlock | null {
+  if (!/(Decree|DECREE)/i.test(text)) return null;
+  if (!/(VERDICT|Verdict|ISSUE|Issue)/i.test(text)) return null;
+
+  // Issue
+  const issueM = text.match(/(?:ISSUE|Issue):?\s*#?(\d+)/i);
+  const issue: string | null = issueM?.[1] ?? null;
+
+  // Verdict — handle bold markdown **PASS**, plain text, emoji
+  const verdictM = text.match(/(?:VERDICT|Verdict|STATUS|Status):?\s*\*{0,2}([\w❌✅🔴🟢 ]+)\*{0,2}/i);
+  const verdict: string | null = verdictM?.[1] ? normaliseVerdict(verdictM[1]) : null;
+
+  // PR
+  const prM = text.match(/PR:?\s*(https:\/\/\S+|#\d+)/i);
+  const pr: string | null = prM?.[1] ?? null;
+
+  // Checks
+  const checks = extractFallbackChecks(text);
+
+  if (!issue && !verdict) return null;
+
+  return {
+    issue,
+    verdict,
+    pr,
+    summary: [],
+    checks,
+    sealAgent: null,
+    sealRunes: null,
+    sealTitle: null,
+    signoff: null,
+    format: "freeform",
+  };
 }
