@@ -3092,4 +3092,8 @@ const connectionStatus = {
   stripe: await getStripeKey().then(Boolean).catch(() => false),
 };
 
-render(h(SpearApp, { connectionStatus, counts: initialCounts }));
+const { waitUntilExit } = render(h(SpearApp, { connectionStatus, counts: initialCounts }));
+await waitUntilExit();
+cleanupPortForward();
+await redis.quit().catch(() => {});
+process.exit(0);
