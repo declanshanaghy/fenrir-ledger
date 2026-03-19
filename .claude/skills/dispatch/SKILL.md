@@ -29,6 +29,10 @@ Call 2: bash dispatch-job.sh ... && node pack-status.mjs --move N in-progress
 
 If issue data + agent template are already in context, that's **1 tool call** (spawn + board move).
 
+**Loop mode (invoked from `/fire-next-up` default queue):** All issue data AND agent templates
+were pre-fetched and pre-read in Phase 1 of the Multi-Issue Review Loop. Every dispatch in
+loop mode is guaranteed to be **1 tool call** — no Read, no fetch, just spawn + board move.
+
 ## Arguments
 
 | Arg/Flag | Required | Description |
