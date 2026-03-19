@@ -32,6 +32,7 @@ Pulls the next "Up Next" item from the GitHub Project board and runs the full ag
 | `--batch N` | Pull top N **unblocked** items from "Up Next", start chains in parallel. Max 5. |
 | `--local` | Force local worktree execution instead of Depot. |
 | `#N` | Start a fresh chain for a specific issue number (skip priority selection). |
+| `#N1 #N2 #N3 ...` | **Multi-issue review loop.** Fetch all listed issues, sort by priority (critical → high → normal → low), then present each one-by-one via `AskUserQuestion`. See **Multi-Issue Review Loop** below. |
 | *(no flag)* | Default: pick the top item and start the agent chain via Depot. |
 
 ### Session ID Parsing
@@ -43,6 +44,56 @@ Examples:
 - `issue-300-step2-loki-a1b2c3d4` → `--resume #300`
 
 Also accept Depot URLs: `https://depot.dev/orgs/.../claude/<session-id>` — extract the session ID from the URL path, then parse as above.
+
+### Multi-Issue Review Loop
+
+When multiple issue numbers are passed (`#N1 #N2 #N3 ...`), the orchestrator runs an
+interactive review loop instead of batch-dispatching blindly:
+
+**Phase 1 — Gather and sort:**
+1. Fetch all listed issues: `gh issue view <N> --json number,title,body,labels` for each.
+2. Sort by priority: `critical` → `high` → `normal` → `low`. Within the same priority,
+   preserve the order Odin listed them.
+
+**Phase 2 — Interactive loop (one issue at a time):**
+For each issue in priority order, present via `AskUserQuestion`:
+
+```
+Question: "#<N> — <TITLE> (<priority>/<type>) — <1-line summary from body>"
+Header: "#<N>"
+Options:
+  - "Dispatch" — dispatch via `/dispatch #<N>` immediately
+  - "Skip" — leave on Up Next, move to next issue
+  - "Hold" — move to a hold/backlog state, move to next issue
+  - "Stop" — stop processing remaining issues
+```
+
+**Phase 3 — Execute decisions:**
+
+| Response | Action |
+|----------|--------|
+| **Dispatch** | Invoke `/dispatch #<N> --agent <inferred-agent> --step 1`. Collect the dispatch report. Continue to next issue. |
+| **Skip** | Do nothing with this issue. Continue to next issue. |
+| **Hold** | Leave issue where it is (no board move). Continue to next issue. |
+| **Stop** | Immediately stop the loop. Do not process remaining issues. Report what was dispatched so far. |
+
+**Phase 4 — Summary report:**
+After the loop completes (or is stopped), output a single summary:
+
+```
+## Dispatch Summary
+
+| # | Title | Decision |
+|---|-------|----------|
+| 1397 | fix: exclude tests from coverage | Dispatched → session-id |
+| 1406 | Karl tab styling | Skipped |
+| 1416 | Thrall E2E timeout | Dispatched → session-id |
+| 1415 | WSS status badge | Stopped (not processed) |
+```
+
+All dispatched issues are dispatched in sequence (not parallel) so Odin can adjust
+decisions based on what was already dispatched. Each dispatch fires immediately after
+Odin says "Dispatch" — do not batch them.
 
 ---
 
