@@ -78,25 +78,7 @@ If tsc + build both PASS and handoff comment is posted:
 This dispatches Loki (QA) on the same branch to validate the security fix.
 If ANY verify step FAILED: do NOT run this step — stop and leave the issue for manual triage.
 
-**Step 9 — Decree (UNBREAKABLE — final output of this session):**
-Emit EXACTLY this structure as your absolute last output — no text before or after the delimiters:
-
-᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
-ISSUE: #<NUMBER>
-VERDICT: SECURED
-PR: <pr-url or N/A>
-SUMMARY:
-- <what was audited/fixed — 1 bullet per finding area>
-CHECKS:
-- owasp-top10: PASS or FINDINGS
-- requireAuth: PASS or FAIL
-- secrets: PASS or FAIL
-SEAL: Heimdall · ᚺᛖᛁᛗᛞᚨᛚᛚ · Security Specialist
-SIGNOFF: The bridge holds — none shall pass unvetted
-᛭᛭᛭ END DECREE ᛭᛭᛭
-
-NEVER use box-drawing characters (╔║╗═), emoji, markdown code fences, or any alternative format.
-This structure is MACHINE-PARSED by Odin's Throne. Deviations break the parser.
+{{DECREE_TEMPLATE}}
 ```
 
 ## Mode B: Report / Audit (only writes `.md` files, files issues)

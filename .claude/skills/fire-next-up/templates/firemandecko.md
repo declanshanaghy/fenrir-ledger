@@ -96,23 +96,5 @@ If tsc + build both PASS and handoff comment is posted:
 This dispatches Loki (QA) on the same branch to validate the implementation.
 If ANY verify step FAILED: do NOT run this step — stop and leave the issue for manual triage.
 
-**Step 9 — Decree (UNBREAKABLE — final output of this session):**
-Emit EXACTLY this structure as your absolute last output — no text before or after the delimiters:
-
-᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
-ISSUE: #<NUMBER>
-VERDICT: DONE
-PR: <pr-url or N/A>
-SUMMARY:
-- <what was implemented — 1 bullet per logical change>
-CHECKS:
-- tsc: PASS or FAIL
-- build: PASS or FAIL
-- vitest: <count> tests, all passing (or N failing)
-SEAL: FiremanDecko · ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ · Principal Engineer
-SIGNOFF: Forged in fire, tempered by craft
-᛭᛭᛭ END DECREE ᛭᛭᛭
-
-NEVER use box-drawing characters (╔║╗═), emoji, markdown code fences, or any alternative format.
-This structure is MACHINE-PARSED by Odin's Throne. Deviations break the parser.
+{{DECREE_TEMPLATE}}
 ```
