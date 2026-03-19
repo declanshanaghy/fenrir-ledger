@@ -2984,21 +2984,21 @@ const h = React.createElement;
 // ── Command Palette — commands registry ───────────────────────────────────────
 
 const PALETTE_COMMANDS = [
-  { name: "delete-user",         desc: "Delete selected user and all their data",          category: "Users",      destructive: true  },
-  { name: "update-tier",         desc: "Change user tier (karl / trial / thrall)",          category: "Users",      destructive: false },
-  { name: "delete-subscription", desc: "Cancel and remove Stripe subscription",             category: "Billing",    destructive: true  },
-  { name: "list-subscriptions",  desc: "List all active Stripe subscriptions",              category: "Billing",    destructive: false },
-  { name: "list-customers",      desc: "List all Stripe customers",                         category: "Billing",    destructive: false },
-  { name: "delete-entitlement",  desc: "Clear Redis entitlement cache for selected user",   category: "Billing",    destructive: true  },
-  { name: "delete-member",       desc: "Remove member from selected household",             category: "Households", destructive: true  },
-  { name: "update-owner",        desc: "Transfer ownership of selected household",          category: "Households", destructive: false },
-  { name: "update-invite",       desc: "Regenerate household invite code",                  category: "Households", destructive: false },
-  { name: "delete-household",    desc: "Delete selected household and all members",         category: "Households", destructive: true  },
-  { name: "delete-all",          desc: "Delete ALL data for selected user (nuclear option)", category: "Danger",    destructive: true  },
-  { name: "reconnect",           desc: "Reconnect to Redis / Firestore / Stripe",           category: "System",     destructive: false },
-  { name: "trial-adjust",        desc: "Shift trial start date by +N / -N days",            category: "Trial",      destructive: false },
-  { name: "trial-complete",      desc: `Expire trial immediately (>${TRIAL_DURATION_DAYS} days ago)`, category: "Trial", destructive: false },
-  { name: "trial-progress",      desc: `Advance to next phase boundary (day ${TRIAL_NUDGE_DAY} or expiry)`, category: "Trial", destructive: false },
+  { name: "delete-user",         desc: "Delete selected user and all their data",          category: "Users",      destructive: true,  requiresContext: null         },
+  { name: "update-tier",         desc: "Change tier for selected household",               category: "Households", destructive: false, requiresContext: "household"  },
+  { name: "delete-subscription", desc: "Cancel and remove Stripe subscription",             category: "Billing",    destructive: true,  requiresContext: null         },
+  { name: "list-subscriptions",  desc: "List all active Stripe subscriptions",              category: "Billing",    destructive: false, requiresContext: null         },
+  { name: "list-customers",      desc: "List all Stripe customers",                         category: "Billing",    destructive: false, requiresContext: null         },
+  { name: "delete-entitlement",  desc: "Clear Redis entitlement cache for selected trial",  category: "Billing",    destructive: true,  requiresContext: "trial"     },
+  { name: "delete-member",       desc: "Remove member from selected household",             category: "Households", destructive: true,  requiresContext: "household"  },
+  { name: "update-owner",        desc: "Transfer ownership of selected household",          category: "Households", destructive: false, requiresContext: "household"  },
+  { name: "update-invite",       desc: "Regenerate household invite code",                  category: "Households", destructive: false, requiresContext: "household"  },
+  { name: "delete-household",    desc: "Delete selected household and all members",         category: "Households", destructive: true,  requiresContext: "household"  },
+  { name: "delete-all",          desc: "Delete ALL data for selected trial (nuclear option)", category: "Danger",   destructive: true,  requiresContext: "trial"     },
+  { name: "reconnect",           desc: "Reconnect to Redis / Firestore / Stripe",           category: "System",     destructive: false, requiresContext: null         },
+  { name: "trial-adjust",        desc: "Shift trial start date by +N / -N days",            category: "Trial",      destructive: false, requiresContext: "trial"     },
+  { name: "trial-complete",      desc: `Expire trial immediately (>${TRIAL_DURATION_DAYS} days ago)`, category: "Trial", destructive: false, requiresContext: "trial" },
+  { name: "trial-progress",      desc: `Advance to next phase boundary (day ${TRIAL_NUDGE_DAY} or expiry)`, category: "Trial", destructive: false, requiresContext: "trial" },
 ];
 
 /** Filter PALETTE_COMMANDS by a search query string. */
@@ -3016,8 +3016,19 @@ function filterPaletteCommands(query) {
  * Command palette overlay. Rendered inside SpearApp when `isOpen` is true.
  * Provides real-time search, category grouping, arrow-key navigation, Enter to execute.
  */
+
 function CommandPalette({ isOpen, query, highlight, onClose, onQueryChange, onHighlightChange, onExecute }) {
-  const filtered = filterPaletteCommands(query);
+  const allFiltered = filterPaletteCommands(query);
+
+  /** Returns true if this command's required context is currently satisfied. */
+  function isAvailable(cmd) {
+    if (cmd.requiresContext === "trial")     return !!selectedFp;
+    if (cmd.requiresContext === "household") return !!selectedHouseholdId;
+    return true;
+  }
+
+  // Only show commands whose required context is currently active
+  const filtered = allFiltered.filter(isAvailable);
 
   useInput((input, key) => {
     if (key.escape) { onClose(); return; }
@@ -3494,6 +3505,10 @@ function SpearApp({ connectionStatus, counts }) {
 
     // ── Trial commands — open TrialDialog ──
     if (cmd.name === "trial-adjust") {
+      if (!selectedFp) {
+        setCmdStatusMsg("Error: no trial selected — use list + use <N> first");
+        return;
+      }
       setTrialDialog({ action: "trial-adjust", phase: "input", dayInput: "", oldDesc: "", newDesc: "", applyFn: null });
       return;
     }
