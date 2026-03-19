@@ -133,6 +133,17 @@ let portForwardProc = null; // track child process so we can kill on exit
 let pfManagedByUs = false;  // true if we started the port-forward (vs user-managed)
 let reconnecting = false;   // prevent concurrent reconnect attempts
 
+/**
+ * Route port-forward / Redis async log messages to TUI once it's running,
+ * or fall through to console before render() is called.
+ * SpearApp registers _tuiLog on mount and clears it on unmount.
+ */
+let _tuiLog = null;
+function pfLog(msg, isError = false) {
+  if (_tuiLog) { _tuiLog(msg); return; }
+  if (isError) console.error(msg); else console.log(msg);
+}
+
 /** Check if localhost:6379 is accepting connections. */
 function isPortOpen(port, host = "127.0.0.1", timeoutMs = 1000) {
   return new Promise((resolve) => {
@@ -175,8 +186,8 @@ async function startPortForward() {
   portForwardProc.stderr.on("data", (chunk) => { stderrBuf += chunk.toString(); });
   portForwardProc.on("exit", (code) => {
     if (code && code !== 0) {
-      console.error(`${RED}Port-forward exited with code ${code}${RESET}`);
-      if (stderrBuf.trim()) console.error(`${DIM}${stderrBuf.trim()}${RESET}`);
+      pfLog(`Port-forward exited with code ${code}`, true);
+      if (stderrBuf.trim()) pfLog(stderrBuf.trim(), true);
     }
     portForwardProc = null;
     // Auto-reconnect if we managed the port-forward and it dropped unexpectedly
@@ -189,12 +200,12 @@ async function startPortForward() {
   for (let i = 0; i < 20; i++) {
     await new Promise((r) => setTimeout(r, 500));
     if (await isPortOpen(PF_LOCAL_PORT)) {
-      console.log(`${GREEN}Port-forward established${RESET} ${DIM}(localhost:${PF_LOCAL_PORT} → ${PF_SERVICE})${RESET}`);
+      pfLog(`Port-forward established (localhost:${PF_LOCAL_PORT} → ${PF_SERVICE})`);
       return true;
     }
   }
 
-  console.error(`${RED}Port-forward timed out after 10s${RESET}`);
+  pfLog("Port-forward timed out after 10s", true);
   portForwardProc?.kill();
   portForwardProc = null;
   return false;
@@ -209,7 +220,7 @@ async function reconnectPortForward() {
   const delays = [1000, 3000, 5000];
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    console.log(`${GOLD}Port-forward dropped — reconnecting (attempt ${attempt}/${MAX_ATTEMPTS})...${RESET}`);
+    pfLog(`Port-forward dropped — reconnecting (attempt ${attempt}/${MAX_ATTEMPTS})...`);
     await new Promise((r) => setTimeout(r, delays[attempt - 1]));
 
     const ok = await startPortForward();
@@ -220,8 +231,7 @@ async function reconnectPortForward() {
   }
 
   reconnecting = false;
-  console.error(`${RED}Port-forward reconnect failed after ${MAX_ATTEMPTS} attempts.${RESET}`);
-  console.error(`${DIM}Commands will fail until the connection is restored. Try "reconnect" or restart the REPL.${RESET}`);
+  pfLog(`Port-forward reconnect failed after ${MAX_ATTEMPTS} attempts. Use / → reconnect to retry.`, true);
 }
 
 /** Clean up port-forward on exit. */
@@ -264,8 +274,7 @@ const redis = new Redis(redisUrl, {
   maxRetriesPerRequest: 1,
   retryStrategy(times) {
     if (times > 3) {
-      console.error(`${RED}Redis connection lost. Reconnect failed after ${times} attempts.${RESET}`);
-      console.error(`${DIM}Port-forward may have dropped. Restart the REPL to reconnect.${RESET}`);
+      pfLog(`Redis: reconnect failed after ${times} attempts — port-forward may have dropped`, true);
       return null; // stop retrying
     }
     return Math.min(times * 500, 2000);
@@ -275,9 +284,9 @@ const redis = new Redis(redisUrl, {
 // Suppress "Unhandled error event" noise from ioredis reconnect attempts
 redis.on("error", (err) => {
   if (err.code === "ECONNREFUSED" || err.code === "ECONNRESET") {
-    console.error(`${RED}Redis connection error${RESET} ${DIM}(${err.code} — port-forward may have dropped)${RESET}`);
+    pfLog(`Redis connection error (${err.code} — port-forward may have dropped)`, true);
   } else {
-    console.error(`${RED}Redis error: ${err.message}${RESET}`);
+    pfLog(`Redis error: ${err.message}`, true);
   }
 });
 
@@ -367,13 +376,15 @@ function getDb() {
   return _db;
 }
 
-// ── State ────────────────────────────────────────────────────────────────────
+// ── TUI context refs — set by tab components when selections change ───────────
+// These allow the command palette to know what is currently "in scope" without
+// needing to lift all tab state up to SpearApp.
 
-let selectedFp = null;       // currently selected fingerprint
-let trialIndex = [];         // cached list from last "list" command: [fingerprint, ...]
-
-let selectedHouseholdId = null;  // currently selected Firestore household
-let householdIndex = [];         // cached list from last "households" command: [householdId, ...]
+let selectedFp = null;           // trial fingerprint — set when Users tab loads a user with a trial
+let selectedHouseholdId = null;  // Firestore household ID — set when Households tab selects a household
+let _selectedUserId = null;      // Firestore user ID — set when Users tab selects a user
+let _selectedUserEmail = null;   // email for display in confirm dialogs
+let _selectedSubId = null;       // Stripe subscription ID — set when user detail loads
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -433,24 +444,6 @@ function describeTrialState(state) {
   return `${state.status} — ${state.remainingDays}d remaining`;
 }
 
-function printTrial(trial, fp, ttl) {
-  const s = computeStatus(trial);
-  const emoji = STATUS_EMOJI[s.status];
-  console.log();
-  console.log(`  ${BOLD}Fingerprint:${RESET}  ${shortFp(fp)}  ${DIM}(full: ${fp})${RESET}`);
-  console.log(`  ${BOLD}Status:${RESET}       ${emoji} ${s.status}`);
-  console.log(`  ${BOLD}Start date:${RESET}   ${trial.startDate}`);
-  console.log(`  ${BOLD}Elapsed:${RESET}      ${TRIAL_DURATION_DAYS - s.remainingDays} days`);
-  console.log(`  ${BOLD}Remaining:${RESET}    ${s.remainingDays} days`);
-  if (trial.convertedDate) {
-    console.log(`  ${BOLD}Converted:${RESET}    ${trial.convertedDate}`);
-  }
-  if (ttl !== undefined) {
-    console.log(`  ${BOLD}Redis TTL:${RESET}    ${ttl}s (${Math.round(ttl / 86400)}d)`);
-  }
-  console.log();
-}
-
 /** Truncate a Firestore/Clerk ID for display: first-8 … last-4 */
 function shortId(id) {
   if (!id || id.length <= 16) return id;
@@ -465,25 +458,6 @@ function generateInviteCode() {
   return Array.from(bytes).map((b) => CHARS[b % CHARS.length]).join("");
 }
 
-/**
- * Prompt the user for y/N confirmation.
- * NOTE: In TUI mode, destructive operations require explicit confirmation via
- * the command palette (future issue). Stub returns false (safe default).
- */
-async function confirmPrompt(_msg) {
-  // TODO(#1390): wire up TUI command palette confirmation
-  return false;
-}
-
-/** Require a household to be selected; print error and return false if not. */
-function requireHousehold() {
-  if (!selectedHouseholdId) {
-    console.log(`${RED}No household selected.${RESET} Use ${CYAN}households${RESET} then ${CYAN}use-household <N>${RESET} to select one.`);
-    return false;
-  }
-  return true;
-}
-
 async function getTrial(fp) {
   const raw = await redis.get(`trial:${fp}`);
   return raw ? JSON.parse(raw) : null;
@@ -493,905 +467,192 @@ async function setTrial(fp, trial) {
   await redis.set(`trial:${fp}`, JSON.stringify(trial), "EX", TRIAL_TTL_SECONDS);
 }
 
-function requireSelected() {
-  if (!selectedFp) {
-    console.log(`${RED}No trial selected.${RESET} Use ${CYAN}list${RESET} then ${CYAN}use <N>${RESET} to select one.`);
-    return false;
-  }
-  return true;
+// ── TUI data operations — pure async, return data/status, never console.log ───
+
+/** Returns lines[] for the ResultsOverlay — Stripe customers. */
+async function fetchListCustomers() {
+  const data = await stripe("GET", "/customers?limit=20");
+  if (!data) return ["Stripe unavailable."];
+  if (!data.data?.length) return ["No Stripe customers found."];
+  return [
+    `Customers (${data.data.length}):`,
+    "─".repeat(60),
+    ...data.data.map((c) => {
+      const subs = c.subscriptions?.data?.length || 0;
+      return `${c.id}  ${(c.email || "no email").padEnd(30)}  subs=${subs}`;
+    }),
+  ];
 }
 
-// ── Commands ─────────────────────────────────────────────────────────────────
+/** Returns lines[] for the ResultsOverlay — Stripe subscriptions. */
+async function fetchListSubscriptions() {
+  const data = await stripe("GET", "/subscriptions?limit=20&status=all");
+  if (!data) return ["Stripe unavailable."];
+  if (!data.data?.length) return ["No Stripe subscriptions found."];
+  return [
+    `Subscriptions (${data.data.length}):`,
+    "─".repeat(60),
+    ...data.data.map((s) => {
+      const dot = s.status === "active" ? "●" : s.status === "canceled" ? "○" : "◑";
+      return `${dot} ${s.id}  ${s.status.padEnd(12)}  customer=${s.customer}`;
+    }),
+  ];
+}
 
-const commands = {
-  async list() {
-    const keys = await redis.keys("trial:*");
-    if (keys.length === 0) {
-      console.log("\n  No trial keys found in Redis.\n");
-      return;
-    }
-    keys.sort();
-    trialIndex = keys.map((k) => k.replace("trial:", ""));
+/** Returns lines[] for the ResultsOverlay — Redis entitlement cache. */
+async function fetchEntitlements() {
+  const keys = await redis.keys("entitlement:*");
+  if (!keys.length) return ["No entitlement keys found."];
+  const lines = [`Entitlements (${keys.length}):`, "─".repeat(60)];
+  for (const key of keys.sort()) {
+    const raw = await redis.get(key);
+    if (!raw) continue;
+    const ent = JSON.parse(raw);
+    const sub = key.replace("entitlement:", "");
+    lines.push(`${ent.active ? "●" : "○"} ${shortFp(sub)}  tier=${ent.tier}  active=${ent.active}`);
+  }
+  return lines;
+}
 
-    console.log(`\n  ${BOLD}#   Fingerprint              Status     Remaining   Started${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(70)}${RESET}`);
-    for (let i = 0; i < keys.length; i++) {
-      const fp = trialIndex[i];
-      const raw = await redis.get(keys[i]);
-      if (!raw) continue;
-      const trial = JSON.parse(raw);
-      const s = computeStatus(trial);
-      const emoji = STATUS_EMOJI[s.status];
-      const selected = fp === selectedFp ? `${GOLD}→${RESET}` : " ";
-      const started = new Date(trial.startDate).toLocaleDateString();
-      console.log(`  ${selected}${String(i + 1).padStart(2)}  ${shortFp(fp)}  ${emoji} ${s.status.padEnd(10)} ${String(s.remainingDays).padStart(2)}d left     ${started}`);
-    }
-    console.log(`\n  ${DIM}Use "use <N>" to select a trial${RESET}\n`);
-  },
+/** Returns lines[] for the ResultsOverlay — all Redis keys grouped by prefix. */
+async function fetchRedisKeys() {
+  const allKeys = await redis.keys("*");
+  const grouped = {};
+  for (const k of allKeys.sort()) {
+    const prefix = k.split(":")[0];
+    grouped[prefix] = (grouped[prefix] || 0) + 1;
+  }
+  const lines = [`Redis keys by prefix (total: ${allKeys.length}):`, "─".repeat(40)];
+  for (const [prefix, count] of Object.entries(grouped).sort()) {
+    lines.push(`  ${prefix.padEnd(25)} ${count}`);
+  }
+  return lines;
+}
 
-  async use(args) {
-    const n = parseInt(args[0], 10);
-    if (isNaN(n) || n < 1 || n > trialIndex.length) {
-      // Check if it's a raw fingerprint
-      if (args[0] && /^[0-9a-f]{64}$/i.test(args[0])) {
-        selectedFp = args[0].toLowerCase();
-        const trial = await getTrial(selectedFp);
-        if (!trial) {
-          console.log(`${RED}No trial found for that fingerprint.${RESET}`);
-          selectedFp = null;
-          return;
-        }
-        const ttl = await redis.ttl(`trial:${selectedFp}`);
-        console.log(`${GREEN}Selected:${RESET}`);
-        printTrial(trial, selectedFp, ttl);
-        return;
-      }
-      console.log(`${RED}Invalid selection.${RESET} Run ${CYAN}list${RESET} first, then ${CYAN}use <N>${RESET} or ${CYAN}use <fingerprint>${RESET}.`);
-      return;
-    }
-    selectedFp = trialIndex[n - 1];
-    const trial = await getTrial(selectedFp);
-    if (!trial) {
-      console.log(`${RED}Trial no longer exists.${RESET} Run ${CYAN}list${RESET} to refresh.`);
-      selectedFp = null;
-      return;
-    }
-    const ttl = await redis.ttl(`trial:${selectedFp}`);
-    console.log(`${GREEN}Selected:${RESET}`);
-    printTrial(trial, selectedFp, ttl);
-  },
+/** Reconnect port-forward. Returns a status string for display. */
+async function doReconnect() {
+  if (!isLocalhost) return "Not on localhost — port-forward not applicable.";
+  if (await isPortOpen(PF_LOCAL_PORT)) return "Port is already open — connection looks healthy.";
+  pfManagedByUs = true;
+  await reconnectPortForward();
+  return "Reconnect initiated.";
+}
 
-  async status() {
-    if (!requireSelected()) return;
-    const trial = await getTrial(selectedFp);
-    if (!trial) {
-      console.log(`${RED}Trial no longer exists.${RESET}`);
-      selectedFp = null;
-      return;
-    }
-    const ttl = await redis.ttl(`trial:${selectedFp}`);
-    printTrial(trial, selectedFp, ttl);
-  },
+/** Flush Redis entitlement cache for the currently selected fingerprint. */
+async function doDeleteEntitlement() {
+  if (!selectedFp) return "No trial selected — select a user with a trial first.";
+  const key = `entitlement:${selectedFp}`;
+  const exists = await redis.get(key);
+  if (!exists) return "No entitlement cache found for this fingerprint.";
+  await redis.del(key);
+  return `Entitlement cache flushed for ${shortFp(selectedFp)}. Will rebuild on next auth check.`;
+}
 
-  async update_trial_dates(args) {
-    if (!requireSelected()) return;
-    const days = parseInt(args[0], 10);
-    if (isNaN(days)) {
-      console.log(`${RED}Usage: update-trial-dates <days>${RESET}  (e.g., update-trial-dates -25 for 5 days remaining)`);
-      return;
-    }
-    const trial = await getTrial(selectedFp);
-    if (!trial) {
-      console.log(`${RED}Trial no longer exists.${RESET} Use ${CYAN}update-trial-reset${RESET} to create one.`);
-      return;
-    }
-    const oldDate = trial.startDate;
-    const newDate = new Date(new Date(oldDate).getTime() + days * 86400000);
-    const updated = { ...trial, startDate: newDate.toISOString() };
-    await setTrial(selectedFp, updated);
-    const s = computeStatus(updated);
-    console.log(`\n  ${BOLD}Shifted ${days > 0 ? "+" : ""}${days} days${RESET}`);
-    console.log(`  Old: ${oldDate}`);
-    console.log(`  New: ${updated.startDate}`);
-    console.log(`  ${STATUS_EMOJI[s.status]} ${s.status} — ${s.remainingDays}d remaining\n`);
-  },
+/** Regenerate invite code for the currently selected household. Returns status string. */
+async function doUpdateInvite() {
+  if (!selectedHouseholdId) return "No household selected.";
+  const code = generateInviteCode();
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  await getDb().doc(`households/${selectedHouseholdId}`).update({
+    inviteCode: code,
+    inviteCodeExpiresAt: expiresAt,
+    updatedAt: new Date().toISOString(),
+  });
+  return `Invite code regenerated: ${code}  (expires ${new Date(expiresAt).toLocaleDateString()})`;
+}
 
-  async update_trial_field(args) {
-    if (!requireSelected()) return;
-    const remaining = parseInt(args[0], 10);
-    if (isNaN(remaining) || remaining < 0) {
-      console.log(`${RED}Usage: update-trial-field <remaining-days>${RESET}  (e.g., update-trial-field 5 for 5 days left, update-trial-field 0 for expired)`);
-      return;
+/** Delete selected user from Firestore. Returns status string. */
+async function doDeleteUser() {
+  if (!_selectedUserId) return "No user selected.";
+  const db = getDb();
+  const snap = await db.doc(`users/${_selectedUserId}`).get();
+  if (!snap.exists) return `User not found: ${_selectedUserId}`;
+  const u = snap.data();
+  if (u.householdId) {
+    const hSnap = await db.doc(`households/${u.householdId}`).get();
+    if (hSnap.exists) {
+      const h = hSnap.data();
+      await db.doc(`households/${u.householdId}`).update({
+        memberIds: (h.memberIds || []).filter((id) => id !== _selectedUserId),
+        updatedAt: new Date().toISOString(),
+      });
     }
-    const trial = await getTrial(selectedFp);
-    const daysAgo = TRIAL_DURATION_DAYS - remaining;
-    const newStart = new Date(Date.now() - daysAgo * 86400000).toISOString();
-    const updated = { ...(trial || {}), startDate: newStart };
-    delete updated.convertedDate; // un-convert if setting days
-    await setTrial(selectedFp, updated);
-    const s = computeStatus(updated);
-    console.log(`\n  ${BOLD}Set to ${remaining} days remaining${RESET}`);
-    console.log(`  Start date: ${newStart}`);
-    console.log(`  ${STATUS_EMOJI[s.status]} ${s.status} — ${s.remainingDays}d remaining\n`);
-  },
+  }
+  await db.doc(`users/${_selectedUserId}`).delete();
+  const email = _selectedUserEmail || _selectedUserId;
+  _selectedUserId = null;
+  _selectedUserEmail = null;
+  return `Deleted user ${email}`;
+}
 
-  async update_trial_reset() {
-    if (!requireSelected()) return;
-    const updated = { startDate: new Date().toISOString() };
-    await setTrial(selectedFp, updated);
-    console.log(`\n  ${GREEN}Trial reset to today${RESET}`);
-    console.log(`  Start date: ${updated.startDate}`);
-    console.log(`  ${STATUS_EMOJI.active} active — ${TRIAL_DURATION_DAYS}d remaining\n`);
-  },
+/** Delete selected household and all its cards. Returns status string. */
+async function doDeleteHousehold() {
+  if (!selectedHouseholdId) return "No household selected.";
+  const db = getDb();
+  const snap = await db.doc(`households/${selectedHouseholdId}`).get();
+  if (!snap.exists) return `Household not found: ${selectedHouseholdId}`;
+  const cards = await db.collection(`households/${selectedHouseholdId}/cards`).get();
+  const batch = db.batch();
+  cards.docs.forEach((d) => batch.delete(d.ref));
+  batch.delete(db.doc(`households/${selectedHouseholdId}`));
+  await batch.commit();
+  const id = selectedHouseholdId;
+  selectedHouseholdId = null;
+  return `Deleted household ${shortId(id)} and ${cards.size} cards.`;
+}
 
-  async update_trial_expire() {
-    if (!requireSelected()) return;
-    const trial = await getTrial(selectedFp);
-    const expired = new Date(Date.now() - 31 * 86400000).toISOString();
-    const updated = { ...(trial || {}), startDate: expired };
-    delete updated.convertedDate;
-    await setTrial(selectedFp, updated);
-    console.log(`\n  ${RED}Trial expired${RESET}`);
-    console.log(`  Start date: ${expired} (31 days ago)`);
-    console.log(`  ${STATUS_EMOJI.expired} expired — 0d remaining\n`);
-  },
+/** Cancel a Stripe subscription by ID. Returns status string. */
+async function doDeleteSubscription(subId) {
+  if (!subId) return "No subscription ID provided.";
+  const sub = await stripe("GET", `/subscriptions/${subId}`);
+  if (!sub) return `Subscription not found: ${subId}`;
+  if (sub.status === "canceled") return `Subscription ${subId} is already canceled.`;
+  const data = await stripe("DELETE", `/subscriptions/${subId}`);
+  if (!data) return "Stripe request failed.";
+  _selectedSubId = null;
+  return `Canceled subscription ${subId} (status: ${data.status}).`;
+}
 
-  async update_trial_convert() {
-    if (!requireSelected()) return;
-    const trial = await getTrial(selectedFp);
-    if (!trial) {
-      console.log(`${RED}No trial exists.${RESET} Use ${CYAN}update-trial-reset${RESET} to create one first.`);
-      return;
-    }
-    const updated = { ...trial, convertedDate: new Date().toISOString() };
-    await setTrial(selectedFp, updated);
-    console.log(`\n  ${GOLD}Trial marked as converted${RESET}`);
-    console.log(`  Converted at: ${updated.convertedDate}\n`);
-  },
+/** Nuclear option: cancel Stripe sub + customer, delete trial + entitlement. */
+async function doDeleteAll() {
+  if (!selectedFp) return "No trial selected.";
+  const lines = [`NUKE: removing all state for ${shortFp(selectedFp)}`];
+  const trial = await getTrial(selectedFp);
+  const entKey = `entitlement:${selectedFp}`;
+  const entRaw = await redis.get(entKey);
 
-  async update_trial_unconvert() {
-    if (!requireSelected()) return;
-    const trial = await getTrial(selectedFp);
-    if (!trial) {
-      console.log(`${RED}No trial exists.${RESET}`);
-      return;
-    }
-    if (!trial.convertedDate) {
-      console.log(`  Trial is not converted — nothing to do.`);
-      return;
-    }
-    const updated = { ...trial };
-    delete updated.convertedDate;
-    await setTrial(selectedFp, updated);
-    const s = computeStatus(updated);
-    console.log(`\n  ${GREEN}Conversion removed${RESET}`);
-    console.log(`  ${STATUS_EMOJI[s.status]} ${s.status} — ${s.remainingDays}d remaining\n`);
-  },
-
-  async delete_trial() {
-    if (!requireSelected()) return;
-    await redis.del(`trial:${selectedFp}`);
-    console.log(`\n  ${RED}Trial deleted${RESET} for ${shortFp(selectedFp)}`);
-    console.log(`  ${DIM}User will get a fresh trial on next sign-up.${RESET}\n`);
-    selectedFp = null;
-  },
-
-  async create(args) {
-    const fp = args[0];
-    if (!fp || !/^[0-9a-f]{64}$/i.test(fp)) {
-      console.log(`${RED}Usage: create <64-char-hex-fingerprint>${RESET}`);
-      console.log(`${DIM}Get your fingerprint from browser DevTools — see "identity" command.${RESET}`);
-      return;
-    }
-    const existing = await getTrial(fp);
-    if (existing) {
-      console.log(`${RED}Trial already exists for that fingerprint.${RESET} Use ${CYAN}use${RESET} to select it.`);
-      return;
-    }
-    const trial = { startDate: new Date().toISOString() };
-    await setTrial(fp, trial);
-    selectedFp = fp;
-    console.log(`\n  ${GREEN}Trial created${RESET}`);
-    printTrial(trial, fp);
-  },
-
-  async keys() {
-    const allKeys = await redis.keys("*");
-    const grouped = {};
-    for (const k of allKeys.sort()) {
-      const prefix = k.split(":")[0];
-      grouped[prefix] = (grouped[prefix] || 0) + 1;
-    }
-    console.log(`\n  ${BOLD}All Redis keys by prefix:${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(40)}${RESET}`);
-    for (const [prefix, count] of Object.entries(grouped).sort()) {
-      console.log(`  ${prefix.padEnd(25)} ${count}`);
-    }
-    console.log(`\n  ${DIM}Total: ${allKeys.length} keys${RESET}\n`);
-  },
-
-  async entitlements() {
-    const keys = await redis.keys("entitlement:*");
-    if (keys.length === 0) {
-      console.log("\n  No entitlement keys found.\n");
-      return;
-    }
-    console.log(`\n  ${BOLD}Entitlements (${keys.length}):${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(60)}${RESET}`);
-    for (const key of keys.sort()) {
-      const raw = await redis.get(key);
-      if (!raw) continue;
-      const ent = JSON.parse(raw);
-      const sub = key.replace("entitlement:", "");
-      const emoji = ent.active ? `${GREEN}●${RESET}` : `${RED}●${RESET}`;
-      console.log(`  ${emoji} ${shortFp(sub)}  tier=${ent.tier}  active=${ent.active}`);
-    }
-    console.log();
-  },
-
-  async list_customers() {
-    const data = await stripe("GET", "/customers?limit=20");
-    if (!data) return;
-    if (data.data.length === 0) {
-      console.log("\n  No Stripe customers found.\n");
-      return;
-    }
-    console.log(`\n  ${BOLD}Stripe Customers (${data.data.length}):${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(70)}${RESET}`);
-    for (const c of data.data) {
-      const subs = c.subscriptions?.data?.length || 0;
-      console.log(`  ${c.id}  ${(c.email || "no email").padEnd(30)}  ${DIM}subs=${subs}${RESET}`);
-    }
-    console.log();
-  },
-
-  async list_subscriptions() {
-    const data = await stripe("GET", "/subscriptions?limit=20&status=all");
-    if (!data) return;
-    if (data.data.length === 0) {
-      console.log("\n  No Stripe subscriptions found.\n");
-      return;
-    }
-    console.log(`\n  ${BOLD}Stripe Subscriptions (${data.data.length}):${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(80)}${RESET}`);
-    for (const s of data.data) {
-      const emoji = s.status === "active" ? `${GREEN}●${RESET}` : s.status === "canceled" ? `${RED}●${RESET}` : `${GOLD}●${RESET}`;
-      console.log(`  ${emoji} ${s.id}  ${s.status.padEnd(12)}  customer=${s.customer}`);
-    }
-    console.log();
-  },
-
-  async delete_customer(args) {
-    const id = args[0];
-    if (!id || !id.startsWith("cus_")) {
-      console.log(`${RED}Usage: delete-customer <cus_xxx>${RESET}`);
-      console.log(`${DIM}Use "list-customers" to list customer IDs.${RESET}`);
-      return;
-    }
-    // Stripe API is source of truth — delete there, webhooks sync Redis
-    const data = await stripe("DELETE", `/customers/${id}`);
-    if (!data) return;
-    console.log(`\n  ${RED}Deleted customer${RESET} ${id} ${DIM}(via Stripe API)${RESET}`);
-    console.log(`  ${DIM}Webhooks will clean up Redis entitlements automatically.${RESET}\n`);
-  },
-
-  async delete_subscription(args) {
-    const id = args[0];
-    if (!id || !id.startsWith("sub_")) {
-      console.log(`${RED}Usage: delete-subscription <sub_xxx>${RESET}`);
-      console.log(`${DIM}Use "list-subscriptions" to list subscription IDs.${RESET}`);
-      return;
-    }
-    // Retrieve first to check current status before attempting cancellation
-    const sub = await stripe("GET", `/subscriptions/${id}`);
-    if (!sub) {
-      console.log(`\n  ${RED}Subscription not found:${RESET} ${id}\n`);
-      return;
-    }
-    if (sub.status === "canceled") {
-      console.log(`\n  ${DIM}Subscription ${id} is already canceled.${RESET}\n`);
-      return;
-    }
-    // Stripe API is source of truth — cancel there, webhooks sync Redis
-    const data = await stripe("DELETE", `/subscriptions/${id}`);
-    if (!data) return;
-    console.log(`\n  ${RED}Canceled subscription${RESET} ${id} ${DIM}(via Stripe API)${RESET}`);
-    console.log(`  ${DIM}Status: ${data.status}. Webhooks will update Redis entitlement.${RESET}\n`);
-  },
-
-  async delete_entitlement(args) {
-    const id = args[0];
-    if (!id) {
-      if (selectedFp) {
-        const key = `entitlement:${selectedFp}`;
-        const exists = await redis.get(key);
-        if (!exists) {
-          console.log(`${RED}No entitlement found for selected fingerprint.${RESET}`);
-          return;
-        }
-        await redis.del(key);
-        console.log(`\n  ${GOLD}Flushed entitlement cache${RESET} for ${shortFp(selectedFp)}`);
-        console.log(`  ${DIM}This only clears the Redis cache. Stripe subscription is unaffected.${RESET}`);
-        console.log(`  ${DIM}Next auth check will re-fetch from Stripe and rebuild the cache.${RESET}\n`);
-        return;
-      }
-      console.log(`${RED}Usage: delete-entitlement <key-suffix>${RESET}  or select a trial first.`);
-      console.log(`${DIM}Use "entitlements" to list keys. This only clears the Redis cache.${RESET}`);
-      return;
-    }
-    const key = id.startsWith("entitlement:") ? id : `entitlement:${id}`;
-    const exists = await redis.get(key);
-    if (!exists) {
-      console.log(`${RED}Key not found: ${key}${RESET}`);
-      return;
-    }
-    await redis.del(key);
-    console.log(`\n  ${GOLD}Flushed entitlement cache${RESET} ${key}`);
-    console.log(`  ${DIM}Stripe subscription unaffected. Cache will rebuild on next auth check.${RESET}\n`);
-  },
-
-  async delete_all() {
-    if (!requireSelected()) return;
-    const trial = await getTrial(selectedFp);
-    const entKey = `entitlement:${selectedFp}`;
-    const entRaw = await redis.get(entKey);
-
-    console.log(`\n  ${BOLD}${RED}NUKE — removing all state for ${shortFp(selectedFp)}${RESET}`);
-    console.log(`  ${DIM}Stripe first (source of truth), then Redis cleanup.${RESET}\n`);
-
-    // 1. Stripe first — cancel subs + delete customer (source of truth)
-    let stripeCleanedUp = false;
-    if (entRaw) {
-      try {
-        const ent = JSON.parse(entRaw);
-        if (ent.customerId) {
-          const cust = await stripe("GET", `/customers/${ent.customerId}?expand[]=subscriptions`);
-          if (cust?.subscriptions?.data) {
-            for (const sub of cust.subscriptions.data) {
-              if (sub.status !== "canceled") {
-                await stripe("DELETE", `/subscriptions/${sub.id}`);
-                console.log(`  ${RED}✗${RESET} Stripe: subscription ${sub.id} canceled`);
-              }
+  if (entRaw) {
+    try {
+      const ent = JSON.parse(entRaw);
+      if (ent.customerId) {
+        const cust = await stripe("GET", `/customers/${ent.customerId}?expand[]=subscriptions`);
+        if (cust?.subscriptions?.data) {
+          for (const sub of cust.subscriptions.data) {
+            if (sub.status !== "canceled") {
+              await stripe("DELETE", `/subscriptions/${sub.id}`);
+              lines.push(`✗ Stripe: subscription ${sub.id} canceled`);
             }
           }
-          await stripe("DELETE", `/customers/${ent.customerId}`);
-          console.log(`  ${RED}✗${RESET} Stripe: customer ${ent.customerId} deleted`);
-          stripeCleanedUp = true;
         }
-      } catch { /* best effort */ }
-    }
-    if (!stripeCleanedUp) {
-      console.log(`  ${DIM}○ No Stripe customer to clean up${RESET}`);
-    }
-
-    // 2. Redis cleanup — belt-and-suspenders (webhooks would do this too)
-    if (trial) {
-      await redis.del(`trial:${selectedFp}`);
-      console.log(`  ${RED}✗${RESET} Redis: trial deleted`);
-    } else {
-      console.log(`  ${DIM}○ No trial to delete${RESET}`);
-    }
-
-    if (entRaw) {
-      await redis.del(entKey);
-      console.log(`  ${RED}✗${RESET} Redis: entitlement cache flushed`);
-    } else {
-      console.log(`  ${DIM}○ No entitlement cache to flush${RESET}`);
-    }
-
-    selectedFp = null;
-    console.log(`\n  ${DIM}User will get a completely fresh start on next visit.${RESET}\n`);
-  },
-
-  async reconnect() {
-    if (!isLocalhost) {
-      console.log(`${DIM}Not using localhost — reconnect only applies to port-forwarded connections.${RESET}`);
-      return;
-    }
-    if (await isPortOpen(PF_LOCAL_PORT)) {
-      console.log(`${GREEN}Port is already open — connection looks healthy.${RESET}`);
-      return;
-    }
-    pfManagedByUs = true;
-    await reconnectPortForward();
-  },
-
-  identity() {
-    console.log(`
-  ${BOLD}How to find your trial fingerprint:${RESET}
-
-  1. Open ${CYAN}fenrirledger.com${RESET} in your browser
-  2. Open DevTools (F12) → Console
-  3. Run:
-
-     ${GOLD}localStorage.getItem('fenrir:device-id')${RESET}
-
-     This gives your deviceId (a UUID).
-
-  4. The fingerprint is SHA-256(navigator.userAgent + deviceId).
-     To compute it in the console:
-
-     ${GOLD}async function fp() {
-       const did = localStorage.getItem('fenrir:device-id');
-       const data = new TextEncoder().encode(navigator.userAgent + did);
-       const hash = await crypto.subtle.digest('SHA-256', data);
-       return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,'0')).join('');
-     }
-     fp().then(console.log)${RESET}
-
-  5. Or just use ${CYAN}list${RESET} here — if you only have one trial, that's you.
-`);
-  },
-
-  // ── Firestore: Household commands ──────────────────────────────────────────
-
-  async households() {
-    const db = getDb();
-    const snap = await db.collection("households").orderBy("createdAt", "desc").limit(50).get();
-    if (snap.empty) { console.log("\n  No households found in Firestore.\n"); return; }
-    householdIndex = snap.docs.map((d) => d.id);
-
-    console.log(`\n  ${BOLD}#   ID                                    Name                   Owner          Tier   Mbrs  Created${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(100)}${RESET}`);
-    for (let i = 0; i < snap.docs.length; i++) {
-      const d = snap.docs[i];
-      const h = d.data();
-      const sel = d.id === selectedHouseholdId ? `${GOLD}→${RESET}` : " ";
-      const tier = h.tier === "karl" ? `${GOLD}karl${RESET}` : "free";
-      const created = h.createdAt ? new Date(h.createdAt).toLocaleDateString() : "—";
-      console.log(`  ${sel}${String(i + 1).padStart(2)}  ${d.id.padEnd(36)} ${(h.name || "").substring(0, 20).padEnd(22)} ${shortId(h.ownerId || "").padEnd(14)} ${tier}  ${((h.memberIds || []).length).toString().padStart(2)}    ${created}`);
-    }
-    console.log(`\n  ${DIM}Total: ${snap.docs.length}. Use "use-household <N>" to select.${RESET}\n`);
-  },
-
-  async household(args) {
-    const id = args[0];
-    if (!id) {
-      // Show currently selected if no arg
-      if (!requireHousehold()) return;
-      args = [selectedHouseholdId];
-    }
-    const db = getDb();
-    let docId = args[0];
-
-    // Resolve row number (e.g. "household 1") from last households listing.
-    // Only treat as row number if the argument is purely numeric (no letters/dashes).
-    const n = /^\d+$/.test(docId) ? parseInt(docId, 10) : NaN;
-    if (!isNaN(n)) {
-      if (householdIndex.length === 0) {
-        console.log(`${RED}No household index.${RESET} Run ${CYAN}households${RESET} first, then ${CYAN}household <N>${RESET}.`);
-        return;
+        await stripe("DELETE", `/customers/${ent.customerId}`);
+        lines.push(`✗ Stripe: customer ${ent.customerId} deleted`);
       }
-      if (n < 1 || n > householdIndex.length) {
-        console.log(`${RED}Row ${n} out of range (1–${householdIndex.length}).${RESET} Run ${CYAN}households${RESET} to see the list.`);
-        return;
-      }
-      docId = householdIndex[n - 1];
-    }
+    } catch { lines.push("○ Stripe cleanup failed (best effort)"); }
+  } else {
+    lines.push("○ No Stripe entitlement to clean up");
+  }
 
-    const snap = await db.doc(`households/${docId}`).get();
-    if (!snap.exists) { console.log(`${RED}Household not found: ${docId}${RESET}`); return; }
-    const h = snap.data();
-    const cardSnap = await db.collection(`households/${docId}/cards`).get();
-    const activeCards = cardSnap.docs.filter((d) => !d.data().deletedAt).length;
-    const tier = h.tier === "karl" ? `${GOLD}★ karl${RESET}` : `${DIM}free${RESET}`;
-    const inviteExpired = h.inviteCodeExpiresAt && new Date(h.inviteCodeExpiresAt) < new Date();
-    console.log();
-    console.log(`  ${BOLD}Household:${RESET}        ${docId}`);
-    console.log(`  ${BOLD}Name:${RESET}             ${h.name || "—"}`);
-    console.log(`  ${BOLD}Tier:${RESET}             ${tier}`);
-    console.log(`  ${BOLD}Owner:${RESET}            ${h.ownerId}`);
-    console.log(`  ${BOLD}Members (${(h.memberIds || []).length}):${RESET}      ${(h.memberIds || []).join(", ") || "—"}`);
-    console.log(`  ${BOLD}Invite code:${RESET}      ${h.inviteCode || "—"}  ${inviteExpired ? `${RED}(expired)${RESET}` : `${GREEN}(valid)${RESET}`}  expires ${h.inviteCodeExpiresAt ? new Date(h.inviteCodeExpiresAt).toLocaleDateString() : "—"}`);
-    console.log(`  ${BOLD}Cards (active):${RESET}   ${activeCards} / ${cardSnap.size} total`);
-    console.log(`  ${BOLD}Created:${RESET}          ${h.createdAt || "—"}`);
-    console.log(`  ${BOLD}Updated:${RESET}          ${h.updatedAt || "—"}`);
-    console.log();
-  },
+  if (trial) { await redis.del(`trial:${selectedFp}`); lines.push("✗ Redis: trial deleted"); }
+  else { lines.push("○ No trial to delete"); }
 
-  async use_household(args) {
-    const n = parseInt(args[0], 10);
-    if (isNaN(n) || n < 1 || n > householdIndex.length) {
-      // Maybe it's a raw ID
-      const rawId = args[0];
-      if (rawId && rawId.length >= 8) {
-        const snap = await getDb().doc(`households/${rawId}`).get();
-        if (!snap.exists) { console.log(`${RED}Household not found: ${rawId}${RESET}`); return; }
-        selectedHouseholdId = rawId;
-        console.log(`${GREEN}Selected household:${RESET} ${rawId}`);
-        return;
-      }
-      console.log(`${RED}Invalid selection.${RESET} Run ${CYAN}households${RESET} first, then ${CYAN}use-household <N>${RESET}.`);
-      return;
-    }
-    selectedHouseholdId = householdIndex[n - 1];
-    const snap = await getDb().doc(`households/${selectedHouseholdId}`).get();
-    if (!snap.exists) {
-      console.log(`${RED}Household no longer exists.${RESET} Run ${CYAN}households${RESET} to refresh.`);
-      selectedHouseholdId = null;
-      return;
-    }
-    const h = snap.data();
-    console.log(`\n  ${GREEN}Selected:${RESET} ${selectedHouseholdId}  ${DIM}(${h.name || "unnamed"})${RESET}\n`);
-  },
+  if (entRaw) { await redis.del(entKey); lines.push("✗ Redis: entitlement cache flushed"); }
+  else { lines.push("○ No entitlement cache to flush"); }
 
-  async delete_member(args) {
-    if (!requireHousehold()) return;
-    const userId = args[0];
-    if (!userId) { console.log(`${RED}Usage: delete-member <clerkUserId>${RESET}`); return; }
-    const db = getDb();
-    const snap = await db.doc(`households/${selectedHouseholdId}`).get();
-    if (!snap.exists) { console.log(`${RED}Household not found.${RESET}`); return; }
-    const h = snap.data();
-    if (h.ownerId === userId) { console.log(`${RED}Cannot remove the owner. Use update-owner first.${RESET}`); return; }
-    if (!(h.memberIds || []).includes(userId)) { console.log(`${RED}User ${userId} is not a member of this household.${RESET}`); return; }
-    const confirmed = await confirmPrompt(`Remove ${userId} from household ${shortId(selectedHouseholdId)}?`);
-    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
-    const newMembers = (h.memberIds || []).filter((id) => id !== userId);
-    await db.doc(`households/${selectedHouseholdId}`).update({
-      memberIds: newMembers,
-      updatedAt: new Date().toISOString(),
-    });
-    // Update user's householdId to empty (they've been removed)
-    const userSnap = await db.doc(`users/${userId}`).get();
-    if (userSnap.exists) {
-      await db.doc(`users/${userId}`).update({ householdId: "", updatedAt: new Date().toISOString() });
-    }
-    console.log(`\n  ${RED}Removed${RESET} ${userId} from household ${shortId(selectedHouseholdId)}\n`);
-  },
+  selectedFp = null;
+  lines.push("Done. User gets a fresh start on next visit.");
+  return lines.join("\n");
+}
 
-  async update_owner(args) {
-    if (!requireHousehold()) return;
-    const userId = args[0];
-    if (!userId) { console.log(`${RED}Usage: update-owner <clerkUserId>${RESET}`); return; }
-    const db = getDb();
-    const snap = await db.doc(`households/${selectedHouseholdId}`).get();
-    if (!snap.exists) { console.log(`${RED}Household not found.${RESET}`); return; }
-    const h = snap.data();
-    if (!(h.memberIds || []).includes(userId)) { console.log(`${RED}User ${userId} is not a member of this household.${RESET}`); return; }
-    if (h.ownerId === userId) { console.log(`  User is already the owner — nothing to do.`); return; }
-    const confirmed = await confirmPrompt(`Transfer ownership to ${userId}?`);
-    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
-    const now = new Date().toISOString();
-    const batch = db.batch();
-    batch.update(db.doc(`households/${selectedHouseholdId}`), { ownerId: userId, updatedAt: now });
-    const oldOwnerSnap = await db.doc(`users/${h.ownerId}`).get();
-    if (oldOwnerSnap.exists) batch.update(db.doc(`users/${h.ownerId}`), { role: "member", updatedAt: now });
-    const newOwnerSnap = await db.doc(`users/${userId}`).get();
-    if (newOwnerSnap.exists) batch.update(db.doc(`users/${userId}`), { role: "owner", updatedAt: now });
-    await batch.commit();
-    console.log(`\n  ${GOLD}Ownership transferred${RESET} to ${userId}\n`);
-  },
-
-  async update_tier(args) {
-    if (!requireHousehold()) return;
-    const tier = args[0];
-    if (tier !== "free" && tier !== "karl") {
-      console.log(`${RED}Usage: update-tier <free|karl>${RESET}`);
-      return;
-    }
-    const confirmed = await confirmPrompt(`Set tier to "${tier}" for ${shortId(selectedHouseholdId)}?`);
-    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
-    await getDb().doc(`households/${selectedHouseholdId}`).update({
-      tier,
-      updatedAt: new Date().toISOString(),
-    });
-    const badge = tier === "karl" ? `${GOLD}★ karl${RESET}` : `${DIM}free${RESET}`;
-    console.log(`\n  ${GREEN}Tier updated:${RESET} ${badge}\n`);
-  },
-
-  async update_invite() {
-    if (!requireHousehold()) return;
-    const code = generateInviteCode();
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    await getDb().doc(`households/${selectedHouseholdId}`).update({
-      inviteCode: code,
-      inviteCodeExpiresAt: expiresAt,
-      updatedAt: new Date().toISOString(),
-    });
-    console.log(`\n  ${GREEN}Invite code regenerated:${RESET} ${BOLD}${code}${RESET}`);
-    console.log(`  ${DIM}Expires: ${new Date(expiresAt).toLocaleDateString()}${RESET}\n`);
-  },
-
-  async delete_household(args) {
-    const id = args[0] || selectedHouseholdId;
-    if (!id) { console.log(`${RED}Usage: delete-household <id>${RESET}`); return; }
-    const db = getDb();
-    const snap = await db.doc(`households/${id}`).get();
-    if (!snap.exists) { console.log(`${RED}Household not found: ${id}${RESET}`); return; }
-    const h = snap.data();
-    console.log(`\n  ${RED}${BOLD}WARNING: This permanently deletes household ${shortId(id)} ("${h.name || "unnamed"}") and ALL its cards.${RESET}`);
-    const confirmed = await confirmPrompt(`Type "y" to confirm permanent deletion:`);
-    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
-
-    // Delete all cards in the subcollection first
-    const cards = await db.collection(`households/${id}/cards`).get();
-    const batch = db.batch();
-    cards.docs.forEach((d) => batch.delete(d.ref));
-    batch.delete(db.doc(`households/${id}`));
-    await batch.commit();
-
-    console.log(`  ${RED}✗${RESET} Deleted ${cards.size} cards`);
-    console.log(`  ${RED}✗${RESET} Deleted household ${id}\n`);
-    if (selectedHouseholdId === id) selectedHouseholdId = null;
-  },
-
-  // ── Firestore: User commands ────────────────────────────────────────────────
-
-  async users() {
-    const db = getDb();
-    const snap = await db.collection("users").orderBy("createdAt", "desc").limit(50).get();
-    if (snap.empty) { console.log("\n  No users found in Firestore.\n"); return; }
-
-    console.log(`\n  ${BOLD}  ClerkUserId                          Email                          Display name        Role     Household${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(115)}${RESET}`);
-    snap.docs.forEach((d) => {
-      const u = d.data();
-      const roleColor = u.role === "owner" ? GOLD : DIM;
-      console.log(`  ${d.id.padEnd(36)} ${(u.email || "").substring(0, 30).padEnd(31)} ${(u.displayName || "").substring(0, 18).padEnd(19)} ${roleColor}${(u.role || "").padEnd(8)}${RESET} ${shortId(u.householdId || "")}`);
-    });
-    console.log(`\n  ${DIM}Total: ${snap.size}${RESET}\n`);
-  },
-
-  async user(args) {
-    const id = args[0];
-    if (!id) { console.log(`${RED}Usage: user <clerkUserId>${RESET}`); return; }
-    const snap = await getDb().doc(`users/${id}`).get();
-    if (!snap.exists) { console.log(`${RED}User not found: ${id}${RESET}`); return; }
-    const u = snap.data();
-    console.log();
-    console.log(`  ${BOLD}ClerkUserId:${RESET}  ${id}`);
-    console.log(`  ${BOLD}Email:${RESET}        ${u.email || "—"}`);
-    console.log(`  ${BOLD}Display name:${RESET} ${u.displayName || "—"}`);
-    console.log(`  ${BOLD}Role:${RESET}         ${u.role === "owner" ? `${GOLD}owner${RESET}` : u.role || "—"}`);
-    console.log(`  ${BOLD}Household:${RESET}    ${u.householdId || "—"}`);
-    console.log(`  ${BOLD}Created:${RESET}      ${u.createdAt || "—"}`);
-    console.log(`  ${BOLD}Updated:${RESET}      ${u.updatedAt || "—"}`);
-    console.log();
-  },
-
-  async delete_user(args) {
-    const id = args[0];
-    if (!id) { console.log(`${RED}Usage: delete-user <clerkUserId>${RESET}`); return; }
-    const db = getDb();
-    const snap = await db.doc(`users/${id}`).get();
-    if (!snap.exists) { console.log(`${RED}User not found: ${id}${RESET}`); return; }
-    const u = snap.data();
-    console.log(`\n  ${RED}${BOLD}WARNING: Deletes user ${id} (${u.email || "unknown email"})${RESET}`);
-    console.log(`  ${DIM}The user's household and cards are NOT deleted — use delete-member first if needed.${RESET}`);
-    const confirmed = await confirmPrompt(`Confirm delete user ${id}?`);
-    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
-    // Remove from household memberIds if present
-    if (u.householdId) {
-      const hSnap = await db.doc(`households/${u.householdId}`).get();
-      if (hSnap.exists) {
-        const h = hSnap.data();
-        const newMembers = (h.memberIds || []).filter((mid) => mid !== id);
-        await db.doc(`households/${u.householdId}`).update({ memberIds: newMembers, updatedAt: new Date().toISOString() });
-      }
-    }
-    await db.doc(`users/${id}`).delete();
-    console.log(`\n  ${RED}✗${RESET} Deleted user ${id}\n`);
-  },
-
-  // ── Firestore: Card commands ────────────────────────────────────────────────
-
-  async cards() {
-    if (!requireHousehold()) return;
-    const db = getDb();
-    const snap = await db.collection(`households/${selectedHouseholdId}/cards`).get();
-    if (snap.empty) { console.log("\n  No cards found for this household.\n"); return; }
-
-    const active = snap.docs.filter((d) => !d.data().deletedAt);
-    const deleted = snap.docs.filter((d) => d.data().deletedAt);
-
-    console.log(`\n  ${BOLD}  ID              Issuer      Card name             Status         Annual fee  Open date${RESET}`);
-    console.log(`  ${DIM}${"─".repeat(90)}${RESET}`);
-    for (const d of active) {
-      const c = d.data();
-      const fee = c.annualFee ? `$${(c.annualFee / 100).toFixed(0)}` : "none";
-      const opened = c.openDate ? new Date(c.openDate).toLocaleDateString() : "—";
-      console.log(`  ${shortId(d.id).padEnd(16)} ${(c.issuerId || "").padEnd(10)} ${(c.cardName || "").substring(0, 20).padEnd(21)} ${(c.status || "").padEnd(14)} ${fee.padEnd(11)} ${opened}`);
-    }
-    if (deleted.length > 0) {
-      console.log(`\n  ${DIM}Soft-deleted (${deleted.length}):${RESET}`);
-      for (const d of deleted) {
-        const c = d.data();
-        console.log(`  ${DIM}${shortId(d.id).padEnd(16)} ${(c.issuerId || "").padEnd(10)} ${(c.cardName || "")} — deleted ${c.deletedAt ? new Date(c.deletedAt).toLocaleDateString() : "?"}${RESET}`);
-      }
-    }
-    console.log(`\n  ${DIM}Active: ${active.length}, Deleted: ${deleted.length}, Total: ${snap.size}${RESET}\n`);
-  },
-
-  async card(args) {
-    if (!requireHousehold()) return;
-    const id = args[0];
-    if (!id) { console.log(`${RED}Usage: card <cardId>${RESET}`); return; }
-    const snap = await getDb().doc(`households/${selectedHouseholdId}/cards/${id}`).get();
-    if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
-    const c = snap.data();
-    const deleted = c.deletedAt ? `${RED} [DELETED ${new Date(c.deletedAt).toLocaleDateString()}]${RESET}` : "";
-    const closed = c.closedAt ? ` ${DIM}[closed ${new Date(c.closedAt).toLocaleDateString()}]${RESET}` : "";
-    console.log();
-    console.log(`  ${BOLD}Card ID:${RESET}      ${id}${deleted}`);
-    console.log(`  ${BOLD}Issuer:${RESET}       ${c.issuerId || "—"}`);
-    console.log(`  ${BOLD}Name:${RESET}         ${c.cardName || "—"}${closed}`);
-    console.log(`  ${BOLD}Status:${RESET}       ${c.status || "—"}`);
-    console.log(`  ${BOLD}Credit limit:${RESET} $${c.creditLimit ? (c.creditLimit / 100).toLocaleString() : "—"}`);
-    console.log(`  ${BOLD}Annual fee:${RESET}   ${c.annualFee ? `$${(c.annualFee / 100).toFixed(0)}` : "none"}${c.annualFeeDate ? `  (due ${new Date(c.annualFeeDate).toLocaleDateString()})` : ""}`);
-    console.log(`  ${BOLD}Open date:${RESET}    ${c.openDate ? new Date(c.openDate).toLocaleDateString() : "—"}`);
-    if (c.signUpBonus) {
-      console.log(`  ${BOLD}Sign-up bonus:${RESET} ${JSON.stringify(c.signUpBonus)}`);
-    }
-    console.log(`  ${BOLD}Notes:${RESET}        ${c.notes || "—"}`);
-    console.log(`  ${BOLD}Household:${RESET}    ${c.householdId || "—"}`);
-    console.log(`  ${BOLD}Created:${RESET}      ${c.createdAt || "—"}`);
-    console.log(`  ${BOLD}Updated:${RESET}      ${c.updatedAt || "—"}`);
-    console.log();
-  },
-
-  async delete_card(args) {
-    if (!requireHousehold()) return;
-    const id = args[0];
-    if (!id) { console.log(`${RED}Usage: delete-card <cardId>${RESET}`); return; }
-    const db = getDb();
-    const snap = await db.doc(`households/${selectedHouseholdId}/cards/${id}`).get();
-    if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
-    const c = snap.data();
-    if (c.deletedAt) { console.log(`${GOLD}Card already soft-deleted.${RESET} Use update-card-restore to undo, or delete-card-permanent to permanently remove.`); return; }
-    await db.doc(`households/${selectedHouseholdId}/cards/${id}`).update({
-      deletedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    console.log(`\n  ${RED}Soft-deleted:${RESET} ${c.cardName || id}  ${DIM}(use update-card-restore ${id} to undo)${RESET}\n`);
-  },
-
-  async update_card_restore(args) {
-    if (!requireHousehold()) return;
-    const id = args[0];
-    if (!id) { console.log(`${RED}Usage: update-card-restore <cardId>${RESET}`); return; }
-    const db = getDb();
-    const snap = await db.doc(`households/${selectedHouseholdId}/cards/${id}`).get();
-    if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
-    const c = snap.data();
-    if (!c.deletedAt) { console.log(`${DIM}Card is not soft-deleted — nothing to restore.${RESET}`); return; }
-    await db.doc(`households/${selectedHouseholdId}/cards/${id}`).update({
-      deletedAt: FieldValue.delete(),
-      updatedAt: new Date().toISOString(),
-    });
-    console.log(`\n  ${GREEN}Restored:${RESET} ${c.cardName || id}\n`);
-  },
-
-  async delete_card_permanent(args) {
-    if (!requireHousehold()) return;
-    const id = args[0];
-    if (!id) { console.log(`${RED}Usage: delete-card-permanent <cardId>${RESET}`); return; }
-    const db = getDb();
-    const snap = await db.doc(`households/${selectedHouseholdId}/cards/${id}`).get();
-    if (!snap.exists) { console.log(`${RED}Card not found: ${id}${RESET}`); return; }
-    const c = snap.data();
-    console.log(`\n  ${RED}${BOLD}WARNING: Permanently deletes "${c.cardName || id}" — cannot be undone.${RESET}`);
-    const confirmed = await confirmPrompt(`Confirm permanent delete card ${id}?`);
-    if (!confirmed) { console.log(`${DIM}Aborted.${RESET}`); return; }
-    await db.doc(`households/${selectedHouseholdId}/cards/${id}`).delete();
-    console.log(`\n  ${RED}✗${RESET} Permanently deleted card ${id}\n`);
-  },
-
-  async read_card_count() {
-    if (!requireHousehold()) return;
-    const snap = await getDb().collection(`households/${selectedHouseholdId}/cards`).get();
-    const active = snap.docs.filter((d) => !d.data().deletedAt).length;
-    const deleted = snap.docs.filter((d) => !!d.data().deletedAt).length;
-    console.log(`\n  ${BOLD}Card count for ${shortId(selectedHouseholdId)}:${RESET}`);
-    console.log(`  ${GREEN}Active:${RESET}  ${active}`);
-    console.log(`  ${RED}Deleted:${RESET} ${deleted}`);
-    console.log(`  ${BOLD}Total:${RESET}   ${snap.size}\n`);
-  },
-
-  help() {
-    if (selectedFp) {
-      console.log(`
-  ${BOLD}Selected:${RESET} ${GOLD}${shortFp(selectedFp)}${RESET}
-  ${DIM}${"─".repeat(50)}${RESET}
-
-  ${CYAN}status${RESET}                         Show trial details
-  ${CYAN}update-trial-field <days>${RESET}     Set remaining days (e.g., "update-trial-field 5")
-  ${CYAN}update-trial-dates <days>${RESET}     Shift start date (e.g., "update-trial-dates -25")
-  ${CYAN}update-trial-reset${RESET}            Fresh 30-day trial
-  ${CYAN}update-trial-expire${RESET}           Instantly expire
-  ${CYAN}update-trial-convert${RESET} / ${CYAN}update-trial-unconvert${RESET}    Toggle paid conversion
-  ${CYAN}delete-entitlement${RESET}            Clear Redis entitlement cache
-  ${CYAN}delete-all${RESET}                    Wipe everything: Stripe + Redis
-  ${CYAN}delete${RESET}                        Delete trial from Redis
-  ${CYAN}list${RESET}                          Switch trial     ${CYAN}quit${RESET}  Exit
-`);
-    } else if (selectedHouseholdId) {
-      // Household selected — show all sections including Cards
-      console.log(`
-  ${BOLD}No trial selected${RESET} — start here:
-  ${DIM}${"─".repeat(50)}${RESET}
-
-  ${CYAN}list${RESET}                          List all trials (pick by number)
-  ${CYAN}use <N|fingerprint>${RESET}           Select a trial
-  ${CYAN}create <fingerprint>${RESET}           Create a new trial
-  ${CYAN}identity${RESET}                      How to find your fingerprint
-
-  ${BOLD}Redis / Stripe${RESET}
-  ${CYAN}keys${RESET}                          All Redis key prefixes
-  ${CYAN}entitlements${RESET}                   Stripe entitlement cache
-  ${CYAN}list-customers${RESET}                List Stripe customers
-  ${CYAN}list-subscriptions${RESET}           List Stripe subscriptions
-  ${CYAN}delete-customer <cus_xxx>${RESET}    Delete Stripe customer
-  ${CYAN}delete-subscription <sub_xxx>${RESET}  Cancel subscription
-  ${CYAN}reconnect${RESET}                    Reconnect port-forward
-
-  ${BOLD}Firestore — Households${RESET}  ${DIM}(selected: ${shortId(selectedHouseholdId)})${RESET}
-  ${CYAN}households${RESET}                   List all households (paginated, 50)
-  ${CYAN}household [id]${RESET}               Show household details
-  ${CYAN}use-household <N|id>${RESET}         Select a household
-  ${CYAN}delete-member <userId>${RESET}       Remove member from selected household
-  ${CYAN}update-owner <userId>${RESET}        Transfer ownership
-  ${CYAN}update-tier <free|karl>${RESET}      Change subscription tier
-  ${CYAN}update-invite${RESET}               Regenerate invite code
-  ${CYAN}delete-household [id]${RESET}        Permanently delete household + cards
-
-  ${BOLD}Firestore — Users${RESET}
-  ${CYAN}users${RESET}                        List all users (paginated, 50)
-  ${CYAN}user <clerkUserId>${RESET}           Show user details
-  ${CYAN}delete-user <clerkUserId>${RESET}    Delete user document
-
-  ${BOLD}Firestore — Cards${RESET}  ${DIM}(household: ${shortId(selectedHouseholdId)})${RESET}
-  ${CYAN}cards${RESET}                        List cards for selected household
-  ${CYAN}card <cardId>${RESET}                Show card details
-  ${CYAN}read-card-count${RESET}              Count active/deleted cards
-  ${CYAN}delete-card <cardId>${RESET}         Soft-delete a card (sets deletedAt)
-  ${CYAN}update-card-restore <cardId>${RESET} Restore a soft-deleted card
-  ${CYAN}delete-card-permanent <cardId>${RESET}  Permanently delete a card
-
-  ${CYAN}quit${RESET}                         Exit
-`);
-    } else {
-      // No household selected — hide Cards section, prompt to select one
-      console.log(`
-  ${BOLD}No trial selected${RESET} — start here:
-  ${DIM}${"─".repeat(50)}${RESET}
-
-  ${CYAN}list${RESET}                          List all trials (pick by number)
-  ${CYAN}use <N|fingerprint>${RESET}           Select a trial
-  ${CYAN}create <fingerprint>${RESET}           Create a new trial
-  ${CYAN}identity${RESET}                      How to find your fingerprint
-
-  ${BOLD}Redis / Stripe${RESET}
-  ${CYAN}keys${RESET}                          All Redis key prefixes
-  ${CYAN}entitlements${RESET}                   Stripe entitlement cache
-  ${CYAN}list-customers${RESET}                List Stripe customers
-  ${CYAN}list-subscriptions${RESET}           List Stripe subscriptions
-  ${CYAN}delete-customer <cus_xxx>${RESET}    Delete Stripe customer
-  ${CYAN}delete-subscription <sub_xxx>${RESET}  Cancel subscription
-  ${CYAN}reconnect${RESET}                    Reconnect port-forward
-
-  ${BOLD}Firestore — Households${RESET}
-  ${CYAN}households${RESET}                   List all households (paginated, 50)
-  ${CYAN}household [id]${RESET}               Show household details
-  ${CYAN}use-household <N|id>${RESET}         Select a household
-  ${CYAN}delete-member <userId>${RESET}       Remove member from selected household
-  ${CYAN}update-owner <userId>${RESET}        Transfer ownership
-  ${CYAN}update-tier <free|karl>${RESET}      Change subscription tier
-  ${CYAN}update-invite${RESET}               Regenerate invite code
-  ${CYAN}delete-household [id]${RESET}        Permanently delete household + cards
-
-  ${BOLD}Firestore — Users${RESET}
-  ${CYAN}users${RESET}                        List all users (paginated, 50)
-  ${CYAN}user <clerkUserId>${RESET}           Show user details
-  ${CYAN}delete-user <clerkUserId>${RESET}    Delete user document
-
-  ${DIM}Firestore — Cards: run use-household <N> to unlock card commands${RESET}
-
-  ${CYAN}quit${RESET}                         Exit
-`);
-    }
-  },
-};
 
 // ── Load initial counts ──────────────────────────────────────────────────────
 
@@ -1445,7 +706,7 @@ async function loadUsersWithTiers() {
   });
 }
 
-/** Fetch full detail for a selected user: household, cards, Stripe, cloud sync. */
+/** Fetch full detail for a selected user: household, cards, Stripe, cloud sync, trial. */
 async function loadUserDetailData(user) {
   const db = getDb();
   const result = {
@@ -1457,6 +718,7 @@ async function loadUserDetailData(user) {
       health: user.syncHealth || "unknown",
     } : null,
     cardCount: null,
+    trial: null,      // { fingerprint, startDate, convertedDate?, remainingDays, status }
   };
 
   if (user.householdId) {
@@ -1515,6 +777,25 @@ async function loadUserDetailData(user) {
     } catch { /* best effort */ }
   }
 
+  // Fetch trial via reverse-lookup index: trial:user:{userId} → fingerprint
+  try {
+    const fp = await redis.get(`trial:user:${user.id}`);
+    if (fp) {
+      const raw = await redis.get(`trial:${fp}`);
+      if (raw) {
+        const t = JSON.parse(raw);
+        const s = computeStatus(t);
+        result.trial = { fingerprint: fp, startDate: t.startDate, convertedDate: t.convertedDate, ...s };
+      }
+    }
+  } catch { /* best effort */ }
+
+  // Update module-level context refs so the command palette knows what is in scope
+  _selectedUserId = user.id;
+  _selectedUserEmail = user.email || null;
+  selectedFp = result.trial?.fingerprint ?? null;
+  _selectedSubId = result.stripe?.subId ?? null;
+
   return result;
 }
 
@@ -1541,6 +822,14 @@ function SubStatusBadge({ status }) {
     status === "past_due"  ? "yellow" :
     status === "canceled"  ? "red"    : "gray";
   return h(Text, { color, bold: color !== "gray" }, status.replace(/_/g, " "));
+}
+
+/** Trial status badge. */
+function TrialStatusBadge({ status, remainingDays }) {
+  if (status === "none")      return h(Text, { color: "gray", dimColor: true }, "none");
+  if (status === "converted") return h(Text, { color: "yellow", bold: true }, "★ converted");
+  if (status === "expired")   return h(Text, { color: "red" }, "● expired");
+  return h(Text, { color: "green", bold: true }, `● active — ${remainingDays}d left`);
 }
 
 /** Cloud sync health indicator. */
@@ -1586,13 +875,14 @@ function UserListRow({ user, selected }) {
 
 /**
  * Right-panel: full detail for selected user.
- * Shows identity, household, Stripe, cloud sync, card count, and action shortcuts.
+ * Shows identity, household, Stripe, cloud sync, card count, trial, and action shortcuts.
  */
 function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusMessage }) {
   const hh = detail?.household ?? null;
   const stripeData = detail?.stripe ?? null;
   const sync = detail?.cloudSync ?? null;
   const cards = detail?.cardCount ?? null;
+  const trial = detail?.trial ?? null;
 
   // ── Action area ──
   let actionArea;
@@ -1614,6 +904,30 @@ function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusM
       h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
       h(Text, { color: "gray" }, "[Esc] Cancel")
     );
+  } else if (mode === "confirm-trial-reset") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "yellow", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "yellow" }, "Reset trial to today? "),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
+  } else if (mode === "confirm-trial-expire") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "red", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "red" }, "Force-expire trial now? "),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
+  } else if (mode === "confirm-trial-convert") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "yellow", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "yellow" }, "Mark trial as converted? "),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
+  } else if (mode === "confirm-trial-delete") {
+    actionArea = h(Box, { borderStyle: "single", borderColor: "red", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "red" }, "Delete trial record entirely? "),
+      h(Text, { color: "yellow", bold: true }, "[y] Confirm  "),
+      h(Text, { color: "gray" }, "[Esc] Cancel")
+    );
   } else {
     actionArea = h(Box, { flexDirection: "row", flexWrap: "wrap", borderStyle: "single", borderColor: "gray", paddingX: 1, marginTop: 1 },
       h(Text, { color: "red" }, "[d] Delete  "),
@@ -1621,6 +935,12 @@ function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusM
       ...(stripeData ? [h(Text, { color: "red" }, "[s] Cancel Sub  ")] : []),
       ...(hh ? [h(Text, { color: "yellow" }, "[h] Household  ")] : []),
       ...(hh ? [h(Text, { color: "cyan" }, "[c] Cards  ")] : []),
+      ...(trial ? [
+        h(Text, { color: "green" }, "[R] Trial Reset  "),
+        h(Text, { color: "red" }, "[E] Trial Expire  "),
+        ...(trial.status !== "converted" ? [h(Text, { color: "yellow" }, "[K] Trial Convert  ")] : []),
+        h(Text, { color: "red" }, "[X] Trial Delete  "),
+      ] : []),
       h(Text, { color: "gray" }, "[Esc] Back")
     );
   }
@@ -1704,6 +1024,31 @@ function UserDetailPanel({ user, detail, detailLoading, mode, tierInput, statusM
           )
         : h(Text, { color: "gray", dimColor: true }, "  N/A"),
 
+    // ── Trial ──
+    h(SectionHeader, { title: "Trial" }),
+    detailLoading
+      ? h(Text, { color: "gray", dimColor: true }, "  Loading…")
+      : trial
+        ? h(Box, { flexDirection: "column" },
+            h(DetailField, { label: "Status" },
+              h(TrialStatusBadge, { status: trial.status, remainingDays: trial.remainingDays })
+            ),
+            h(DetailField, { label: "Started" },
+              h(Text, {}, new Date(trial.startDate).toLocaleDateString())
+            ),
+            ...(trial.convertedDate ? [
+              h(DetailField, { label: "Converted" },
+                h(Text, { color: "yellow" }, new Date(trial.convertedDate).toLocaleDateString())
+              ),
+            ] : []),
+            h(DetailField, { label: "Fingerprint" },
+              h(Text, { color: "cyan", dimColor: true },
+                trial.fingerprint.slice(0, 8) + "…" + trial.fingerprint.slice(-8)
+              )
+            ),
+          )
+        : h(Text, { color: "gray", dimColor: true }, "  No trial found (not yet linked)"),
+
     // ── Actions ──
     actionArea,
 
@@ -1727,7 +1072,7 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
   const [scrollOffset, setScrollOffset] = useState(0);
   const [detail, setDetail]             = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [mode, setMode]                 = useState("browse"); // browse | confirm-delete | prompt-tier | confirm-cancel-sub
+  const [mode, setMode]                 = useState("browse"); // browse | confirm-delete | prompt-tier | confirm-cancel-sub | confirm-trial-reset | confirm-trial-expire | confirm-trial-convert | confirm-trial-delete
   const [tierInput, setTierInput]       = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [cardView, setCardView]         = useState(false); // true = show CardDrilldownView
@@ -1831,6 +1176,74 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
     })();
   }
 
+  function doTrialReset() {
+    const fp = detail?.trial?.fingerprint;
+    if (!fp) return;
+    (async () => {
+      try {
+        const updated = { startDate: new Date().toISOString() };
+        await redis.set(`trial:${fp}`, JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
+        const s = computeStatus(updated);
+        setDetail((d) => d ? { ...d, trial: { ...d.trial, ...updated, ...s } } : d);
+        setStatusMessage(`Trial reset — ${TRIAL_DURATION_DAYS}d remaining`);
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
+  function doTrialExpire() {
+    const fp = detail?.trial?.fingerprint;
+    if (!fp) return;
+    (async () => {
+      try {
+        const expired = new Date(Date.now() - 31 * 86400000).toISOString();
+        const raw = await redis.get(`trial:${fp}`);
+        const existing = raw ? JSON.parse(raw) : {};
+        const updated = { ...existing, startDate: expired };
+        delete updated.convertedDate;
+        await redis.set(`trial:${fp}`, JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
+        const s = computeStatus(updated);
+        setDetail((d) => d ? { ...d, trial: { ...d.trial, ...updated, ...s } } : d);
+        setStatusMessage("Trial force-expired");
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
+  function doTrialConvert() {
+    const fp = detail?.trial?.fingerprint;
+    if (!fp) return;
+    (async () => {
+      try {
+        const raw = await redis.get(`trial:${fp}`);
+        const existing = raw ? JSON.parse(raw) : {};
+        const updated = { ...existing, convertedDate: new Date().toISOString() };
+        await redis.set(`trial:${fp}`, JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
+        const s = computeStatus(updated);
+        setDetail((d) => d ? { ...d, trial: { ...d.trial, ...updated, ...s } } : d);
+        setStatusMessage("Trial marked as converted");
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
+  function doTrialDelete() {
+    const fp = detail?.trial?.fingerprint;
+    if (!fp) return;
+    (async () => {
+      try {
+        await redis.del(`trial:${fp}`);
+        setDetail((d) => d ? { ...d, trial: null } : d);
+        setStatusMessage("Trial deleted");
+      } catch (err) {
+        setStatusMessage(`Error: ${err.message}`);
+      }
+    })();
+  }
+
   // ── Keyboard input ──
 
   useInput((input, key) => {
@@ -1875,6 +1288,26 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
       } else {
         setStatusMessage("Cancelled");
       }
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-trial-reset") {
+      if (input === "y" || input === "Y") doTrialReset(); else setStatusMessage("Cancelled");
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-trial-expire") {
+      if (input === "y" || input === "Y") doTrialExpire(); else setStatusMessage("Cancelled");
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-trial-convert") {
+      if (input === "y" || input === "Y") doTrialConvert(); else setStatusMessage("Cancelled");
+      setMode("browse");
+      return;
+    }
+    if (mode === "confirm-trial-delete") {
+      if (input === "y" || input === "Y") doTrialDelete(); else setStatusMessage("Cancelled");
       setMode("browse");
       return;
     }
@@ -1927,6 +1360,22 @@ function UsersTab({ isActive, onJumpToHousehold, setInputCaptured }) {
       const u = users[selectedIdx];
       setCardContext({ householdId: u.householdId, filterUserId: u.id, ownerEmail: u.email });
       setCardView(true);
+      return;
+    }
+    if ((input === "R") && detail?.trial) {
+      setMode("confirm-trial-reset");
+      return;
+    }
+    if ((input === "E") && detail?.trial) {
+      setMode("confirm-trial-expire");
+      return;
+    }
+    if ((input === "K") && detail?.trial && detail.trial.status !== "converted") {
+      setMode("confirm-trial-convert");
+      return;
+    }
+    if ((input === "X") && detail?.trial) {
+      setMode("confirm-trial-delete");
       return;
     }
   }, { isActive });
@@ -2984,21 +2433,27 @@ const h = React.createElement;
 // ── Command Palette — commands registry ───────────────────────────────────────
 
 const PALETTE_COMMANDS = [
-  { name: "delete-user",         desc: "Delete selected user and all their data",          category: "Users",      destructive: true,  requiresContext: null         },
-  { name: "update-tier",         desc: "Change tier for selected household",               category: "Households", destructive: false, requiresContext: "household"  },
-  { name: "delete-subscription", desc: "Cancel and remove Stripe subscription",             category: "Billing",    destructive: true,  requiresContext: null         },
-  { name: "list-subscriptions",  desc: "List all active Stripe subscriptions",              category: "Billing",    destructive: false, requiresContext: null         },
+  // ── Users ──
+  { name: "delete-user",         desc: "Delete selected user from Firestore",               category: "Users",      destructive: true,  requiresContext: "user"      },
+  // ── Households ──
+  { name: "update-invite",       desc: "Regenerate invite code for selected household",     category: "Households", destructive: false, requiresContext: "household"  },
+  { name: "delete-household",    desc: "Delete selected household and all its cards",        category: "Households", destructive: true,  requiresContext: "household"  },
+  // ── Billing ──
+  { name: "list-subscriptions",  desc: "List all Stripe subscriptions",                     category: "Billing",    destructive: false, requiresContext: null         },
   { name: "list-customers",      desc: "List all Stripe customers",                         category: "Billing",    destructive: false, requiresContext: null         },
-  { name: "delete-entitlement",  desc: "Clear Redis entitlement cache for selected trial",  category: "Billing",    destructive: true,  requiresContext: "trial"     },
-  { name: "delete-member",       desc: "Remove member from selected household",             category: "Households", destructive: true,  requiresContext: "household"  },
-  { name: "update-owner",        desc: "Transfer ownership of selected household",          category: "Households", destructive: false, requiresContext: "household"  },
-  { name: "update-invite",       desc: "Regenerate household invite code",                  category: "Households", destructive: false, requiresContext: "household"  },
-  { name: "delete-household",    desc: "Delete selected household and all members",         category: "Households", destructive: true,  requiresContext: "household"  },
-  { name: "delete-all",          desc: "Delete ALL data for selected trial (nuclear option)", category: "Danger",   destructive: true,  requiresContext: "trial"     },
-  { name: "reconnect",           desc: "Reconnect to Redis / Firestore / Stripe",           category: "System",     destructive: false, requiresContext: null         },
-  { name: "trial-adjust",        desc: "Shift trial start date by +N / -N days",            category: "Trial",      destructive: false, requiresContext: "trial"     },
-  { name: "trial-complete",      desc: `Expire trial immediately (>${TRIAL_DURATION_DAYS} days ago)`, category: "Trial", destructive: false, requiresContext: "trial" },
+  { name: "delete-subscription", desc: "Cancel Stripe subscription for selected user",      category: "Billing",    destructive: true,  requiresContext: "user"       },
+  { name: "delete-entitlement",  desc: "Flush Redis entitlement cache for selected trial",  category: "Billing",    destructive: true,  requiresContext: "trial"      },
+  // ── Trial ──
+  { name: "trial-adjust",        desc: "Shift trial start date by +N / -N days",            category: "Trial",      destructive: false, requiresContext: "trial"      },
+  { name: "trial-complete",      desc: `Force-expire trial (sets start ${TRIAL_DURATION_DAYS + 1} days ago)`, category: "Trial", destructive: false, requiresContext: "trial" },
   { name: "trial-progress",      desc: `Advance to next phase boundary (day ${TRIAL_NUDGE_DAY} or expiry)`, category: "Trial", destructive: false, requiresContext: "trial" },
+  // ── Redis ──
+  { name: "entitlements",        desc: "Show Redis entitlement cache",                      category: "Redis",      destructive: false, requiresContext: null         },
+  { name: "keys",                desc: "Show all Redis keys grouped by prefix",              category: "Redis",      destructive: false, requiresContext: null         },
+  // ── Danger ──
+  { name: "delete-all",          desc: "Nuke all data for selected trial: Stripe + Redis",  category: "Danger",     destructive: true,  requiresContext: "trial"      },
+  // ── System ──
+  { name: "reconnect",           desc: "Reconnect Redis port-forward",                      category: "System",     destructive: false, requiresContext: null         },
 ];
 
 /** Filter PALETTE_COMMANDS by a search query string. */
@@ -3024,6 +2479,7 @@ function CommandPalette({ isOpen, query, highlight, onClose, onQueryChange, onHi
   function isAvailable(cmd) {
     if (cmd.requiresContext === "trial")     return !!selectedFp;
     if (cmd.requiresContext === "household") return !!selectedHouseholdId;
+    if (cmd.requiresContext === "user")      return !!_selectedUserId;
     return true;
   }
 
@@ -3308,6 +2764,51 @@ function TrialDialog({ dialog, onConfirm, onCancel, onPhaseNext, onDayInputChang
   );
 }
 
+// ── ResultsOverlay ────────────────────────────────────────────────────────────
+
+/**
+ * Full-screen overlay for displaying read-only text results from palette commands
+ * (list-customers, list-subscriptions, entitlements, keys).
+ * Supports arrow-key scrolling. Press Esc or q to close.
+ */
+function ResultsOverlay({ lines, title, onClose }) {
+  const [offset, setOffset] = useState(0);
+  const { stdout } = useStdout();
+  const visibleRows = Math.max(5, (stdout?.rows ?? process.stdout.rows ?? 24) - 6);
+
+  useInput((input, key) => {
+    if (key.escape || input === "q") { onClose(); return; }
+    if (key.upArrow)   setOffset((o) => Math.max(0, o - 1));
+    if (key.downArrow) setOffset((o) => Math.min(Math.max(0, lines.length - visibleRows), o + 1));
+    if (key.pageDown)  setOffset((o) => Math.min(Math.max(0, lines.length - visibleRows), o + visibleRows));
+    if (key.pageUp)    setOffset((o) => Math.max(0, o - visibleRows));
+  });
+
+  const visible = lines.slice(offset, offset + visibleRows);
+  const canScrollUp   = offset > 0;
+  const canScrollDown = offset + visibleRows < lines.length;
+
+  return h(Box, {
+    flexDirection: "column", flexGrow: 1,
+    borderStyle: "round", borderColor: "cyan", paddingX: 2, paddingY: 1,
+  },
+    h(Box, { flexDirection: "row", marginBottom: 1 },
+      h(Text, { bold: true, color: "cyan" }, title),
+      h(Box, { flexGrow: 1 }),
+      h(Text, { color: "gray", dimColor: true }, `${offset + 1}–${Math.min(offset + visibleRows, lines.length)} of ${lines.length}`),
+    ),
+    canScrollUp && h(Text, { color: "gray", dimColor: true }, "  ↑ more"),
+    ...visible.map((line, i) =>
+      h(Text, { key: i, color: line.startsWith("─") ? "gray" : "white", dimColor: line.startsWith("─") }, line)
+    ),
+    canScrollDown && h(Text, { color: "gray", dimColor: true }, "  ↓ more"),
+    h(Box, { flexGrow: 1 }),
+    h(Box, { borderStyle: "single", borderColor: "gray", paddingX: 1, marginTop: 1 },
+      h(Text, { color: "gray", dimColor: true }, "↑/↓ scroll   PgUp/PgDn page   Esc close")
+    )
+  );
+}
+
 /** Top bar: branding, tab buttons, shortcut hints. */
 function TopBar({ activeTab, onTabChange }) {
   return h(Box, { flexDirection: "row", alignItems: "center", paddingX: 1, borderStyle: "single", borderColor: "yellow" },
@@ -3467,14 +2968,23 @@ function SpearApp({ connectionStatus, counts }) {
   const [deleteInput, setDeleteInput]     = useState("");
   const [cmdStatusMsg, setCmdStatusMsg]   = useState("");
 
+  // ── Results overlay state — for read-only palette command output ──
+  const [resultsOverlay, setResultsOverlay] = useState(null); // { title, lines } | null
+
   // ── Trial dialog state ──
   // { action, phase: "input"|"confirm", dayInput, oldDesc, newDesc, applyFn } | null
   const [trialDialog, setTrialDialog] = useState(null);
 
+  // Register TUI log sink so port-forward/Redis async callbacks don't write to stdout
+  React.useEffect(() => {
+    _tuiLog = (msg) => setCmdStatusMsg(msg);
+    return () => { _tuiLog = null; };
+  }, []);
+
   // Auto-clear status messages
   React.useEffect(() => {
     if (!cmdStatusMsg) return;
-    const tid = setTimeout(() => setCmdStatusMsg(""), 3000);
+    const tid = setTimeout(() => setCmdStatusMsg(""), 5000);
     return () => clearTimeout(tid);
   }, [cmdStatusMsg]);
 
@@ -3499,25 +3009,23 @@ function SpearApp({ connectionStatus, counts }) {
     setDeleteInput("");
   }
 
+  /** Show lines in the ResultsOverlay. */
+  function showResults(title, lines) {
+    setResultsOverlay({ title, lines });
+  }
+
   /** Called when user executes a command from the palette. */
   function handleCmdExecute(cmd) {
     closeCommandPalette();
 
     // ── Trial commands — open TrialDialog ──
     if (cmd.name === "trial-adjust") {
-      if (!selectedFp) {
-        setCmdStatusMsg("Error: no trial selected — use list + use <N> first");
-        return;
-      }
+      if (!selectedFp) { setCmdStatusMsg("No trial in scope — select a user with a linked trial first"); return; }
       setTrialDialog({ action: "trial-adjust", phase: "input", dayInput: "", oldDesc: "", newDesc: "", applyFn: null });
       return;
     }
     if (cmd.name === "trial-complete" || cmd.name === "trial-progress") {
-      if (!selectedFp) {
-        setCmdStatusMsg("Error: no trial selected — use list + use <N> first");
-        return;
-      }
-      // Build confirm preview by reading current trial state synchronously from last cached value
+      if (!selectedFp) { setCmdStatusMsg("No trial in scope — select a user with a linked trial first"); return; }
       getTrial(selectedFp).then((trial) => {
         const currentStatus = computeStatus(trial);
         const oldDesc = describeTrialState(currentStatus);
@@ -3532,12 +3040,8 @@ function SpearApp({ connectionStatus, counts }) {
             await setTrial(selectedFp, updated);
           };
         } else {
-          // trial-progress
           const target = computeTrialProgressTarget(currentStatus.remainingDays);
-          if (!target) {
-            setCmdStatusMsg("Trial already expired — nothing to progress");
-            return;
-          }
+          if (!target) { setCmdStatusMsg("Trial already expired — nothing to progress"); return; }
           const newStart = startDateForRemaining(target.targetRemaining);
           newDesc = target.targetRemaining === 0
             ? "expired — 0 days remaining"
@@ -3550,35 +3054,67 @@ function SpearApp({ connectionStatus, counts }) {
           };
         }
         setTrialDialog({ action: cmd.name, phase: "confirm", dayInput: "", oldDesc, newDesc, applyFn });
-      }).catch(() => {
-        setCmdStatusMsg("Error: failed to read trial state");
-      });
+      }).catch(() => setCmdStatusMsg("Error: failed to read trial state"));
       return;
     }
 
+    // ── Read-only commands — fetch data and show in ResultsOverlay ──
+    if (cmd.name === "list-customers") {
+      fetchListCustomers().then((lines) => showResults("Stripe Customers", lines)).catch(() => setCmdStatusMsg("Stripe request failed"));
+      return;
+    }
+    if (cmd.name === "list-subscriptions") {
+      fetchListSubscriptions().then((lines) => showResults("Stripe Subscriptions", lines)).catch(() => setCmdStatusMsg("Stripe request failed"));
+      return;
+    }
+    if (cmd.name === "entitlements") {
+      fetchEntitlements().then((lines) => showResults("Redis Entitlements", lines)).catch(() => setCmdStatusMsg("Redis request failed"));
+      return;
+    }
+    if (cmd.name === "keys") {
+      fetchRedisKeys().then((lines) => showResults("Redis Keys", lines)).catch(() => setCmdStatusMsg("Redis request failed"));
+      return;
+    }
+    if (cmd.name === "reconnect") {
+      doReconnect().then((msg) => setCmdStatusMsg(msg)).catch(() => setCmdStatusMsg("Reconnect failed"));
+      return;
+    }
+    if (cmd.name === "update-invite") {
+      doUpdateInvite().then((msg) => setCmdStatusMsg(msg)).catch((err) => setCmdStatusMsg(`Error: ${err?.message}`));
+      return;
+    }
+
+    // ── Destructive commands — require typed confirmation ──
     if (cmd.destructive) {
       setDeleteInput("");
       setConfirmDialog({ action: cmd.name, desc: cmd.desc });
-    } else {
-      // Non-destructive: execute immediately (dispatch via REPL commands object)
-      const fn = commands[cmd.name.replace(/-/g, "_")];
-      if (fn) {
-        fn([]).catch(() => {});
-      }
-      setCmdStatusMsg(`Executed: ${cmd.name}`);
+      return;
     }
+
+    setCmdStatusMsg(`Unknown command: ${cmd.name}`);
   }
 
   /** Called when user confirms a destructive action (typed "delete" and hit Enter). */
   function handleConfirm() {
     if (!confirmDialog) return;
-    const fn = commands[confirmDialog.action.replace(/-/g, "_")];
-    if (fn) {
-      fn([]).catch(() => {});
-    }
-    setCmdStatusMsg(`${confirmDialog.action} executed`);
+    const action = confirmDialog.action;
     setConfirmDialog(null);
     setDeleteInput("");
+
+    const run = async () => {
+      switch (action) {
+        case "delete-user":        return doDeleteUser();
+        case "delete-household":   return doDeleteHousehold();
+        case "delete-all":         return doDeleteAll();
+        case "delete-entitlement": return doDeleteEntitlement();
+        case "delete-subscription": return doDeleteSubscription(_selectedSubId);
+        default: return `Unknown destructive action: ${action}`;
+      }
+    };
+
+    run()
+      .then((msg) => setCmdStatusMsg(msg || `${action} executed`))
+      .catch((err) => setCmdStatusMsg(`Error: ${err?.message ?? action + " failed"}`));
   }
 
   function handleCancelConfirm() {
@@ -3646,8 +3182,8 @@ function SpearApp({ connectionStatus, counts }) {
     // Let the active tab consume input when it has captured focus (e.g. tier prompt)
     if (inputCaptured) return;
 
-    // Command palette, confirm dialog, and trial dialog handle their own input via useInput({ isActive })
-    if (showCmdPalette || confirmDialog || trialDialog) return;
+    // Overlays handle their own input via useInput({ isActive })
+    if (showCmdPalette || confirmDialog || trialDialog || resultsOverlay) return;
 
     // q — quit
     if (input === "q") {
@@ -3688,9 +3224,15 @@ function SpearApp({ connectionStatus, counts }) {
   });
 
   // Determine which content to render in the main area
-  // Priority: confirmDialog > trialDialog > showCmdPalette > showHelp > MainContent
+  // Priority: resultsOverlay > confirmDialog > trialDialog > showCmdPalette > showHelp > MainContent
   let mainArea;
-  if (confirmDialog) {
+  if (resultsOverlay) {
+    mainArea = h(ResultsOverlay, {
+      title: resultsOverlay.title,
+      lines: resultsOverlay.lines,
+      onClose: () => setResultsOverlay(null),
+    });
+  } else if (confirmDialog) {
     mainArea = h(ConfirmDialog, {
       dialog: confirmDialog,
       deleteInput,
