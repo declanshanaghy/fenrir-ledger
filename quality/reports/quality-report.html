@@ -125,27 +125,40 @@
   <div class="header">
     <div class="runes">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
     <h1>Quality Report</h1>
-    <div class="subtitle">Generated 3/20/2026, 05:29:27 UTC</div>
+    <div class="subtitle">Generated 3/20/2026, 06:21:27 UTC</div>
   </div>
 
   <!-- Loki's Decree -->
-  <div class="decree secure">
-    <div class="decree-type">Runic Seal of Quality</div>
-    <div class="decree-title">ᛉ The Shield Wall Holds ᛉ</div>
-    <div class="decree-quote">"The pack runs strong and silent."</div>
+  <div class="decree wanting">
+    <div class="decree-type">Formal Change Order</div>
+    <div class="decree-title">ᚦ Action Required ᚦ</div>
+    <div class="decree-quote">"The pack limps. Tend the wounded before they fall."</div>
 
     
+    <div class="deficiencies">
+      <h4>Deficiencies</h4>
+      <ul>
+        
+        <li>Combined line coverage at <strong>7.3%</strong> — below 50% threshold</li>
+      </ul>
+      <h4 style="margin-top:1rem">Required Actions</h4>
+      <ul class="actions">
+        
+        <li>Increase coverage to &ge;50% combined lines</li><li>Priority: auth flows, sync engine, import pipeline</li>
+      </ul>
+    </div>
+    
 
-    <div class="decree-verdict">THE CHAIN IS FORGED CLEAN.</div>
+    <div class="decree-verdict">THE BINDING IS COMPROMISED.</div>
 
     <div class="decree-meta">
-      <dl><dt>Tests</dt><dd>2180</dd></dl>
-      <dl><dt>Files</dt><dd>155</dd></dl>
-      <dl><dt>Coverage</dt><dd>52.0%</dd></dl>
+      <dl><dt>Tests</dt><dd>2221</dd></dl>
+      <dl><dt>Files</dt><dd>156</dd></dl>
+      <dl><dt>Coverage</dt><dd>7.3%</dd></dl>
       <dl><dt>Hollow</dt><dd>0</dd></dl>
     </div>
 
-    <div class="decree-closing">"The blood oath is honoured."</div>
+    <div class="decree-closing">"Even tricksters know when the joke has gone too far."</div>
 
     <div class="decree-seal-row">
       <img src="loki-dark.png" alt="Loki Laufeyson" class="loki-profile"/>
@@ -177,10 +190,10 @@
     <text x="160" y="84" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8b8680">QA Tester</text>
     <text x="160" y="104" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">2026-03-20</text>
     <line x1="30" y1="115" x2="290" y2="115" stroke="#c9920a" stroke-width="0.3" opacity="0.15"/>
-    <text x="160" y="138" text-anchor="middle" font-family="serif" font-size="12" letter-spacing="4" fill="#4ade80" opacity="0.5" style="filter: drop-shadow(0 0 6px #4ade8060)">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</text>
+    <text x="160" y="138" text-anchor="middle" font-family="serif" font-size="12" letter-spacing="4" fill="#ef4444" opacity="0.5" style="filter: drop-shadow(0 0 6px #ef444460)">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</text>
     <text x="160" y="153" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#555" letter-spacing="2">OFFICIAL SEAL</text>
   </svg>
-        <div class="decree-tagline">ᚠᛖᚾᚱᛁᚱ — Gleipnir's six threads remain unbroken</div>
+        <div class="decree-tagline">ᚠᛖᚾᚱᛁᚱ — the runes speak: action is required</div>
       </div>
     </div>
   </div>
@@ -190,7 +203,15 @@
     <div class="section-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><h2>Code Coverage</h2></div>
 
     <div class="gauges">
-      
+      <svg width="100" height="124" viewBox="0 0 100 124">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#2a2a34" stroke-width="8"/>
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8"
+      stroke-dasharray="282.7433388230814" stroke-dashoffset="262.10307508899643"
+      stroke-linecap="round" transform="rotate(-90 50 50)"
+      style="transition: stroke-dashoffset 1s ease"/>
+    <text x="50" y="55" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" fill="#ef4444">7.3%</text>
+    <text x="50" y="118" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8b8680">Combined</text>
+  </svg>
       <svg width="100" height="124" viewBox="0 0 100 124">
     <circle cx="50" cy="50" r="45" fill="none" stroke="#2a2a34" stroke-width="8"/>
     <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8"
@@ -200,7 +221,15 @@
     <text x="50" y="55" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" fill="#ef4444">52.0%</text>
     <text x="50" y="118" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8b8680">Vitest</text>
   </svg>
-      
+      <svg width="100" height="124" viewBox="0 0 100 124">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#2a2a34" stroke-width="8"/>
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8"
+      stroke-dasharray="282.7433388230814" stroke-dashoffset="282.7433388230814"
+      stroke-linecap="round" transform="rotate(-90 50 50)"
+      style="transition: stroke-dashoffset 1s ease"/>
+    <text x="50" y="55" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" fill="#ef4444">0.0%</text>
+    <text x="50" y="118" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8b8680">Playwright</text>
+  </svg>
     </div>
 
     <table>
@@ -208,27 +237,27 @@
       <tbody>
         <tr>
           <td><a href="coverage/combined/index.html">Combined</a></td>
-          <td>—</td>
-          <td class="dim">—</td>
-          <td class="dim">—</td>
-          <td class="dim">—</td>
-          <td></td>
+          <td>426</td>
+          <td class="lo">7.3% <span class="frac">3396/46220</span></td>
+          <td class="lo">43.2% <span class="frac">585/1354</span></td>
+          <td class="lo">43.0% <span class="frac">2026/4710</span></td>
+          <td><div class="cover-bar"><div class="cover-fill" style="width:7.3%;background:#ef4444"></div></div></td>
         </tr>
         <tr>
           <td><a href="coverage/vitest/index.html">Vitest</a></td>
-          <td>214</td>
-          <td class="lo">52.0% <span class="frac">3396/6535</span></td>
-          <td class="lo">43.2% <span class="frac">585/1355</span></td>
-          <td class="lo">45.0% <span class="frac">2026/4501</span></td>
+          <td>213</td>
+          <td class="lo">52.0% <span class="frac">3396/6530</span></td>
+          <td class="lo">43.2% <span class="frac">585/1354</span></td>
+          <td class="lo">45.1% <span class="frac">2026/4497</span></td>
           <td><div class="cover-bar"><div class="cover-fill" style="width:52%;background:#ef4444"></div></div></td>
         </tr>
         <tr>
           <td><a href="coverage/playwright/index.html">Playwright</a></td>
-          <td>—</td>
-          <td class="dim">—</td>
-          <td class="dim">—</td>
-          <td class="dim">—</td>
-          <td></td>
+          <td>213</td>
+          <td class="lo">0.0% <span class="frac">0/39690</span></td>
+          <td class="lo">0.0% <span class="frac">0/0</span></td>
+          <td class="lo">0.0% <span class="frac">0/213</span></td>
+          <td><div class="cover-bar"><div class="cover-fill" style="width:0%;background:#ef4444"></div></div></td>
         </tr>
       </tbody>
     </table>
@@ -247,8 +276,8 @@
     <div class="section-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/></svg><h2>Test Inventory</h2></div>
 
     <div class="stats-grid">
-      <div class="stat-card gold"><div class="value">155</div><div class="label">Test Files</div></div>
-      <div class="stat-card gold"><div class="value">2180</div><div class="label">Test Cases</div></div>
+      <div class="stat-card gold"><div class="value">156</div><div class="label">Test Files</div></div>
+      <div class="stat-card gold"><div class="value">2221</div><div class="label">Test Cases</div></div>
       <div class="stat-card green"><div class="value">0</div><div class="label">Hollow Tests</div></div>
       <div class="stat-card green"><div class="value">5</div><div class="label">Categories</div></div>
     </div>
@@ -256,8 +285,8 @@
     <div class="cat-grid">
       <div class="cat-card">
           <span class="cat-icon">⚡</span> <span class="cat-name">Unit</span>
-          <div class="cat-count">806</div>
-          <div class="cat-files">36 files · 37% of suite</div>
+          <div class="cat-count">847</div>
+          <div class="cat-files">37 files · 38% of suite</div>
           <div class="cat-desc">Pure logic, lib/, utilities</div>
           <div class="cat-status clean">✓ clean</div>
         </div>
@@ -271,7 +300,7 @@
 <div class="cat-card">
           <span class="cat-icon">🧱</span> <span class="cat-name">Component</span>
           <div class="cat-count">609</div>
-          <div class="cat-files">52 files · 28% of suite</div>
+          <div class="cat-files">52 files · 27% of suite</div>
           <div class="cat-desc">Render tests (.tsx)</div>
           <div class="cat-status clean">✓ clean</div>
         </div>
@@ -296,30 +325,30 @@
       <tbody>
         <tr>
             <td>⚡ Unit</td>
-            <td>36</td>
-            <td>806</td>
-            <td>37.0%</td>
+            <td>37</td>
+            <td>847</td>
+            <td>38.1%</td>
             <td class="hi">✓ clean</td>
           </tr>
 <tr>
             <td>🪝 Hook</td>
             <td>7</td>
             <td>131</td>
-            <td>6.0%</td>
+            <td>5.9%</td>
             <td class="hi">✓ clean</td>
           </tr>
 <tr>
             <td>🧱 Component</td>
             <td>52</td>
             <td>609</td>
-            <td>27.9%</td>
+            <td>27.4%</td>
             <td class="hi">✓ clean</td>
           </tr>
 <tr>
             <td>🚪 API / Route</td>
             <td>52</td>
             <td>614</td>
-            <td>28.2%</td>
+            <td>27.6%</td>
             <td class="hi">✓ clean</td>
           </tr>
 <tr>
