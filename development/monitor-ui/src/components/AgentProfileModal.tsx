@@ -82,12 +82,7 @@ export function AgentProfileModal({ agentKey, theme, onClose }: Props) {
         onKeyDown={handleModalKeyDown}
         style={{ "--agent-accent": accent } as React.CSSProperties}
       >
-        {/* [B] Top rune band */}
-        <div className="apm-rune-band" aria-hidden="true">
-          {ELDER_FUTHARK}
-        </div>
-
-        {/* [C] Close button */}
+        {/* [C] Close button — outside scroll body so it stays at top-right */}
         <button
           ref={closeButtonRef}
           className="apm-close"
@@ -97,58 +92,66 @@ export function AgentProfileModal({ agentKey, theme, onClose }: Props) {
           ✕
         </button>
 
-        {/* [D] Portrait */}
-        <div className="apm-portrait-zone">
-          {portrait ? (
-            <img
-              className="apm-portrait"
-              src={portrait}
-              alt={name}
-            />
-          ) : (
-            <div className="apm-portrait apm-portrait-placeholder" aria-label={name}>
-              {name.charAt(0)}
-            </div>
-          )}
-        </div>
-
-        {/* [E] Identity block */}
-        <div className="apm-identity">
-          <div
-            className="apm-agent-name"
-            id="apm-agent-name"
-            style={{ color: accent }}
-          >
-            {name}
+        {/* [B–H] Scrollable body */}
+        <div className="apm-body">
+          {/* [B] Top rune band */}
+          <div className="apm-rune-band" aria-hidden="true">
+            {ELDER_FUTHARK}
           </div>
-          <div className="apm-agent-title">{title}</div>
-          {runes && (
+
+          {/* [D] Portrait */}
+          <div className="apm-portrait-zone">
+            {portrait ? (
+              <img
+                className="apm-portrait"
+                src={portrait}
+                alt={name}
+              />
+            ) : (
+              <div className="apm-portrait apm-portrait-placeholder" aria-label={name}>
+                {name.charAt(0)}
+              </div>
+            )}
+          </div>
+
+          {/* [E] Identity block */}
+          <div className="apm-identity">
             <div
-              className="apm-rune-sig"
-              aria-label={`Rune signature: ${name}`}
+              className="apm-agent-name"
+              id="apm-agent-name"
+              style={{ color: accent }}
             >
-              {runes}
+              {name}
+            </div>
+            <div className="apm-agent-title">{title}</div>
+            {runes && (
+              <div
+                className="apm-rune-sig"
+                aria-label={`Rune signature: ${name}`}
+              >
+                {runes}
+              </div>
+            )}
+          </div>
+
+          {/* [F] Norse quote */}
+          {quote && (
+            <div className="apm-quote">
+              <p>&ldquo;{quote}&rdquo;</p>
             </div>
           )}
-        </div>
 
-        {/* [F] Norse quote */}
-        {quote && (
-          <div className="apm-quote">
-            <p>&ldquo;{quote}&rdquo;</p>
+          {/* [G] Role description */}
+          {description && (
+            <div className="apm-description">
+              <p>{description}</p>
+            </div>
+          )}
+
+          {/* [H] Bottom rune band */}
+          <div className="apm-rune-band apm-rune-band--bottom" aria-hidden="true">
+            {ELDER_FUTHARK}
           </div>
-        )}
-
-        {/* [G] Role description */}
-        {description && (
-          <div className="apm-description">
-            <p>{description}</p>
-          </div>
-        )}
-
-        {/* [H] Bottom rune band */}
-        <div className="apm-rune-band apm-rune-band--bottom" aria-hidden="true">
-          {ELDER_FUTHARK}
         </div>
       </div>
     </div>
