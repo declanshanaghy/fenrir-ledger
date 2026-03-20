@@ -44,7 +44,7 @@ Extract from the user's message:
 | `normal` | Standard work, no urgency |
 | `low` | Nice to have, cosmetic, minor |
 
-If type or priority is ambiguous, ask the user **one question max** — don't interrogate.
+If type or priority is ambiguous, use `AskUserQuestion` to ask the user **one question max** — don't interrogate.
 
 ### 3. Check for Duplicates
 
@@ -54,7 +54,7 @@ Before creating, search for existing issues:
 gh issue list --search "KEYWORD" --state open --json number,title --limit 10
 ```
 
-If a potential duplicate exists, show it to the user and ask whether to proceed.
+If a potential duplicate exists, use `AskUserQuestion` to show it to the user and ask whether to proceed.
 
 ### 4. Build Issue Body
 
@@ -138,6 +138,7 @@ This step is **skipped** for non-bug types (enhancement, ux, security, documenta
 
 ## Rules
 
+- **All questions to the user MUST use `AskUserQuestion`** — never output a question as plain text. This includes: ambiguous type/priority, duplicate confirmation, dispatch confirmation, and any other user input needed.
 - Every issue MUST have exactly **one type label** and **one priority label**
 - **Always add to board** — never skip this step
 - **No duplicates** — always check open issues first
