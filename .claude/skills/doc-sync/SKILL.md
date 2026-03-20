@@ -31,75 +31,73 @@ This table maps role names and agent name aliases to their owned output director
 
 ## Orchestration Mode (`--all`)
 
-When invoked with `--all`, the orchestrator dispatches all roles in parallel and then
-runs a consolidator. This replaces the manual process of filing 5 issues + 1 join issue.
+When invoked with `--all`, delegate to `/plan-w-team` to create a tracked epic with
+proper dependency graph and tracker issue. This ensures doc-sync runs are managed by
+`/epic-manager` like all other multi-issue work.
 
-### Phase 1 — File issues (if not already filed)
+### Step 1 — Invoke `/plan-w-team`
 
-For each role in the Project Configuration table, check if an open doc-sync issue exists:
-
-```bash
-gh issue list --search "Doc sync: <AGENT_NAME>" --state open --json number --jq '.[0].number'
-```
-
-If no issue exists, file one per role:
+Pass the following prompt to `/plan-w-team`:
 
 ```
-Title: Doc sync: <Agent Display Name> (<Role>)
-Labels: enhancement, low
-Body: Run /doc-sync --role <role>. Update all markdown in <DEST>. Remove stale content, ensure README index is accurate.
-skip-refinement
+Doc sync for all team roles. Create one issue per role to run /doc-sync --role <role>,
+plus a consolidator issue that updates root README.md after all roles complete.
+
+Roles and their owned directories:
+- Freya (product-owner) → product/
+- Luna (ux-designer) → ux/
+- FiremanDecko (principal-engineer) → architecture/, development/, infrastructure/
+- Loki (qa-tester) → quality/
+- Heimdall (security) → security/
+
+Each role issue should:
+- Title: "Doc sync: <Agent Name>"
+- Labels: enhancement, low
+- Body: "Run /doc-sync --role <role>. Update all markdown in <DEST>. Remove stale content, ensure README index is accurate."
+- Include "skip-refinement" in the body
+
+The consolidator issue should:
+- Title: "Consolidate doc-sync outputs into top-level README.md"
+- Labels: enhancement, low
+- Be blocked by all 5 role issues
+- Body: "Read all {DEST}/.sync-report.md files and update root README.md based on the hints."
+- Include "skip-refinement" in the body
+
+Wave 0: All 5 role issues (parallel — no dependencies between them)
+Wave 1: Consolidator (blocked by all 5 role issues)
 ```
 
-Also file the consolidator issue if not already open:
+`/plan-w-team` will:
+1. Skip Freya interview (issues are fully specified above)
+2. Skip Luna wireframes (no UI work)
+3. File all 6 issues via `/file-issue`
+4. Write the epic graph to `tmp/epics/<tracker>.yml`
+5. Create an `[Epic]` tracker issue
+
+### Step 2 — Dispatch via `/epic-manager`
+
+After `/plan-w-team` completes, run:
 
 ```
-Title: Consolidate doc-sync outputs into top-level README.md
-Labels: enhancement, low
-Body: Blocked by #<all role issue numbers>
-Read all {DEST}/.sync-report.md files and update root README.md.
-skip-refinement
+/epic-manager <tracker-number> --dispatch
 ```
 
-### Phase 2 — Dispatch all roles in parallel
+This shows the dashboard and presents Wave 0 (all 5 role issues) for parallel dispatch.
 
-For each role, dispatch via `/dispatch` using the **role's own agent**:
+### Step 3 — Monitor and advance
 
-```
-/dispatch #<ISSUE> --agent <AGENT_FROM_TABLE> --step 1
-```
-
-The agent prompt MUST:
-1. Reference the correct **agent definition file** from the Project Configuration table
-2. Include `/doc-sync --role <role>` as the task (the agent runs Steps 1-7 below)
-3. Use the correct **dispatch model** from the table
-
-All dispatches run in parallel (`--parallel` flag to `/dispatch`).
-
-### Phase 3 — Resume and consolidate
-
-When all role PRs are merged (detected via `/fire-next-up --resume`), dispatch the
-consolidator issue (#704 or equivalent):
-
-```
-/dispatch #<CONSOLIDATOR_ISSUE> --agent firemandecko --step 1
-```
-
-The consolidator agent:
-1. Reads all `{DEST}/.sync-report.md` files from each role's merged branch
-2. Updates root `README.md` based on the hints in each sync report
-3. Creates a PR and posts handoff
+Use `/epic-manager <tracker-number>` to check progress. When all Wave 0 issues close,
+Wave 1 (consolidator) unblocks and can be dispatched.
 
 ### Example Full Flow
 
 ```
 /doc-sync --all
-  → Files 5 role issues + 1 consolidator (if needed)
-  → /dispatch #700 #701 #702 #703 #753 --parallel
+  → /plan-w-team creates 5 role issues + 1 consolidator + tracker + epic graph
+  → /epic-manager <tracker> --dispatch  (presents Wave 0 for parallel dispatch)
   → Agents run on GKE, each creates PR
-  → /fire-next-up --resume  (merges PASS PRs, detects all done)
-  → /dispatch #704 --agent firemandecko  (consolidator)
-  → Consolidator merges, chain complete
+  → /epic-manager <tracker>  (check progress, dispatch Wave 1 when ready)
+  → Consolidator merges, epic complete
 ```
 
 ---
