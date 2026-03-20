@@ -1,7 +1,7 @@
 # Trust Boundaries — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-17 (updated for Firestore sync — added Zone 6)
+**Last reviewed**: 2026-03-20 (removed Zone 5 Upstash Redis — entitlements migrated to Firestore in issue #1521; updated stale vercel.app hostname references)
 
 ---
 
@@ -10,7 +10,9 @@
 Fenrir Ledger has two primary trust zones: the browser (untrusted) and the Next.js
 server (trusted). A third zone, Google's infrastructure, is treated as trusted for
 OAuth token responses and JWKS key material. A fourth zone, Stripe's infrastructure,
-is trusted for payment processing and subscription lifecycle events.
+is trusted for payment processing and subscription lifecycle events. Subscription
+entitlements were formerly stored in Upstash Redis (Zone 5); they are now stored in
+Firestore (Zone 6) following the KV infrastructure removal in issue #1521.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -63,26 +65,21 @@ is trusted for payment processing and subscription lifecycle events.
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│  ZONE 5: Upstash Redis (Trusted Persistent Store)            │
-│                                                              │
-│  - entitlement:{googleSub}       → StripeEntitlement         │
-│  - stripe-customer:{stripeId}    → googleSub (reverse index) │
-│                                                              │
-│  Accessed only from ZONE 2 (server). Browser has no direct   │
-│  access. No user credentials stored in KV.                   │
-└──────────────────────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────────────────────┐
-│  ZONE 6: Google Firestore (Trusted Persistent Store)         │
+│  ZONE 5: Google Firestore (Trusted Persistent Store)         │
 │                                                              │
 │  - households/{householdId}/cards → FirestoreCard[]          │
 │  - users/{googleSub}              → UserRecord               │
 │  - households/{householdId}       → HouseholdRecord          │
+│  - entitlements/{googleSub}       → FirestoreEntitlement     │
+│  - entitlements/stripe:{id}       → FirestoreEntitlement     │
 │                                                              │
 │  Accessed via Firebase Admin SDK from ZONE 2 only. Admin SDK │
 │  bypasses Firestore security rules — all authorization is    │
 │  enforced at the API route layer. Browser has no direct      │
 │  Firestore access.                                           │
+│                                                              │
+│  Note: Upstash Redis (formerly Zone 5) was removed in        │
+│  issue #1521. Entitlements are now stored here instead of KV.│
 │                                                              │
 │  CRITICAL CONSTRAINT: householdId MUST be derived from the  │
 │  server-side user record (getUser(googleSub).householdId),   │
@@ -102,8 +99,6 @@ is trusted for payment processing and subscription lifecycle events.
 | `STRIPE_SECRET_KEY` | `process.env` (server) | No | Used only in Stripe API calls (server-side) |
 | `STRIPE_WEBHOOK_SECRET` | `process.env` (server) | No | Used only for webhook signature verification |
 | `STRIPE_PRICE_ID` | `process.env` (server) | No | Stripe price ID for subscription |
-| `KV_REST_API_URL` | `process.env` (server) | No | Upstash Redis connection |
-| `KV_REST_API_TOKEN` | `process.env` (server) | No | Upstash Redis auth token |
 | `GOOGLE_PICKER_API_KEY` | `process.env` (server) | Yes — served on request | Auth-gated; GCP referrer restriction required |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | `process.env` (public) | Yes — by design | OAuth Client ID is public; embedded in auth URL |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `process.env` (public) | Yes — by design | Stripe publishable key is safe for client exposure |
@@ -171,7 +166,7 @@ Every request to an API route crosses this boundary. The following data crosses:
 ## localStorage as an Untrusted Store
 
 `localStorage` is **origin-scoped** but not **script-scoped**. Any JavaScript
-executing on the same origin (`https://fenrir-ledger.vercel.app`) can read
+executing on the same origin (the production GKE Ingress hostname) can read
 `localStorage`. This includes:
 
 1. First-party application code (intended)
@@ -181,7 +176,7 @@ executing on the same origin (`https://fenrir-ledger.vercel.app`) can read
 
 ### What an XSS payload could steal
 
-A successful XSS attack on fenrir-ledger.vercel.app could read:
+A successful XSS attack on the production GKE hostname could read:
 - `fenrir:auth` → full Google access token + id_token (valid for ~1 hour)
 - `fenrir:drive-token` → Google Drive access token (valid for ~1 hour)
 - `fenrir_ledger:{sub}:cards` → all credit card financial metadata
@@ -238,9 +233,9 @@ This means:
 
 ## Stripe Entitlement Data
 
-Unlike card data, subscription entitlements are stored server-side in Upstash Redis.
-The browser fetches the current tier from `/api/stripe/membership` on demand and
-caches it in React state only (not localStorage). This means:
+Subscription entitlements are stored server-side in Firestore (formerly Upstash Redis,
+migrated in issue #1521). The browser fetches the current tier from `/api/stripe/membership`
+on demand and caches it in React state only (not localStorage). This means:
 
 - An XSS attack cannot read entitlement data from localStorage
 - Entitlement data is protected by the full server trust boundary

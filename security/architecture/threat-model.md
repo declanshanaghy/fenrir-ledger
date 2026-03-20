@@ -1,7 +1,7 @@
 # Threat Model — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-17 (added Firestore sync assets and attack surfaces)
+**Last reviewed**: 2026-03-20 (updated entitlement store references from Upstash Redis to Firestore — issue #1521)
 **Methodology**: STRIDE-lite with OWASP Top 10 mapping
 
 ---
@@ -21,7 +21,7 @@
 | `GOOGLE_PICKER_API_KEY` | MEDIUM | Server env, served to browser auth-gated | Attacker can display Picker UI with Fenrir's quota |
 | Card portfolio data | MEDIUM | localStorage per-user | Financial metadata exposure (no PAN/CVV stored) |
 | User PII (email, name, picture) | MEDIUM | localStorage["fenrir:auth"].user | Identity exposure |
-| Stripe entitlements in KV | MEDIUM | Upstash Redis | Attacker can grant or revoke subscription tier |
+| Stripe entitlements in Firestore | MEDIUM | Firestore entitlements collection | Attacker can grant or revoke subscription tier if Admin SDK authorization is bypassed |
 | Card portfolio in Firestore | HIGH | Firestore per-household collection | Attacker can read/overwrite any household's full card portfolio if IDOR present |
 | Household membership in Firestore | MEDIUM | Firestore households collection | Attacker can enumerate members, manipulate household composition |
 
@@ -191,9 +191,9 @@
 - SHA-256 HMAC webhook signature verification (`stripe.webhooks.constructEvent()`)
 - Raw body read before JSON parsing for webhook signature validation
 - `STRIPE_WEBHOOK_SECRET` never logged or returned to clients
-- Stripe entitlements in KV with 30-day TTL
-- Reverse index (`stripe-customer:{id}`) for webhook-to-user mapping
-- No token encryption in KV (unlike previous platforms) — only subscription status stored
+- Stripe entitlements in Firestore (persistent documents, no TTL)
+- Reverse lookup via `users` collection (`stripeCustomerId` field) for webhook-to-user mapping
+- No token encryption in Firestore — only subscription status stored
 
 ---
 
@@ -204,7 +204,7 @@
 | Refresh token in localStorage | HIGH | Long-lived token accessible to XSS; no server-side revocation | Move to HttpOnly cookie or shorten TTL |
 | Drive token in localStorage | MEDIUM | Persisted despite 1-hour TTL; widens XSS window | Keep in React state only |
 | `unsafe-inline` in CSP | MEDIUM | Allows inline script execution; reduces XSS protection | Move to nonce-based CSP |
-| Non-distributed rate limiting | MEDIUM | In-memory rate limiter doesn't work across Pod instances | Upstash Redis |
+| Non-distributed rate limiting | MEDIUM | In-memory rate limiter doesn't work across Pod instances | Implement Redis or Firestore-backed rate limiting |
 | Anonymous data merge without Zod | LOW | Malformed localStorage data merged without validation | Add `CardsArraySchema.safeParse()` |
 | No refresh token rotation | LOW | Refresh token never rotated; stolen token remains valid | Implement token refresh + rotation via server proxy |
 | LLM singleton caches stale key | LOW | API key rotation may not take effect until cold start | Document; add version check to invalidate singleton |

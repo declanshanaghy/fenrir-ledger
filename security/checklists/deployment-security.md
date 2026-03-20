@@ -1,7 +1,7 @@
 # Deployment Security Checklist — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-17 (added Firestore env vars to required list)
+**Last reviewed**: 2026-03-20 (removed KV_REST_API_URL and KV_REST_API_TOKEN — Upstash Redis removed in issue #1521)
 
 Run this checklist before every production deployment. Items marked [AUTOMATED] are
 covered by the Playwright test suite or CI. Items marked [MANUAL] require human review.
@@ -34,7 +34,6 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
   - `FENRIR_ANTHROPIC_API_KEY`
   - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`
   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-  - `KV_REST_API_URL`, `KV_REST_API_TOKEN`
   - `APP_BASE_URL` (production URL for Stripe redirects)
   - `UPTIME_CHECK_HOST` (Google Cloud Monitoring uptime check target)
   - `FIRESTORE_PROJECT_ID`, `FIRESTORE_DATABASE_ID` (Firestore cloud sync)

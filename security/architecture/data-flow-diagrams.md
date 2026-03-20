@@ -1,7 +1,7 @@
 # Security Data Flow Diagrams — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-17 (added Firestore sync flows — sections 7 and 8)
+**Last reviewed**: 2026-03-20 (updated Stripe checkout flow — entitlements now in Firestore, not Upstash Redis; issue #1521)
 
 Trust boundary notation:
 - `[TB]` — Trust boundary crossing (browser ↔ server)
@@ -245,7 +245,7 @@ Browser (authenticated)
   │    stripe.webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET)
   │    ← SHA-256 HMAC verification
   │    handle checkout.session.completed:
-  │      session.metadata.googleSub → setStripeEntitlement(googleSub, entitlement) → KV
+  │      session.metadata.googleSub → setStripeEntitlement(googleSub, entitlement) → Firestore
   │
   └─ Browser redirects to success_url: /settings?stripe=success
 ```
@@ -267,7 +267,7 @@ Browser (authenticated)
 | Token proxy | None (fixed URL) | None | None | N/A (public, rate-limited) |
 | Stripe checkout | None (Stripe SDK) | None | None | requireAuth |
 | Stripe webhook | None | None | None | N/A (SHA-256 HMAC) |
-| Stripe membership | None | None | None (KV only) | requireAuth |
+| Stripe membership | None | None | None (Firestore only) | requireAuth |
 | Firestore sync pull | None | None | None (Firestore) | requireAuth + Karl tier |
 | Firestore sync push | None | None (Zod validated) | None (Firestore) | requireAuth + Karl tier |
 
