@@ -114,8 +114,11 @@ export function getOrCreateDeviceId(): string {
 }
 
 /**
- * Computes the browser fingerprint as SHA-256(userAgent + deviceId).
+ * Computes the browser fingerprint as SHA-256(deviceId).
  * Returns a 64-character lowercase hex string.
+ *
+ * Using deviceId alone ensures the fingerprint is stable across browser
+ * updates (userAgent changes on every browser version bump).
  *
  * Must be called from a browser context (requires `window` and `crypto.subtle`).
  *
@@ -127,7 +130,7 @@ export async function computeFingerprint(): Promise<string> {
   }
 
   const deviceId = getOrCreateDeviceId();
-  const input = navigator.userAgent + deviceId;
+  const input = deviceId;
 
   const encoder = new TextEncoder();
   const data = encoder.encode(input);
