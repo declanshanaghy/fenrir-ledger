@@ -8,9 +8,10 @@ export default defineConfig({
   forbidOnly: false,
   retries: 0,
   workers: process.env.CI ? 2 : (process.env.PW_WORKERS ? Number(process.env.PW_WORKERS) : 4),
-  reporter: process.env.CI
-    ? [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]]
-    : "list",
+  reporter: [
+    ["list"],
+    ["html", { outputFolder: "../../quality/reports/test-report-playwright", open: "never" }],
+  ],
   use: {
     baseURL: process.env.SERVER_URL || "http://localhost:9653",
     trace: "off",
