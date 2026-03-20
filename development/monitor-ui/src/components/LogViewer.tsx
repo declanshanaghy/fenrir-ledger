@@ -82,7 +82,8 @@ import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscription";
 import { DecreeBlock, isDecreeBlock } from "./DecreeBlock";
-import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
+import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
+import { StatusIconSvg } from "./StatusIcon";
 
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 
@@ -137,22 +138,22 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
       <span className="header-badges">
         {job.status === "running" && onCancelJob ? (
           <button
-            className="job-status-badge job-status-badge--cancel pulse"
+            className={`job-status-icon-btn job-status-icon-btn--cancel${job.status === "running" ? " pulse" : ""}`}
             style={{ color: STATUS_COLORS[job.status] }}
             title="Click to cancel this job"
             aria-label="Cancel running job"
             onClick={() => onCancelJob(job.sessionId)}
           >
-            {STATUS_ICONS[job.status]} {STATUS_LABELS[job.status]}
+            <StatusIconSvg status={job.status} />
           </button>
         ) : (
           <span
-            className={`job-status-badge${job.status === "running" ? " pulse" : ""}`}
+            className={`job-status-icon-btn${job.status === "running" ? " pulse" : ""}`}
             style={{ color: STATUS_COLORS[job.status] }}
-            title={`Job status: ${job.status}`}
+            title={`Job status: ${STATUS_LABELS[job.status]}`}
             aria-label={`Job status: ${STATUS_LABELS[job.status]}`}
           >
-            {STATUS_ICONS[job.status]} {STATUS_LABELS[job.status]}
+            <StatusIconSvg status={job.status} />
           </span>
         )}
         {replayedFromCache && (
