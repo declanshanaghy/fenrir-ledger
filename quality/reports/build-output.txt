@@ -3,18 +3,24 @@ This information is used to shape Next.js' roadmap and prioritize features.
 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
 https://nextjs.org/telemetry
 
-▲ Next.js 16.1.6 (Turbopack)
+Warning: Custom Cache-Control headers detected for the following routes:
+  - /_next/static/:path*
+  - /_next/image
+
+Setting a custom Cache-Control header can break Next.js development behavior.
+▲ Next.js 16.2.0 (Turbopack)
 
 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
   Creating an optimized production build ...
-✓ Compiled successfully in 42s
+✓ Compiled successfully in 35.8s
   Running TypeScript ...
+  Finished TypeScript in 24.0s ...
   Collecting page data using 15 workers ...
   Generating static pages using 15 workers (0/69) ...
   Generating static pages using 15 workers (17/69) 
   Generating static pages using 15 workers (34/69) 
   Generating static pages using 15 workers (51/69) 
-✓ Generating static pages using 15 workers (69/69) in 7.2s
+✓ Generating static pages using 15 workers (69/69) in 7.8s
   Finalizing page optimization ...
 
 Route (app)
