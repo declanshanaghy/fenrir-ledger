@@ -3,6 +3,25 @@ import type { Job, DisplayJob, ServerMessage } from "../lib/types";
 import { AGENT_NAMES } from "../lib/constants";
 import { getCachedSessionIds, getCachedSessionMeta } from "../lib/localStorageLogs";
 
+const STATUS_PRIORITY: Record<DisplayJob["status"], number> = {
+  running: 0,
+  pending: 1,
+  failed: 2,
+  succeeded: 3,
+  cached: 4,
+  purged: 5,
+};
+
+function sortJobs(a: DisplayJob, b: DisplayJob): number {
+  const aPriority = STATUS_PRIORITY[a.status] ?? 99;
+  const bPriority = STATUS_PRIORITY[b.status] ?? 99;
+  if (aPriority !== bPriority) return aPriority - bPriority;
+  // Within same status group, sort by start time descending (newest first)
+  const aTime = a.startTime ?? 0;
+  const bTime = b.startTime ?? 0;
+  return bTime - aTime;
+}
+
 function parseJob(job: Job): DisplayJob {
   const agentKey = job.agent || "unknown";
   return {
@@ -62,11 +81,7 @@ export function useJobs() {
       const liveIds = new Set(live.map((j) => j.sessionId));
       const cached = buildCachedJobs(liveIds);
 
-      const all = [...live, ...cached].sort((a, b) => {
-        const aTime = a.startTime ?? Number.MAX_SAFE_INTEGER;
-        const bTime = b.startTime ?? Number.MAX_SAFE_INTEGER;
-        return bTime - aTime;
-      });
+      const all = [...live, ...cached].sort(sortJobs);
       setJobs(all);
     }
   }, []);
@@ -79,11 +94,7 @@ export function useJobs() {
       );
       const live = prev.filter((j) => j.status !== "cached");
       const cached = buildCachedJobs(liveIds);
-      return [...live, ...cached].sort((a, b) => {
-        const aTime = a.startTime ?? Number.MAX_SAFE_INTEGER;
-        const bTime = b.startTime ?? Number.MAX_SAFE_INTEGER;
-        return bTime - aTime;
-      });
+      return [...live, ...cached].sort(sortJobs);
     });
   }, []);
 
