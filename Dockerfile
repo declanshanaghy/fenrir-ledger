@@ -48,8 +48,11 @@ ENV NEXT_PUBLIC_UMAMI_WEBSITE_ID=${NEXT_PUBLIC_UMAMI_WEBSITE_ID}
 # Next.js telemetry opt-out
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy deps from previous stage (workspace node_modules at root)
+# Copy deps from previous stage — pnpm hoists to root node_modules/.pnpm/
+# but also creates per-package node_modules with symlinks back to the store.
+# Both must be present for the build to resolve imports correctly.
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/development/frontend/node_modules ./development/frontend/node_modules
 
 # Copy workspace manifests
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
