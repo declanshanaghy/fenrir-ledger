@@ -4,12 +4,14 @@
  * Validates the webhook handler correctly persists entitlements to Redis
  * via ioredis for checkout.session.completed, subscription.updated,
  * and subscription.deleted events.
+ *
+ * Deduplication is handled via Firestore processedEvents/{eventId} — mocked here.
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type Stripe from "stripe";
 
-// ── Mock Redis client ─────────────────────────────────────────────────────
+// ── Mock Redis client (entitlement store) ─────────────────────────────────
 
 const mockRedis = vi.hoisted(() => ({
   get: vi.fn(),
@@ -20,6 +22,20 @@ const mockRedis = vi.hoisted(() => ({
 vi.mock("@/lib/kv/redis-client", () => ({
   getRedisClient: () => mockRedis,
 }));
+
+// ── Mock Firestore dedup helpers ──────────────────────────────────────────
+
+const mockIsEventProcessed = vi.hoisted(() => vi.fn());
+const mockMarkEventProcessed = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/firebase/firestore", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/firebase/firestore")>();
+  return {
+    ...actual,
+    isEventProcessed: mockIsEventProcessed,
+    markEventProcessed: mockMarkEventProcessed,
+  };
+});
 
 // ── Mock Stripe SDK ───────────────────────────────────────────────────────
 
@@ -107,7 +123,10 @@ function makeSubscription(
 describe("POST /api/stripe/webhook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: dedup cache misses (event not yet processed)
+    // Default: event not yet processed (no duplicate)
+    mockIsEventProcessed.mockResolvedValue(false);
+    mockMarkEventProcessed.mockResolvedValue(undefined);
+    // Default: entitlement store Redis operations succeed
     mockRedis.get.mockResolvedValue(null);
     mockRedis.set.mockResolvedValue("OK");
   });
@@ -149,8 +168,8 @@ describe("POST /api/stripe/webhook", () => {
   it("deduplicates already-processed events", async () => {
     const event = makeStripeEvent("checkout.session.completed", {});
     vi.mocked(verifyWebhookSignature).mockReturnValue(event);
-    // First get call = dedup check returns "already processed"
-    mockRedis.get.mockResolvedValueOnce("1");
+    // Firestore dedup check returns "already processed"
+    mockIsEventProcessed.mockResolvedValueOnce(true);
 
     const res = await POST(makeRequest("{}") as never);
     expect(res.status).toBe(200);
@@ -250,9 +269,8 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("customer.subscription.updated", sub);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
-      // First get = dedup (null), second get = reverse index lookup
+      // reverse index lookup, then existing entitlement
       mockRedis.get
-        .mockResolvedValueOnce(null) // dedup
         .mockResolvedValueOnce(JSON.stringify("google-sub-123")) // reverse index
         .mockResolvedValueOnce(null); // existing entitlement
 
@@ -277,10 +295,8 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("customer.subscription.updated", sub);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
-      // dedup miss, then reverse index returns null (unknown customer)
-      mockRedis.get
-        .mockResolvedValueOnce(null) // dedup
-        .mockResolvedValueOnce(null); // reverse index
+      // reverse index returns null (unknown customer)
+      mockRedis.get.mockResolvedValueOnce(null); // reverse index
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
@@ -298,7 +314,6 @@ describe("POST /api/stripe/webhook", () => {
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
       mockRedis.get
-        .mockResolvedValueOnce(null) // dedup
         .mockResolvedValueOnce(JSON.stringify("google-sub-123")) // reverse index
         .mockResolvedValueOnce(null); // existing entitlement
 
@@ -334,10 +349,8 @@ describe("POST /api/stripe/webhook", () => {
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
       mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
 
-      // Dedup read fails, but processing should continue
-      mockRedis.get
-        .mockRejectedValueOnce(new Error("Redis timeout"))
-        .mockResolvedValue(null); // subsequent reads succeed
+      // Firestore dedup read fails — processing should continue
+      mockIsEventProcessed.mockRejectedValueOnce(new Error("Firestore timeout"));
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
@@ -374,9 +387,7 @@ describe("POST /api/stripe/webhook", () => {
       mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
 
       // Mock entitlement storage failure
-      mockRedis.set
-        .mockResolvedValueOnce(null) // dedup get
-        .mockRejectedValueOnce(new Error("Redis write failed")); // entitlement set fails
+      mockRedis.set.mockRejectedValueOnce(new Error("Redis write failed"));
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(500);
@@ -397,29 +408,23 @@ describe("POST /api/stripe/webhook", () => {
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
       mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
 
-      // Dedup read succeeds, all set calls succeed
-      // (In real scenario, dedup write is the last one and any failure won't change response)
-      mockRedis.get.mockResolvedValue(null);
-      mockRedis.set.mockResolvedValue("OK");
+      // Dedup write fails after successful processing — response should still be 200
+      mockMarkEventProcessed.mockRejectedValueOnce(new Error("Firestore write failed"));
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
 
       const json = await res.json();
       expect(json.status).toBe("processed");
-      // Verify both entitlement and dedup marker were written
+      // Verify entitlement was written
       expect(mockRedis.set).toHaveBeenCalledWith(
         "entitlement:google-sub-123",
         expect.any(String),
         "EX",
         expect.any(Number),
       );
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        "stripe-event-processed:evt_test123",
-        "1",
-        "EX",
-        expect.any(Number),
-      );
+      // Verify dedup marker was attempted
+      expect(mockMarkEventProcessed).toHaveBeenCalledWith("evt_test123");
     });
   });
 
@@ -433,8 +438,6 @@ describe("POST /api/stripe/webhook", () => {
       };
       const event = makeStripeEvent("checkout.session.completed", session);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
-
-      mockRedis.get.mockResolvedValue(null);
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
@@ -456,9 +459,6 @@ describe("POST /api/stripe/webhook", () => {
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
       mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
 
-      mockRedis.get.mockResolvedValue(null);
-      mockRedis.set.mockResolvedValue("OK");
-
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
 
@@ -478,9 +478,6 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("checkout.session.completed", session);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
       mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
-
-      mockRedis.get.mockResolvedValue(null);
-      mockRedis.set.mockResolvedValue("OK");
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
@@ -506,9 +503,7 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("customer.subscription.updated", sub);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
-      mockRedis.get
-        .mockResolvedValueOnce(null) // dedup
-        .mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
+      mockRedis.get.mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
@@ -536,9 +531,7 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("customer.subscription.updated", sub);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
-      mockRedis.get
-        .mockResolvedValueOnce(null) // dedup
-        .mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
+      mockRedis.get.mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
@@ -561,9 +554,7 @@ describe("POST /api/stripe/webhook", () => {
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
       const beforeDate = new Date();
-      mockRedis.get
-        .mockResolvedValueOnce(null) // dedup
-        .mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
+      mockRedis.get.mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
 
       const res = await POST(makeRequest("{}") as never);
       const afterDate = new Date();
@@ -589,7 +580,6 @@ describe("POST /api/stripe/webhook", () => {
       const existingEntitlement = JSON.stringify({ linkedAt: originalLinkedAt });
 
       mockRedis.get
-        .mockResolvedValueOnce(null) // dedup
         .mockResolvedValueOnce(JSON.stringify("stripe:cus_test456")) // reverse index (anonymous)
         .mockResolvedValueOnce(existingEntitlement); // existing entitlement
 
@@ -616,8 +606,6 @@ describe("POST /api/stripe/webhook", () => {
       mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
 
       const beforeDate = new Date();
-      mockRedis.get.mockResolvedValue(null);
-      mockRedis.set.mockResolvedValue("OK");
 
       const res = await POST(makeRequest("{}") as never);
       const afterDate = new Date();

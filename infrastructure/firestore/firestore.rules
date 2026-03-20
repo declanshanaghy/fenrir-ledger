@@ -167,6 +167,18 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ─── /processedEvents/{eventId} ───────────────────────────────────────────
+    //
+    // Stores processed Stripe webhook event IDs for deduplication.
+    // Written exclusively by the server via the Admin SDK (bypasses these rules).
+    // Client reads and writes are denied — dedup is server-side logic only.
+    // Documents carry an expiresAt field used by the Firestore TTL policy for
+    // automatic purging after 24 hours.
+
+    match /processedEvents/{eventId} {
+      allow read, write: if false;
+    }
+
     // ─── Deny all other paths ──────────────────────────────────────────────────
 
     match /{document=**} {

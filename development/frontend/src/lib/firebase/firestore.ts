@@ -375,6 +375,40 @@ export async function joinHouseholdTransaction(
   });
 }
 
+// ─── Processed webhook events (deduplication) ────────────────────────────────
+
+/** 24 hours in milliseconds — TTL for processed Stripe webhook event documents */
+const PROCESSED_EVENT_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Checks whether a Stripe webhook event has already been processed.
+ * Returns true if a processedEvents/{eventId} document exists in Firestore.
+ *
+ * Used for idempotent webhook handling — if this returns true, skip processing.
+ */
+export async function isEventProcessed(eventId: string): Promise<boolean> {
+  const db = getFirestore();
+  const snap = await db.doc(`processedEvents/${eventId}`).get();
+  return snap.exists;
+}
+
+/**
+ * Marks a Stripe webhook event as processed by writing a document to
+ * processedEvents/{eventId} with an expiresAt timestamp 24 hours in the future.
+ *
+ * Firestore's TTL policy on the expiresAt field auto-purges documents after expiry.
+ */
+export async function markEventProcessed(eventId: string): Promise<void> {
+  const db = getFirestore();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + PROCESSED_EVENT_TTL_MS);
+  await db.doc(`processedEvents/${eventId}`).set({
+    eventId,
+    processedAt: now.toISOString(),
+    expiresAt,
+  });
+}
+
 // ─── Auto-create solo household ───────────────────────────────────────────────
 
 export interface EnsureSoloHouseholdInput {

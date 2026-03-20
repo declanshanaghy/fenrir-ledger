@@ -7,13 +7,15 @@ import { NextRequest } from "next/server";
 import { POST } from "@/app/api/stripe/webhook/route";
 import type Stripe from "stripe";
 
-// Mock Redis client (used by webhook deduplication)
-vi.mock("@/lib/kv/redis-client", () => ({
-  getRedisClient: () => ({
-    get: vi.fn().mockResolvedValue(null), // No duplicate by default
-    set: vi.fn().mockResolvedValue("OK"),
-  }),
-}));
+// Mock Firestore dedup helpers
+vi.mock("@/lib/firebase/firestore", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/firebase/firestore")>();
+  return {
+    ...actual,
+    isEventProcessed: vi.fn().mockResolvedValue(false), // No duplicate by default
+    markEventProcessed: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 // Mock the logger
 vi.mock("@/lib/logger", () => ({
