@@ -7,14 +7,14 @@ https://nextjs.org/telemetry
 
 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
   Creating an optimized production build ...
-✓ Compiled successfully in 41s
+✓ Compiled successfully in 42s
   Running TypeScript ...
   Collecting page data using 15 workers ...
   Generating static pages using 15 workers (0/69) ...
   Generating static pages using 15 workers (17/69) 
   Generating static pages using 15 workers (34/69) 
   Generating static pages using 15 workers (51/69) 
-✓ Generating static pages using 15 workers (69/69) in 6.8s
+✓ Generating static pages using 15 workers (69/69) in 6.5s
   Finalizing page optimization ...
 
 Route (app)
