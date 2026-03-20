@@ -179,6 +179,18 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ─── /entitlements/{docId} ────────────────────────────────────────────────
+    //
+    // Server-side write only (Admin SDK). No direct client access.
+    // docId is either a Google sub (authenticated) or `stripe:{customerId}` (anonymous).
+    //
+    // All entitlement reads/writes go through API routes using the Admin SDK,
+    // which bypasses these rules. These rules block any direct client-SDK access.
+
+    match /entitlements/{docId} {
+      allow read, write: if false;
+    }
+
     // ─── Deny all other paths ──────────────────────────────────────────────────
 
     match /{document=**} {
