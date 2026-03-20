@@ -83,8 +83,8 @@ const TIMELINE_STEPS: TimelineStep[] = [
   {
     day: "Day 1",
     rune: "\u16A0",
-    title: "You Feed Me a Card",
-    desc: "Add your first card and I open my eyes. Every feature unlocks. Every tool sharpens. No setup ritual. No waiting. I am already running.",
+    title: "You Sign In. I Wake.",
+    desc: "Sign in with Google and I open my eyes. Every Karl feature unlocks. Every tool sharpens. Add your first card and the hunt begins. No setup ritual. No waiting.",
     milestone: false,
   },
   {
@@ -176,14 +176,14 @@ function HeroSection() {
           variants={fadeInUp}
           transition={{ duration: 0.5 }}
         >
-          I am Fenrir. Give me thirty days and I will guard every card in your wallet, every fee on your calendar, every deadline you&apos;ve forgotten. I ask nothing in return.
+          I am Fenrir. Sign in with Google and I will guard every card in your wallet, every fee on your calendar, every deadline you&apos;ve forgotten &mdash; free for 30 days.
         </motion.p>
         <motion.p
           className="font-body text-[15px] sm:text-base text-muted-foreground max-w-[560px] mx-auto mb-10 leading-[1.8]"
           variants={fadeInUp}
           transition={{ duration: 0.5 }}
         >
-          The moment you add your first card, I wake. I watch the fees. I count down the bonuses. I track the whole pack &mdash; your household, your spreadsheets, your graveyard of closed cards. All of it falls under my teeth.
+          The moment you sign in, I wake. I watch the fees. I count down the bonuses. I track the whole pack &mdash; your household, your spreadsheets, your graveyard of closed cards. All of it falls under my teeth.
         </motion.p>
         <motion.div
           className="flex flex-col sm:flex-row gap-4 justify-center"
@@ -191,7 +191,7 @@ function HeroSection() {
           transition={{ duration: 0.5 }}
         >
           <Link
-            href="/ledger"
+            href="/ledger/sign-in?returnTo=/ledger"
             className={[
               "inline-flex items-center justify-center px-10 py-4",
               "font-heading text-sm font-bold tracking-[0.12em] uppercase",
@@ -202,7 +202,7 @@ function HeroSection() {
             role="button"
             data-app-link
           >
-            Unleash the Wolf
+            Sign In with Google to Start
           </Link>
           <Link
             href="/features"
@@ -222,7 +222,7 @@ function HeroSection() {
           variants={fadeInUp}
           transition={{ duration: 0.5 }}
         >
-          No credit card. No chains. I hunt from day one.
+          Google sign-in required &mdash; no credit card, no chains, no commitment.
         </motion.p>
       </div>
     </motion.header>
@@ -708,14 +708,14 @@ function FinalCtaSection() {
             variants={fadeInUp}
             transition={{ duration: 0.4 }}
           >
-            One card is all it takes. I open my eyes. Every chain, every fee, every forgotten deadline &mdash; I find them all. Let me hunt.
+            Sign in with Google and I open my eyes. Every chain, every fee, every forgotten deadline &mdash; I find them all. Let me hunt for 30 days, free.
           </motion.p>
           <motion.div
             variants={fadeInUp}
             transition={{ duration: 0.4 }}
           >
             <Link
-              href="/ledger"
+              href="/ledger/sign-in?returnTo=/ledger"
               className={[
                 "inline-flex items-center justify-center px-10 py-4",
                 "font-heading text-sm font-bold tracking-[0.12em] uppercase",
@@ -726,7 +726,7 @@ function FinalCtaSection() {
               role="button"
               data-app-link
             >
-              Unleash the Wolf
+              Sign In with Google to Start
             </Link>
           </motion.div>
           <motion.p
@@ -734,7 +734,7 @@ function FinalCtaSection() {
             variants={fadeInUp}
             transition={{ duration: 0.4 }}
           >
-            No credit card · No chains · No commitment
+            Google sign-in required · No credit card · No commitment
           </motion.p>
         </motion.div>
       </div>

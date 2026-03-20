@@ -24,13 +24,13 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Free Trial — Fenrir Ledger | Unleash the Wolf",
   description:
-    "30-day free trial of Fenrir Ledger — the wolf-guarded credit card tracker. Track fees, bonuses, and deadlines. Full Karl access, no credit card required.",
+    "30-day free trial of Fenrir Ledger — the wolf-guarded credit card tracker. Sign in with Google to start. Track fees, bonuses, and deadlines with full Karl access.",
   keywords:
     "free credit card tracker trial, credit card churn tracker free trial, annual fee tracker, sign-up bonus tracker",
   openGraph: {
     title: "I Hunt For 30 Days. Free. — Fenrir Ledger",
     description:
-      "Give me thirty days. I will guard every card, every fee, every deadline. No credit card. No chains.",
+      "Sign in with Google and give me thirty days. I will guard every card, every fee, every deadline. No credit card. No chains.",
   },
 };
 
