@@ -27,7 +27,6 @@ import {
 } from "@/lib/firebase/firestore";
 import type { FirestoreStripeSubscription } from "@/lib/firebase/firestore-types";
 import type { StoredStripeEntitlement } from "@/lib/stripe/types";
-import { ACTIVE_STRIPE_STATUSES } from "@/lib/stripe/types";
 import { log } from "@/lib/logger";
 
 // ---------------------------------------------------------------------------
