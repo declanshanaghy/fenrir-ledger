@@ -47,8 +47,8 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Run: `cd <REPO_ROOT>/development/frontend && npx vitest run src/__tests__/<feature>/ --reporter=verbose`
 - Commit+push tests with implementation.
 - Loki will add E2E tests later — you own Vitest tests.
-- **NEVER write tests for monitor-ui (Odin's Throne).** `development/monitor-ui/` has NO test
-  infrastructure — no vitest, no testing-library, no __tests__/ directory. Tests are frontend-only.
+- **NEVER write tests for monitor-ui (Odin's Throne) or odins-spear.** `development/monitor-ui/` and
+  `development/odins-spear/` have no test infrastructure that agents should use. Tests are frontend-only.
 
 **Step 4 — Full verify: tsc + build + Vitest (each = separate Bash tool call + separate todo):**
   cd <REPO_ROOT>/development/frontend && pnpm run verify:tsc

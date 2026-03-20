@@ -65,10 +65,10 @@ Then create your todo list via TodoWrite. Every todo below is required:
   **Rule of thumb:** If the test breaks when someone edits a config file, copy,
   or infrastructure template — it should NOT exist. Only test code that RUNS.
 
-- **NEVER write tests for monitor-ui (Odin's Throne).** `development/monitor-ui/` has NO test
-  infrastructure — no vitest, no testing-library, no __tests__/ directory. All tests target
-  `development/frontend/` only. If the issue is a monitor-ui change, skip Vitest entirely and
-  validate via tsc + build only.
+- **NEVER write tests for monitor-ui (Odin's Throne) or odins-spear.** `development/monitor-ui/` and
+  `development/odins-spear/` have no test infrastructure that agents should use. All tests target
+  `development/frontend/` only. If the issue is a monitor-ui or odins-spear change, skip Vitest
+  entirely and validate via tsc + build only.
 - Follow ALL Test Standards from the agent definition — budgets, pyramid, locators, data isolation.
 - Use the handoff's "How to verify" and "Edge cases" to guide test design.
 - **Commit+push tests before running them:**
