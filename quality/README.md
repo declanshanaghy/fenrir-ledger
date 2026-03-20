@@ -31,7 +31,7 @@ See `quality/quality-report.md` for the latest bloat critique and per-suite deta
 - **After each feature:** Create/update E2E suite under `quality/test-suites/<feature>/`
 - **Max 8 tests per suite** — if you hit 15, split by sub-feature or move to integration tests
 - **Incremental commits** every 1-3 files changed: `wip: <what> — Ref #<issue>`
-- **Verify:** `bash quality/scripts/verify.sh --step tsc` + `--step build` after each chunk
+- **Verify:** `cd development/frontend && pnpm run verify:tsc` + `pnpm run verify:build` after each chunk
 
 ### Loki (Validation)
 
@@ -96,7 +96,7 @@ cd ../.. && node quality/scripts/coverage.mjs
 **Every PASS verdict requires:**
 - Code review clean
 - Build clean (`npm run build`)
-- TypeScript clean (`bash quality/scripts/verify.sh --step tsc`)
+- TypeScript clean (`cd development/frontend && pnpm run verify:tsc`)
 - GitHub Actions green
 - New Playwright tests written and passing (Loki-approved)
 

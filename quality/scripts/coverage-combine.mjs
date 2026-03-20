@@ -79,7 +79,7 @@ function main() {
 
   const available = SOURCES.filter((s) => existsSync(s.lcov));
   if (available.length === 0) {
-    log("ERROR: No coverage data found. Run verify.sh --coverage first.");
+    log("ERROR: No coverage data found. Run pnpm run verify:unit or verify:e2e with --coverage first.");
     log(`  Looked for: ${SOURCES.map((s) => s.lcov).join(", ")}`);
     process.exit(1);
   }

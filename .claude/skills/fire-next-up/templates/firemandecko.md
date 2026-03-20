@@ -37,7 +37,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Follow ALL Implementation Rules from the agent definition (aria-labels, mobile-friendly, logger, paths).
 - **After each logical chunk** (1-3 files changed):
   1. git add -A && git commit -m 'wip: <what> — issue:<NUMBER>' && git push origin <BRANCH>
-  2. cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc
+  2. cd <REPO_ROOT>/development/frontend && pnpm run verify:tsc
   3. If tsc fails: fix, commit+push, re-run tsc.
   4. Update your todos (mark chunk completed, start next chunk).
 
@@ -51,9 +51,9 @@ Then create your todo list via TodoWrite. Every todo below is required:
   infrastructure — no vitest, no testing-library, no __tests__/ directory. Tests are frontend-only.
 
 **Step 4 — Full verify: tsc + build + Vitest (each = separate Bash tool call + separate todo):**
-  cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc
-  cd <REPO_ROOT> && bash quality/scripts/verify.sh --step build
-  cd <REPO_ROOT>/development/frontend && npx vitest run --reporter=verbose
+  cd <REPO_ROOT>/development/frontend && pnpm run verify:tsc
+  cd <REPO_ROOT>/development/frontend && pnpm run verify:build
+  cd <REPO_ROOT>/development/frontend && pnpm run verify:unit
 On failure: fix ALL failing tests (yours AND pre-existing), commit+push, re-run.
 Do NOT proceed to handoff with ANY failing Vitest tests.
 Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.
