@@ -28,16 +28,21 @@ vi.mock("@/lib/firebase/firestore", async (importOriginal) => {
   };
 });
 
-// ── Mock Redis client (entitlement store) ────────────────────────────────────
+// ── Mock entitlement store (Firestore-backed) ────────────────────────────────
 
-const mockRedis = vi.hoisted(() => ({
-  get: vi.fn(),
-  set: vi.fn(),
-  del: vi.fn(),
-}));
+const mockSetStripeEntitlement = vi.hoisted(() => vi.fn());
+const mockSetAnonymousStripeEntitlement = vi.hoisted(() => vi.fn());
+const mockGetGoogleSubByStripeCustomerId = vi.hoisted(() => vi.fn());
+const mockGetAnonymousStripeEntitlement = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/kv/redis-client", () => ({
-  getRedisClient: () => mockRedis,
+vi.mock("@/lib/kv/entitlement-store", () => ({
+  getStripeEntitlement: vi.fn().mockResolvedValue(null),
+  setStripeEntitlement: (...args: unknown[]) => mockSetStripeEntitlement(...args),
+  getGoogleSubByStripeCustomerId: (...args: unknown[]) => mockGetGoogleSubByStripeCustomerId(...args),
+  setAnonymousStripeEntitlement: (...args: unknown[]) => mockSetAnonymousStripeEntitlement(...args),
+  getAnonymousStripeEntitlement: (...args: unknown[]) => mockGetAnonymousStripeEntitlement(...args),
+  isAnonymousStripeReverseIndex: (v: string) => v.startsWith("stripe:"),
+  extractStripeCustomerIdFromReverseIndex: (v: string) => v.slice("stripe:".length),
 }));
 
 // ── Mock Stripe SDK ───────────────────────────────────────────────────────────
@@ -105,8 +110,10 @@ describe("Webhook dedup: Firestore event ID propagation", () => {
     vi.clearAllMocks();
     mockIsEventProcessed.mockResolvedValue(false);
     mockMarkEventProcessed.mockResolvedValue(undefined);
-    mockRedis.get.mockResolvedValue(null);
-    mockRedis.set.mockResolvedValue("OK");
+    mockSetStripeEntitlement.mockResolvedValue(undefined);
+    mockSetAnonymousStripeEntitlement.mockResolvedValue(undefined);
+    mockGetGoogleSubByStripeCustomerId.mockResolvedValue(null);
+    mockGetAnonymousStripeEntitlement.mockResolvedValue(null);
   });
 
   it("calls markEventProcessed with the exact event ID after checkout.session.completed", async () => {
@@ -158,7 +165,7 @@ describe("Webhook dedup: Firestore event ID propagation", () => {
     const sub = makeSubscription();
     const event = makeStripeEvent("customer.subscription.updated", sub, eventId);
     vi.mocked(verifyWebhookSignature).mockReturnValue(event);
-    mockRedis.get.mockResolvedValueOnce(JSON.stringify("google-sub-abc")); // reverse index
+    mockGetGoogleSubByStripeCustomerId.mockResolvedValueOnce("google-sub-abc");
 
     await POST(makeRequest() as never);
 
@@ -170,9 +177,7 @@ describe("Webhook dedup: Firestore event ID propagation", () => {
     const sub = makeSubscription();
     const event = makeStripeEvent("customer.subscription.deleted", sub, eventId);
     vi.mocked(verifyWebhookSignature).mockReturnValue(event);
-    mockRedis.get
-      .mockResolvedValueOnce(JSON.stringify("google-sub-abc")) // reverse index
-      .mockResolvedValueOnce(null); // existing entitlement
+    mockGetGoogleSubByStripeCustomerId.mockResolvedValueOnce("google-sub-abc");
 
     await POST(makeRequest() as never);
 
@@ -200,7 +205,7 @@ describe("Webhook dedup: Firestore event ID propagation", () => {
     const event = makeStripeEvent("checkout.session.completed", session, "evt_err_777");
     vi.mocked(verifyWebhookSignature).mockReturnValue(event);
     mockStripeSubscriptionsRetrieve.mockResolvedValue(sub);
-    mockRedis.set.mockRejectedValueOnce(new Error("storage failure"));
+    mockSetStripeEntitlement.mockRejectedValueOnce(new Error("storage failure"));
 
     const res = await POST(makeRequest() as never);
     expect(res.status).toBe(500);
