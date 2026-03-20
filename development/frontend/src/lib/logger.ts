@@ -80,23 +80,6 @@ const MASKED_PATTERNS = [
 
 const isProd = process.env.NODE_ENV === "production";
 
-/**
- * Singleton logger instance for all server-side code.
- *
- * - Production: JSON output (one structured object per line, Vercel-friendly)
- * - Development: Pretty output (human-readable, coloured)
- */
-export const log = new Logger({
-  name: "fenrir-backend",
-  type: isProd ? "json" : "pretty",
-  minLevel: isProd ? 2 : 0,        // prod: debug+  dev: silly+
-  maskValuesOfKeys: MASKED_KEYS,
-  maskValuesOfKeysCaseInsensitive: true,
-  maskValuesRegEx: MASKED_PATTERNS,
-  maskPlaceholder: "[***]",
-  hideLogPositionForProduction: isProd,
-});
-
 const MAX_LOG_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_LOG_FILES = 5;
 
@@ -107,16 +90,77 @@ const MAX_LOG_FILES = 5;
 function rotateLogFile(logPath: string): void {
   if (!existsSync(logPath)) return;
   const base = logPath.replace(/\.jsonl$/, "");
-  // Delete oldest if at capacity
   const oldest = `${base}.${MAX_LOG_FILES}.jsonl`;
   if (existsSync(oldest)) unlinkSync(oldest);
-  // Shift .4→.5, .3→.4, .2→.3, .1→.2
   for (let i = MAX_LOG_FILES - 1; i >= 1; i--) {
     const src = `${base}.${i}.jsonl`;
     if (existsSync(src)) renameSync(src, `${base}.${i + 1}.jsonl`);
   }
-  // Active → .1
   renameSync(logPath, `${base}.1.jsonl`);
+}
+
+/**
+ * Extract a structured log entry from a tslog logObj.
+ * Shared by both the console transport and file transport so the format
+ * is identical everywhere — JSONL with the same field names.
+ */
+function formatLogEntry(logObj: Record<string, unknown>): Record<string, unknown> {
+  const meta = logObj["_meta"] as Record<string, unknown> | undefined;
+  const metaPath = meta?.["path"] as Record<string, unknown> | undefined;
+
+  const args: unknown[] = [];
+  for (let i = 0; i in logObj; i++) {
+    args.push(logObj[String(i)]);
+  }
+  const message = args.length === 1 && typeof args[0] === "string"
+    ? args[0]
+    : args.map(a => typeof a === "string" ? a : JSON.stringify(a)).join(" ");
+
+  const entry: Record<string, unknown> = {
+    datetime: meta?.["date"],
+    runtimeVersion: meta?.["runtimeVersion"],
+    hostname: meta?.["hostname"],
+    name: meta?.["name"],
+    logLevelId: meta?.["logLevelId"],
+    level: meta?.["logLevelName"],
+    message,
+    codeLocation: metaPath?.["fullFilePath"] ?? undefined,
+  };
+  if (args.length > 1 && typeof args[args.length - 1] === "object" && args[args.length - 1] !== null) {
+    entry["data"] = args[args.length - 1];
+  }
+  return entry;
+}
+
+/** Shared masking config used by all logger instances. */
+const MASK_CONFIG = {
+  maskValuesOfKeys: MASKED_KEYS,
+  maskValuesOfKeysCaseInsensitive: true,
+  maskValuesRegEx: MASKED_PATTERNS,
+  maskPlaceholder: "[***]",
+} as const;
+
+/**
+ * Singleton logger instance for all server-side code.
+ *
+ * Uses the same JSONL format as file loggers — `formatLogEntry` is the
+ * single source of truth for log structure. In production, output is
+ * structured JSON to stdout. In development, pretty output for readability.
+ */
+export const log = new Logger({
+  name: "fenrir-backend",
+  type: isProd ? "hidden" : "pretty",
+  minLevel: isProd ? 2 : 0,        // prod: debug+  dev: silly+
+  ...MASK_CONFIG,
+  hideLogPositionForProduction: isProd,
+});
+
+// In production, attach a transport that writes the same JSONL format as file loggers.
+if (isProd) {
+  log.attachTransport((logObj) => {
+    const entry = formatLogEntry(logObj as Record<string, unknown>);
+    process.stdout.write(JSON.stringify(entry) + "\n");
+  });
 }
 
 /**
@@ -127,6 +171,8 @@ function rotateLogFile(logPath: string): void {
  * Rotates the existing log at startup and when the file exceeds 10 MB.
  * Keeps up to 5 previous log files (foo.1.jsonl … foo.5.jsonl).
  *
+ * Uses the same `formatLogEntry` as the console logger — identical format.
+ *
  * Usage:
  *   import { createFileLogger } from "@fenrir/logger";
  *   const log = createFileLogger("odins-spear", "tmp/logs/odins-spear");
@@ -135,47 +181,19 @@ export function createFileLogger(name: string, filePath: string) {
   const normalised = filePath.replace(/\.(log|jsonl?)$/i, "") + ".jsonl";
   mkdirSync(dirname(normalised), { recursive: true });
 
-  // Rotate on startup so each run gets a fresh file
   rotateLogFile(normalised);
 
   let bytesWritten = 0;
 
   const fileLogger = new Logger({
     name,
-    type: "hidden",           // suppress console output
-    minLevel: 0,              // silly+ (everything)
-    maskValuesOfKeys: MASKED_KEYS,
-    maskValuesOfKeysCaseInsensitive: true,
-    maskValuesRegEx: MASKED_PATTERNS,
-    maskPlaceholder: "[***]",
+    type: "hidden",
+    minLevel: 0,
+    ...MASK_CONFIG,
   });
   fileLogger.attachTransport((logObj) => {
-    const meta = (logObj as Record<string, unknown>)["_meta"] as Record<string, unknown> | undefined;
-    const metaPath = meta?.["path"] as Record<string, unknown> | undefined;
+    const entry = formatLogEntry(logObj as Record<string, unknown>);
 
-    const args: unknown[] = [];
-    for (let i = 0; i in (logObj as Record<string, unknown>); i++) {
-      args.push((logObj as Record<string, unknown>)[String(i)]);
-    }
-    const message = args.length === 1 && typeof args[0] === "string"
-      ? args[0]
-      : args.map(a => typeof a === "string" ? a : JSON.stringify(a)).join(" ");
-
-    const entry: Record<string, unknown> = {
-      datetime: meta?.["date"],
-      runtimeVersion: meta?.["runtimeVersion"],
-      hostname: meta?.["hostname"],
-      name: meta?.["name"],
-      logLevelId: meta?.["logLevelId"],
-      level: meta?.["logLevelName"],
-      message,
-      codeLocation: metaPath?.["fullFilePath"] ?? undefined,
-    };
-    if (args.length > 1 && typeof args[args.length - 1] === "object" && args[args.length - 1] !== null) {
-      entry["data"] = args[args.length - 1];
-    }
-
-    // Size-based rotation
     if (bytesWritten >= MAX_LOG_SIZE) {
       rotateLogFile(normalised);
       bytesWritten = 0;
