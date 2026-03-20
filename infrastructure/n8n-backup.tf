@@ -26,7 +26,7 @@ variable "n8n_disk_name" {
 
 # --------------------------------------------------------------------------
 # Snapshot resource policy — daily at 04:00 UTC, 7-day retention
-# Offset from Redis (02:00) and PostgreSQL (03:00) to avoid concurrent I/O.
+# Offset from PostgreSQL (03:00) to avoid concurrent I/O.
 # --------------------------------------------------------------------------
 
 resource "google_compute_resource_policy" "n8n_daily_snapshot" {
@@ -38,7 +38,7 @@ resource "google_compute_resource_policy" "n8n_daily_snapshot" {
     schedule {
       daily_schedule {
         days_in_cycle = 1
-        start_time    = "04:00" # 04:00 UTC — offset from Redis (02:00) and PostgreSQL (03:00)
+        start_time    = "04:00" # 04:00 UTC — offset from PostgreSQL (03:00)
       }
     }
 

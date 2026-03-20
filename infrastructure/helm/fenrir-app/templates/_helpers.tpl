@@ -15,19 +15,3 @@ Selector labels for the app
 app.kubernetes.io/name: fenrir-app
 {{- end -}}
 
-{{/*
-Common labels for Redis
-*/}}
-{{- define "fenrir-app.redisLabels" -}}
-app.kubernetes.io/name: redis
-app.kubernetes.io/part-of: fenrir-ledger
-app.kubernetes.io/component: cache
-app.kubernetes.io/managed-by: helm
-{{- end -}}
-
-{{/*
-Selector labels for Redis
-*/}}
-{{- define "fenrir-app.redisSelectorLabels" -}}
-app.kubernetes.io/name: redis
-{{- end -}}

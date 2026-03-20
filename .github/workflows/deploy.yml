@@ -451,7 +451,6 @@ jobs:
             --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
             --from-literal=STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
             --from-literal=STRIPE_PRICE_ID="${{ secrets.STRIPE_PRICE_ID }}" \
-            --from-literal=REDIS_URL="redis://redis.fenrir-app.svc.cluster.local:6379" \
             --from-literal=NEXT_PUBLIC_APP_VERSION="${{ github.sha }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 

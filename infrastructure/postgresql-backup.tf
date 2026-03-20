@@ -24,7 +24,7 @@ variable "postgresql_disk_name" {
 
 # --------------------------------------------------------------------------
 # Snapshot resource policy — daily at 03:00 UTC, 7-day retention
-# Offset from Redis (02:00) to avoid concurrent snapshot I/O.
+# Off-peak scheduling to avoid concurrent snapshot I/O.
 # --------------------------------------------------------------------------
 
 resource "google_compute_resource_policy" "postgresql_daily_snapshot" {
@@ -36,7 +36,7 @@ resource "google_compute_resource_policy" "postgresql_daily_snapshot" {
     schedule {
       daily_schedule {
         days_in_cycle = 1
-        start_time    = "03:00" # 03:00 UTC — off-peak, offset from Redis at 02:00
+        start_time    = "03:00" # 03:00 UTC — off-peak
       }
     }
 

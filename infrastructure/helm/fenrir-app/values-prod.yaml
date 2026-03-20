@@ -29,7 +29,3 @@ ingress:
     cdn:
       enabled: true
 
-redis:
-  enabled: true
-  persistence:
-    storageClassName: "redis-retain"
