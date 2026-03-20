@@ -1,17 +1,20 @@
 /**
- * Redis trial store — server-side persistence for trial state.
+ * Firestore trial store — server-side persistence for trial state.
  *
- * Stores and retrieves trial records keyed by browser fingerprint.
+ * Stores and retrieves trial records in the Firestore `trials/` collection,
+ * keyed by browser fingerprint (document ID).
  *
- * Key format:  `trial:{fingerprint}`     → StoredTrial
- * Reverse idx: `trial:user:{userId}`     → fingerprint string
+ * Collection:  `trials/{fingerprint}`  → StoredTrial
+ * Reverse idx: query `trials` where `userId == userId` limit 1
  *
- * TTL: 60 days (covers the 30-day trial + 30 days of post-trial data retention).
+ * TTL: 60 days via `expiresAt` Firestore Timestamp field.
+ * TTL policy is configured on the `trials` collection in firestore.tf.
  *
  * @module kv/trial-store
  */
 
-import { getRedisClient } from "@/lib/kv/redis-client";
+import { Timestamp } from "@google-cloud/firestore";
+import { getFirestore } from "@/lib/firebase/firestore";
 import { log } from "@/lib/logger";
 import { TRIAL_DURATION_DAYS } from "@/lib/trial-utils";
 
@@ -19,7 +22,7 @@ import { TRIAL_DURATION_DAYS } from "@/lib/trial-utils";
 // Types
 // ---------------------------------------------------------------------------
 
-/** Shape of a trial record stored in Redis. */
+/** Shape of a trial record stored in Firestore (public interface). */
 export interface StoredTrial {
   /** ISO timestamp of when the trial started (first card creation). */
   startDate: string;
@@ -29,29 +32,31 @@ export interface StoredTrial {
   userId?: string;
 }
 
+/** Internal Firestore document shape — includes TTL field. */
+interface FirestoreTrialDoc extends StoredTrial {
+  /** Firestore Timestamp — TTL policy purges docs automatically after 60 days. */
+  expiresAt: Timestamp;
+}
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-/** 60 days in seconds — covers trial + post-trial data retention. */
-const TRIAL_TTL_SECONDS = 60 * 24 * 60 * 60;
+const TRIALS_COLLECTION = "trials";
+
+/** 60 days in milliseconds — covers trial + post-trial data retention. */
+const TRIAL_TTL_MS = 60 * 24 * 60 * 60 * 1000;
 
 // ---------------------------------------------------------------------------
-// Key builders
+// Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Builds the KV key for a trial record.
- *
- * @param fingerprint - 64-char SHA-256 hex fingerprint
- * @returns KV key string
- */
-function trialKey(fingerprint: string): string {
-  return `trial:${fingerprint}`;
+function trialDocRef(fingerprint: string) {
+  return getFirestore().doc(`${TRIALS_COLLECTION}/${fingerprint}`);
 }
 
-function userTrialKey(userId: string): string {
-  return `trial:user:${userId}`;
+function makeExpiresAt(): Timestamp {
+  return Timestamp.fromDate(new Date(Date.now() + TRIAL_TTL_MS));
 }
 
 // ---------------------------------------------------------------------------
@@ -67,14 +72,18 @@ function userTrialKey(userId: string): string {
 export async function getTrial(fingerprint: string): Promise<StoredTrial | null> {
   log.debug("getTrial called", { fingerprint });
   try {
-    const redis = getRedisClient();
-    const raw = await redis.get(trialKey(fingerprint));
-    const result: StoredTrial | null = raw ? JSON.parse(raw) : null;
-    log.debug("getTrial returning", {
-      fingerprint,
-      found: result !== null,
-      startDate: result?.startDate,
-    });
+    const snap = await trialDocRef(fingerprint).get();
+    if (!snap.exists) {
+      log.debug("getTrial returning", { fingerprint, found: false });
+      return null;
+    }
+    const doc = snap.data() as FirestoreTrialDoc;
+    const result: StoredTrial = {
+      startDate: doc.startDate,
+      ...(doc.convertedDate ? { convertedDate: doc.convertedDate } : {}),
+      ...(doc.userId ? { userId: doc.userId } : {}),
+    };
+    log.debug("getTrial returning", { fingerprint, found: true, startDate: result.startDate });
     return result;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -84,10 +93,10 @@ export async function getTrial(fingerprint: string): Promise<StoredTrial | null>
 }
 
 /**
- * Creates a new trial record in KV. If a record already exists for this
+ * Creates a new trial record in Firestore. If a record already exists for this
  * fingerprint, this is a no-op — the original start date is preserved.
- * If `userId` is provided, it is stored on the trial and a reverse-lookup
- * key `trial:user:{userId}` → fingerprint is written.
+ * If `userId` is provided, it is stored on the trial and allows reverse-lookup
+ * via a Firestore query on the `userId` field.
  *
  * @param fingerprint - 64-char SHA-256 hex fingerprint
  * @param userId - Google OAuth `sub` (optional; present when user is signed in)
@@ -95,8 +104,6 @@ export async function getTrial(fingerprint: string): Promise<StoredTrial | null>
  */
 export async function initTrial(fingerprint: string, userId?: string): Promise<StoredTrial> {
   log.debug("initTrial called", { fingerprint, hasUserId: !!userId });
-
-  const redis = getRedisClient();
 
   // Check for existing trial first (idempotent)
   const existing = await getTrial(fingerprint);
@@ -114,11 +121,13 @@ export async function initTrial(fingerprint: string, userId?: string): Promise<S
     ...(userId ? { userId } : {}),
   };
 
+  const doc: FirestoreTrialDoc = {
+    ...trial,
+    expiresAt: makeExpiresAt(),
+  };
+
   try {
-    await redis.set(trialKey(fingerprint), JSON.stringify(trial), "EX", TRIAL_TTL_SECONDS);
-    if (userId) {
-      await redis.set(userTrialKey(userId), fingerprint, "EX", TRIAL_TTL_SECONDS);
-    }
+    await trialDocRef(fingerprint).set(doc);
     log.debug("initTrial returning", { fingerprint, startDate: trial.startDate });
     return trial;
   } catch (err) {
@@ -130,8 +139,7 @@ export async function initTrial(fingerprint: string, userId?: string): Promise<S
 
 /**
  * Links an existing anonymous trial to a Google user ID.
- * Patches the trial record with `userId` and writes the reverse-lookup key.
- * No-op if the trial is already linked to this user.
+ * Patches the trial record with `userId`. No-op if already linked to this user.
  *
  * @param fingerprint - 64-char SHA-256 hex fingerprint
  * @param userId - Google OAuth `sub`
@@ -139,14 +147,11 @@ export async function initTrial(fingerprint: string, userId?: string): Promise<S
 export async function linkTrialToUser(fingerprint: string, userId: string): Promise<void> {
   log.debug("linkTrialToUser called", { fingerprint, userId });
   try {
-    const redis = getRedisClient();
     const existing = await getTrial(fingerprint);
     if (!existing) return;
     if (existing.userId === userId) return;
 
-    const updated: StoredTrial = { ...existing, userId };
-    await redis.set(trialKey(fingerprint), JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
-    await redis.set(userTrialKey(userId), fingerprint, "EX", TRIAL_TTL_SECONDS);
+    await trialDocRef(fingerprint).update({ userId });
     log.debug("linkTrialToUser success", { fingerprint, userId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -155,7 +160,7 @@ export async function linkTrialToUser(fingerprint: string, userId: string): Prom
 }
 
 /**
- * Looks up the trial fingerprint for a given Google user ID via the reverse index.
+ * Looks up the trial fingerprint for a given Google user ID via a Firestore query.
  *
  * @param userId - Google OAuth `sub`
  * @returns fingerprint string or null if not found
@@ -163,10 +168,19 @@ export async function linkTrialToUser(fingerprint: string, userId: string): Prom
 export async function getFingerprintByUserId(userId: string): Promise<string | null> {
   log.debug("getFingerprintByUserId called", { userId });
   try {
-    const redis = getRedisClient();
-    const fp = await redis.get(userTrialKey(userId));
-    log.debug("getFingerprintByUserId returning", { userId, found: !!fp });
-    return fp;
+    const db = getFirestore();
+    const snap = await db
+      .collection(TRIALS_COLLECTION)
+      .where("userId", "==", userId)
+      .limit(1)
+      .get();
+    if (snap.empty || !snap.docs[0]) {
+      log.debug("getFingerprintByUserId returning", { userId, found: false });
+      return null;
+    }
+    const fingerprint = snap.docs[0].id;
+    log.debug("getFingerprintByUserId returning", { userId, found: true });
+    return fingerprint;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("getFingerprintByUserId failed", { userId, error: message });
@@ -195,18 +209,10 @@ export async function markTrialConverted(fingerprint: string): Promise<boolean> 
     return true;
   }
 
-  const updated: StoredTrial = {
-    ...existing,
-    convertedDate: new Date().toISOString(),
-  };
-
   try {
-    const redis = getRedisClient();
-    await redis.set(trialKey(fingerprint), JSON.stringify(updated), "EX", TRIAL_TTL_SECONDS);
-    log.debug("markTrialConverted success", {
-      fingerprint,
-      convertedDate: updated.convertedDate,
-    });
+    const convertedDate = new Date().toISOString();
+    await trialDocRef(fingerprint).update({ convertedDate });
+    log.debug("markTrialConverted success", { fingerprint, convertedDate });
     return true;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

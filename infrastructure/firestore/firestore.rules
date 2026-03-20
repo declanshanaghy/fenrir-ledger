@@ -153,6 +153,20 @@ service cloud.firestore {
       }
     }
 
+    // ─── /trials/{fingerprint} ────────────────────────────────────────────────
+    //
+    // Trial records are written exclusively from the server (Admin SDK).
+    // Client SDKs have no access. These rules document intent and enforce
+    // it in the emulator / future client-SDK usage.
+    //
+    // TTL policy is configured on the `trials` collection via firestore.tf:
+    //   the `expiresAt` Timestamp field is used for auto-deletion after 60 days.
+
+    match /trials/{fingerprint} {
+      // No client-side read or write access. All access is via Admin SDK.
+      allow read, write: if false;
+    }
+
     // ─── Deny all other paths ──────────────────────────────────────────────────
 
     match /{document=**} {
