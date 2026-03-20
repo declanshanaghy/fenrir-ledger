@@ -20,8 +20,9 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "paths": {
-      "@fenrir/logger": ["../frontend/src/lib/logger.ts"],
-      "@fenrir/*":      ["../frontend/src/*"]
+      "@fenrir/logger":      ["./src/log.ts"],
+      "@fenrir/logger-base": ["../frontend/src/lib/logger.ts"],
+      "@fenrir/*":           ["../frontend/src/*"]
     },
     "outDir": "dist"
   },
