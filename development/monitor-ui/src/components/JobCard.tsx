@@ -13,6 +13,7 @@ interface Props {
   onTogglePin?: () => void;
   onCancelJob?: (sessionId: string) => void;
   displayMode?: DisplayMode;
+  isTerminating?: boolean;
 }
 
 function formatElapsed(startTime: number | null, completionTime: number | null): string {
@@ -32,7 +33,7 @@ function formatTimestamp(ts: number | null): string {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin, onCancelJob, displayMode = "normal" }: Props) {
+export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin, onCancelJob, displayMode = "normal", isTerminating = false }: Props) {
   const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
   const avatar = AGENT_AVATARS[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
@@ -47,7 +48,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
   if (displayMode === "compact") {
     return (
       <div
-        className={`card card--minimal${isActive ? " active" : ""}`}
+        className={`card card--minimal${isActive ? " active" : ""}${isTerminating ? " card--terminating" : ""}`}
         role="listitem"
         aria-label={`Job: Issue ${job.issue} – ${job.agentName} – ${sLabel}`}
         onClick={onClick}
@@ -76,6 +77,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
             {job.agentName?.[0] ?? "?"}
           </span>
         )}
+        {isTerminating && <span className="card-terminated-overlay" aria-label="Terminating">✕</span>}
       </div>
     );
   }
@@ -84,7 +86,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
 
   return (
     <div
-      className={`card${isActive ? " active" : ""}`}
+      className={`card${isActive ? " active" : ""}${isTerminating ? " card--terminating" : ""}`}
       role="listitem"
       aria-label={`Job: Issue ${job.issue} – ${displayTitle} – Step ${job.step} – ${job.agentName} – ${sLabel}`}
       onClick={onClick}
@@ -155,6 +157,11 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
             </span>
           )}
         </div>
+      )}
+      {isTerminating && (
+        <span className="card-terminated-overlay" aria-label="Terminating">
+          TERMINATED
+        </span>
       )}
     </div>
   );

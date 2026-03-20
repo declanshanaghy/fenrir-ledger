@@ -50,9 +50,10 @@ interface Props {
   onTogglePinSession?: (sessionId: string) => void;
   pinnedSessionIds?: Set<string>;
   onCancelJob?: (sessionId: string) => void;
+  terminatingSessionIds?: Set<string>;
 }
 
-export function Sidebar({ jobs, activeSessionId, quote, wsState, onSelectSession, onAvatarClick, onOdinClick, onTogglePinSession, pinnedSessionIds, onCancelJob }: Props) {
+export function Sidebar({ jobs, activeSessionId, quote, wsState, onSelectSession, onAvatarClick, onOdinClick, onTogglePinSession, pinnedSessionIds, onCancelJob, terminatingSessionIds }: Props) {
   const { theme, setTheme } = useTheme();
   const [width, setWidth] = useState<number>(loadWidth);
   const isDraggingRef = useRef(false);
@@ -164,6 +165,7 @@ export function Sidebar({ jobs, activeSessionId, quote, wsState, onSelectSession
               onTogglePin={onTogglePinSession ? () => onTogglePinSession(job.sessionId) : undefined}
               onCancelJob={onCancelJob}
               displayMode={displayMode}
+              isTerminating={terminatingSessionIds?.has(job.sessionId) ?? false}
             />
           ))
         )}
