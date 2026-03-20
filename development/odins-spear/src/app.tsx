@@ -40,6 +40,7 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
   const selection = useSelection();
 
   const [activeTab, setActiveTab] = useState(0);
+  const [jumpHouseholdId, setJumpHouseholdId] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<OverlayMode>({ kind: "none" });
   const [cmdStatus, setCmdStatusMsg] = useState<string | null>(null);
   const [connState, setConnState] = useState<ConnStatus>(initialConnStatus);
@@ -248,7 +249,7 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
       <UsersTab
         cmdStatus={cmdStatus}
         onInputCapture={setInputCaptured}
-        onJumpToHousehold={() => { setActiveTab(1); }}
+        onJumpToHousehold={(householdId) => { setJumpHouseholdId(householdId); setActiveTab(1); }}
         onCardsView={(householdId, filterUserId, ownerEmail) => {
           setCardDrilldown({ householdId, filterUserId, breadcrumbFrom: ownerEmail, ownerEmail });
         }}
@@ -262,6 +263,7 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
     mainContent = (
       <HouseholdsTab
         cmdStatus={cmdStatus}
+        initialHouseholdId={jumpHouseholdId}
         onCardsView={(householdId, householdName) => {
           setCardDrilldown({ householdId, filterUserId: null, breadcrumbFrom: householdName, ownerEmail: householdName });
         }}
