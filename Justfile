@@ -17,6 +17,12 @@ mod spear 'development/odins-spear'
 mod quality 'quality'
 mod infra 'infrastructure'
 
+# ── Install ────────────────────────────────────────────────────────────────
+
+# Install all workspace dependencies (pnpm)
+install:
+    cd "{{repo_root}}" && pnpm install
+
 # ── Dev Environment ─────────────────────────────────────────────────────────
 
 # Start local dev server (Next.js + Stripe webhooks)

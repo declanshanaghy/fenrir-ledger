@@ -6,6 +6,7 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 this_dir  := source_directory()
 repo_root := this_dir / "../.."
+tsx_run   := "NODE_NO_WARNINGS=1 npx tsx --import ./register.mjs"
 
 # ── Build & Verify ──────────────────────────────────────────────────────────
 
@@ -30,22 +31,13 @@ test-watch:
 
 # Start Odin's Spear in dev mode (tsx --watch)
 dev:
-    cd "{{this_dir}}" && npx tsx watch src/index.ts
+    cd "{{this_dir}}" && {{tsx_run}} watch src/index.ts
 
 # Run Odin's Spear
 run *args:
-    cd "{{this_dir}}" && npx tsx src/index.ts {{args}}
+    cd "{{this_dir}}" && {{tsx_run}} src/index.ts {{args}}
 
 # ── Utilities ───────────────────────────────────────────────────────────────
-
-# Install dependencies if node_modules is absent
-install:
-    #!/usr/bin/env bash
-    if [ ! -d "{{this_dir}}/node_modules" ]; then
-        cd "{{repo_root}}" && pnpm install --filter odins-spear
-    else
-        echo "node_modules already present"
-    fi
 
 # Clean build artifacts
 clean:
