@@ -9,12 +9,11 @@
  *  - Returns correct status for converted trial
  *  - Invalid fingerprint returns 400
  *  - Missing fingerprint returns 400
- *  - Unauthenticated request returns 401
  *  - Rate limit returns 429
- *  - Redis failure falls through gracefully
+ *  - Firestore failure falls through gracefully
  *
  * @see src/app/api/trial/status/route.ts
- * @ref Issue #944 (regression of #922)
+ * @ref Issue #944 (regression of #922), #1516
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -22,13 +21,25 @@ import { NextRequest } from "next/server";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockRedis = vi.hoisted(() => ({
+const mockDocRef = vi.hoisted(() => ({
   get: vi.fn(),
   set: vi.fn(),
+  update: vi.fn(),
 }));
 
-vi.mock("@/lib/kv/redis-client", () => ({
-  getRedisClient: () => mockRedis,
+const mockCollectionRef = vi.hoisted(() => ({
+  where: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockReturnThis(),
+  get: vi.fn(),
+}));
+
+const mockDb = vi.hoisted(() => ({
+  doc: vi.fn(() => mockDocRef),
+  collection: vi.fn(() => mockCollectionRef),
+}));
+
+vi.mock("@/lib/firebase/firestore", () => ({
+  getFirestore: () => mockDb,
 }));
 
 const mockRateLimit = vi.hoisted(() => vi.fn(() => ({ success: true, remaining: 29 })));
@@ -54,6 +65,14 @@ import { POST } from "@/app/api/trial/status/route";
 
 const VALID_FINGERPRINT = "a".repeat(64);
 
+/** Snapshot for a missing document. */
+const missingSnap = { exists: false, data: () => null };
+
+/** Snapshot for an existing trial. */
+function existingSnap(trial: Record<string, unknown>) {
+  return { exists: true, data: () => ({ ...trial, expiresAt: {} }) };
+}
+
 function makeRequest(body: Record<string, unknown> = {}, token = "valid-token"): NextRequest {
   return new NextRequest("http://localhost:9653/api/trial/status", {
     method: "POST",
@@ -72,13 +91,6 @@ function authOk() {
   mockRequireAuthz.mockResolvedValue({ ok: true, user: { sub: "google-sub-123" }, firestoreUser: MOCK_FIRESTORE_USER });
 }
 
-function authFail() {
-  mockRequireAuthz.mockResolvedValue({
-    ok: false,
-    response: new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 }),
-  });
-}
-
 /** Returns an ISO date N days ago. */
 function daysAgo(n: number): string {
   const d = new Date();
@@ -92,15 +104,20 @@ describe("POST /api/trial/status", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authOk();
+    // Default: doc not found
+    mockDocRef.get.mockResolvedValue(missingSnap);
+    mockDocRef.set.mockResolvedValue(undefined);
+    mockDocRef.update.mockResolvedValue(undefined);
+    mockCollectionRef.get.mockResolvedValue({ empty: true, docs: [] });
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Active trial — existing Redis record
+  // Active trial — existing Firestore record
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns active status with remaining days for a new trial", async () => {
     const startDate = daysAgo(0); // started today
-    mockRedis.get.mockResolvedValueOnce(JSON.stringify({ startDate }));
+    mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate }));
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
@@ -108,13 +125,13 @@ describe("POST /api/trial/status", () => {
     expect(res.status).toBe(200);
     expect(body.status).toBe("active");
     expect(body.remainingDays).toBe(30);
-    // Redis set should NOT be called — trial already exists
-    expect(mockRedis.set).not.toHaveBeenCalled();
+    // Firestore set should NOT be called — trial already exists
+    expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 
   it("returns correct remaining days based on start date", async () => {
     const startDate = daysAgo(5); // 5 days into 30-day trial
-    mockRedis.get.mockResolvedValueOnce(JSON.stringify({ startDate }));
+    mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate }));
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
@@ -129,12 +146,12 @@ describe("POST /api/trial/status", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("auto-initializes trial when none exists and returns active status", async () => {
-    // First GET (getTrial check) returns null — trial not found
-    mockRedis.get.mockResolvedValueOnce(null);
-    // Second GET (inside initTrial's getTrial check) also returns null
-    mockRedis.get.mockResolvedValueOnce(null);
-    // Redis SET succeeds for the new trial
-    mockRedis.set.mockResolvedValueOnce("OK");
+    // First GET (status route's getTrial) returns null
+    mockDocRef.get
+      .mockResolvedValueOnce(missingSnap) // getTrial in status route: not found
+      .mockResolvedValueOnce(missingSnap); // getTrial inside initTrial: also not found
+    // Firestore SET succeeds for the new trial
+    mockDocRef.set.mockResolvedValueOnce(undefined);
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
@@ -142,31 +159,25 @@ describe("POST /api/trial/status", () => {
     expect(res.status).toBe(200);
     expect(body.status).toBe("active");
     expect(body.remainingDays).toBe(30);
-    // Trial was written to Redis
-    expect(mockRedis.set).toHaveBeenCalledOnce();
-    expect(mockRedis.set).toHaveBeenCalledWith(
-      `trial:${VALID_FINGERPRINT}`,
-      expect.any(String),
-      "EX",
-      expect.any(Number),
-    );
+    // Trial was written to Firestore
+    expect(mockDocRef.set).toHaveBeenCalledOnce();
+    expect(mockDb.doc).toHaveBeenCalledWith(`trials/${VALID_FINGERPRINT}`);
   });
 
   it("auto-init is idempotent: if trial exists between getTrial and initTrial, preserves original", async () => {
     const originalStartDate = "2026-03-01T00:00:00.000Z";
     // getTrial returns null (missed by callback), but initTrial finds it (race condition resolved)
-    mockRedis.get.mockResolvedValueOnce(null); // getTrial in status route: not found
-    mockRedis.get.mockResolvedValueOnce( // getTrial inside initTrial: found (another init already ran)
-      JSON.stringify({ startDate: originalStartDate }),
-    );
+    mockDocRef.get
+      .mockResolvedValueOnce(missingSnap) // getTrial in status route: not found
+      .mockResolvedValueOnce(existingSnap({ startDate: originalStartDate })); // getTrial inside initTrial: found
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body.status).toBe("active");
-    // No new Redis write — initTrial returned the existing record
-    expect(mockRedis.set).not.toHaveBeenCalled();
+    // No new Firestore write — initTrial returned the existing record
+    expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -174,13 +185,11 @@ describe("POST /api/trial/status", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns active trial for a user with a canceled Stripe subscription", async () => {
-    // The status route does NOT check Stripe status — no entitlement lookup occurs here.
-    // A user with stripeStatus:canceled has no trial in Redis; the route auto-inits it.
-    mockRedis.get.mockResolvedValueOnce(null); // getTrial: not found
-    mockRedis.get.mockResolvedValueOnce(null); // getTrial inside initTrial: also not found
-    mockRedis.set.mockResolvedValueOnce("OK"); // initTrial writes new trial
+    mockDocRef.get
+      .mockResolvedValueOnce(missingSnap)
+      .mockResolvedValueOnce(missingSnap);
+    mockDocRef.set.mockResolvedValueOnce(undefined);
 
-    // Auth user simulates a canceled Stripe customer — no difference at this route level
     mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: { sub: "google-sub-canceled-stripe", email: "user@example.com" },
@@ -201,7 +210,7 @@ describe("POST /api/trial/status", () => {
 
   it("returns expired status for trial started 31 days ago", async () => {
     const startDate = daysAgo(31); // 31 days ago — beyond the 30-day trial
-    mockRedis.get.mockResolvedValueOnce(JSON.stringify({ startDate }));
+    mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate }));
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
@@ -218,7 +227,7 @@ describe("POST /api/trial/status", () => {
   it("returns converted status for a trial with a convertedDate", async () => {
     const startDate = daysAgo(10);
     const convertedDate = daysAgo(2);
-    mockRedis.get.mockResolvedValueOnce(JSON.stringify({ startDate, convertedDate }));
+    mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate, convertedDate }));
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
@@ -235,7 +244,7 @@ describe("POST /api/trial/status", () => {
 
   it("allows anonymous request (no Bearer token) with valid fingerprint", async () => {
     const startDate = daysAgo(0);
-    mockRedis.get.mockResolvedValueOnce(JSON.stringify({ startDate }));
+    mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate }));
 
     // Request with no Authorization header
     const req = new NextRequest("http://localhost:9653/api/trial/status", {
@@ -310,7 +319,7 @@ describe("POST /api/trial/status", () => {
 
   it("response includes Cache-Control: no-store", async () => {
     const startDate = daysAgo(0);
-    mockRedis.get.mockResolvedValueOnce(JSON.stringify({ startDate }));
+    mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate }));
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
 
@@ -318,12 +327,12 @@ describe("POST /api/trial/status", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Auto-init failure: Redis unavailable
+  // Auto-init failure: Firestore unavailable
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns none status when both getTrial and auto-init fail due to Redis error", async () => {
-    // getTrial fails — Redis error
-    mockRedis.get.mockRejectedValueOnce(new Error("Redis unavailable"));
+  it("returns none status when both getTrial and auto-init fail due to Firestore error", async () => {
+    // getTrial fails — Firestore error (caught, returns null)
+    mockDocRef.get.mockRejectedValueOnce(new Error("Firestore unavailable"));
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
