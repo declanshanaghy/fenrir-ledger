@@ -13,6 +13,7 @@ pack      := repo_root / ".claude" / "skills" / "fire-next-up" / "scripts" / "pa
 # ── Submodules ─────────────────────────────────────────────────────────────
 
 mod frontend 'development/frontend'
+mod spear 'development/odins-spear'
 mod quality 'quality'
 mod infra 'infrastructure'
 

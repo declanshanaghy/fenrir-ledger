@@ -1,0 +1,52 @@
+# Odin's Spear — Admin TUI for trials, entitlements, and Stripe
+# Invoked via: just spear <recipe>
+
+set dotenv-load := false
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+this_dir  := source_directory()
+repo_root := this_dir / "../.."
+
+# ── Build & Verify ──────────────────────────────────────────────────────────
+
+# Run TypeScript type checking
+tsc:
+    cd "{{this_dir}}" && npx tsc --noEmit
+
+# Run build (type check only — no bundler)
+build: tsc
+
+# ── Tests ───────────────────────────────────────────────────────────────────
+
+# Run unit tests (Vitest)
+test:
+    cd "{{this_dir}}" && npx vitest run
+
+# Run unit tests in watch mode
+test-watch:
+    cd "{{this_dir}}" && npx vitest
+
+# ── Run ─────────────────────────────────────────────────────────────────────
+
+# Start Odin's Spear in dev mode (tsx --watch)
+dev:
+    cd "{{this_dir}}" && npx tsx watch src/index.ts
+
+# Run Odin's Spear
+run *args:
+    cd "{{this_dir}}" && npx tsx src/index.ts {{args}}
+
+# ── Utilities ───────────────────────────────────────────────────────────────
+
+# Install dependencies if node_modules is absent
+install:
+    #!/usr/bin/env bash
+    if [ ! -d "{{this_dir}}/node_modules" ]; then
+        cd "{{repo_root}}" && pnpm install --filter odins-spear
+    else
+        echo "node_modules already present"
+    fi
+
+# Clean build artifacts
+clean:
+    rm -rf "{{this_dir}}/dist"
