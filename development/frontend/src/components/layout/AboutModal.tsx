@@ -64,14 +64,11 @@ function BuildInfo() {
   const buildDate = process.env.NEXT_PUBLIC_BUILD_DATE ?? "";
   const env = process.env.NEXT_PUBLIC_ENV ?? process.env.NODE_ENV ?? "unknown";
 
-  // Version: prefer semver-like string; fall back to first 7 chars of SHA
-  const rawVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
-  const version = rawVersion.match(/^\d+\.\d+/)
-    ? rawVersion
-    : rawVersion.slice(0, 7) || "0.1.0";
-
   const formattedDate = buildDate
-    ? new Date(buildDate).toUTCString().replace(" GMT", " UTC")
+    ? new Date(buildDate).toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
     : "unknown";
 
   return (
@@ -79,27 +76,33 @@ function BuildInfo() {
       className="mt-2 flex flex-col gap-0.5 text-[11px] font-mono text-muted-foreground/60 w-full"
       data-testid="build-info"
     >
-      <span>v{version}</span>
       {sha !== "unknown" ? (
-        <a
-          href={`${GITHUB_REPO}/commit/${rawCommit}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-gold transition-colors truncate"
-          title={rawCommit}
-          data-testid="build-info-commit"
-        >
-          {sha}
-        </a>
+        <span>
+          <span className="text-muted-foreground/40">commit </span>
+          <a
+            href={`${GITHUB_REPO}/commit/${rawCommit}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gold transition-colors"
+            title={rawCommit}
+            data-testid="build-info-commit"
+          >
+            {sha}
+          </a>
+        </span>
       ) : (
-        <span data-testid="build-info-commit">{sha}</span>
+        <span data-testid="build-info-commit">
+          <span className="text-muted-foreground/40">commit </span>{sha}
+        </span>
       )}
-      <span data-testid="build-info-date">{formattedDate}</span>
+      <span data-testid="build-info-date">
+        <span className="text-muted-foreground/40">built </span>{formattedDate}
+      </span>
       <span
         className="capitalize"
         data-testid="build-info-env"
       >
-        {env}
+        <span className="text-muted-foreground/40 normal-case">env </span>{env}
       </span>
     </div>
   );

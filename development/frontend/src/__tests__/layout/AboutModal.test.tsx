@@ -2,13 +2,13 @@
  * AboutModal.test.tsx
  *
  * Vitest suite for AboutModal build info section — Issue #1349.
- * Tests that build info (version, commit, build date, environment)
- * renders correctly in the left column.
+ * Tests that build info (commit, build date, environment)
+ * renders correctly in the left column with labels.
  *
  * Written by FiremanDecko, Principal Engineer.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AboutModal } from "@/components/layout/AboutModal";
 
@@ -63,6 +63,13 @@ describe("AboutModal — build info section", () => {
     expect(commitEl).toHaveTextContent("unknown");
   });
 
+  it("shows 'commit' label before SHA", () => {
+    process.env.NEXT_PUBLIC_APP_VERSION = "abcdef1234567890";
+    renderModal();
+    const commitEl = document.querySelector("[data-testid='build-info-commit']");
+    expect(commitEl?.closest("span")).toHaveTextContent("commit");
+  });
+
   it("truncates NEXT_PUBLIC_APP_VERSION to 7 chars for commit SHA", () => {
     process.env.NEXT_PUBLIC_APP_VERSION = "abcdef1234567890";
     renderModal();
@@ -85,17 +92,28 @@ describe("AboutModal — build info section", () => {
     expect(dateEl).toHaveTextContent("unknown");
   });
 
-  it("formats NEXT_PUBLIC_BUILD_DATE as UTC string", () => {
+  it("shows 'built' label before date", () => {
     process.env.NEXT_PUBLIC_BUILD_DATE = "2026-03-18T12:00:00.000Z";
     renderModal();
     const dateEl = document.querySelector("[data-testid='build-info-date']");
-    expect(dateEl).toHaveTextContent("UTC");
+    expect(dateEl).toHaveTextContent("built");
   });
 
-  it("shows environment from NEXT_PUBLIC_ENV", () => {
+  it("formats date in locale format (not UTC)", () => {
+    process.env.NEXT_PUBLIC_BUILD_DATE = "2026-03-18T12:00:00.000Z";
+    renderModal();
+    const dateEl = document.querySelector("[data-testid='build-info-date']");
+    // Should NOT contain "UTC" — uses toLocaleString for local timezone
+    expect(dateEl?.textContent).not.toContain("UTC");
+    // Should contain the year
+    expect(dateEl).toHaveTextContent("2026");
+  });
+
+  it("shows 'env' label before environment", () => {
     process.env.NEXT_PUBLIC_ENV = "staging";
     renderModal();
     const envEl = document.querySelector("[data-testid='build-info-env']");
+    expect(envEl).toHaveTextContent("env");
     expect(envEl).toHaveTextContent("staging");
   });
 
@@ -105,20 +123,6 @@ describe("AboutModal — build info section", () => {
     renderModal();
     const envEl = document.querySelector("[data-testid='build-info-env']");
     expect(envEl).toHaveTextContent("test");
-  });
-
-  it("renders version prefixed with 'v'", () => {
-    process.env.NEXT_PUBLIC_APP_VERSION = "1.2.3";
-    renderModal();
-    const buildInfo = document.querySelector("[data-testid='build-info']");
-    expect(buildInfo).toHaveTextContent("v1.2.3");
-  });
-
-  it("falls back to v0.1.0 when NEXT_PUBLIC_APP_VERSION is not set", () => {
-    delete process.env.NEXT_PUBLIC_APP_VERSION;
-    renderModal();
-    const buildInfo = document.querySelector("[data-testid='build-info']");
-    expect(buildInfo).toHaveTextContent("v0.1.0");
   });
 
   // ── Loki QA additions — gap coverage ─────────────────────────────────────
