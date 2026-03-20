@@ -73,14 +73,23 @@ Requires `genhtml` for the combined HTML report:
 brew install lcov   # macOS
 ```
 
-### Viewing reports
+### Viewing reports (MANDATORY post-run step)
+
+After the coverage script completes, **always** start a local HTTP server to serve
+the reports directory. The Vitest HTML test report is a Vue SPA that requires HTTP
+to load its data — `file://` URLs won't work.
 
 ```bash
-open quality/reports/coverage/vitest/index.html      # Unit
-open quality/reports/coverage/playwright/index.html  # E2E
-open quality/reports/coverage/combined/index.html    # Combined
-open quality/reports/quality-report.html              # Quality summary (primary)
+npx serve quality/reports -p 7463 &
+open http://localhost:7463/quality-report.html
 ```
+
+This serves ALL reports (coverage, test reports, quality report) from one URL.
+The server runs in the background on port 7463. Key URLs:
+- `http://localhost:7463/quality-report.html` — quality summary (primary)
+- `http://localhost:7463/coverage/index.html` — coverage index
+- `http://localhost:7463/test-report-vitest/` — Vitest test report
+- `http://localhost:7463/test-report-playwright/` — Playwright test report
 
 ### Quality report
 
