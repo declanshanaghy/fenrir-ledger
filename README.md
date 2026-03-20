@@ -210,6 +210,9 @@ graph LR
 - [Product README](product/README.md) — Index of all product artifacts owned by Freya
 - [Product Brief](product-brief.md) — The vision I have laid before the pack, the reason the wolf hunts
 - [Design Brief](product/product-design-brief.md) — My counsel to the forge-master, where strategy becomes structure
+- [Chronicles Design Brief](product/product-design-brief-agent-chronicles.md) — Norse ceremonial components for public-facing chronicles (shipped 2026-03-20)
+- [Mythology Map](product/mythology-map.md) — Norse cosmology mapped to every card state, team role, and UI feature
+- [Copywriting](product/copywriting.md) — The two-voice rule, kenning vocabulary, status badge copy, and Edda quotes
 - [Backlog](https://github.com/declanshanaghy/fenrir-ledger/issues) — The hunts I have ordered by urgency, tracked as GitHub Issues
 
 ---
@@ -222,6 +225,7 @@ graph LR
 - [Theme System](ux/theme-system.md) — The runes of color and shadow I have woven into the wolf's skin
 - [Wireframes](ux/wireframes.md) — Bones of every screen, drawn before steel is poured
 - [Interactions](ux/interactions.md) — How the wolf moves when touched, precise as tides beneath Mani's gaze
+- [UX Audit Report](ux/audit-report.md) — UX audit: ux/ design system vs current app (2026-03-12)
 
 ---
 
@@ -233,6 +237,7 @@ graph LR
 - [Development README](development/README.md) — Source code layout, setup guide, QA handoffs, and deploy scripts
 - [System Design](architecture/system-design.md) — The load-bearing bones of this hall, forged to outlast the age
 - [ADRs](architecture/adrs/) — Every decision struck in fire, recorded so none may undo them lightly
+- [Route Ownership](architecture/route-ownership.md) — Route placement table: all Next.js routes on GKE Autopilot
 - [Setup Guide](development/docs/setup-guide.md) — Full setup: prerequisites, GKE cluster, env vars, CI/CD
 
 ---
@@ -257,9 +262,9 @@ graph LR
 
 - [Quality README](quality/README.md) — Test architecture, E2E strategy, coverage metrics, QA standards
 - [Test Suites](quality/test-suites/) — Every trap I have laid to catch the careless and the overconfident
-- [Quality Report](quality/quality-report.md) — My verdict on what stands and what crumbles to ash
 - [Test Guidelines](quality/test-guidelines.md) — Pyramid rules, bloat detection, migration rules
 - [Issue Template](quality/issue-template.md) — Canonical defect schema, label taxonomy, and agent chain routing
+- **Quality Report** — Auto-generated (not committed): run `bash quality/scripts/loki-critique.sh` for a fresh verdict
 
 ---
 
