@@ -18,7 +18,6 @@ import type {
   FirestoreUser,
   FirestoreHousehold,
   FirestoreCard,
-  FirestoreEntitlement,
 } from "./firestore-types";
 import {
   FIRESTORE_PATHS,
@@ -457,8 +456,9 @@ export async function ensureSoloHousehold(
   }
 
   // First sign-in — create household + user atomically
+  // householdId = userId (Google sub) — predictable, tamper-proof
   const now = new Date().toISOString();
-  const householdId = crypto.randomUUID();
+  const householdId = userId;
 
   const household: FirestoreHousehold = {
     id: householdId,
@@ -489,46 +489,6 @@ export async function ensureSoloHousehold(
   await batch.commit();
 
   return { user, household, created: true };
-}
-
-// ─── Entitlement operations ───────────────────────────────────────────────────
-
-/**
- * Fetches an entitlement document by doc ID.
- * docId is either:
- *   - a Google sub for authenticated users
- *   - `stripe:{stripeCustomerId}` for anonymous users
- *
- * Returns null if the document does not exist.
- */
-export async function getEntitlement(
-  docId: string
-): Promise<FirestoreEntitlement | null> {
-  const db = getFirestore();
-  const snap = await db.doc(FIRESTORE_PATHS.entitlement(docId)).get();
-  if (!snap.exists) return null;
-  return snap.data() as FirestoreEntitlement;
-}
-
-/**
- * Creates or overwrites an entitlement document.
- * docId is either a Google sub or `stripe:{stripeCustomerId}`.
- */
-export async function setEntitlement(
-  docId: string,
-  entitlement: FirestoreEntitlement
-): Promise<void> {
-  const db = getFirestore();
-  await db.doc(FIRESTORE_PATHS.entitlement(docId)).set(entitlement);
-}
-
-/**
- * Deletes an entitlement document.
- * docId is either a Google sub or `stripe:{stripeCustomerId}`.
- */
-export async function deleteEntitlement(docId: string): Promise<void> {
-  const db = getFirestore();
-  await db.doc(FIRESTORE_PATHS.entitlement(docId)).delete();
 }
 
 /**

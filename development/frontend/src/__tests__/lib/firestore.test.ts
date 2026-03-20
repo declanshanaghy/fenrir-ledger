@@ -695,4 +695,118 @@ describe("ensureSoloHousehold", () => {
     // Max 3 — starts at 1
     expect(result.household.memberIds.length).toBeLessThanOrEqual(3);
   });
+
+  // ── Issue #1633: householdId = userId (Google sub) ──────────────────────────
+
+  it("household.id equals userId — householdId is Google sub, not random UUID", async () => {
+    const mockBatch = {
+      set: vi.fn(),
+      commit: vi.fn().mockResolvedValue(undefined),
+    };
+
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = {
+        doc: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue({ exists: false }), set: vi.fn() }),
+        batch: vi.fn().mockReturnValue(mockBatch),
+        collection: vi.fn(),
+      };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { ensureSoloHousehold, _resetFirestoreForTests } = await import(
+      "@/lib/firebase/firestore"
+    );
+    _resetFirestoreForTests();
+
+    const userId = "google-sub-abc123";
+    const result = await ensureSoloHousehold({
+      userId,
+      email: "user@example.com",
+      displayName: "Test User",
+    });
+
+    // Core AC: household document ID equals the userId (Google sub)
+    expect(result.household.id).toBe(userId);
+    expect(result.household.id).toBe(result.user.userId);
+  });
+
+  it("user.householdId equals userId — solo household is self-referential", async () => {
+    const mockBatch = {
+      set: vi.fn(),
+      commit: vi.fn().mockResolvedValue(undefined),
+    };
+
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = {
+        doc: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue({ exists: false }), set: vi.fn() }),
+        batch: vi.fn().mockReturnValue(mockBatch),
+        collection: vi.fn(),
+      };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { ensureSoloHousehold, _resetFirestoreForTests } = await import(
+      "@/lib/firebase/firestore"
+    );
+    _resetFirestoreForTests();
+
+    const userId = "google-sub-xyz789";
+    const result = await ensureSoloHousehold({
+      userId,
+      email: "another@example.com",
+      displayName: "Another User",
+    });
+
+    // User's householdId must equal their own userId for solo households
+    expect(result.user.householdId).toBe(userId);
+    expect(result.user.householdId).toBe(result.household.id);
+  });
+
+  it("household starts on free tier with no Stripe fields", async () => {
+    const mockBatch = {
+      set: vi.fn(),
+      commit: vi.fn().mockResolvedValue(undefined),
+    };
+
+    vi.doMock("@google-cloud/firestore", () => {
+      const mockInstance = {
+        doc: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue({ exists: false }), set: vi.fn() }),
+        batch: vi.fn().mockReturnValue(mockBatch),
+        collection: vi.fn(),
+      };
+      return { Firestore: class MockFirestore { constructor() { Object.assign(this, mockInstance); } } };
+    });
+
+    const { ensureSoloHousehold, _resetFirestoreForTests } = await import(
+      "@/lib/firebase/firestore"
+    );
+    _resetFirestoreForTests();
+
+    const result = await ensureSoloHousehold({
+      userId: "google-sub-new",
+      email: "new@example.com",
+      displayName: "New User",
+    });
+
+    // New households start free — Stripe fields not present
+    expect(result.household.tier).toBe("free");
+    expect(result.household.stripeCustomerId).toBeUndefined();
+    expect(result.household.stripeSubscriptionId).toBeUndefined();
+    expect(result.household.stripeStatus).toBeUndefined();
+  });
+});
+
+// ── Issue #1633: FIRESTORE_PATHS has no entitlement path ──────────────────────
+
+describe("FIRESTORE_PATHS — no entitlement path (issue #1633)", () => {
+  it("does not have an entitlement() method — /entitlements/ collection removed", () => {
+    // After schema v2, there is no separate /entitlements/ collection.
+    // The FIRESTORE_PATHS object must not expose an entitlement() helper.
+    expect((FIRESTORE_PATHS as Record<string, unknown>).entitlement).toBeUndefined();
+  });
+
+  it("has exactly the expected path builders: user, household, cards, card", () => {
+    const keys = Object.keys(FIRESTORE_PATHS).sort();
+    expect(keys).toEqual(["card", "cards", "household", "user"]);
+  });
 });

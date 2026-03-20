@@ -1,18 +1,14 @@
 /**
  * Firestore entitlement store -- server-side persistence for subscription entitlements.
  *
- * Stores and retrieves entitlement records in Firestore, keyed by Google user sub
- * (authenticated) or Stripe customer ID (anonymous).
+ * Stripe subscription state is stored directly on the household document at
+ * /households/{householdId}. Since householdId == userId for solo households,
+ * entitlements are retrieved by looking up the user's household.
  *
- * Document paths:
- *   - `entitlements/{googleSub}` → FirestoreEntitlement (authenticated users)
- *   - `entitlements/stripe:{stripeCustomerId}` → FirestoreEntitlement (anonymous Stripe users)
+ * No /entitlements/ collection. All billing state lives on the household.
  *
  * Reverse lookup (Stripe customer → Google sub):
  *   - Query `users` collection where `stripeCustomerId == customerId`
- *   - Falls back to checking the `entitlements/stripe:{customerId}` doc for anonymous users
- *
- * No TTL: subscription records are persistent (unlike trials).
  *
  * Firestore IS the authoritative billing source.
  * Stripe webhooks write here; `requireKarl` reads from here.
@@ -21,38 +17,19 @@
  */
 
 import {
-  getEntitlement,
-  setEntitlement,
-  deleteEntitlement,
+  getUser,
+  getHousehold,
   findUserByStripeCustomerId,
   setUserStripeCustomerId,
+  getFirestore,
 } from "@/lib/firebase/firestore";
-import type { FirestoreEntitlement } from "@/lib/firebase/firestore-types";
+import { FIRESTORE_PATHS } from "@/lib/firebase/firestore-types";
 import type { StoredStripeEntitlement } from "@/lib/stripe/types";
+import { ACTIVE_STRIPE_STATUSES } from "@/lib/stripe/types";
 import { log } from "@/lib/logger";
 
 // ---------------------------------------------------------------------------
-// Type bridge
-// ---------------------------------------------------------------------------
-
-/**
- * FirestoreEntitlement and StoredStripeEntitlement have the same shape.
- * This cast is safe — both represent the same billing record.
- */
-function toStoredEntitlement(
-  e: FirestoreEntitlement
-): StoredStripeEntitlement {
-  return e as unknown as StoredStripeEntitlement;
-}
-
-function toFirestoreEntitlement(
-  e: StoredStripeEntitlement
-): FirestoreEntitlement {
-  return e as unknown as FirestoreEntitlement;
-}
-
-// ---------------------------------------------------------------------------
-// Anonymous identity helpers (public API — unchanged contract)
+// Anonymous identity helpers (preserved for webhook backward-compatibility)
 // ---------------------------------------------------------------------------
 
 /**
@@ -79,24 +56,60 @@ export function extractStripeCustomerIdFromReverseIndex(reverseIndexValue: strin
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Converts household Stripe fields into a StoredStripeEntitlement record.
+ * Returns null if the household has no linked Stripe subscription.
+ */
+function householdToEntitlement(
+  household: Awaited<ReturnType<typeof getHousehold>>
+): StoredStripeEntitlement | null {
+  if (!household) return null;
+  if (!household.stripeCustomerId || !household.stripeSubscriptionId || !household.stripeStatus) {
+    return null;
+  }
+  const active = ACTIVE_STRIPE_STATUSES.has(household.stripeStatus);
+  return {
+    tier: household.tier === "karl" ? "karl" : "thrall",
+    active,
+    stripeCustomerId: household.stripeCustomerId,
+    stripeSubscriptionId: household.stripeSubscriptionId,
+    stripeStatus: household.stripeStatus,
+    cancelAtPeriodEnd: household.cancelAtPeriodEnd ?? false,
+    currentPeriodEnd: household.currentPeriodEnd,
+    linkedAt: household.stripeLinkedAt ?? household.createdAt,
+    checkedAt: household.stripeCheckedAt ?? household.updatedAt,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Authenticated user entitlement operations
 // ---------------------------------------------------------------------------
 
 /**
- * Retrieves a Stripe entitlement for an authenticated Google user.
+ * Retrieves the Stripe entitlement for an authenticated Google user by reading
+ * Stripe fields from their household document.
  *
  * @param googleSub - Google account immutable ID
- * @returns The stored entitlement or null if not found
+ * @returns The stored entitlement or null if not found / not subscribed
  */
 export async function getStripeEntitlement(
   googleSub: string,
 ): Promise<StoredStripeEntitlement | null> {
   log.debug("getStripeEntitlement called", { googleSub });
   try {
-    const doc = await getEntitlement(googleSub);
-    const result = doc ? toStoredEntitlement(doc) : null;
+    const user = await getUser(googleSub);
+    if (!user) {
+      log.debug("getStripeEntitlement: user not found", { googleSub });
+      return null;
+    }
+    const household = await getHousehold(user.householdId);
+    const result = householdToEntitlement(household);
     log.debug("getStripeEntitlement returning", {
       googleSub,
+      householdId: user.householdId,
       found: result !== null,
       tier: result?.tier,
       active: result?.active,
@@ -110,7 +123,7 @@ export async function getStripeEntitlement(
 }
 
 /**
- * Stores a Stripe entitlement record for an authenticated Google user.
+ * Stores Stripe subscription fields directly on the user's household document.
  * Also updates the user document with the Stripe customer ID for reverse lookup.
  *
  * @param googleSub - Google account immutable ID
@@ -127,8 +140,25 @@ export async function setStripeEntitlement(
     stripeCustomerId: entitlement.stripeCustomerId,
   });
   try {
-    // Write entitlement document
-    await setEntitlement(googleSub, toFirestoreEntitlement(entitlement));
+    const user = await getUser(googleSub);
+    if (!user) {
+      log.error("setStripeEntitlement: user not found — cannot write to household", { googleSub });
+      throw new Error(`User ${googleSub} not found — cannot write Stripe entitlement`);
+    }
+
+    const now = new Date().toISOString();
+    const db = getFirestore();
+    await db.doc(FIRESTORE_PATHS.household(user.householdId)).update({
+      stripeCustomerId: entitlement.stripeCustomerId,
+      stripeSubscriptionId: entitlement.stripeSubscriptionId,
+      stripeStatus: entitlement.stripeStatus,
+      tier: entitlement.tier === "karl" ? "karl" : "free",
+      cancelAtPeriodEnd: entitlement.cancelAtPeriodEnd ?? false,
+      currentPeriodEnd: entitlement.currentPeriodEnd ?? null,
+      stripeLinkedAt: entitlement.linkedAt,
+      stripeCheckedAt: now,
+      updatedAt: now,
+    });
 
     // Maintain reverse index: set stripeCustomerId on user document
     await setUserStripeCustomerId(googleSub, entitlement.stripeCustomerId);
@@ -142,14 +172,32 @@ export async function setStripeEntitlement(
 }
 
 /**
- * Deletes a Stripe entitlement record for an authenticated Google user.
+ * Clears Stripe subscription fields from the user's household document,
+ * reverting the household to the free tier.
  *
  * @param googleSub - Google account immutable ID
  */
 export async function deleteStripeEntitlement(googleSub: string): Promise<void> {
   log.debug("deleteStripeEntitlement called", { googleSub });
   try {
-    await deleteEntitlement(googleSub);
+    const user = await getUser(googleSub);
+    if (!user) {
+      log.debug("deleteStripeEntitlement: user not found — nothing to clear", { googleSub });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const db = getFirestore();
+    await db.doc(FIRESTORE_PATHS.household(user.householdId)).update({
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      stripeStatus: null,
+      tier: "free",
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: null,
+      updatedAt: now,
+    });
+
     log.debug("deleteStripeEntitlement returning", { googleSub, success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -159,47 +207,30 @@ export async function deleteStripeEntitlement(googleSub: string): Promise<void> 
 }
 
 // ---------------------------------------------------------------------------
-// Reverse lookup: Stripe customer → identity
+// Reverse lookup: Stripe customer → Google sub
 // ---------------------------------------------------------------------------
 
 /**
- * Looks up the identity for a Stripe customer ID.
+ * Looks up the Google sub for a given Stripe customer ID.
  *
- * Returns one of:
- *   - The Google sub string (authenticated user — found via users.stripeCustomerId query)
- *   - `"stripe:{stripeCustomerId}"` (anonymous user — entitlements/stripe:{id} doc exists)
- *   - null (unknown customer)
- *
- * Used by webhook handlers to map incoming Stripe events to our users.
+ * Queries the users collection by stripeCustomerId field.
+ * Returns the Google sub string, or null if not found.
  *
  * @param stripeCustomerId - Stripe customer ID from webhook payload
- * @returns Identity string or null
+ * @returns Google sub string or null
  */
 export async function getGoogleSubByStripeCustomerId(
   stripeCustomerId: string,
 ): Promise<string | null> {
   log.debug("getGoogleSubByStripeCustomerId called", { stripeCustomerId });
   try {
-    // 1. Query users collection by stripeCustomerId field (authenticated path)
     const user = await findUserByStripeCustomerId(stripeCustomerId);
     if (user) {
-      const googleSub = user.userId;
-      log.debug("getGoogleSubByStripeCustomerId returning (authenticated)", {
+      log.debug("getGoogleSubByStripeCustomerId returning", {
         stripeCustomerId,
         found: true,
       });
-      return googleSub;
-    }
-
-    // 2. Check if anonymous entitlement doc exists
-    const anonDocId = `stripe:${stripeCustomerId}`;
-    const anonDoc = await getEntitlement(anonDocId);
-    if (anonDoc) {
-      log.debug("getGoogleSubByStripeCustomerId returning (anonymous)", {
-        stripeCustomerId,
-        found: true,
-      });
-      return anonDocId;
+      return user.userId;
     }
 
     log.debug("getGoogleSubByStripeCustomerId returning", {
@@ -215,141 +246,34 @@ export async function getGoogleSubByStripeCustomerId(
 }
 
 // ---------------------------------------------------------------------------
-// Anonymous Stripe user operations
+// Anonymous Stripe user operations (no-op — requires authenticated sign-in)
 // ---------------------------------------------------------------------------
 
 /**
- * Retrieves a stored entitlement for an anonymous Stripe user
- * (keyed by `stripe:{stripeCustomerId}`).
+ * Anonymous Stripe subscriptions are no longer supported.
+ * Users must sign in with Google before subscribing.
+ * Kept for interface compatibility — always returns null.
  *
- * @param stripeCustomerId - Stripe customer ID (cus_xxx)
- * @returns The stored entitlement or null if not found
+ * @deprecated Anonymous subscriptions removed in schema v2 (issue #1633)
  */
 export async function getAnonymousStripeEntitlement(
-  stripeCustomerId: string,
+  _stripeCustomerId: string,
 ): Promise<StoredStripeEntitlement | null> {
-  log.debug("getAnonymousStripeEntitlement called", { stripeCustomerId });
-  try {
-    const doc = await getEntitlement(`stripe:${stripeCustomerId}`);
-    const result = doc ? toStoredEntitlement(doc) : null;
-    log.debug("getAnonymousStripeEntitlement returning", {
-      stripeCustomerId,
-      found: result !== null,
-      tier: result?.tier,
-      active: result?.active,
-    });
-    return result;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    log.error("getAnonymousStripeEntitlement failed", { stripeCustomerId, error: message });
-    return null;
-  }
+  return null;
 }
 
 /**
- * Stores an entitlement record for an anonymous Stripe user
- * (keyed by `stripe:{stripeCustomerId}`).
+ * Anonymous Stripe subscriptions are no longer supported.
+ * Users must sign in with Google before subscribing.
+ * Kept for interface compatibility — no-op.
  *
- * @param stripeCustomerId - Stripe customer ID (cus_xxx)
- * @param entitlement - The Stripe entitlement record to store
+ * @deprecated Anonymous subscriptions removed in schema v2 (issue #1633)
  */
 export async function setAnonymousStripeEntitlement(
-  stripeCustomerId: string,
-  entitlement: StoredStripeEntitlement,
+  _stripeCustomerId: string,
+  _entitlement: StoredStripeEntitlement,
 ): Promise<void> {
-  log.debug("setAnonymousStripeEntitlement called", {
-    stripeCustomerId,
-    tier: entitlement.tier,
-    active: entitlement.active,
+  log.debug("setAnonymousStripeEntitlement: no-op (anonymous subscriptions removed)", {
+    stripeCustomerId: _stripeCustomerId,
   });
-  try {
-    await setEntitlement(`stripe:${stripeCustomerId}`, toFirestoreEntitlement(entitlement));
-    log.debug("setAnonymousStripeEntitlement returning", { stripeCustomerId, success: true });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    log.error("setAnonymousStripeEntitlement failed", { stripeCustomerId, error: message });
-    throw err;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Stripe entitlement migration (anonymous → authenticated)
-// ---------------------------------------------------------------------------
-
-/**
- * Migrates an anonymous Stripe entitlement to an authenticated (Google-keyed) entitlement.
- *
- * Steps:
- *   1. Check if `entitlements/{googleSub}` already exists (idempotent)
- *   2. Read from `entitlements/stripe:{stripeCustomerId}`
- *   3. Copy to `entitlements/{googleSub}`
- *   4. Set `stripeCustomerId` on `users/{googleSub}` for reverse lookup
- *   5. Delete `entitlements/stripe:{stripeCustomerId}`
- *
- * Idempotent: if the Google-keyed entry already exists, returns success.
- *
- * @param stripeCustomerId - Stripe customer ID from the anonymous flow
- * @param googleSub - Google account immutable ID to migrate to
- * @returns Object indicating whether migration occurred and the entitlement details
- */
-export async function migrateStripeEntitlement(
-  stripeCustomerId: string,
-  googleSub: string,
-): Promise<{ migrated: boolean; tier?: string; active?: boolean; reason?: string }> {
-  log.debug("migrateStripeEntitlement called", { stripeCustomerId, googleSub });
-
-  try {
-    // 1. Check if Google-keyed entry already exists (idempotent)
-    const existing = await getEntitlement(googleSub);
-    if (existing) {
-      log.debug("migrateStripeEntitlement returning", {
-        migrated: true,
-        reason: "already_migrated",
-        tier: existing.tier,
-        active: existing.active,
-      });
-      return {
-        migrated: true,
-        tier: existing.tier,
-        active: existing.active,
-      };
-    }
-
-    // 2. Read the anonymous entitlement
-    const anonDoc = await getEntitlement(`stripe:${stripeCustomerId}`);
-    if (!anonDoc) {
-      log.debug("migrateStripeEntitlement returning", {
-        migrated: false,
-        reason: "not_found",
-      });
-      return { migrated: false, reason: "not_found" };
-    }
-
-    // 3. Copy to Google-keyed entry
-    await setEntitlement(googleSub, anonDoc);
-
-    // 4. Set stripeCustomerId on user document for future reverse lookups
-    await setUserStripeCustomerId(googleSub, stripeCustomerId);
-
-    // 5. Delete the anonymous doc
-    await deleteEntitlement(`stripe:${stripeCustomerId}`);
-
-    log.debug("migrateStripeEntitlement returning", {
-      migrated: true,
-      stripeCustomerId,
-      googleSub,
-      tier: anonDoc.tier,
-      active: anonDoc.active,
-    });
-
-    return {
-      migrated: true,
-      tier: anonDoc.tier,
-      active: anonDoc.active,
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    log.error("migrateStripeEntitlement failed", { stripeCustomerId, googleSub, error: message });
-    throw err;
-  }
 }

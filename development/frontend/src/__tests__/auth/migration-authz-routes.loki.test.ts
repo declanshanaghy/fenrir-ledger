@@ -71,7 +71,6 @@ const mockSetStripeEntitlement = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/kv/entitlement-store", () => ({
   getStripeEntitlement: mockGetStripeEntitlement,
   setStripeEntitlement: mockSetStripeEntitlement,
-  migrateStripeEntitlement: vi.fn(),
 }));
 
 const mockStripe = vi.hoisted(() => ({

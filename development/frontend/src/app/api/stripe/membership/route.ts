@@ -6,12 +6,12 @@
  * Behind requireAuth (ADR-008).
  *
  * Logic:
- *   1. Look up cached entitlement in Vercel KV (keyed by Google sub)
- *   2. Return cached data (Stripe webhooks keep it fresh)
- *   3. If no entitlement exists, return thrall tier (not subscribed)
+ *   1. Look up Stripe fields from user's household document in Firestore
+ *   2. Return subscription data (Stripe webhooks keep it fresh)
+ *   3. If no subscription exists, return thrall tier (not subscribed)
  *
- * Stripe webhooks proactively update KV on subscription changes.
- * The cached state is authoritative -- no need for live re-checks.
+ * Stripe webhooks proactively update the household on subscription changes.
+ * The household state is authoritative -- no need for live re-checks.
  *
  * Response: { tier, active, platform: "stripe", checkedAt, customerId?, linkedAt? }
  *
@@ -20,7 +20,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthz } from "@/lib/auth/authz";
-import { getStripeEntitlement, setStripeEntitlement, migrateStripeEntitlement } from "@/lib/kv/entitlement-store";
+import { getStripeEntitlement, setStripeEntitlement } from "@/lib/kv/entitlement-store";
 import { stripe } from "@/lib/stripe/api";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
@@ -56,48 +56,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const googleSub = authz.user.sub;
 
-  // Fetch cached entitlement from Vercel KV
-  let cached = await getStripeEntitlement(googleSub);
+  // Fetch entitlement from household doc
+  const cached = await getStripeEntitlement(googleSub);
 
-  // If no entitlement found, attempt to migrate an anonymous Stripe entitlement
-  // using the checkout session_id from the success redirect
-  if (!cached) {
-    const sessionId = request.nextUrl.searchParams.get("session_id");
-    if (sessionId) {
-      log.debug("GET /api/stripe/membership: no entitlement found, attempting migration", {
-        googleSub,
-        sessionId,
-      });
-      try {
-        const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId);
-        const customerId = typeof checkoutSession.customer === "string"
-          ? checkoutSession.customer
-          : checkoutSession.customer?.id;
-
-        if (customerId) {
-          const result = await migrateStripeEntitlement(customerId, googleSub);
-          log.debug("GET /api/stripe/membership: migration result", {
-            googleSub,
-            customerId,
-            ...result,
-          });
-          if (result.migrated) {
-            // Re-fetch after migration
-            cached = await getStripeEntitlement(googleSub);
-          }
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        log.debug("GET /api/stripe/membership: migration attempt failed", {
-          googleSub,
-          sessionId,
-          error: message,
-        });
-      }
-    }
-  }
-
-  // If still no entitlement exists, user has not subscribed via Stripe
+  // If no subscription exists, user has not subscribed via Stripe
   if (!cached) {
     const response: StripeMembershipResponse = {
       tier: "thrall",
@@ -131,7 +93,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           ? new Date(sub.items.data[0].current_period_end * 1000).toISOString()
           : new Date().toISOString();
 
-      // Update KV cache with the new fields
+      // Update household with the new fields
       await setStripeEntitlement(googleSub, {
         ...cached,
         cancelAtPeriodEnd,
