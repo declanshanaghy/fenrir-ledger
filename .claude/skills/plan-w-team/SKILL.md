@@ -179,22 +179,74 @@ and auto-dispatch prompt for bugs.
 gh issue comment <N> --body "Blocks #M — <one-line summary of dependent issue>"
 ```
 
-### Step 5b — Write Epic Graph File
+### Step 5b — Create Epic Tracker Issue
 
-After all issues are created and their numbers are known, write the epic dependency
-graph to `tmp/epics/<root-issue-number>.yml`.
+After all work issues are filed, create a **tracker issue** that serves as the epic's
+umbrella. This issue tracks the dependency graph, links all child issues, and
+auto-closes when every child issue is closed (via a GitHub Actions workflow).
 
-The **root issue** is the foundational story — wave 0, the first issue that everything
-else depends on (directly or transitively). If there is no single root, use the lowest
-issue number.
+**Title format:** `[Epic] <epic title>`
+
+**Body template:**
+
+```markdown
+## Epic: <title>
+
+<one-sentence description>
+
+### Dependency Graph
+
+| Wave | Issue | Title | Depends On |
+|------|-------|-------|------------|
+| 0 | #A | ... | — |
+| 0 | #B | ... | — |
+| 1 | #C | ... | #A, #B |
+| 2 | #D | ... | #C |
+
+### Tracked Issues
+
+<!-- GitHub renders these as a checklist that fills in as issues close -->
+- [ ] #A
+- [ ] #B
+- [ ] #C
+- [ ] #D
+
+This issue will close automatically when all tracked issues above are closed.
+
+---
+Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+**Labels:** `enhancement`, same priority as the highest-priority child issue.
+
+**Create via `/file-issue`**, then add to board as `In Progress` (it stays open for
+the duration of the epic):
+
+```bash
+SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts"
+node "$SCRIPT_DIR/pack-status.mjs" --move <TRACKER_NUMBER> in-progress
+```
+
+The tracker issue number becomes the **epic number** used in the graph file and
+`/epic-manager`. Do NOT include the tracker issue itself in the `stories:` list of
+the epic graph — it is metadata, not a work item.
+
+### Step 5c — Write Epic Graph File
+
+After all issues are created and the tracker is filed, write the epic dependency
+graph to `tmp/epics/<tracker-issue-number>.yml`.
+
+The **tracker issue** number is used as the epic number (NOT the lowest work issue).
+This keeps the epic graph, `/epic-manager`, and the tracker issue aligned on one number.
 
 **Schema:**
 
 ```yaml
 epic:
-  number: <root-issue-number>
+  number: <tracker-issue-number>
   title: "<epic title>"
   description: "<one-sentence description>"
+  tracker_issue: <tracker-issue-number>
 
 stories:
   - number: <N>
@@ -230,8 +282,8 @@ node -e "import('js-yaml').then(y => { y.default.load(require('fs').readFileSync
 
 Commit the file on `main` so agents can find it:
 ```bash
-git add -f tmp/epics/<N>.yml
-git commit -m "chore: add epic graph for #<N> — <title>
+git add -f tmp/epics/<TRACKER>.yml
+git commit -m "chore: add epic graph for #<TRACKER> — <title>
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 git push
@@ -239,6 +291,88 @@ git push
 
 > **Note:** `tmp/` is gitignored but `tmp/epics/` is explicitly unblocked via
 > `!tmp/epics/` in `.gitignore`. Use `git add -f` if needed.
+
+### Step 5d — Set Up Auto-Close Workflow
+
+Check if `.github/workflows/close-epic-tracker.yml` already exists. If not, create it.
+This workflow closes the tracker issue when all its linked child issues are closed.
+
+```yaml
+# .github/workflows/close-epic-tracker.yml
+name: Close Epic Tracker
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  check-epic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check and close parent epic tracker
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Find open issues with [Epic] prefix that reference the closed issue
+            const closedNumber = context.payload.issue.number;
+            const { data: epics } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'enhancement',
+              per_page: 100,
+            });
+
+            for (const epic of epics) {
+              if (!epic.title.startsWith('[Epic]')) continue;
+              if (!epic.body) continue;
+
+              // Extract all issue numbers from "- [ ] #N" and "- [x] #N" lines
+              const checklistPattern = /^- \[[ x]\] #(\d+)/gm;
+              const issueNumbers = [];
+              let match;
+              while ((match = checklistPattern.exec(epic.body)) !== null) {
+                issueNumbers.push(parseInt(match[1], 10));
+              }
+
+              if (issueNumbers.length === 0) continue;
+              if (!issueNumbers.includes(closedNumber)) continue;
+
+              // Check if ALL referenced issues are now closed
+              let allClosed = true;
+              for (const num of issueNumbers) {
+                const { data: issue } = await github.rest.issues.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: num,
+                });
+                if (issue.state !== 'closed') {
+                  allClosed = false;
+                  break;
+                }
+              }
+
+              if (allClosed) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: epic.number,
+                  state: 'closed',
+                  state_reason: 'completed',
+                });
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: epic.number,
+                  body: `All tracked issues are closed. Epic complete! 🐺`,
+                });
+                console.log(`Closed epic tracker #${epic.number}`);
+              }
+            }
+```
+
+This workflow is **created once** and covers all future epics. If the file already
+exists, skip this step entirely.
 
 ### Step 6 — Report
 
@@ -248,8 +382,9 @@ After all issues are created and the epic file is written, report:
 ## Plan Filed
 
 **Topic:** <brief description>
-**Issues created:** N
-**Epic graph:** tmp/epics/<root-N>.yml
+**Tracker issue:** #T — [Epic] <title>
+**Issues created:** N (+ 1 tracker)
+**Epic graph:** tmp/epics/<T>.yml
 
 | # | Title | Type | Priority | Chain | Wave | Depends On |
 |---|-------|------|----------|-------|------|------------|
@@ -257,10 +392,11 @@ After all issues are created and the epic file is written, report:
 | #M | ... | ux | high | Luna -> Decko -> Loki | 1 | #N |
 
 **Wireframes:** <path or "none">
+**Auto-close:** When all tracked issues close, #T closes automatically.
 
 To start execution:
-- `/epic-manager <root-N>` — dashboard + next dispatch recommendation
-- `/epic-manager <root-N> --dispatch` — dashboard + ready dispatch commands
+- `/epic-manager <T>` — dashboard + next dispatch recommendation
+- `/epic-manager <T> --dispatch` — dashboard + ready dispatch commands
 - `/fire-next-up` — pick the top unblocked issue from the board
 ```
 
