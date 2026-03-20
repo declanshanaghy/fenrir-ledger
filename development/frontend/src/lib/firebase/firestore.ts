@@ -18,6 +18,7 @@ import type {
   FirestoreUser,
   FirestoreHousehold,
   FirestoreCard,
+  FirestoreStripeSubscription,
 } from "./firestore-types";
 import {
   FIRESTORE_PATHS,
@@ -467,7 +468,6 @@ export async function ensureSoloHousehold(
     memberIds: [userId],
     inviteCode: generateInviteCode(),
     inviteCodeExpiresAt: generateInviteCodeExpiry(),
-    tier: "free",
     createdAt: now,
     updatedAt: now,
   };
@@ -523,4 +523,54 @@ export async function setUserStripeCustomerId(
 ): Promise<void> {
   const db = getFirestore();
   await db.doc(FIRESTORE_PATHS.user(userId)).update({ stripeCustomerId });
+}
+
+// ─── Stripe subcollection operations ──────────────────────────────────────────
+
+/**
+ * Fetches the Stripe subscription document for a household.
+ * Stored at /households/{householdId}/stripe/subscription.
+ * Returns null if no Stripe subscription has ever been linked.
+ *
+ * @param householdId - The household document ID
+ */
+export async function getStripeSubscription(
+  householdId: string
+): Promise<FirestoreStripeSubscription | null> {
+  const db = getFirestore();
+  const snap = await db
+    .doc(FIRESTORE_PATHS.stripeSubscription(householdId))
+    .get();
+  if (!snap.exists) return null;
+  return snap.data() as FirestoreStripeSubscription;
+}
+
+/**
+ * Creates or overwrites the Stripe subscription document for a household.
+ * Stored at /households/{householdId}/stripe/subscription.
+ * Called by webhook handlers on subscription changes.
+ *
+ * @param householdId - The household document ID
+ * @param data - The Stripe subscription document to write
+ */
+export async function setStripeSubscription(
+  householdId: string,
+  data: FirestoreStripeSubscription
+): Promise<void> {
+  const db = getFirestore();
+  await db.doc(FIRESTORE_PATHS.stripeSubscription(householdId)).set(data);
+}
+
+/**
+ * Deletes the Stripe subscription document for a household.
+ * Stored at /households/{householdId}/stripe/subscription.
+ * Called when a household's Stripe entitlement is fully cleared.
+ *
+ * @param householdId - The household document ID
+ */
+export async function deleteStripeSubscription(
+  householdId: string
+): Promise<void> {
+  const db = getFirestore();
+  await db.doc(FIRESTORE_PATHS.stripeSubscription(householdId)).delete();
 }

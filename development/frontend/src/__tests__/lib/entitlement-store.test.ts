@@ -1,31 +1,31 @@
 /**
- * Unit tests for kv/entitlement-store.ts — household-based Stripe entitlement operations.
+ * Unit tests for kv/entitlement-store.ts — stripe subcollection-based Stripe entitlement operations.
  *
  * Mocks @/lib/firebase/firestore helpers to test all get/set/delete paths.
- * Stripe state is now stored on the household document, not in a separate
- * /entitlements/ collection.
+ * Stripe state is now stored at /households/{id}/stripe/subscription (issue #1648),
+ * not directly on the household document.
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { StoredStripeEntitlement } from "@/lib/stripe/types";
-import type { FirestoreUser, FirestoreHousehold } from "@/lib/firebase/firestore-types";
+import type { FirestoreUser, FirestoreStripeSubscription } from "@/lib/firebase/firestore-types";
 
 // ── Mock Firestore helpers ────────────────────────────────────────────────
 
 const mockGetUser = vi.fn();
-const mockGetHousehold = vi.fn();
 const mockFindUserByStripeCustomerId = vi.fn();
 const mockSetUserStripeCustomerId = vi.fn();
-const mockUpdate = vi.fn().mockResolvedValue(undefined);
-const mockDoc = vi.fn().mockReturnValue({ update: mockUpdate });
-const mockGetFirestore = vi.fn().mockReturnValue({ doc: mockDoc });
+const mockGetStripeSubscription = vi.fn();
+const mockSetStripeSubscription = vi.fn();
+const mockDeleteStripeSubscription = vi.fn();
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getUser: (...args: unknown[]) => mockGetUser(...args),
-  getHousehold: (...args: unknown[]) => mockGetHousehold(...args),
   findUserByStripeCustomerId: (...args: unknown[]) => mockFindUserByStripeCustomerId(...args),
   setUserStripeCustomerId: (...args: unknown[]) => mockSetUserStripeCustomerId(...args),
-  getFirestore: () => mockGetFirestore(),
+  getStripeSubscription: (...args: unknown[]) => mockGetStripeSubscription(...args),
+  setStripeSubscription: (...args: unknown[]) => mockSetStripeSubscription(...args),
+  deleteStripeSubscription: (...args: unknown[]) => mockDeleteStripeSubscription(...args),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -81,22 +81,18 @@ function makeFakeUser(overrides: Partial<FirestoreUser> = {}): FirestoreUser {
   };
 }
 
-function makeFakeHousehold(overrides: Partial<FirestoreHousehold> = {}): FirestoreHousehold {
+function makeFakeStripeDoc(
+  overrides: Partial<FirestoreStripeSubscription> = {}
+): FirestoreStripeSubscription {
   return {
-    id: HOUSEHOLD_ID,
-    name: "Test Household",
-    ownerId: GOOGLE_SUB,
-    memberIds: [GOOGLE_SUB],
-    inviteCode: "ABCDEF",
-    inviteCodeExpiresAt: "2026-01-01T00:00:00.000Z",
-    tier: "karl",
     stripeCustomerId: STRIPE_CUSTOMER_ID,
     stripeSubscriptionId: STRIPE_SUBSCRIPTION_ID,
     stripeStatus: "active",
-    stripeLinkedAt: "2025-01-01T00:00:00.000Z",
-    stripeCheckedAt: "2025-01-01T00:00:00.000Z",
-    createdAt: "2025-01-01T00:00:00.000Z",
-    updatedAt: "2025-01-01T00:00:00.000Z",
+    tier: "karl",
+    active: true,
+    cancelAtPeriodEnd: false,
+    linkedAt: "2025-01-01T00:00:00.000Z",
+    checkedAt: "2025-01-01T00:00:00.000Z",
     ...overrides,
   };
 }
@@ -106,9 +102,9 @@ function makeFakeHousehold(overrides: Partial<FirestoreHousehold> = {}): Firesto
 describe("entitlement-store", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetFirestore.mockReturnValue({ doc: mockDoc });
-    mockDoc.mockReturnValue({ update: mockUpdate });
-    mockUpdate.mockResolvedValue(undefined);
+    mockSetStripeSubscription.mockResolvedValue(undefined);
+    mockDeleteStripeSubscription.mockResolvedValue(undefined);
+    mockSetUserStripeCustomerId.mockResolvedValue(undefined);
   });
 
   // ── Pure helpers ──────────────────────────────────────────────────────
@@ -140,11 +136,11 @@ describe("entitlement-store", () => {
   // ── getStripeEntitlement ──────────────────────────────────────────────
 
   describe("getStripeEntitlement", () => {
-    it("returns entitlement when household has Stripe fields", async () => {
+    it("returns entitlement when stripe subcollection doc exists", async () => {
       const user = makeFakeUser();
-      const household = makeFakeHousehold();
+      const stripeDoc = makeFakeStripeDoc();
       mockGetUser.mockResolvedValueOnce(user);
-      mockGetHousehold.mockResolvedValueOnce(household);
+      mockGetStripeSubscription.mockResolvedValueOnce(stripeDoc);
 
       const result = await getStripeEntitlement(GOOGLE_SUB);
 
@@ -155,7 +151,7 @@ describe("entitlement-store", () => {
       expect(result!.stripeSubscriptionId).toBe(STRIPE_SUBSCRIPTION_ID);
       expect(result!.stripeStatus).toBe("active");
       expect(mockGetUser).toHaveBeenCalledWith(GOOGLE_SUB);
-      expect(mockGetHousehold).toHaveBeenCalledWith(HOUSEHOLD_ID);
+      expect(mockGetStripeSubscription).toHaveBeenCalledWith(HOUSEHOLD_ID);
     });
 
     it("returns null when user not found", async () => {
@@ -163,33 +159,22 @@ describe("entitlement-store", () => {
 
       const result = await getStripeEntitlement(GOOGLE_SUB);
       expect(result).toBeNull();
-      expect(mockGetHousehold).not.toHaveBeenCalled();
+      expect(mockGetStripeSubscription).not.toHaveBeenCalled();
     });
 
-    it("returns null when household not found", async () => {
+    it("returns null when stripe subcollection doc not found", async () => {
       mockGetUser.mockResolvedValueOnce(makeFakeUser());
-      mockGetHousehold.mockResolvedValueOnce(null);
+      mockGetStripeSubscription.mockResolvedValueOnce(null);
 
       const result = await getStripeEntitlement(GOOGLE_SUB);
       expect(result).toBeNull();
     });
 
-    it("returns null when household has no Stripe subscription", async () => {
+    it("returns thrall tier when stripe doc has free tier", async () => {
       mockGetUser.mockResolvedValueOnce(makeFakeUser());
-      mockGetHousehold.mockResolvedValueOnce(makeFakeHousehold({
-        stripeCustomerId: undefined,
-        stripeSubscriptionId: undefined,
-        stripeStatus: undefined,
-      }));
-
-      const result = await getStripeEntitlement(GOOGLE_SUB);
-      expect(result).toBeNull();
-    });
-
-    it("returns thrall tier when household is on free tier with Stripe fields", async () => {
-      mockGetUser.mockResolvedValueOnce(makeFakeUser());
-      mockGetHousehold.mockResolvedValueOnce(makeFakeHousehold({
+      mockGetStripeSubscription.mockResolvedValueOnce(makeFakeStripeDoc({
         tier: "free",
+        active: false,
         stripeStatus: "canceled",
       }));
 
@@ -210,33 +195,35 @@ describe("entitlement-store", () => {
   // ── setStripeEntitlement ──────────────────────────────────────────────
 
   describe("setStripeEntitlement", () => {
-    it("updates household doc and user stripeCustomerId", async () => {
+    it("writes to stripe subcollection and updates user stripeCustomerId", async () => {
       const ent = makeFakeEntitlement();
       mockGetUser.mockResolvedValueOnce(makeFakeUser());
 
       await setStripeEntitlement(GOOGLE_SUB, ent);
 
       expect(mockGetUser).toHaveBeenCalledWith(GOOGLE_SUB);
-      expect(mockDoc).toHaveBeenCalledWith(`households/${HOUSEHOLD_ID}`);
-      expect(mockUpdate).toHaveBeenCalledWith(
+      expect(mockSetStripeSubscription).toHaveBeenCalledWith(
+        HOUSEHOLD_ID,
         expect.objectContaining({
           stripeCustomerId: STRIPE_CUSTOMER_ID,
           stripeSubscriptionId: STRIPE_SUBSCRIPTION_ID,
           stripeStatus: "active",
           tier: "karl",
+          active: true,
         })
       );
       expect(mockSetUserStripeCustomerId).toHaveBeenCalledWith(GOOGLE_SUB, STRIPE_CUSTOMER_ID);
     });
 
-    it("writes tier 'free' to household when entitlement tier is 'thrall'", async () => {
+    it("writes tier 'free' to stripe subcollection when entitlement tier is 'thrall'", async () => {
       const ent = makeFakeEntitlement({ tier: "thrall", active: false });
       mockGetUser.mockResolvedValueOnce(makeFakeUser());
 
       await setStripeEntitlement(GOOGLE_SUB, ent);
 
-      expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ tier: "free" })
+      expect(mockSetStripeSubscription).toHaveBeenCalledWith(
+        HOUSEHOLD_ID,
+        expect.objectContaining({ tier: "free", active: false })
       );
     });
 
@@ -248,9 +235,9 @@ describe("entitlement-store", () => {
       );
     });
 
-    it("throws on Firestore update failure", async () => {
+    it("throws on Firestore write failure", async () => {
       mockGetUser.mockResolvedValueOnce(makeFakeUser());
-      mockUpdate.mockRejectedValueOnce(new Error("Firestore write failed"));
+      mockSetStripeSubscription.mockRejectedValueOnce(new Error("Firestore write failed"));
 
       await expect(setStripeEntitlement(GOOGLE_SUB, makeFakeEntitlement())).rejects.toThrow(
         "Firestore write failed"
@@ -261,34 +248,24 @@ describe("entitlement-store", () => {
   // ── deleteStripeEntitlement ───────────────────────────────────────────
 
   describe("deleteStripeEntitlement", () => {
-    it("clears Stripe fields on household doc and sets tier to free", async () => {
+    it("deletes the stripe subcollection doc", async () => {
       mockGetUser.mockResolvedValueOnce(makeFakeUser());
 
       await deleteStripeEntitlement(GOOGLE_SUB);
 
-      expect(mockDoc).toHaveBeenCalledWith(`households/${HOUSEHOLD_ID}`);
-      expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          stripeCustomerId: null,
-          stripeSubscriptionId: null,
-          stripeStatus: null,
-          tier: "free",
-          cancelAtPeriodEnd: false,
-          currentPeriodEnd: null,
-        })
-      );
+      expect(mockDeleteStripeSubscription).toHaveBeenCalledWith(HOUSEHOLD_ID);
     });
 
     it("returns silently when user not found (nothing to clear)", async () => {
       mockGetUser.mockResolvedValueOnce(null);
 
       await expect(deleteStripeEntitlement(GOOGLE_SUB)).resolves.toBeUndefined();
-      expect(mockUpdate).not.toHaveBeenCalled();
+      expect(mockDeleteStripeSubscription).not.toHaveBeenCalled();
     });
 
     it("throws on Firestore failure", async () => {
       mockGetUser.mockResolvedValueOnce(makeFakeUser());
-      mockUpdate.mockRejectedValueOnce(new Error("Firestore delete failed"));
+      mockDeleteStripeSubscription.mockRejectedValueOnce(new Error("Firestore delete failed"));
 
       await expect(deleteStripeEntitlement(GOOGLE_SUB)).rejects.toThrow(
         "Firestore delete failed"

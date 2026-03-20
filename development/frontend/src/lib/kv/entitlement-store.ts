@@ -1,11 +1,12 @@
 /**
  * Firestore entitlement store -- server-side persistence for subscription entitlements.
  *
- * Stripe subscription state is stored directly on the household document at
- * /households/{householdId}. Since householdId == userId for solo households,
- * entitlements are retrieved by looking up the user's household.
+ * Stripe subscription state is stored in the household stripe subcollection at
+ * /households/{householdId}/stripe/subscription (issue #1648).
+ * Since householdId == userId for solo households, entitlements are retrieved
+ * by looking up the user's household ID, then reading the stripe subcollection.
  *
- * No /entitlements/ collection. All billing state lives on the household.
+ * No /entitlements/ collection. All billing state lives in the stripe subcollection.
  *
  * Reverse lookup (Stripe customer → Google sub):
  *   - Query `users` collection where `stripeCustomerId == customerId`
@@ -18,12 +19,13 @@
 
 import {
   getUser,
-  getHousehold,
   findUserByStripeCustomerId,
   setUserStripeCustomerId,
-  getFirestore,
+  getStripeSubscription,
+  setStripeSubscription,
+  deleteStripeSubscription,
 } from "@/lib/firebase/firestore";
-import { FIRESTORE_PATHS } from "@/lib/firebase/firestore-types";
+import type { FirestoreStripeSubscription } from "@/lib/firebase/firestore-types";
 import type { StoredStripeEntitlement } from "@/lib/stripe/types";
 import { ACTIVE_STRIPE_STATUSES } from "@/lib/stripe/types";
 import { log } from "@/lib/logger";
@@ -60,27 +62,23 @@ export function extractStripeCustomerIdFromReverseIndex(reverseIndexValue: strin
 // ---------------------------------------------------------------------------
 
 /**
- * Converts household Stripe fields into a StoredStripeEntitlement record.
- * Returns null if the household has no linked Stripe subscription.
+ * Converts a stripe subcollection document into a StoredStripeEntitlement record.
+ * Returns null if the document is absent (household has no Stripe subscription).
  */
-function householdToEntitlement(
-  household: Awaited<ReturnType<typeof getHousehold>>
+function stripeDocToEntitlement(
+  doc: FirestoreStripeSubscription | null
 ): StoredStripeEntitlement | null {
-  if (!household) return null;
-  if (!household.stripeCustomerId || !household.stripeSubscriptionId || !household.stripeStatus) {
-    return null;
-  }
-  const active = ACTIVE_STRIPE_STATUSES.has(household.stripeStatus);
+  if (!doc) return null;
   return {
-    tier: household.tier === "karl" ? "karl" : "thrall",
-    active,
-    stripeCustomerId: household.stripeCustomerId,
-    stripeSubscriptionId: household.stripeSubscriptionId,
-    stripeStatus: household.stripeStatus,
-    cancelAtPeriodEnd: household.cancelAtPeriodEnd ?? false,
-    currentPeriodEnd: household.currentPeriodEnd,
-    linkedAt: household.stripeLinkedAt ?? household.createdAt,
-    checkedAt: household.stripeCheckedAt ?? household.updatedAt,
+    tier: doc.tier === "karl" ? "karl" : "thrall",
+    active: doc.active,
+    stripeCustomerId: doc.stripeCustomerId,
+    stripeSubscriptionId: doc.stripeSubscriptionId,
+    stripeStatus: doc.stripeStatus,
+    cancelAtPeriodEnd: doc.cancelAtPeriodEnd,
+    currentPeriodEnd: doc.currentPeriodEnd,
+    linkedAt: doc.linkedAt,
+    checkedAt: doc.checkedAt,
   };
 }
 
@@ -90,7 +88,7 @@ function householdToEntitlement(
 
 /**
  * Retrieves the Stripe entitlement for an authenticated Google user by reading
- * Stripe fields from their household document.
+ * the stripe subcollection at /households/{householdId}/stripe/subscription.
  *
  * @param googleSub - Google account immutable ID
  * @returns The stored entitlement or null if not found / not subscribed
@@ -105,8 +103,8 @@ export async function getStripeEntitlement(
       log.debug("getStripeEntitlement: user not found", { googleSub });
       return null;
     }
-    const household = await getHousehold(user.householdId);
-    const result = householdToEntitlement(household);
+    const stripeDoc = await getStripeSubscription(user.householdId);
+    const result = stripeDocToEntitlement(stripeDoc);
     log.debug("getStripeEntitlement returning", {
       googleSub,
       householdId: user.householdId,
@@ -123,7 +121,8 @@ export async function getStripeEntitlement(
 }
 
 /**
- * Stores Stripe subscription fields directly on the user's household document.
+ * Stores Stripe subscription fields in the stripe subcollection at
+ * /households/{householdId}/stripe/subscription.
  * Also updates the user document with the Stripe customer ID for reverse lookup.
  *
  * @param googleSub - Google account immutable ID
@@ -142,23 +141,23 @@ export async function setStripeEntitlement(
   try {
     const user = await getUser(googleSub);
     if (!user) {
-      log.error("setStripeEntitlement: user not found — cannot write to household", { googleSub });
+      log.error("setStripeEntitlement: user not found — cannot write to stripe subcollection", { googleSub });
       throw new Error(`User ${googleSub} not found — cannot write Stripe entitlement`);
     }
 
     const now = new Date().toISOString();
-    const db = getFirestore();
-    await db.doc(FIRESTORE_PATHS.household(user.householdId)).update({
+    const stripeDoc: FirestoreStripeSubscription = {
       stripeCustomerId: entitlement.stripeCustomerId,
       stripeSubscriptionId: entitlement.stripeSubscriptionId,
       stripeStatus: entitlement.stripeStatus,
       tier: entitlement.tier === "karl" ? "karl" : "free",
+      active: entitlement.active,
       cancelAtPeriodEnd: entitlement.cancelAtPeriodEnd ?? false,
-      currentPeriodEnd: entitlement.currentPeriodEnd ?? null,
-      stripeLinkedAt: entitlement.linkedAt,
-      stripeCheckedAt: now,
-      updatedAt: now,
-    });
+      currentPeriodEnd: entitlement.currentPeriodEnd ?? undefined,
+      linkedAt: entitlement.linkedAt,
+      checkedAt: now,
+    };
+    await setStripeSubscription(user.householdId, stripeDoc);
 
     // Maintain reverse index: set stripeCustomerId on user document
     await setUserStripeCustomerId(googleSub, entitlement.stripeCustomerId);
@@ -172,8 +171,8 @@ export async function setStripeEntitlement(
 }
 
 /**
- * Clears Stripe subscription fields from the user's household document,
- * reverting the household to the free tier.
+ * Deletes the Stripe subscription document from the household's stripe subcollection
+ * at /households/{householdId}/stripe/subscription.
  *
  * @param googleSub - Google account immutable ID
  */
@@ -186,17 +185,7 @@ export async function deleteStripeEntitlement(googleSub: string): Promise<void> 
       return;
     }
 
-    const now = new Date().toISOString();
-    const db = getFirestore();
-    await db.doc(FIRESTORE_PATHS.household(user.householdId)).update({
-      stripeCustomerId: null,
-      stripeSubscriptionId: null,
-      stripeStatus: null,
-      tier: "free",
-      cancelAtPeriodEnd: false,
-      currentPeriodEnd: null,
-      updatedAt: now,
-    });
+    await deleteStripeSubscription(user.householdId);
 
     log.debug("deleteStripeEntitlement returning", { googleSub, success: true });
   } catch (err) {
