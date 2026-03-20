@@ -8,13 +8,19 @@
  *
  * Usage:
  *   node .claude/skills/epic-manager/epic-manager.mjs <root-issue-number> [--dispatch]
+ *   node .claude/skills/epic-manager/epic-manager.mjs <root-issue-number> --add <N> --blocked-by <N>[,N...] [--wave <N>] [--parallel-with <N>[,N...]] [--note "..."]
  *
  * Flags:
- *   --dispatch   Print ready dispatch commands (does not execute them)
- *   --json       Emit machine-readable JSON instead of human dashboard
+ *   --dispatch        Print ready dispatch commands (does not execute them)
+ *   --json            Emit machine-readable JSON instead of human dashboard
+ *   --add <N>         Add issue #N to the graph (fetches title from GitHub)
+ *   --blocked-by <N>  Comma-separated list of issues that must close before --add issue starts
+ *   --wave <N>        Override wave assignment (default: auto-computed from blockers)
+ *   --parallel-with   Comma-separated issues in the same wave that run alongside --add issue
+ *   --note "..."      Optional note for the new story
  */
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { resolve } from "node:path";
 
@@ -24,8 +30,31 @@ const rootIssue = args.find((a) => /^\d+$/.test(a));
 const flagDispatch = args.includes("--dispatch");
 const flagJson = args.includes("--json");
 
+// --add mode args
+const addIdx = args.indexOf("--add");
+const flagAdd = addIdx !== -1 ? parseInt(args[addIdx + 1], 10) : null;
+
+function parseNumList(flag) {
+  const idx = args.indexOf(flag);
+  if (idx === -1) return [];
+  return (args[idx + 1] ?? "")
+    .split(",")
+    .map((s) => parseInt(s.trim(), 10))
+    .filter((n) => !isNaN(n));
+}
+
+const flagBlockedBy = parseNumList("--blocked-by");
+const flagParallelWith = parseNumList("--parallel-with");
+
+const waveIdx = args.indexOf("--wave");
+const flagWave = waveIdx !== -1 ? parseInt(args[waveIdx + 1], 10) : null;
+
+const noteIdx = args.indexOf("--note");
+const flagNote = noteIdx !== -1 ? (args[noteIdx + 1] ?? "") : "";
+
 if (!rootIssue) {
   console.error("Usage: epic-manager.mjs <root-issue-number> [--dispatch] [--json]");
+  console.error("       epic-manager.mjs <root-issue-number> --add <N> --blocked-by <N>[,N...] [--wave <N>] [--parallel-with <N>[,N...]] [--note \"...\"]");
   process.exit(1);
 }
 
@@ -47,6 +76,104 @@ function run(cmd) {
   } catch {
     return null;
   }
+}
+
+// ── --add mode ───────────────────────────────────────────────────────────────
+if (flagAdd) {
+  if (isNaN(flagAdd)) {
+    console.error("--add requires a valid issue number");
+    process.exit(1);
+  }
+
+  // Check not already in graph
+  if (stories.find((s) => s.number === flagAdd)) {
+    console.error(`Issue #${flagAdd} is already in the epic graph.`);
+    process.exit(1);
+  }
+
+  // Fetch issue title from GitHub
+  console.log(`Fetching issue #${flagAdd} from GitHub...`);
+  const ghRaw = run(`gh issue view ${flagAdd} --json number,state,title 2>/dev/null`);
+  if (!ghRaw) {
+    console.error(`Could not fetch issue #${flagAdd} from GitHub.`);
+    process.exit(1);
+  }
+  const ghData = JSON.parse(ghRaw);
+  const newTitle = ghData.title ?? `Issue #${flagAdd}`;
+  const newState = ghData.state?.toLowerCase() ?? "open";
+
+  // Auto-compute wave: max wave of all blockers + 1, or 0 if no blockers
+  let newWave = flagWave;
+  if (newWave === null || isNaN(newWave)) {
+    if (flagBlockedBy.length === 0) {
+      newWave = 0;
+    } else {
+      const blockerWaves = flagBlockedBy.map((b) => {
+        const s = stories.find((s) => s.number === b);
+        return s ? (s.wave ?? 0) : 0;
+      });
+      newWave = Math.max(...blockerWaves) + 1;
+    }
+  }
+
+  // Build new story entry
+  const newStory = {
+    number: flagAdd,
+    title: newTitle,
+    state: newState,
+    wave: newWave,
+    blocks: [],
+    blocked_by: flagBlockedBy,
+    parallel_with: flagParallelWith,
+    duplicate_of: null,
+    note: flagNote,
+  };
+
+  // Update blocks[] on each blocker
+  for (const blockerNum of flagBlockedBy) {
+    const blocker = stories.find((s) => s.number === blockerNum);
+    if (blocker) {
+      if (!blocker.blocks) blocker.blocks = [];
+      if (!blocker.blocks.includes(flagAdd)) {
+        blocker.blocks.push(flagAdd);
+      }
+    } else {
+      console.warn(`  ⚠ Blocker #${blockerNum} not found in graph — skipping blocks[] update`);
+    }
+  }
+
+  // Update parallel_with[] on peers (bidirectional)
+  for (const peerNum of flagParallelWith) {
+    const peer = stories.find((s) => s.number === peerNum);
+    if (peer) {
+      if (!peer.parallel_with) peer.parallel_with = [];
+      if (!peer.parallel_with.includes(flagAdd)) {
+        peer.parallel_with.push(flagAdd);
+      }
+    } else {
+      console.warn(`  ⚠ Peer #${peerNum} not found in graph — skipping parallel_with[] update`);
+    }
+  }
+
+  // Insert in wave order
+  const insertIdx = stories.findIndex((s) => (s.wave ?? 0) > newWave);
+  if (insertIdx === -1) {
+    stories.push(newStory);
+  } else {
+    stories.splice(insertIdx, 0, newStory);
+  }
+
+  epic.stories = stories;
+  writeFileSync(epicFile, JSON.stringify(epic, null, 2) + "\n", "utf8");
+  console.log(`  ✅ Added #${flagAdd} "${newTitle}" at wave ${newWave} to ${epicFile}`);
+  if (flagBlockedBy.length > 0) {
+    console.log(`     blocked_by: [${flagBlockedBy.join(", ")}]`);
+  }
+  if (flagParallelWith.length > 0) {
+    console.log(`     parallel_with: [${flagParallelWith.join(", ")}]`);
+  }
+  console.log();
+  // Fall through to render dashboard
 }
 
 // ── 1. Batch-fetch GitHub issue states ─────────────────────────────────────
