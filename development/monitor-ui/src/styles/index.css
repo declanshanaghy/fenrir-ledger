@@ -382,6 +382,7 @@ body {
   flex-direction: column; gap: 4px;
   padding: 0.45rem 0.3rem; border-radius: 4px; cursor: pointer;
   margin-bottom: 2px; border-left: 3px solid transparent;
+  background: var(--void-black, transparent);
   transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 .card--minimal:hover { background: var(--chain); }
@@ -416,6 +417,7 @@ body {
 .card {
   padding: 0.6rem 0.75rem; border-radius: 4px; cursor: pointer;
   margin-bottom: 2px; border-left: 3px solid transparent;
+  background: var(--void-black, transparent);
   transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 .card:hover { background: var(--chain); }
