@@ -227,70 +227,8 @@ SCRIPT_DIR="$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts
 node "$SCRIPT_DIR/pack-status.mjs" --move <TRACKER_NUMBER> in-progress
 ```
 
-The tracker issue number becomes the **epic number** used in the graph file and
-`/epic-manager`. Do NOT include the tracker issue itself in the `stories:` list of
-the epic graph — it is metadata, not a work item.
-
-### Step 5c — Write Epic Graph File
-
-After all issues are created and the tracker is filed, write the epic dependency
-graph to `tmp/epics/<tracker-issue-number>.yml`.
-
-The **tracker issue** number is used as the epic number (NOT the lowest work issue).
-This keeps the epic graph, `/epic-manager`, and the tracker issue aligned on one number.
-
-**Schema:**
-
-```yaml
-epic:
-  number: <tracker-issue-number>
-  title: "<epic title>"
-  description: "<one-sentence description>"
-  tracker_issue: <tracker-issue-number>
-
-stories:
-  - number: <N>
-    title: "<GitHub issue title>"
-    state: open
-    wave: <0-based wave index>
-    blocks: [<issue numbers this story unblocks>]
-    blocked_by: [<issue numbers that must close before this starts>]
-    parallel_with: [<issue numbers in the same wave that run in parallel>]
-    duplicate_of: null
-    note: "<optional human note>"
-```
-
-**Wave assignment rules:**
-- Wave 0 — root / foundation story (no `blocked_by`)
-- Wave N+1 — stories whose last blocker is in wave N
-- Stories in the same wave with no dependency between them get the same wave number
-  and list each other in `parallel_with`
-
-**Write the file:**
-
-```bash
-mkdir -p tmp/epics
-# write YAML via Write tool — do NOT use bash heredoc or echo
-```
-
-Use the Write tool directly with the YAML content. Do not shell-escape or base64 encode.
-
-After writing, verify:
-```bash
-node -e "import('js-yaml').then(y => { y.default.load(require('fs').readFileSync('tmp/epics/<N>.yml','utf8')); console.log('valid YAML'); })"
-```
-
-Commit the file on `main` so agents can find it:
-```bash
-git add -f tmp/epics/<TRACKER>.yml
-git commit -m "chore: add epic graph for #<TRACKER> — <title>
-
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
-git push
-```
-
-> **Note:** `tmp/` is gitignored but `tmp/epics/` is explicitly unblocked via
-> `!tmp/epics/` in `.gitignore`. Use `git add -f` if needed.
+The tracker issue number is the **epic number** used by `/epic-manager`.
+The tracker issue body IS the dependency graph — no local YAML files needed.
 
 ### Step 5d — Set Up Auto-Close Workflow
 
@@ -376,7 +314,7 @@ exists, skip this step entirely.
 
 ### Step 6 — Report
 
-After all issues are created and the epic file is written, report:
+After all issues are created and the tracker is filed, report:
 
 ```
 ## Plan Filed
@@ -384,7 +322,6 @@ After all issues are created and the epic file is written, report:
 **Topic:** <brief description>
 **Tracker issue:** #T — [Epic] <title>
 **Issues created:** N (+ 1 tracker)
-**Epic graph:** tmp/epics/<T>.yml
 
 | # | Title | Type | Priority | Chain | Wave | Depends On |
 |---|-------|------|----------|-------|------|------------|
@@ -412,4 +349,4 @@ To start execution:
 8. **Freya always interviews** — never skip the product owner interview
 9. **Luna only for UI** — skip wireframes for pure backend/infra/test work
 10. **Use the issue template** — all required sections must be present for agents to work from
-11. **Always write the epic graph** — `tmp/epics/<N>.yml` is mandatory output for every plan. `/epic-manager` depends on it.
+11. **GitHub is the source of truth** — the tracker issue body IS the dependency graph. No local YAML files. `/epic-manager` reads the tracker issue directly from GitHub.

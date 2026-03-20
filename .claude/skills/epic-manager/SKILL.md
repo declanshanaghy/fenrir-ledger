@@ -1,9 +1,9 @@
 ---
 name: epic-manager
 description: >
-  Monitor epic progress and dispatch next ready stories. Reads tmp/epics/<N>.yml,
-  cross-references live GitHub issue states and active GKE K8s jobs, prints a
-  wave-by-wave dashboard, and identifies what's ready to dispatch next.
+  Monitor epic progress and dispatch next ready stories. Reads the [Epic] tracker
+  issue body from GitHub, cross-references live issue states and active GKE K8s jobs,
+  prints a wave-by-wave dashboard, and identifies what's ready to dispatch next.
   Use when the user says 'epic status', 'epic manager', 'what's next in epic',
   '/epic-manager <N>', or provides a root issue number to track.
 ---
@@ -13,22 +13,24 @@ description: >
 Monitor an epic's dependency graph against live GitHub + K8s state and prepare
 the next wave of stories for dispatch.
 
+**Source of truth:** The `[Epic]` tracker issue on GitHub. No local YAML files.
+The tracker issue body contains the dependency graph table and tracked issues checklist.
+
 ## Input
 
 ```
-/epic-manager <root-issue-number> [--dispatch]
-/epic-manager <root-issue-number> --add <N> --blocked-by <N>[,N...] [--wave <N>] [--parallel-with <N>[,N...]] [--note "..."]
+/epic-manager <tracker-issue-number> [--dispatch]
+/epic-manager <tracker-issue-number> --add <N> --blocked-by <N>[,N...] [--wave <N>] [--note "..."]
 ```
 
 | Arg | Required | Description |
 |-----|----------|-------------|
-| `<N>` | Yes | Root issue number — reads `tmp/epics/<N>.yml` |
+| `<N>` | Yes | Tracker issue number (must be an `[Epic]` issue) |
 | `--dispatch` | No | Print ready `/dispatch` commands after the dashboard |
-| `--add <N>` | No | Add issue #N to the graph (title fetched from GitHub) |
+| `--add <N>` | No | Add issue #N to the graph (updates tracker issue body on GitHub) |
 | `--blocked-by <N>[,N...]` | With `--add` | Comma-separated blockers for the new story |
 | `--wave <N>` | No | Override auto-computed wave (default: max blocker wave + 1) |
-| `--parallel-with <N>[,N...]` | No | Peers in the same wave (bidirectional update) |
-| `--note "..."` | No | Optional note text for the new story |
+| `--note "..."` | No | Optional note text |
 
 ## Help
 
@@ -39,44 +41,35 @@ text directly** (do NOT run the script):
 /epic-manager — Epic dependency graph tracker + dispatch advisor
 
 USAGE
-  /epic-manager <N>                          Show dashboard for epic #N
+  /epic-manager <N>                          Show dashboard for epic tracker #N
   /epic-manager <N> --dispatch               Dashboard + copy-paste dispatch commands
   /epic-manager <N> --json                   Machine-readable JSON output
   /epic-manager <N> --add <M> --blocked-by <X>[,Y]   Add story #M to epic graph
 
 DASHBOARD EXAMPLES
-  /epic-manager 1386                         Live status of epic #1386
-  /epic-manager 1386 --dispatch              Dashboard + ready dispatch commands
+  /epic-manager 1526                         Live status of Odin's Spear epic
+  /epic-manager 1527 --dispatch              Dashboard + ready dispatch commands
 
 ADD STORY EXAMPLES
-  /epic-manager 1386 --add 1507 --blocked-by 1495
-  /epic-manager 1386 --add 1508 --blocked-by 1495 --parallel-with 1507
-  /epic-manager 1386 --add 1509 --blocked-by 1495 --wave 3 --note "Extra context"
-
-ADD FLAGS
-  --add <N>              Issue number to insert into the graph
-  --blocked-by <N>[,N]   Comma-separated blockers (must close before this starts)
-  --parallel-with <N>[,N] Peers in the same wave (bidirectional link)
-  --wave <N>             Override wave (default: max blocker wave + 1)
-  --note "..."           Optional note stored in the YAML
+  /epic-manager 1526 --add 1507 --blocked-by 1495
+  /epic-manager 1526 --add 1508 --blocked-by 1495 --wave 3
 
 DASHBOARD ICONS
   ✅  done      — GitHub issue is CLOSED
   🔄  running   — Active K8s job found for this issue
   🟢  ready     — All blockers closed, not yet running
   🔴  blocked   — One or more blockers still OPEN
-  ⚠️   duplicate — duplicate_of is set; close manually before dispatching
 
-EPIC FILE
-  Reads/writes tmp/epics/<root-issue>.yml
-  Auto-migrates legacy .json files to .yml on first run.
+SOURCE OF TRUTH
+  The [Epic] tracker issue body on GitHub contains the dependency graph.
+  No local YAML files — GitHub is the single source of truth.
 ```
 
 ## Speed Rules (UNBREAKABLE)
 
 1. **One tool call.** Run the MJS script directly — no pre-fetching, no narration between calls.
 2. **Never re-fetch what the script already fetches.** The script queries GitHub and K8s itself.
-3. **If the epic file is missing**, tell Odin to run `/plan-w-team` or check the issue number.
+3. **If the issue is not an `[Epic]` tracker**, tell Odin to check the issue number.
 4. **If no issue number or `--help`**, display the Help section above — do NOT run the script.
 
 ## Execution
@@ -86,80 +79,49 @@ node .claude/skills/epic-manager/epic-manager.mjs <N> [--dispatch]
 ```
 
 That is the entire execution. No other tool calls needed unless the output requires
-follow-up action (e.g., closing a duplicate, dispatching a ready story).
+follow-up action (e.g., dispatching a ready story).
 
 ## What the Script Does
 
-### Phase 1 — Load epic graph
-Reads `tmp/epics/<N>.yml`. Fails with a clear message if missing.
+### Phase 1 — Load epic graph from GitHub
+Fetches the `[Epic]` tracker issue body via `gh issue view <N>`.
+Parses the dependency graph markdown table:
+```
+| Wave | Issue | Title | Depends On |
+|------|-------|-------|------------|
+| 0 | #1516 | Migrate trial store | — |
+| 1 | #1519 | Remove Redis client | #1516, #1517, #1518 |
+```
 
 ### Phase 2 — GitHub state sync
 For every issue number in the graph (stories + their blockers), calls:
 ```
 gh issue view <N> --json number,state,title
 ```
-Results are keyed by issue number. State is `OPEN` or `CLOSED`.
 
 ### Phase 3 — K8s job sync
 Queries active GKE jobs in `fenrir-agents` namespace:
 ```
 kubectl get jobs -n fenrir-agents -o json
 ```
-Extracts issue numbers from:
-- `fenrir.dev/session-id` label (format: `issue-<N>-step<S>-<agent>-<uuid>`)
-- Job name (format: `agent-issue-<N>-step<S>-<agent>-<uuid>`)
-
-Only jobs with `status.active > 0` are counted as running (completed/failed are ignored).
+Only jobs with `status.active > 0` are counted as running.
 
 ### Phase 4 — Status computation
-Each story gets one of these statuses (in priority order):
-
 | Status | Condition |
 |--------|-----------|
 | `done` | GitHub state = CLOSED |
 | `running` | Active K8s job found for this issue |
-| `blocked` | One or more `blocked_by` issues are still OPEN |
-| `duplicate` | Story has `duplicate_of` set — needs manual close |
+| `blocked` | One or more `Depends On` issues are still OPEN |
 | `ready` | None of the above — all blockers closed, not running |
 
 ### Phase 5 — Dashboard output
-Wave-by-wave table with icons:
+Wave-by-wave table with icons (same format as before).
 
-```
-══════════════════════════════════════════════════════════════════════════
-  EPIC #1386 — Odin's Spear TUI
-══════════════════════════════════════════════════════════════════════════
-
-✅ Wave 0
-    ✅ #1386   [DONE     ]  Odin's Spear TUI: foundation — Ink setup…
-
-   Wave 1
-    🟢 #1496   [READY    ]  Odin's Spear: extract into standalone package…
-
-   Wave 2
-    🔴 #1495   [BLOCKED  ]  Odin's Spear: command & help subsystem…  ← blocked by #1496
-    ⚠️  #1390   [DUPLICATE]  Odin's Spear TUI: command palette…        ← duplicate of #1495
-
-   Wave 3  (parallel)
-    🔴 #1387   [BLOCKED  ]  Odin's Spear TUI: Users tab…               ← blocked by #1496, #1495
-    🔴 #1388   [BLOCKED  ]  Odin's Spear TUI: Households tab…          ← blocked by #1496, #1495
-
-   Wave 4  (parallel)
-    🔴 #1389   [BLOCKED  ]  Odin's Spear TUI: Card drill-down view…    ← blocked by #1387
-    🔴 #1472   [BLOCKED  ]  Odin's Spear — trial manipulation…         ← blocked by #1495
-
-──────────────────────────────────────────────────────────────────────────
-  1 done  |  0 running  |  1 ready  |  5 blocked  |  1 duplicate
-──────────────────────────────────────────────────────────────────────────
-
-  ▶  Next to dispatch (1 issue):
-
-    /dispatch #1496   — Odin's Spear: extract into standalone package…
-
-  ⚠️  Duplicate stories detected — close before dispatching:
-    #1390 — Odin's Spear TUI: command palette + confirmation dialogs
-    gh issue close 1390 --comment "Superseded by #1495"
-```
+### --add mode
+When `--add` is used, the script updates the tracker issue body directly on GitHub:
+- Adds a new row to the dependency graph table
+- Adds the issue to the tracked issues checklist
+- No local files modified
 
 ## After the Dashboard
 
@@ -176,12 +138,6 @@ them up. Format:
 - #Y — <title> (type/priority) — <1-line summary from issue body>
 ```
 
-or for duplicates:
-```
-**Duplicates detected:**
-- #X — <title> — duplicate of #Y
-```
-
 or for stalls:
 ```
 **Epic stalled — nothing ready or running:**
@@ -194,59 +150,18 @@ should appear in the same response — no extra round-trip.
 
 Read the output and:
 
-1. **If duplicates are flagged** — summarize which issues are duplicates and of what, then
-   use `AskUserQuestion` to confirm closing them. Options: "Close duplicates", "Skip".
-   If confirmed, close with the suggested `gh issue close` command, then re-run.
-2. **If stories are ready** — summarize the ready issues with titles, types, and priorities,
+1. **If stories are ready** — summarize the ready issues with titles, types, and priorities,
    then use `AskUserQuestion`: *"Wave N is unblocked. Dispatch?"*
    Options: "Dispatch #X", "Dispatch all in parallel", "Skip". Then invoke `/dispatch`
    or `/fire-next-up #X #Y` accordingly.
-3. **If nothing is ready and nothing is running** — summarize the blockage chain, then use
+2. **If nothing is ready and nothing is running** — summarize the blockage chain, then use
    `AskUserQuestion` to flag the stall. Options: "Re-check", "Close epic".
-4. **If epic is complete** — congratulate, update the epic file `state` fields, and HKR.
-
-## Epic File Format
-
-The epic file `tmp/epics/<N>.yml` must match this schema:
-
-```yaml
-epic:
-  number: 1386
-  title: "Odin's Spear TUI"
-  description: "..."
-
-stories:
-  - number: 1386
-    title: "Odin's Spear TUI: foundation — Ink setup, auto-startup, tab shell"
-    state: closed
-    wave: 0
-    blocks: [1496]
-    blocked_by: []
-    parallel_with: []
-    duplicate_of: null
-    note: "DONE — produces development/frontend/scripts/odins-spear.mjs"
-  - number: 1496
-    title: "Odin's Spear: extract into standalone package"
-    state: open
-    wave: 1
-    blocks: [1495, 1387, 1388]
-    blocked_by: [1386]
-    parallel_with: []
-    duplicate_of: null
-    note: ""
-```
-
-> **Note:** `state` in the YAML is the initial/authored state. The script ignores it and
-> always uses live GitHub state. It is kept for human reference only.
+3. **If epic is complete** — congratulate and close the tracker issue.
 
 ## Rules
 
 1. **Always run the script** — never manually reconstruct the dashboard from memory.
-2. **K8s query is best-effort** — if `kubectl` is unavailable (e.g., no cluster access),
-   the script continues without K8s data and marks K8s status as unknown.
-3. **Never dispatch without showing the dashboard first** — Odin must see the state before
-   agents are spawned.
-4. **Duplicate check is mandatory** — if `--dispatch` is passed, warn about duplicates
-   before printing dispatch commands.
-5. **Epic file is the graph source of truth** — GitHub/K8s are for live state only.
-   Dependencies (`blocked_by`, `blocks`, `wave`) come from the YAML file.
+2. **K8s query is best-effort** — if `kubectl` is unavailable, the script continues without K8s data.
+3. **Never dispatch without showing the dashboard first** — Odin must see the state before agents are spawned.
+4. **GitHub is the source of truth** — the tracker issue body contains the dependency graph. No local YAML files.
+5. **`--add` updates GitHub directly** — the tracker issue body is edited in-place via `gh issue edit`.
