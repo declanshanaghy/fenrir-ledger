@@ -39,7 +39,7 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
 
   const [activeTab, setActiveTab] = useState(0);
   const [overlay, setOverlay] = useState<OverlayMode>({ kind: "none" });
-  const [cmdStatus] = useState<string | null>(null);
+  const [cmdStatus, setCmdStatusMsg] = useState<string | null>(null);
   const [connState, setConnState] = useState<ConnStatus>(initialConnStatus);
   const [countState, setCountState] = useState<Counts>(initialCounts);
   const [inputCaptured, setInputCaptured] = useState(false);
