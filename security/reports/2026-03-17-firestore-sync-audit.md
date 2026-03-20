@@ -107,7 +107,7 @@ const members = memberUsers.map((m) => ({
 
 - **File**: `development/frontend/src/app/api/household/invite/validate/route.ts`, `development/frontend/src/app/api/household/join/route.ts`
 - **Category**: A07 Identification and Authentication Failures (OWASP)
-- **Description**: The `rateLimit()` utility exists at `src/lib/auth/rate-limit.ts` but is not applied to the invite validation or join endpoints. An attacker could systematically enumerate invite codes at the rate of Firestore query throughput. With 32^6 = ~1.07 billion combinations and no rate limit, automated enumeration is possible (though slow at human-facing latency).
+- **Description**: The `rateLimit()` utility exists at `src/lib/rate-limit.ts` but is not applied to the invite validation or join endpoints. An attacker could systematically enumerate invite codes at the rate of Firestore query throughput. With 32^6 = ~1.07 billion combinations and no rate limit, automated enumeration is possible (though slow at human-facing latency).
 - **Impact**: Given 1 billion combinations and even 1 request/second throughput, full enumeration would take ~34 years. However, targeted attacks against short-lived codes (knowing approximate generation time) and the PII exposure in SEV-003 raise the effective risk. Additionally, flooding the endpoint causes unnecessary Firestore read costs and latency.
 - **Remediation**: Apply `rateLimit()` on both endpoints keyed by authenticated user ID (e.g., `invite-validate:<userId>`). Limit: 10 attempts per 10 minutes. Return 429 on excess. Also consider adding a Firestore composite index on `inviteCode` + `inviteCodeExpiresAt` for efficient lookups.
 

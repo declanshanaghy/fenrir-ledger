@@ -1,7 +1,7 @@
 # API Route Security Checklist — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-17 (added Firestore householdId validation rule)
+**Last reviewed**: 2026-03-20 (updated distributed rate limiting guidance — Upstash Redis removed in issue #1521)
 
 Use this checklist whenever adding, modifying, or reviewing an API route under
 `development/frontend/src/app/api/`.
@@ -83,7 +83,7 @@ Every route handler MUST pass all items in this section before merge.
 
 - [ ] **Unauthenticated routes implement rate limiting**
   - At minimum: in-memory rate limit via `rateLimit()` from `src/lib/rate-limit.ts`
-  - For production: prefer Upstash Redis for distributed rate limiting
+  - For production: prefer a distributed rate limiter (Firestore or external Redis) — Upstash Redis has been removed (issue #1521)
 
 - [ ] **Routes that call external services (LLM, Google APIs) are rate-limited**
   - Consider per-user rate limits (keyed on `auth.user.sub`) in addition to per-IP

@@ -1,7 +1,7 @@
 # Auth Architecture — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-17 (added Firestore sync auth model — Section 10)
+**Last reviewed**: 2026-03-20 (updated entitlement store from Upstash Redis to Firestore — issue #1521)
 **References**: ADR-005, ADR-006, ADR-008, ADR-010
 
 ---
@@ -17,7 +17,7 @@ There is no server-side session. All session state lives in the browser
 the Google `id_token` JWT against Google's public JWKS keys.
 
 Subscription management is handled by Stripe Direct. There is no Patreon integration.
-Entitlements are stored in Upstash Redis (KV store).
+Entitlements are stored in Firestore (migrated from Upstash Redis in issue #1521).
 
 ---
 
@@ -254,9 +254,9 @@ Google `sub` claim.
 
 The Stripe integration creates a **layered model**:
 - Google `id_token` in `localStorage` — identity on every API request
-- Stripe subscription status in Upstash Redis — entitlement lookup
+- Stripe subscription status in Firestore — entitlement lookup
 
-No Stripe secrets are stored in KV. The Stripe secret key is a server-side
+No Stripe secrets are stored in Firestore. The Stripe secret key is a server-side
 process.env variable used server-to-server only.
 
 ### 5.2 Checkout Flow
@@ -303,13 +303,19 @@ This is a stronger cryptographic guarantee than the previous Patreon HMAC-MD5 de
 
 ### 5.4 Entitlement Storage
 
-| Key Pattern | Value | TTL | Purpose |
-|---|---|---|---|
-| `entitlement:{googleSub}` | `StripeEntitlement` JSON | 30 days | Primary lookup by Google user |
-| `stripe-customer:{customerId}` | `{googleSub}` string | 30 days | Reverse index for webhook routing |
+Entitlements are stored in Firestore (migrated from Upstash Redis in issue #1521).
+There is no KV/TTL mechanism — entitlement records are persistent documents.
 
-No tokens are encrypted at rest (unlike Patreon). No user credentials are stored.
-The Stripe subscription ID and status are the only data in KV.
+| Firestore Path | Type | Purpose |
+|---|---|---|
+| `entitlements/{googleSub}` | `FirestoreEntitlement` | Primary lookup by Google user |
+| `entitlements/stripe:{customerId}` | `FirestoreEntitlement` | Lookup for anonymous Stripe users |
+
+Reverse lookup (Stripe customer → Google sub) is done by querying the `users` collection
+where `stripeCustomerId == customerId`.
+
+No user credentials are stored. The Stripe subscription ID and status are the only data
+in the entitlement documents.
 
 ### 5.5 Accepted Webhook Exemption
 
@@ -355,17 +361,18 @@ compensating control is SHA-256 HMAC via `stripe.webhooks.constructEvent()`.
 │    STRIPE_SECRET_KEY                                                 │
 │    STRIPE_WEBHOOK_SECRET                                             │
 │    STRIPE_PRICE_ID                                                   │
-│    KV_REST_API_URL                                                   │
-│    KV_REST_API_TOKEN                                                 │
-└─────────────────────────────────┬───────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────┘
                                    │
 ┌─────────────────────────────────▼───────────────────────────────────┐
-│  UPSTASH REDIS (trusted persistent store)                           │
+│  FIRESTORE (trusted persistent store)                               │
 │                                                                      │
-│  entitlement:{googleSub}          → StripeEntitlement               │
-│  stripe-customer:{stripeId}       → googleSub (reverse index)       │
+│  entitlements/{googleSub}         → FirestoreEntitlement            │
+│  entitlements/stripe:{id}         → FirestoreEntitlement            │
+│  households/{householdId}/cards   → FirestoreCard[]                 │
+│  users/{googleSub}                → UserRecord                      │
 │                                                                      │
-│  No token encryption required — no credentials stored               │
+│  Upstash Redis was removed in issue #1521. Entitlements now live    │
+│  in Firestore. No token encryption required — no credentials stored │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 

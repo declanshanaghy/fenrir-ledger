@@ -4,17 +4,17 @@ Owned by **Heimdall** (`.claude/agents/heimdall.md`).
 
 This directory contains all security documentation for the Fenrir Ledger project: audit reports, architecture diagrams, checklists, and advisories.
 
-## Current State (as of 2026-03-17)
+## Current State (as of 2026-03-20)
 
 - **Infrastructure**: GKE Autopilot (not Vercel). See `infrastructure/k8s/app/` for deployment manifests.
 - **Subscription platform**: Stripe Direct only. Patreon has been fully removed.
 - **Prompt injection**: Fixed in PR #171 — CSV wrapped in XML-style system/user role separation with explicit RAW DATA instruction.
 - **Stripe webhook**: SHA-256 HMAC via `stripe.webhooks.constructEvent()`.
 - **CSP**: Includes all required Google and Stripe domains.
-- **KV store**: Upstash Redis, configured via `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+- **Entitlement store**: Firestore (migrated from Upstash Redis in issue #1521 — `KV_REST_API_URL` and `KV_REST_API_TOKEN` no longer used or deployed).
 - **Firestore sync (issue #1126)**: ~~2 CRITICAL IDOR vulnerabilities~~ → **RESOLVED**. IDOR in `/api/sync/pull` (PR #1203) and `/api/sync/push` (PR #1207) fixed — both routes now derive `householdId` from the server-side user record, not the client. See report below.
 - **Open findings (Firestore audit)**: 1 HIGH (invite validate PII leakage), 3 MEDIUM (no rate limiting on invite/sync routes, Admin SDK bypasses rules), 3 LOW (error handling, entropy docs, tier disclosure), 3 INFO (emulator-only rules, soft-delete, no collection group).
-- **Open findings (older reports)**: 3 LOW (distributed rate limiting, webhook deduplication, email validation), 3 INFO (trust chain comment, KV delete race, publishable key monitoring), plus external pentest CRITICAL (Next.js CVEs #475) and HIGH (SheetJS #476).
+- **Open findings (older reports)**: 3 LOW (distributed rate limiting, webhook deduplication, email validation), 3 INFO (trust chain comment, publishable key monitoring), plus external pentest CRITICAL (Next.js CVEs #475 — **RESOLVED**: upgraded to Next.js 16.x) and HIGH (SheetJS #476 — still open).
 
 ---
 
@@ -23,7 +23,7 @@ This directory contains all security documentation for the Fenrir Ledger project
 | Date | Scope | Risk Summary | Status | Path |
 |------|-------|-------------|--------|------|
 | 2026-03-17 | **Firestore Sync & Household Data Access** (issue #1126) | **2C / 1H / 3M / 3L / 3I** | **[Active] CRITICAL IDOR fixed in PRs #1203 + #1207; HIGH + MEDIUM findings open** | [reports/2026-03-17-firestore-sync-audit.md](reports/2026-03-17-firestore-sync-audit.md) |
-| 2026-03-10 | **Comprehensive External Pen Test** — Consolidated from 4 parallel audits (#470–473) | **1C / 1H / 3M / 3L / 5I** | **[Active] CRITICAL Next.js CVEs require immediate patching; HIGH SheetJS unpatched — see issues** | [reports/2026-03-09-external-pentest.md](reports/2026-03-09-external-pentest.md) |
+| 2026-03-10 | **Comprehensive External Pen Test** — Consolidated from 4 parallel audits (#470–473) | **1C / 1H / 3M / 3L / 5I** | **[Active] CRITICAL Next.js CVEs RESOLVED (Next.js upgraded to 16.x); HIGH SheetJS unpatched — see issues** | [reports/2026-03-09-external-pentest.md](reports/2026-03-09-external-pentest.md) |
 | 2026-03-02 | Google API Integration | 0C / 3H / 3M / 3L / 3I | Active — findings partially open | [reports/2026-03-02-google-api-integration.md](reports/2026-03-02-google-api-integration.md) |
 | 2026-03-04 | Stripe Direct Integration | 0C / 0H / 0M / 3L / 3I | Active — CRITICAL/MEDIUM resolved | [reports/2026-03-04-stripe-direct-integration.md](reports/2026-03-04-stripe-direct-integration.md) |
 | 2026-03-05 | LLM Prompt Injection Remediation (#157) | 0C / 0H / 0M / 0L / 2I | Active | [reports/2026-03-05-llm-prompt-injection-remediation.md](reports/2026-03-05-llm-prompt-injection-remediation.md) |
@@ -65,10 +65,10 @@ This directory contains all security documentation for the Fenrir Ledger project
 
 | Document | Description | Last Reviewed |
 |----------|-------------|---------------|
-| [architecture/auth-architecture.md](architecture/auth-architecture.md) | Full OAuth 2.0 PKCE flow, session storage model, token expiration, incremental Drive consent, trust boundaries, JWKS verification, Stripe subscription auth model, and Firestore sync authorization model | 2026-03-17 |
-| [architecture/data-flow-diagrams.md](architecture/data-flow-diagrams.md) | Security-focused data flow diagrams for OAuth PKCE, URL import (Path A), CSV upload (Path C), Google Picker (Path B), Stripe checkout, and Firestore sync pull/push; marks trust boundaries, SSRF surfaces, and injection points | 2026-03-17 |
-| [architecture/trust-boundaries.md](architecture/trust-boundaries.md) | Six trust zones (browser, GKE server, Google infra, Stripe infra, Upstash Redis, Firestore); secret locations; what data crosses each boundary; localStorage XSS implications and Firestore householdId constraints | 2026-03-17 |
-| [architecture/threat-model.md](architecture/threat-model.md) | Assets, threat actors, attack surfaces, mitigations in place, and residual risks; includes Firestore sync attack surfaces and IDOR mitigations | 2026-03-17 |
+| [architecture/auth-architecture.md](architecture/auth-architecture.md) | Full OAuth 2.0 PKCE flow, session storage model, token expiration, incremental Drive consent, trust boundaries, JWKS verification, Stripe subscription auth model, and Firestore sync authorization model | 2026-03-20 |
+| [architecture/data-flow-diagrams.md](architecture/data-flow-diagrams.md) | Security-focused data flow diagrams for OAuth PKCE, URL import (Path A), CSV upload (Path C), Google Picker (Path B), Stripe checkout, and Firestore sync pull/push; marks trust boundaries, SSRF surfaces, and injection points | 2026-03-20 |
+| [architecture/trust-boundaries.md](architecture/trust-boundaries.md) | Five trust zones (browser, GKE server, Google infra, Stripe infra, Firestore); secret locations; what data crosses each boundary; localStorage XSS implications and Firestore householdId constraints | 2026-03-20 |
+| [architecture/threat-model.md](architecture/threat-model.md) | Assets, threat actors, attack surfaces, mitigations in place, and residual risks; includes Firestore sync attack surfaces and IDOR mitigations | 2026-03-20 |
 
 ---
 
@@ -76,8 +76,8 @@ This directory contains all security documentation for the Fenrir Ledger project
 
 | Document | Description | Last Reviewed |
 |----------|-------------|---------------|
-| [checklists/api-route-checklist.md](checklists/api-route-checklist.md) | Pre-merge checklist for adding or modifying API routes: requireAuth pattern, Firestore householdId validation, input validation, error handling, secret hygiene, SSRF prevention; includes Stripe webhook exemption | 2026-03-17 |
-| [checklists/deployment-security.md](checklists/deployment-security.md) | Pre-deployment checklist for GKE Autopilot: secret hygiene (including Firestore env vars), CSP verification, OAuth config, Stripe config, dependency audit, build verification, post-deployment checks | 2026-03-17 |
+| [checklists/api-route-checklist.md](checklists/api-route-checklist.md) | Pre-merge checklist for adding or modifying API routes: requireAuth pattern, Firestore householdId validation, input validation, error handling, secret hygiene, SSRF prevention; includes Stripe webhook exemption | 2026-03-20 |
+| [checklists/deployment-security.md](checklists/deployment-security.md) | Pre-deployment checklist for GKE Autopilot: secret hygiene (including Firestore env vars), CSP verification, OAuth config, Stripe config, dependency audit, build verification, post-deployment checks | 2026-03-20 |
 
 ---
 
@@ -106,9 +106,9 @@ The following findings from active reports remain open. Assign to FiremanDecko f
 
 | ID | Report | Severity | Title | Status | Issue |
 |----|--------|----------|-------|--------|-------|
-| **CRITICAL-001** | **2026-03-09-external-pentest** | **CRITICAL** | **Next.js Multiple Critical CVEs (GHSA-3h52, GHSA-g5qg, GHSA-xv57, GHSA-4342, GHSA-9g9p, GHSA-f82v)** | **Open** | #475 |
+| ~~CRITICAL-001~~ | ~~2026-03-09-external-pentest~~ | ~~CRITICAL~~ | ~~Next.js Multiple Critical CVEs (GHSA-3h52, GHSA-g5qg, GHSA-xv57, GHSA-4342, GHSA-9g9p, GHSA-f82v)~~ | **RESOLVED — Next.js upgraded to 16.x** | #475 |
 | **HIGH-001** | **2026-03-09-external-pentest** | **HIGH** | **SheetJS Unpatched Prototype Pollution & ReDoS (GHSA-4r6h, GHSA-5pgg)** | Open | #476 |
-| MEDIUM-001 | 2026-03-09-external-pentest | MEDIUM | CSP allows unsafe-inline scripts/styles | Open | #477 |
+| MEDIUM-001 | 2026-03-09-external-pentest | MEDIUM | CSP allows unsafe-inline scripts/styles | Open — nonce-based CSP attempted and reverted (incompatible with PPR + CDN caching; see `src/middleware.ts`) | #477 |
 | MEDIUM-002 | 2026-03-09-external-pentest | MEDIUM | CSV fetch follows redirects without validation (SSRF) | Open | #478 |
 | MEDIUM-003 | 2026-03-09-external-pentest | MEDIUM | CSV sanitization regex bypass via Unicode | Open | #479 |
 | LOW-001 | 2026-03-09-external-pentest | LOW | Minimatch ReDoS in ESLint deps | Open | #480 |
@@ -132,5 +132,5 @@ The following findings from active reports remain open. Assign to FiremanDecko f
 | SEV-005 | 2026-03-04-stripe-direct-integration | LOW | Stripe webhook no event deduplication | Open |
 | SEV-006 | 2026-03-04-stripe-direct-integration | LOW | Checkout email validation (anonymous path removed — verify) | Open |
 | SEV-007 | 2026-03-04-stripe-direct-integration | INFO | googleSub trust chain comment missing | Open |
-| SEV-008 | 2026-03-04-stripe-direct-integration | INFO | deleteStripeEntitlement partial KV delete risk | Open |
+| ~~SEV-008~~ | ~~2026-03-04-stripe-direct-integration~~ | ~~INFO~~ | ~~deleteStripeEntitlement partial KV delete risk~~ | **N/A — Upstash Redis removed (issue #1521); entitlements now in Firestore** |
 | SEV-009 | 2026-03-04-stripe-direct-integration | INFO | Stripe publishable key in .env.example without client usage | Monitoring |
