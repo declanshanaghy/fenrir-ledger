@@ -21,7 +21,7 @@ export async function getStripeKey(): Promise<string | null> {
 
   try {
     const { stdout } = await execAsync(
-      `kubectl get secret fenrir-secrets -n fenrir-app -o jsonpath='{.data.STRIPE_SECRET_KEY}' | base64 -d`
+      `kubectl get secret fenrir-app-secrets -n fenrir-app -o jsonpath='{.data.STRIPE_SECRET_KEY}' | base64 -d`
     );
     stripeKey = stdout.trim();
     log.debug("getStripeKey: loaded from kubectl", { keyLength: stripeKey.length });

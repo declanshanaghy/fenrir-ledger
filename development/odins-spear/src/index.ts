@@ -37,43 +37,37 @@ async function startup(): Promise<void> {
   log.debug("startup called");
 
   // 1. Redis port-forward + connect
-  console.log("Connecting to Redis\u2026");
+  log.info("Connecting to Redis…");
   try {
     await ensureRedisPortForward(tuiLog);
     await connectRedis(tuiLog);
     initialConnStatus.redis = true;
-    log.debug("startup: Redis connected");
-    console.log("Redis connected.");
+    log.info("Redis connected");
   } catch (err) {
     const msg = (err as Error).message ?? String(err);
-    log.debug("startup: Redis failed", { messageLength: msg.length });
-    console.error(`Redis: ${msg} (continuing)`);
+    log.warn("Redis failed, continuing", { error: msg });
   }
 
   // 2. Google ADC
-  console.log("Authenticating Google ADC\u2026");
+  log.info("Authenticating Google ADC…");
   try {
     await ensureAuthenticated();
-    log.debug("startup: Google ADC authenticated");
-    console.log("Google ADC authenticated.");
+    log.info("Google ADC authenticated");
   } catch (err) {
     const msg = (err as Error).message ?? String(err);
-    log.debug("startup: ADC auth failed", { messageLength: msg.length });
-    console.error(`ADC auth error: ${msg}`);
+    log.fatal("ADC auth failed", { error: msg });
     process.exit(1);
   }
 
   // 3. Firestore
-  console.log("Connecting to Firestore\u2026");
+  log.info("Connecting to Firestore…");
   try {
     await connectFirestore();
     initialConnStatus.firestore = true;
-    log.debug("startup: Firestore connected");
-    console.log("Firestore connected.");
+    log.info("Firestore connected");
   } catch (err) {
     const msg = (err as Error).message ?? String(err);
-    log.debug("startup: Firestore failed", { messageLength: msg.length });
-    console.error(`Firestore: ${msg} (continuing)`);
+    log.warn("Firestore failed, continuing", { error: msg });
   }
 
   // 4. Stripe key
