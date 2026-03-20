@@ -1,5 +1,6 @@
 epic:
-  number: 1516
+  number: 1527
+  tracker_issue: 1527
   title: "Remove Redis — consolidate on Firestore"
   description: "Eliminate Redis as redundant infrastructure by migrating all KV stores (trials, entitlements, webhook dedup) to Firestore, then removing Redis code and GKE infrastructure."
 

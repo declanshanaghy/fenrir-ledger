@@ -1,5 +1,6 @@
 epic:
-  number: 1520
+  number: 1528
+  tracker_issue: 1528
   title: "Monorepo: pnpm workspaces + per-package verification"
   description: "Adopt pnpm workspaces for development/ packages, then replace verify.sh with per-package npm scripts and update GH Actions."
 
