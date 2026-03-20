@@ -17,12 +17,18 @@ the next wave of stories for dispatch.
 
 ```
 /epic-manager <root-issue-number> [--dispatch]
+/epic-manager <root-issue-number> --add <N> --blocked-by <N>[,N...] [--wave <N>] [--parallel-with <N>[,N...]] [--note "..."]
 ```
 
 | Arg | Required | Description |
 |-----|----------|-------------|
 | `<N>` | Yes | Root issue number — reads `tmp/epics/<N>.json` |
 | `--dispatch` | No | Print ready `/dispatch` commands after the dashboard |
+| `--add <N>` | No | Add issue #N to the graph (title fetched from GitHub) |
+| `--blocked-by <N>[,N...]` | With `--add` | Comma-separated blockers for the new story |
+| `--wave <N>` | No | Override auto-computed wave (default: max blocker wave + 1) |
+| `--parallel-with <N>[,N...]` | No | Peers in the same wave (bidirectional update) |
+| `--note "..."` | No | Optional note text for the new story |
 
 ## Speed Rules (UNBREAKABLE)
 

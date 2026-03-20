@@ -21,7 +21,7 @@
       "title": "Odin's Spear: extract into standalone package development/odins-spear with modular architecture",
       "state": "open",
       "wave": 1,
-      "blocks": [1495, 1387, 1388],
+      "blocks": [1495, 1505, 1387, 1388],
       "blocked_by": [1386],
       "parallel_with": [],
       "duplicate_of": null,
@@ -34,9 +34,20 @@
       "wave": 2,
       "blocks": [1387, 1388, 1389, 1472],
       "blocked_by": [1496],
-      "parallel_with": [],
+      "parallel_with": [1505],
       "duplicate_of": null,
       "note": "PALETTE_COMMANDS registry, CommandPalette (/ key), HelpOverlay (? key), ResultsOverlay, ConfirmDialog."
+    },
+    {
+      "number": 1505,
+      "title": "Odin's Spear: move tests from frontend/__tests__ into development/odins-spear package",
+      "state": "open",
+      "wave": 2,
+      "blocks": [],
+      "blocked_by": [1496],
+      "parallel_with": [1495],
+      "duplicate_of": null,
+      "note": "Move 11 odins-spear-*.test.ts files from development/frontend/src/__tests__/ into development/odins-spear/. Add Vitest config to the new package."
     },
     {
       "number": 1390,
