@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Box, Text, useInput } from "ink";
 import { log } from "@fenrir/logger";
 import { firestoreClient } from "../lib/firestore.js";
+import { useSelection } from "../context/SelectionContext.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -279,6 +280,8 @@ export function UsersTab({
 }: UsersTabProps): React.JSX.Element {
   log.debug("UsersTab render");
 
+  const selection = useSelection();
+
   const [users, setUsers] = useState<EnrichedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -438,6 +441,37 @@ export function UsersTab({
       }
     })();
   }, [selectedIdx, users]);
+
+  // Sync selected user and trial fingerprint into SelectionContext so commands receive context
+  useEffect(() => {
+    if (selectedIdx < 0 || selectedIdx >= users.length) {
+      selection.setSelectedUserId(null);
+      selection.setSelectedFp(null);
+      return;
+    }
+    const user = users[selectedIdx];
+    if (!user) return;
+
+    selection.setSelectedUserId(user.id);
+    selection.setSelectedFp(null); // reset while querying
+
+    // Reverse-lookup: find the trial document keyed by browser fingerprint via userId field
+    void (async () => {
+      if (!firestoreClient) return;
+      try {
+        const snap = await firestoreClient
+          .collection("trials")
+          .where("userId", "==", user.id)
+          .limit(1)
+          .get();
+        const fp = !snap.empty && snap.docs[0] ? snap.docs[0].id : null;
+        log.debug("UsersTab: trial fp lookup", { userId: user.id, fp });
+        selection.setSelectedFp(fp);
+      } catch (err) {
+        log.error("UsersTab: trial fp lookup error", err as Error);
+      }
+    })();
+  }, [selectedIdx, users]); // selection setters are stable (useState) — safe to omit
 
   // Delete user
   const doDeleteUser = useCallback(
