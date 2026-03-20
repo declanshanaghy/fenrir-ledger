@@ -1,13 +1,27 @@
 ---
-description: Break work into GitHub Issues with labels, dependencies, and acceptance criteria. Interviews Odin via Freya, wireframes via Luna (if UI), then files issues to the Project board.
-argument-hint: [user prompt]
-model: opus
-disallowed-tools: Task, EnterPlanMode
+name: plan-w-team
+description: >
+  Break work into GitHub Issues with labels, dependencies, and acceptance criteria.
+  Interviews Odin via Freya, wireframes via Luna (if UI), then files issues to the
+  Project board and writes an epic dependency graph to tmp/epics/<N>.json for
+  /epic-manager to track. Use when the user says 'plan', 'plan with team',
+  'break this into issues', or describes a feature/bug needing structured planning.
 ---
 
 # Plan With Team
 
-Break the user's request into GitHub Issues on Project #1. Each issue becomes a unit of work that `/fire-next-up` picks up and runs through the agent chain.
+Break the user's request into GitHub Issues on Project #1. Each issue becomes a unit
+of work that `/fire-next-up` picks up and runs through the agent chain. After filing,
+write `tmp/epics/<root-N>.json` so `/epic-manager` can track and dispatch the epic.
+
+## Model
+
+Use **Opus** for this skill — deep reasoning required for dependency analysis and
+issue decomposition.
+
+## Disallowed Tools
+
+Do NOT use: `Task`, `EnterPlanMode`
 
 ## Variables
 
@@ -21,7 +35,7 @@ TEAM_MEMBERS:
 
 ## Instructions
 
-- **PLANNING ONLY**: Do NOT build, write code, or deploy agents. Your only output is GitHub Issues.
+- **PLANNING ONLY**: Do NOT build, write code, or deploy agents. Your only output is GitHub Issues + the epic graph file.
 - If no `USER_PROMPT` is provided, stop and ask the user to provide it.
 - Think deeply about the best approach before breaking work into issues.
 - Understand the codebase directly (no subagents) to understand existing patterns.
@@ -221,12 +235,15 @@ node -e "JSON.parse(require('fs').readFileSync('tmp/epics/<N>.json','utf8')); co
 
 Commit the file on `main` so agents can find it:
 ```bash
-git add tmp/epics/<N>.json
+git add -f tmp/epics/<N>.json
 git commit -m "chore: add epic graph for #<N> — <title>
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 git push
 ```
+
+> **Note:** `tmp/` is gitignored but `tmp/epics/` is explicitly unblocked via
+> `!tmp/epics/` in `.gitignore`. Use `git add -f` if needed.
 
 ### Step 6 — Report
 

@@ -7,7 +7,7 @@
  * running, blocked, or ready to dispatch.
  *
  * Usage:
- *   node .claude/scripts/epic-manager.mjs <root-issue-number> [--dispatch]
+ *   node .claude/skills/epic-manager/epic-manager.mjs <root-issue-number> [--dispatch]
  *
  * Flags:
  *   --dispatch   Print ready dispatch commands (does not execute them)

@@ -1,11 +1,11 @@
 ---
+name: epic-manager
 description: >
   Monitor epic progress and dispatch next ready stories. Reads tmp/epics/<N>.json,
   cross-references live GitHub issue states and active GKE K8s jobs, prints a
   wave-by-wave dashboard, and identifies what's ready to dispatch next.
   Use when the user says 'epic status', 'epic manager', 'what's next in epic',
   '/epic-manager <N>', or provides a root issue number to track.
-argument-hint: "<root-issue-number> [--dispatch]"
 ---
 
 # Epic Manager
@@ -33,7 +33,7 @@ the next wave of stories for dispatch.
 ## Execution
 
 ```bash
-node .claude/scripts/epic-manager.mjs <N> [--dispatch]
+node .claude/skills/epic-manager/epic-manager.mjs <N> [--dispatch]
 ```
 
 That is the entire execution. No other tool calls needed unless the output requires
@@ -142,6 +142,7 @@ The epic file `tmp/epics/<N>.json` must match this schema:
       "blocks": [1496],
       "blocked_by": [],
       "parallel_with": [],
+      "duplicate_of": null,
       "note": "DONE — produces development/frontend/scripts/odins-spear.mjs"
     },
     {
@@ -152,6 +153,7 @@ The epic file `tmp/epics/<N>.json` must match this schema:
       "blocks": [1495, 1387, 1388],
       "blocked_by": [1386],
       "parallel_with": [],
+      "duplicate_of": null,
       "note": ""
     }
   ]
