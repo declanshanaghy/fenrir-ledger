@@ -82,7 +82,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
     );
   }
 
-  const shortSessionId = job.sessionId.length > 8 ? job.sessionId.slice(0, 8) + "…" : job.sessionId;
+  const isExtended = displayMode === "extended";
 
   return (
     <div
@@ -105,8 +105,13 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
             <img className="card-avatar" src={avatar} alt={job.agentName} />
           </button>
         )}
-        <span className="card-issue-title" title={cardTitle}>
-          {cardTitle}
+        {isExtended && (
+          <span className="card-extended-issue-badge" aria-label={`Issue ${job.issue}`}>
+            #{job.issue}
+          </span>
+        )}
+        <span className="card-issue-title" title={isExtended ? (job.issueTitle ?? displayTitle) : cardTitle}>
+          {isExtended ? (job.issueTitle ?? displayTitle) : cardTitle}
         </span>
       </div>
       <div className="card-meta-new">
@@ -115,47 +120,78 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
         </span>
         <span>Step {job.step}</span>
         {job.fixture && <span className="card-fixture-badge" title="Fixture (replayed log)">ᚠ</span>}
-        {job.status === "running" && onCancelJob ? (
-          <button
-            className={`card-status-icon-btn card-status-icon-btn--cancel${pulse}`}
-            style={{ color: sColor }}
-            title="Invoke Ragnarök — click to cancel this job"
-            aria-label="Cancel running job"
-            onClick={(e) => {
-              e.stopPropagation();
-              onCancelJob(job.sessionId);
-            }}
-          >
-            <StatusIconSvg status={job.status} />
-          </button>
+        {isExtended ? (
+          <>
+            {job.status === "running" && onCancelJob ? (
+              <button
+                className={`card-extended-action-btn card-extended-action-btn--cancel card-extended-action-first${pulse}`}
+                style={{ color: sColor }}
+                title="Invoke Ragnarök — click to cancel this job"
+                aria-label="Cancel running job"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancelJob(job.sessionId);
+                }}
+              >
+                <StatusIconSvg status={job.status} />
+                <span>{sLabel}</span>
+              </button>
+            ) : (
+              <span
+                className={`card-extended-status-label card-extended-action-first${pulse}`}
+                style={{ color: sColor }}
+                aria-label={`Status: ${sLabel}`}
+                title={sLabel}
+              >
+                <StatusIconSvg status={job.status} />
+                <span>{sLabel}</span>
+              </span>
+            )}
+            <CardCopySessionIdButton sessionId={job.sessionId} labeled />
+            {onTogglePin && (
+              <CardPinButtonLabeled isPinned={isPinned} onTogglePin={onTogglePin} />
+            )}
+          </>
         ) : (
-          <span
-            className={`card-status-icon-btn${pulse}`}
-            style={{ color: sColor }}
-            title={sLabel}
-            aria-label={`Status: ${sLabel}`}
-          >
-            <StatusIconSvg status={job.status} />
-          </span>
+          <>
+            {job.status === "running" && onCancelJob ? (
+              <button
+                className={`card-status-icon-btn card-status-icon-btn--cancel${pulse}`}
+                style={{ color: sColor }}
+                title="Invoke Ragnarök — click to cancel this job"
+                aria-label="Cancel running job"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancelJob(job.sessionId);
+                }}
+              >
+                <StatusIconSvg status={job.status} />
+              </button>
+            ) : (
+              <span
+                className={`card-status-icon-btn${pulse}`}
+                style={{ color: sColor }}
+                title={sLabel}
+                aria-label={`Status: ${sLabel}`}
+              >
+                <StatusIconSvg status={job.status} />
+              </span>
+            )}
+            {onTogglePin && (
+              <CardPinButton isPinned={isPinned} onTogglePin={onTogglePin} />
+            )}
+            <CardCopySessionIdButton sessionId={job.sessionId} />
+          </>
         )}
-        {onTogglePin && (
-          <CardPinButton isPinned={isPinned} onTogglePin={onTogglePin} />
-        )}
-        <CardCopySessionIdButton sessionId={job.sessionId} />
       </div>
-      {displayMode === "extended" && (
+      {isExtended && (job.startTime || job.completionTime) && (
         <div className="card-extended-meta">
-          <span className="card-extended-session-id" title={job.sessionId}>
-            {shortSessionId}
-          </span>
           <span className="card-extended-elapsed" title="Elapsed time">
             {formatElapsed(job.startTime, job.completionTime)}
           </span>
-          {(job.startTime || job.completionTime) && (
-            <span className="card-extended-timestamp" title="Last activity">
-              {formatTimestamp(job.completionTime ?? job.startTime)}
-            </span>
-          )}
+          <span className="card-extended-timestamp" title="Last activity">
+            {formatTimestamp(job.completionTime ?? job.startTime)}
+          </span>
         </div>
       )}
       {isTerminating && (
@@ -212,7 +248,53 @@ function CardPinButton({ isPinned, onTogglePin }: { isPinned: boolean; onToggleP
   );
 }
 
-function CardCopySessionIdButton({ sessionId }: { sessionId: string }) {
+function CardPinButtonLabeled({ isPinned, onTogglePin }: { isPinned: boolean; onTogglePin: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+
+  useEffect(() => {
+    setConfirming(false);
+  }, [isPinned]);
+
+  if (confirming) {
+    return (
+      <button
+        className="card-extended-action-btn card-extended-action-btn--confirm"
+        onClick={(e) => {
+          e.stopPropagation();
+          onTogglePin();
+          setConfirming(false);
+        }}
+        onBlur={() => setConfirming(false)}
+        title="Confirm: remove from Odin\u2019s memory"
+        aria-label="Confirm unpin"
+      >
+        ✕ Unpin?
+      </button>
+    );
+  }
+
+  return (
+    <button
+      className={`card-extended-action-btn${isPinned ? " card-extended-action-btn--pinned" : ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (isPinned) {
+          setConfirming(true);
+        } else {
+          onTogglePin();
+        }
+      }}
+      title={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
+      aria-label={isPinned ? "Unpin from Odin\u2019s memory" : "Pin to Odin\u2019s memory"}
+      aria-pressed={isPinned}
+    >
+      <CardPinIcon filled={isPinned} />
+      <span>Pin Session</span>
+    </button>
+  );
+}
+
+function CardCopySessionIdButton({ sessionId, labeled }: { sessionId: string; labeled?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy(e: React.MouseEvent) {
@@ -224,6 +306,20 @@ function CardCopySessionIdButton({ sessionId }: { sessionId: string }) {
     } catch {
       // Clipboard API unavailable — no-op
     }
+  }
+
+  if (labeled) {
+    return (
+      <button
+        className={`card-extended-action-btn${copied ? " card-extended-action-btn--copied" : ""}`}
+        onClick={handleCopy}
+        title={copied ? "Copied!" : `Copy session ID: ${sessionId}`}
+        aria-label={copied ? "Session ID copied" : "Copy Session ID"}
+      >
+        {copied ? <CardCheckIcon /> : <CardClipboardIcon />}
+        <span>{copied ? "Copied!" : "Copy Session ID"}</span>
+      </button>
+    );
   }
 
   return (
