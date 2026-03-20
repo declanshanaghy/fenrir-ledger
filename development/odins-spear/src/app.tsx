@@ -56,6 +56,7 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
   const [cmdStatus, setCmdStatusMsg] = useState<string | null>(null);
   const [connState, setConnState] = useState<ConnStatus>(initialConnStatus);
   const [countState, setCountState] = useState<Counts>(initialCounts);
+  const [inputCaptured, setInputCaptured] = useState(false);
 
   // Suppress unused-variable warnings for setters wired in later stories
   void setConnState;
@@ -159,6 +160,9 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
     // Overlays own their own input via useInput — we suppress global keys here
     if (overlay.kind !== "none") return;
 
+    // A tab has captured input (e.g. tier prompt) — global keys must not fire
+    if (inputCaptured) return;
+
     if (input === "q") {
       log.debug("SpearInner: quitting");
       if (pfProc) {
@@ -246,7 +250,13 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
       />
     );
   } else if (activeTab === 0) {
-    mainContent = <UsersTab cmdStatus={cmdStatus} />;
+    mainContent = (
+      <UsersTab
+        cmdStatus={cmdStatus}
+        onInputCapture={setInputCaptured}
+        onJumpToHousehold={() => { setActiveTab(1); }}
+      />
+    );
   } else {
     mainContent = <HouseholdsTab cmdStatus={cmdStatus} />;
   }
