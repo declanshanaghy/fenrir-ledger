@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Box, useApp, useInput, useStdout } from "ink";
 import { log } from "@fenrir/logger";
 import { TopBar } from "./components/TopBar.js";
@@ -11,24 +11,10 @@ import { TrialInputDialog } from "./components/TrialInputDialog.js";
 import { UsersTab } from "./tabs/UsersTab.js";
 import { HouseholdsTab } from "./tabs/HouseholdsTab.js";
 import { SelectionProvider, useSelection } from "./context/SelectionContext.js";
-import { pfProc } from "./lib/redis.js";
 import type { PaletteCommand, CommandContext } from "./commands/registry.js";
 import type { ConnStatus, Counts } from "./components/StatusBar.js";
 
 const TUI_TABS = ["Users", "Households"] as const;
-
-// ─── Module-level tuiLog ─────────────────────────────────────────────────────
-// Async callbacks (Redis, port-forward) that fire after render must use this
-// instead of writing directly to stdout to avoid corrupting Ink's fullscreen buffer.
-
-let _tuiLog: ((msg: string) => void) | null = null;
-
-export function tuiLog(msg: string, _isError = false): void {
-  if (_tuiLog) {
-    _tuiLog(msg);
-  }
-  log.debug("tuiLog called", { messageLength: msg.length });
-}
 
 // ─── Inner component (needs SelectionProvider in tree) ───────────────────────
 
@@ -61,16 +47,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
   // Suppress unused-variable warnings for setters wired in later stories
   void setConnState;
   void setCountState;
-
-  // Register tuiLog handler so async callbacks route through React state
-  useEffect(() => {
-    log.debug("SpearInner: registering tuiLog handler");
-    _tuiLog = (msg: string) => setCmdStatusMsg(String(msg).slice(0, 120));
-    return () => {
-      log.debug("SpearInner: clearing tuiLog handler");
-      _tuiLog = null;
-    };
-  }, []);
 
   // Build CommandContext from SelectionContext
   const cmdCtx: CommandContext = {
@@ -165,9 +141,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
 
     if (input === "q") {
       log.debug("SpearInner: quitting");
-      if (pfProc) {
-        try { pfProc.kill(); } catch { /* ignore */ }
-      }
       exit();
       return;
     }

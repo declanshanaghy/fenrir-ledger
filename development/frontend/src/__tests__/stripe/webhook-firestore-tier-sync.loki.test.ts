@@ -20,13 +20,6 @@ import type Stripe from "stripe";
 
 // ── Core infrastructure mocks ─────────────────────────────────────────────────
 
-vi.mock("@/lib/kv/redis-client", () => ({
-  getRedisClient: () => ({
-    get: vi.fn().mockResolvedValue(null),
-    set: vi.fn().mockResolvedValue("OK"),
-  }),
-}));
-
 vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));

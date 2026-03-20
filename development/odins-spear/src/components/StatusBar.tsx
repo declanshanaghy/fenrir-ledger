@@ -7,7 +7,6 @@ const RED = "#ef4444";
 const GRAY = "#6b6b80";
 
 export interface ConnStatus {
-  redis: boolean;
   firestore: boolean;
   stripe: boolean;
 }
@@ -61,7 +60,6 @@ export function StatusBar({ connStatus, counts, activeTab }: StatusBarProps): Re
       borderColor="#1e1e2e"
     >
       <Box flexDirection="row" gap={3}>
-        <StatusDot connected={connStatus.redis} label="Redis" />
         <StatusDot connected={connStatus.firestore} label="Firestore" />
         <StatusDot connected={connStatus.stripe} label="Stripe" />
       </Box>

@@ -15,7 +15,7 @@ const CONFIRM_WORD = "delete";
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface ConfirmDialogProps {
-  /** Name of the action, e.g. "redis-flush" */
+  /** Name of the action, e.g. "firestore-delete-user" */
   action: string;
   /** One-line description */
   desc: string;

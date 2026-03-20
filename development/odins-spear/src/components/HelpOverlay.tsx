@@ -58,11 +58,9 @@ const SECTIONS: Section[] = [
     title: "System Commands",
     shortcuts: [
       { key: "Ctrl+R",  desc: "Reload current view" },
-      { key: "/redis-ping",       desc: "Ping Redis" },
-      { key: "/redis-keys",       desc: "List all Redis keys" },
-      { key: "/redis-info",       desc: "Redis server INFO" },
+      { key: "/firestore-ping",             desc: "Ping Firestore" },
       { key: "/firestore-list-collections", desc: "List Firestore collections" },
-      { key: "/stripe-check-key", desc: "Verify Stripe key" },
+      { key: "/stripe-check-key",           desc: "Verify Stripe key" },
     ],
   },
 ];

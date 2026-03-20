@@ -6,6 +6,22 @@ export function registerFirestoreCommands(): void {
   log.debug("registerFirestoreCommands called");
 
   registerCommand({
+    name: "firestore-ping",
+    desc: "Ping the Firestore connection (connectivity check)",
+    subsystem: "firestore",
+    execute: async (_ctx) => {
+      log.debug("firestore-ping execute called");
+      if (!firestoreClient) {
+        log.debug("firestore-ping execute: no client");
+        return ["ERROR: Firestore client not connected"];
+      }
+      const cols = await firestoreClient.listCollections();
+      log.debug("firestore-ping execute returning", { colCount: cols.length });
+      return [`PONG: Firestore connected (${cols.length} top-level collections)`];
+    },
+  });
+
+  registerCommand({
     name: "firestore-list-collections",
     desc: "List all top-level Firestore collections",
     subsystem: "firestore",

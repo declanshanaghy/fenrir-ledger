@@ -75,7 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 Fenrir Ledger runs on **Google Kubernetes Engine (GKE) Autopilot**, not Vercel/Depot.
 
 - **App deployment:** Next.js standalone in GKE Pods via `infrastructure/k8s/app/`
-- **Database:** In-cluster Redis StatefulSet — configured via `REDIS_URL` env var (redis://redis.fenrir-app.svc.cluster.local:6379)
+- **Database:** Firestore (Google Cloud) — configured via Application Default Credentials
 - **Monitoring:** Google Cloud Monitoring — uptime checks, error rates, container health via `infrastructure/monitoring.tf`
 - **Dispatch skill:** Uses `dispatch/dispatch-job.sh` to spawn agent sandboxes as GKE Jobs (not Depot remote execution)
 - **DNS:** Google-provided Ingress hostname (future: custom domain via Cloud CDN + manual DNS cutover — see issue #684)

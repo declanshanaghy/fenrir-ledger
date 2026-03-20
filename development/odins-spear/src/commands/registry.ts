@@ -2,11 +2,11 @@ import { log } from "@fenrir/logger";
 
 // ─── Command schema ───────────────────────────────────────────────────────────
 
-export type Subsystem = "redis" | "firestore" | "stripe" | "system" | "trial";
+export type Subsystem = "firestore" | "stripe" | "system" | "trial";
 export type RequiresContext = "user" | "household" | "trial";
 
 export interface PaletteCommand {
-  /** Unique slug, e.g. "redis-keys", "delete-user" */
+  /** Unique slug, e.g. "firestore-ping", "firestore-delete-user" */
   name: string;
   /** One-line description shown in the palette */
   desc: string;

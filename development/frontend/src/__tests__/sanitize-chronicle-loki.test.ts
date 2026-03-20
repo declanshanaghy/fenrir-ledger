@@ -210,9 +210,9 @@ describe("redactInfraDetails — all infra patterns", () => {
 
   it("redacts svc.cluster.local with port", async () => {
     const { redactInfraDetails } = await importSanitize();
-    const text = "REDIS_URL=redis://redis.fenrir-app.svc.cluster.local:6379";
+    const text = "FIRESTORE_HOST=grpc://firestore.fenrir-app.svc.cluster.local:8080";
     const result = redactInfraDetails(text);
-    expect(result).not.toContain("redis.fenrir-app.svc.cluster.local:6379");
+    expect(result).not.toContain("firestore.fenrir-app.svc.cluster.local:8080");
     expect(result).toContain("[REDACTED-SVC]");
   });
 
@@ -335,7 +335,7 @@ describe("sanitizeText — composite pipeline", () => {
   it("processes svc.cluster.local in a realistic commit message context", async () => {
     const { sanitizeText } = await importSanitize();
     const commitMsg =
-      "feat: update REDIS_URL to redis://cache.fenrir-app.svc.cluster.local:6379";
+      "feat: update FIRESTORE_HOST to grpc://cache.fenrir-app.svc.cluster.local:8080";
     const result = sanitizeText(commitMsg);
     expect(result).not.toContain("cache.fenrir-app.svc.cluster.local");
     expect(result).toContain("[REDACTED-SVC]");
@@ -408,7 +408,7 @@ export ANTHROPIC_API_KEY=sk-ant-api03-FakeKeyFakeKeyFakeKeyFakeKeyFakeKey
 
 ## Tool Result
 
-Connected to redis://redis.fenrir-app.svc.cluster.local:6379 (namespace: fenrir-prod)
+Connected to grpc://api.fenrir-app.svc.cluster.local:8080 (namespace: fenrir-prod)
 `;
 
     const sanitized = sanitizeText(fakeMdx);
@@ -416,7 +416,7 @@ Connected to redis://redis.fenrir-app.svc.cluster.local:6379 (namespace: fenrir-
     // API key masked
     expect(sanitized).not.toContain("FakeKeyFakeKeyFakeKeyFakeKeyFakeKey");
     // Internal DNS redacted
-    expect(sanitized).not.toContain("redis.fenrir-app.svc.cluster.local");
+    expect(sanitized).not.toContain("api.fenrir-app.svc.cluster.local");
     // Namespace redacted
     expect(sanitized).not.toContain("fenrir-prod");
     // Structure preserved
@@ -441,7 +441,7 @@ Connected to redis://redis.fenrir-app.svc.cluster.local:6379 (namespace: fenrir-
       "AIzaSyGoogleApiKeyGoogleApiKeyGoogleApiKey12345",
       "https://deploy:npm_NPMTokenNPMTokenNPMTokenNPMTokenNPMToken@github.com/org/repo",
       "namespace: fenrir-production",
-      "redis://cache.default.svc.cluster.local:6379",
+      "grpc://cache.default.svc.cluster.local:8080",
     ].join("\n");
 
     const result = sanitizeText(chronicle);
