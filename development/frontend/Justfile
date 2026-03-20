@@ -46,16 +46,9 @@ verify-fast:
 
 # ── Trial / Subscription ───────────────────────────────────────────────────
 
-# Install node_modules for odins-spear if absent
-_install-odins-spear:
-    #!/usr/bin/env bash
-    if [ ! -d "{{repo_root}}/development/odins-spear/node_modules" ]; then
-        npm install --prefix "{{repo_root}}/development/odins-spear"
-    fi
-
 # Odin's Spear — Interactive REPL for managing trials, entitlements, and Stripe (auto port-forwards)
-odins-spear *args: _install-odins-spear
-    cd "{{repo_root}}/development/odins-spear" && npx tsx src/index.ts {{args}}
+odins-spear *args:
+    cd "{{repo_root}}/development/odins-spear" && NODE_NO_WARNINGS=1 npx tsx --import ./register.mjs src/index.ts {{args}}
 
 # ── Utilities ───────────────────────────────────────────────────────────────
 
