@@ -42,6 +42,12 @@ the next wave of stories for dispatch.
 node .claude/skills/epic-manager/epic-manager.mjs <N> [--dispatch]
 ```
 
+If `--help` is the only argument, run the script directly to show its built-in help:
+
+```bash
+node .claude/skills/epic-manager/epic-manager.mjs --help
+```
+
 That is the entire execution. No other tool calls needed unless the output requires
 follow-up action (e.g., closing a duplicate, dispatching a ready story).
 
