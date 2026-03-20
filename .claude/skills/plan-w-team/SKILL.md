@@ -3,7 +3,7 @@ name: plan-w-team
 description: >
   Break work into GitHub Issues with labels, dependencies, and acceptance criteria.
   Interviews Odin via Freya, wireframes via Luna (if UI), then files issues to the
-  Project board and writes an epic dependency graph to tmp/epics/<N>.json for
+  Project board and writes an epic dependency graph to tmp/epics/<N>.yml for
   /epic-manager to track. Use when the user says 'plan', 'plan with team',
   'break this into issues', or describes a feature/bug needing structured planning.
 ---
@@ -12,7 +12,7 @@ description: >
 
 Break the user's request into GitHub Issues on Project #1. Each issue becomes a unit
 of work that `/fire-next-up` picks up and runs through the agent chain. After filing,
-write `tmp/epics/<root-N>.json` so `/epic-manager` can track and dispatch the epic.
+write `tmp/epics/<root-N>.yml` so `/epic-manager` can track and dispatch the epic.
 
 ## Model
 
@@ -182,7 +182,7 @@ gh issue comment <N> --body "Blocks #M — <one-line summary of dependent issue>
 ### Step 5b — Write Epic Graph File
 
 After all issues are created and their numbers are known, write the epic dependency
-graph to `tmp/epics/<root-issue-number>.json`.
+graph to `tmp/epics/<root-issue-number>.yml`.
 
 The **root issue** is the foundational story — wave 0, the first issue that everything
 else depends on (directly or transitively). If there is no single root, use the lowest
@@ -190,27 +190,22 @@ issue number.
 
 **Schema:**
 
-```json
-{
-  "epic": {
-    "number": <root-issue-number>,
-    "title": "<epic title>",
-    "description": "<one-sentence description>"
-  },
-  "stories": [
-    {
-      "number": <N>,
-      "title": "<GitHub issue title>",
-      "state": "open",
-      "wave": <0-based wave index>,
-      "blocks": [<issue numbers this story unblocks>],
-      "blocked_by": [<issue numbers that must close before this starts>],
-      "parallel_with": [<issue numbers in the same wave that run in parallel>],
-      "duplicate_of": null,
-      "note": "<optional human note>"
-    }
-  ]
-}
+```yaml
+epic:
+  number: <root-issue-number>
+  title: "<epic title>"
+  description: "<one-sentence description>"
+
+stories:
+  - number: <N>
+    title: "<GitHub issue title>"
+    state: open
+    wave: <0-based wave index>
+    blocks: [<issue numbers this story unblocks>]
+    blocked_by: [<issue numbers that must close before this starts>]
+    parallel_with: [<issue numbers in the same wave that run in parallel>]
+    duplicate_of: null
+    note: "<optional human note>"
 ```
 
 **Wave assignment rules:**
@@ -223,19 +218,19 @@ issue number.
 
 ```bash
 mkdir -p tmp/epics
-# write JSON via Write tool — do NOT use bash heredoc or echo
+# write YAML via Write tool — do NOT use bash heredoc or echo
 ```
 
-Use the Write tool directly with the JSON content. Do not shell-escape or base64 encode.
+Use the Write tool directly with the YAML content. Do not shell-escape or base64 encode.
 
 After writing, verify:
 ```bash
-node -e "JSON.parse(require('fs').readFileSync('tmp/epics/<N>.json','utf8')); console.log('valid JSON')"
+node -e "import('js-yaml').then(y => { y.default.load(require('fs').readFileSync('tmp/epics/<N>.yml','utf8')); console.log('valid YAML'); })"
 ```
 
 Commit the file on `main` so agents can find it:
 ```bash
-git add -f tmp/epics/<N>.json
+git add -f tmp/epics/<N>.yml
 git commit -m "chore: add epic graph for #<N> — <title>
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
@@ -254,7 +249,7 @@ After all issues are created and the epic file is written, report:
 
 **Topic:** <brief description>
 **Issues created:** N
-**Epic graph:** tmp/epics/<root-N>.json
+**Epic graph:** tmp/epics/<root-N>.yml
 
 | # | Title | Type | Priority | Chain | Wave | Depends On |
 |---|-------|------|----------|-------|------|------------|
@@ -281,4 +276,4 @@ To start execution:
 8. **Freya always interviews** — never skip the product owner interview
 9. **Luna only for UI** — skip wireframes for pure backend/infra/test work
 10. **Use the issue template** — all required sections must be present for agents to work from
-11. **Always write the epic graph** — `tmp/epics/<N>.json` is mandatory output for every plan. `/epic-manager` depends on it.
+11. **Always write the epic graph** — `tmp/epics/<N>.yml` is mandatory output for every plan. `/epic-manager` depends on it.

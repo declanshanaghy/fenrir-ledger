@@ -1,0 +1,10 @@
+{
+  "name": "@fenrir/epic-manager",
+  "version": "1.0.0",
+  "description": "Epic dependency graph tracker + dispatch advisor",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}
