@@ -132,41 +132,34 @@ Read the output and:
 
 The epic file `tmp/epics/<N>.yml` must match this schema:
 
-```json
-{
-  "epic": {
-    "number": 1386,
-    "title": "Odin's Spear TUI",
-    "description": "..."
-  },
-  "stories": [
-    {
-      "number": 1386,
-      "title": "Odin's Spear TUI: foundation — Ink setup, auto-startup, tab shell",
-      "state": "closed",
-      "wave": 0,
-      "blocks": [1496],
-      "blocked_by": [],
-      "parallel_with": [],
-      "duplicate_of": null,
-      "note": "DONE — produces development/frontend/scripts/odins-spear.mjs"
-    },
-    {
-      "number": 1496,
-      "title": "Odin's Spear: extract into standalone package",
-      "state": "open",
-      "wave": 1,
-      "blocks": [1495, 1387, 1388],
-      "blocked_by": [1386],
-      "parallel_with": [],
-      "duplicate_of": null,
-      "note": ""
-    }
-  ]
-}
+```yaml
+epic:
+  number: 1386
+  title: "Odin's Spear TUI"
+  description: "..."
+
+stories:
+  - number: 1386
+    title: "Odin's Spear TUI: foundation — Ink setup, auto-startup, tab shell"
+    state: closed
+    wave: 0
+    blocks: [1496]
+    blocked_by: []
+    parallel_with: []
+    duplicate_of: null
+    note: "DONE — produces development/frontend/scripts/odins-spear.mjs"
+  - number: 1496
+    title: "Odin's Spear: extract into standalone package"
+    state: open
+    wave: 1
+    blocks: [1495, 1387, 1388]
+    blocked_by: [1386]
+    parallel_with: []
+    duplicate_of: null
+    note: ""
 ```
 
-> **Note:** `state` in the JSON is the initial/authored state. The script ignores it and
+> **Note:** `state` in the YAML is the initial/authored state. The script ignores it and
 > always uses live GitHub state. It is kept for human reference only.
 
 ## Rules
@@ -179,4 +172,4 @@ The epic file `tmp/epics/<N>.yml` must match this schema:
 4. **Duplicate check is mandatory** — if `--dispatch` is passed, warn about duplicates
    before printing dispatch commands.
 5. **Epic file is the graph source of truth** — GitHub/K8s are for live state only.
-   Dependencies (`blocked_by`, `blocks`, `wave`) come from the JSON file.
+   Dependencies (`blocked_by`, `blocks`, `wave`) come from the YAML file.
