@@ -83,7 +83,9 @@ function startServer() {
   // failures. `next start` shows a harmless warning but works correctly for
   // coverage collection. The normalizeLcov() step remaps .next/server/app/
   // paths to src/ after c8 generates the LCOV.
-  const nextBin = path.join(FRONTEND_DIR, "node_modules", ".bin", "next");
+  // Use the actual JS entry point, not the shell wrapper in .bin/ — Node.js
+  // cannot execute the .bin/next shell script and crashes with SyntaxError.
+  const nextBin = path.join(FRONTEND_DIR, "node_modules", "next", "dist", "bin", "next");
 
   const serverProc = spawn(
     "node",
