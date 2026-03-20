@@ -184,7 +184,11 @@ if (flagAdd) {
   }
 
   // Link as GitHub sub-issue (populates "Sub-issues progress" on project board)
-  run(`gh issue edit ${rootIssue} --add-sub-issue ${flagAdd} 2>/dev/null`);
+  const parentId = run(`gh issue view ${rootIssue} --json id -q .id`);
+  const childId = run(`gh issue view ${flagAdd} --json id -q .id`);
+  if (parentId && childId) {
+    run(`gh api graphql -f query='mutation { addSubIssue(input: { issueId: "${parentId.trim()}", subIssueId: "${childId.trim()}" }) { subIssue { number } } }' 2>/dev/null`);
+  }
 
   console.log(`  ✅ Added #${flagAdd} "${newTitle}" at wave ${newWave} to tracker #${rootIssue}`);
   if (flagBlockedBy.length > 0) console.log(`     blocked_by: [${flagBlockedBy.join(", ")}]`);
