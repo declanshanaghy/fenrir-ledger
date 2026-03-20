@@ -55,6 +55,9 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [wireframes/monitor-ui/theme-switcher-interaction-spec.md](wireframes/monitor-ui/theme-switcher-interaction-spec.md) -- Monitor UI theme switcher: light/dark toggle, CSS variable strategy
 - [wireframes/monitor-ui/session-header-title-interaction-spec.md](wireframes/monitor-ui/session-header-title-interaction-spec.md) -- Session header descriptive title: issue title resolution
 - [wireframes/monitor-ui/verdict-inscription-interaction-spec.md](wireframes/monitor-ui/verdict-inscription-interaction-spec.md) -- Norse verdict inscription: detection, agent variants, carve-in animation
+- [wireframes/monitor-ui/wss-icon-tooltip-interaction-spec.md](wireframes/monitor-ui/wss-icon-tooltip-interaction-spec.md) -- WSS icon: remove bounding box, wolf-voice tooltip per connection state (Issue #1443)
+- [wireframes/settings-tabs/settings-tabs-interaction-spec.md](wireframes/settings-tabs/settings-tabs-interaction-spec.md) -- Settings tab layout: tab switching, URL hash persistence, karl-bling tabs, mobile select pattern
+- [wireframes/spear/cancel-button-interaction-spec.md](wireframes/spear/cancel-button-interaction-spec.md) -- Odin's Spear cancel controls: styled button affordance for JobCard and SessionHeader (Issue #1475)
 - [wireframes/sync/sync-interaction-spec.md](wireframes/sync/sync-interaction-spec.md) -- Cloud sync UX: indicator states, settings section, tier gating
 
 ### Wireframes (78 HTML5 documents — synced 2026-03-17)
