@@ -422,7 +422,8 @@ async function executeAction(
   action: ConfirmAction,
   hh: HouseholdListItem,
   setStatus: (s: string) => void,
-  reload: () => void
+  reload: () => void,
+  returnTo?: () => void
 ): Promise<void> {
   log.debug("executeAction called", { kind: action.kind, hhId: hh.id });
   if (!firestoreClient) {
@@ -474,6 +475,8 @@ async function executeAction(
       case "delete": {
         await firestoreClient.collection("households").doc(hh.id).delete();
         setStatus(`Deleted household ${hh.name}`);
+        // Navigate away first — entity no longer exists — then refresh the list
+        returnTo?.();
         reload();
         break;
       }
@@ -526,6 +529,10 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView }: Ho
   // Track whether the initialHouseholdId has been applied — reset on each mount
   const initialApplied = useRef(false);
 
+  // Capture selected household ID at render time (before effects that clear context run)
+  // so we can restore selection when returning from an overlay.
+  const restoreHouseholdRef = useRef<string | null>(selection.selectedHouseholdId);
+
   // Reload function — exported for Ctrl+R
   const doLoad = useCallback(() => {
     log.debug("HouseholdsTab doLoad");
@@ -566,6 +573,24 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView }: Ho
     }
     initialApplied.current = true;
   }, [initialHouseholdId, loadState, households]);
+
+  // Restore selection when returning from an overlay (non-destructive actions).
+  // initialHouseholdId takes priority; this only fires once per mount.
+  // If the previously selected household no longer exists (was deleted), findIndex
+  // returns -1 and selection stays cleared — correct behaviour for delete.
+  useEffect(() => {
+    if (loadState !== "loaded" || households.length === 0) return;
+    if (!restoreHouseholdRef.current) return;
+    if (initialHouseholdId) return; // explicit jump takes priority
+    const restoreId = restoreHouseholdRef.current;
+    restoreHouseholdRef.current = null; // consume — only restore once
+    const idx = households.findIndex((h) => h.id === restoreId);
+    if (idx >= 0) {
+      log.debug("HouseholdsTab: restoring selection", { householdId: restoreId, idx });
+      setSelectedIdx(idx);
+      setScrollOffset(Math.max(0, Math.min(idx, households.length - LIST_HEIGHT)));
+    }
+  }, [loadState, households, initialHouseholdId]);
 
   // Load detail when selection changes
   useEffect(() => {
@@ -697,8 +722,12 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView }: Ho
     if (!confirm) return;
     const hh = selectedIdx >= 0 ? households[selectedIdx] : null;
     if (!hh) { setConfirm(null); return; }
+    const pendingAction = confirm;
     setConfirm(null);
-    void executeAction(confirm, hh, setStatus, doLoad);
+    // For delete, supply a returnTo that clears the selection — the entity won't exist after success.
+    // Non-destructive actions (kick, xfer, etc.) preserve the current selection.
+    const returnTo = pendingAction.kind === "delete" ? () => { setSelectedIdx(-1); } : undefined;
+    void executeAction(pendingAction, hh, setStatus, doLoad, returnTo);
   }, [confirm, selectedIdx, households, doLoad]);
 
   const handleCancel = useCallback(() => {
