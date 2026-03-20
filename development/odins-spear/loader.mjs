@@ -1,6 +1,6 @@
 /**
  * Node.js ESM resolve hook — maps @fenrir/* tsconfig path aliases
- * to the frontend source tree at runtime.
+ * to the correct source files at runtime.
  *
  * Registered via register.mjs (--import ./register.mjs).
  */
@@ -8,8 +8,10 @@
 const baseDir = new URL(".", import.meta.url);
 
 const aliases = [
-  { prefix: "@fenrir/logger", target: "../frontend/src/lib/logger.ts", exact: true },
-  { prefix: "@fenrir/", target: "../frontend/src/" },
+  // Order matters: exact matches before prefix matches
+  { prefix: "@fenrir/logger-base", target: "../frontend/src/lib/logger.ts", exact: true },
+  { prefix: "@fenrir/logger",      target: "./src/log.ts",                  exact: true },
+  { prefix: "@fenrir/",            target: "../frontend/src/" },
 ];
 
 export function resolve(specifier, context, nextResolve) {

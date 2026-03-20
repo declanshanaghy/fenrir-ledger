@@ -21,6 +21,8 @@
  */
 
 import { Logger } from "tslog";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 
 /**
  * Keys whose values are automatically masked in log output.
@@ -94,3 +96,28 @@ export const log = new Logger({
   maskPlaceholder: "[***]",
   hideLogPositionForProduction: isProd,
 });
+
+/**
+ * Create a named logger that writes JSON lines to a file instead of stdout.
+ * Console output is suppressed — all output goes to the file.
+ *
+ * Usage:
+ *   import { createFileLogger } from "@fenrir/logger";
+ *   const log = createFileLogger("odins-spear", "tmp/logs/odins-spear.log");
+ */
+export function createFileLogger(name: string, filePath: string) {
+  mkdirSync(dirname(filePath), { recursive: true });
+  const fileLogger = new Logger({
+    name,
+    type: "hidden",           // suppress console output
+    minLevel: 0,              // silly+ (everything)
+    maskValuesOfKeys: MASKED_KEYS,
+    maskValuesOfKeysCaseInsensitive: true,
+    maskValuesRegEx: MASKED_PATTERNS,
+    maskPlaceholder: "[***]",
+  });
+  fileLogger.attachTransport((logObj) => {
+    appendFileSync(filePath, JSON.stringify(logObj) + "\n");
+  });
+  return fileLogger;
+}
