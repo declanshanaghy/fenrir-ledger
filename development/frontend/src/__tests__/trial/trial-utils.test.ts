@@ -10,6 +10,71 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
+// ── computeFingerprint ────────────────────────────────────────────────────────
+
+import { computeFingerprint } from "@/lib/trial-utils";
+
+describe("computeFingerprint", () => {
+  const DEVICE_ID = "test-device-id-1234";
+
+  beforeEach(() => {
+    // Provide localStorage stub
+    Object.defineProperty(globalThis, "localStorage", {
+      value: {
+        getItem: vi.fn().mockReturnValue(DEVICE_ID),
+        setItem: vi.fn(),
+      },
+      writable: true,
+      configurable: true,
+    });
+    // Provide window stub (non-undefined)
+    Object.defineProperty(globalThis, "window", {
+      value: {},
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns a 64-character lowercase hex string", async () => {
+    const fp = await computeFingerprint();
+    expect(fp).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("is stable — same deviceId always yields same fingerprint", async () => {
+    const fp1 = await computeFingerprint();
+    const fp2 = await computeFingerprint();
+    expect(fp1).toBe(fp2);
+  });
+
+  it("does NOT include userAgent in the hash (stable across browser updates)", async () => {
+    // Two calls with different userAgent values but same deviceId must produce same hash
+    const fp1 = await computeFingerprint();
+
+    Object.defineProperty(globalThis.navigator ?? globalThis, "userAgent", {
+      value: "Mozilla/5.0 Chrome/999 — future browser",
+      writable: true,
+      configurable: true,
+    });
+
+    const fp2 = await computeFingerprint();
+    expect(fp1).toBe(fp2);
+  });
+
+  it("returns empty string when window is undefined (SSR)", async () => {
+    Object.defineProperty(globalThis, "window", {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+    const fp = await computeFingerprint();
+    expect(fp).toBe("");
+  });
+});
+
 // ── isValidFingerprint ────────────────────────────────────────────────────────
 
 import { isValidFingerprint } from "@/lib/trial-utils";
