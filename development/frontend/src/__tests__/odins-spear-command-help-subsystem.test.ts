@@ -310,3 +310,186 @@ describe("PaletteCommand schema", () => {
     expect(lines).toEqual(["line1", "line2"]);
   });
 });
+
+// ─── 7. ResultsOverlay scroll offset logic ────────────────────────────────────
+
+describe("ResultsOverlay scroll offset clamping", () => {
+  // Mirror the pure clamping logic from ResultsOverlay.tsx:
+  //   maxOffset = Math.max(0, lines.length - PAGE_SIZE)
+  //   upArrow:   Math.max(0, o - 1)
+  //   downArrow: Math.min(maxOffset, o + 1)
+  //   pageUp:    Math.max(0, o - PAGE_SIZE)
+  //   pageDown:  Math.min(maxOffset, o + PAGE_SIZE)
+
+  function makeScroller(lines: number, pageSize: number) {
+    const maxOffset = Math.max(0, lines - pageSize);
+    let offset = 0;
+    return {
+      scrollUp:   () => { offset = Math.max(0, offset - 1); },
+      scrollDown: () => { offset = Math.min(maxOffset, offset + 1); },
+      pageUp:     () => { offset = Math.max(0, offset - pageSize); },
+      pageDown:   () => { offset = Math.min(maxOffset, offset + pageSize); },
+      getOffset:  () => offset,
+      maxOffset,
+    };
+  }
+
+  it("offset starts at 0", () => {
+    const s = makeScroller(20, 10);
+    expect(s.getOffset()).toBe(0);
+  });
+
+  it("scrollUp does not go below 0", () => {
+    const s = makeScroller(20, 10);
+    s.scrollUp();
+    expect(s.getOffset()).toBe(0);
+  });
+
+  it("scrollDown advances offset by 1", () => {
+    const s = makeScroller(20, 10);
+    s.scrollDown();
+    expect(s.getOffset()).toBe(1);
+  });
+
+  it("scrollDown clamps at maxOffset", () => {
+    const s = makeScroller(12, 10); // maxOffset = 2
+    s.scrollDown(); s.scrollDown(); s.scrollDown();
+    expect(s.getOffset()).toBe(s.maxOffset);
+    expect(s.getOffset()).toBe(2);
+  });
+
+  it("pageDown advances by PAGE_SIZE", () => {
+    const s = makeScroller(30, 10); // maxOffset = 20
+    s.pageDown();
+    expect(s.getOffset()).toBe(10);
+  });
+
+  it("pageDown clamps at maxOffset", () => {
+    const s = makeScroller(15, 10); // maxOffset = 5
+    s.pageDown();
+    expect(s.getOffset()).toBe(5);
+  });
+
+  it("pageUp from middle returns to 0", () => {
+    const s = makeScroller(30, 10);
+    s.pageDown(); // offset = 10
+    s.pageUp();
+    expect(s.getOffset()).toBe(0);
+  });
+
+  it("maxOffset is 0 when lines <= PAGE_SIZE", () => {
+    const s = makeScroller(5, 10);
+    expect(s.maxOffset).toBe(0);
+    s.scrollDown();
+    expect(s.getOffset()).toBe(0); // nothing to scroll
+  });
+
+  it("maxOffset equals lines - PAGE_SIZE when lines > PAGE_SIZE", () => {
+    const s = makeScroller(50, 10);
+    expect(s.maxOffset).toBe(40);
+  });
+
+  it("roundtrip: scrollDown then scrollUp returns to same offset", () => {
+    const s = makeScroller(30, 10);
+    s.scrollDown(); s.scrollDown();
+    const before = s.getOffset();
+    s.scrollUp(); s.scrollDown();
+    expect(s.getOffset()).toBe(before);
+  });
+});
+
+// ─── 8. OverlayMode state machine ────────────────────────────────────────────
+
+describe("OverlayMode state machine", () => {
+  // Mirror the discriminated-union transitions from app.tsx
+  type OverlayMode =
+    | { kind: "none" }
+    | { kind: "help" }
+    | { kind: "palette" }
+    | { kind: "results"; title: string; lines: string[] }
+    | { kind: "confirm"; cmd: PaletteCommand };
+
+  function makeStateMachine() {
+    let overlay: OverlayMode = { kind: "none" };
+    return {
+      openHelp:    () => { overlay = { kind: "help" }; },
+      openPalette: () => { overlay = { kind: "palette" }; },
+      openResults: (title: string, lines: string[]) => { overlay = { kind: "results", title, lines }; },
+      openConfirm: (cmd: PaletteCommand) => { overlay = { kind: "confirm", cmd }; },
+      close:       () => { overlay = { kind: "none" }; },
+      get:         () => overlay,
+    };
+  }
+
+  it("initial state is none", () => {
+    const sm = makeStateMachine();
+    expect(sm.get().kind).toBe("none");
+  });
+
+  it("/ key opens palette", () => {
+    const sm = makeStateMachine();
+    sm.openPalette();
+    expect(sm.get().kind).toBe("palette");
+  });
+
+  it("? key opens help", () => {
+    const sm = makeStateMachine();
+    sm.openHelp();
+    expect(sm.get().kind).toBe("help");
+  });
+
+  it("close from help returns to none", () => {
+    const sm = makeStateMachine();
+    sm.openHelp();
+    sm.close();
+    expect(sm.get().kind).toBe("none");
+  });
+
+  it("close from palette returns to none", () => {
+    const sm = makeStateMachine();
+    sm.openPalette();
+    sm.close();
+    expect(sm.get().kind).toBe("none");
+  });
+
+  it("read command routes to results overlay", () => {
+    const sm = makeStateMachine();
+    sm.openPalette();
+    sm.openResults("redis-ping", ["PONG: OK"]);
+    expect(sm.get().kind).toBe("results");
+    const state = sm.get() as { kind: "results"; title: string; lines: string[] };
+    expect(state.title).toBe("redis-ping");
+    expect(state.lines).toEqual(["PONG: OK"]);
+  });
+
+  it("destructive command routes to confirm overlay", () => {
+    const cmd: PaletteCommand = {
+      name: "redis-flush", desc: "Flush all", subsystem: "redis", destructive: true, execute: noop,
+    };
+    const sm = makeStateMachine();
+    sm.openPalette();
+    sm.openConfirm(cmd);
+    expect(sm.get().kind).toBe("confirm");
+    const state = sm.get() as { kind: "confirm"; cmd: PaletteCommand };
+    expect(state.cmd.name).toBe("redis-flush");
+    expect(state.cmd.destructive).toBe(true);
+  });
+
+  it("Esc from results returns to none (palette dismissed)", () => {
+    const sm = makeStateMachine();
+    sm.openPalette();
+    sm.openResults("redis-keys", ["key1", "key2"]);
+    sm.close(); // Esc from ResultsOverlay
+    expect(sm.get().kind).toBe("none");
+  });
+
+  it("Esc from confirm returns to none (no execute)", () => {
+    const cmd: PaletteCommand = {
+      name: "redis-flush", desc: "Flush all", subsystem: "redis", destructive: true, execute: noop,
+    };
+    const sm = makeStateMachine();
+    sm.openConfirm(cmd);
+    sm.close();
+    expect(sm.get().kind).toBe("none");
+  });
+});
