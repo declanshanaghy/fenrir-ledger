@@ -197,3 +197,70 @@ describe("TrialStatusProvider — periodic refresh", () => {
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("TrialStatusProvider — error handling (Issue #1616)", () => {
+  let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearTrialStatusCache();
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
+  });
+
+  it("sets isLoading=false and keeps default status when API returns non-200", async () => {
+    fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(null, { status: 500 }));
+
+    const { result } = renderHook(() => useTrialStatus(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.status).toBe("none");
+    expect(result.current.remainingDays).toBe(0);
+  });
+
+  it("sets isLoading=false and keeps default status when fetch throws a network error", async () => {
+    fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Network failure"));
+
+    const { result } = renderHook(() => useTrialStatus(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.status).toBe("none");
+    expect(result.current.remainingDays).toBe(0);
+  });
+
+  it("forwards convertedDate from API response through context to useTrialStatus", async () => {
+    const convertedDate = "2026-01-15T12:00:00.000Z";
+    fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: "converted",
+          remainingDays: 0,
+          convertedDate,
+          cacheVersion: 2,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    const { result } = renderHook(() => useTrialStatus(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.status).toBe("converted");
+    expect(result.current.convertedDate).toBe(convertedDate);
+  });
+});
