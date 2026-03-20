@@ -4,8 +4,10 @@
  * Browser fingerprinting, localStorage key constants, and the
  * `isKarlOrTrial()` helper for gating Karl features during an active trial.
  *
- * Fingerprint = SHA-256(userAgent + deviceId), 64-char hex string.
+ * Fingerprint = SHA-256(deviceId), 64-char hex string.
  * The deviceId is a one-time UUID stored in localStorage under `fenrir:device-id`.
+ * Using deviceId alone ensures stability across browser updates (userAgent changes
+ * on every browser version bump — see issue #1615).
  *
  * @module trial-utils
  */
