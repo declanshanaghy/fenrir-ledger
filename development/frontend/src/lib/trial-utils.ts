@@ -4,10 +4,10 @@
  * Browser fingerprinting, localStorage key constants, and the
  * `isKarlOrTrial()` helper for gating Karl features during an active trial.
  *
- * Fingerprint = SHA-256(deviceId), 64-char hex string.
+ * Fingerprint = raw deviceId (UUID v4), 36 chars with dashes.
  * The deviceId is a one-time UUID stored in localStorage under `fenrir:device-id`.
- * Using deviceId alone ensures stability across browser updates (userAgent changes
- * on every browser version bump — see issue #1615).
+ * SHA-256(deviceId) was a 1:1 mapping that added no entropy or security value;
+ * the raw UUID is used directly instead (see issue #1624).
  *
  * @module trial-utils
  */
@@ -116,39 +116,38 @@ export function getOrCreateDeviceId(): string {
 }
 
 /**
- * Computes the browser fingerprint as SHA-256(deviceId).
- * Returns a 64-character lowercase hex string.
+ * Computes the browser fingerprint as the raw deviceId (UUID v4).
  *
- * Using deviceId alone ensures the fingerprint is stable across browser
- * updates (userAgent changes on every browser version bump).
+ * SHA-256(deviceId) was removed in issue #1624 — it was a 1:1 mapping adding
+ * no entropy or security value. Returning the raw UUID simplifies call sites
+ * (synchronous, no crypto.subtle dependency).
  *
- * Must be called from a browser context (requires `window` and `crypto.subtle`).
+ * Must be called from a browser context (requires `window`).
  *
- * @returns 64-char hex fingerprint, or empty string if not in browser
+ * @returns UUID v4 fingerprint, or empty string if not in browser
  */
-export async function computeFingerprint(): Promise<string> {
+export function computeFingerprint(): string {
   if (typeof window === "undefined") {
     return "";
   }
-
-  const deviceId = getOrCreateDeviceId();
-  const input = deviceId;
-
-  const encoder = new TextEncoder();
-  const data = encoder.encode(input);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-
-  return hashHex;
+  return getOrCreateDeviceId();
 }
 
 /**
- * Validates a fingerprint string: must be exactly 64 lowercase hex chars.
+ * Validates a fingerprint string.
+ *
+ * Accepts:
+ *   - UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx (36 chars) — current format
+ *   - 64-char lowercase hex (SHA-256) — legacy format, accepted during migration (#1624)
  *
  * @param fingerprint - The fingerprint to validate
  * @returns true if valid
  */
 export function isValidFingerprint(fingerprint: string): boolean {
+  // Current format: UUID v4
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(fingerprint)) {
+    return true;
+  }
+  // Legacy format: 64-char lowercase hex (SHA-256), accepted during migration
   return /^[0-9a-f]{64}$/.test(fingerprint);
 }

@@ -13,6 +13,7 @@
  * @module kv/trial-store
  */
 
+import { createHash } from "crypto";
 import { Timestamp } from "@google-cloud/firestore";
 import { getFirestore } from "@/lib/firebase/firestore";
 import { log } from "@/lib/logger";
@@ -59,6 +60,50 @@ function makeExpiresAt(): Timestamp {
   return Timestamp.fromDate(new Date(Date.now() + TRIAL_TTL_MS));
 }
 
+/** UUID pattern — used to detect new-format fingerprints for migration lookup. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Computes the legacy SHA-256 hex fingerprint from a raw UUID deviceId.
+ * Used during migration to look up existing Firestore records keyed by SHA-256.
+ */
+function legacyFingerprint(deviceId: string): string {
+  return createHash("sha256").update(deviceId).digest("hex");
+}
+
+/**
+ * Resolves a trial record and the Firestore key it was found under.
+ *
+ * Tries the fingerprint directly first. If not found and the fingerprint looks
+ * like a UUID (new format), falls back to the legacy SHA-256 key so that
+ * existing trial records created before issue #1624 are still found.
+ *
+ * @returns { trial, key } or null if not found under either key
+ */
+async function getTrialWithKey(
+  fingerprint: string,
+): Promise<{ trial: StoredTrial; key: string } | null> {
+  let snap = await trialDocRef(fingerprint).get();
+  let effectiveKey = fingerprint;
+
+  if (!snap.exists && UUID_RE.test(fingerprint)) {
+    effectiveKey = legacyFingerprint(fingerprint);
+    snap = await trialDocRef(effectiveKey).get();
+  }
+
+  if (!snap.exists) return null;
+
+  const doc = snap.data() as FirestoreTrialDoc;
+  return {
+    key: effectiveKey,
+    trial: {
+      startDate: doc.startDate,
+      ...(doc.convertedDate ? { convertedDate: doc.convertedDate } : {}),
+      ...(doc.userId ? { userId: doc.userId } : {}),
+    },
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Operations
 // ---------------------------------------------------------------------------
@@ -66,25 +111,22 @@ function makeExpiresAt(): Timestamp {
 /**
  * Retrieves a trial record by fingerprint.
  *
- * @param fingerprint - 64-char SHA-256 hex fingerprint
+ * Accepts both UUID v4 fingerprints (current format) and 64-char SHA-256 hex
+ * fingerprints (legacy format — see issue #1624 migration).
+ *
+ * @param fingerprint - UUID v4 or legacy 64-char hex fingerprint
  * @returns The stored trial record or null if not found / expired
  */
 export async function getTrial(fingerprint: string): Promise<StoredTrial | null> {
   log.debug("getTrial called", { fingerprint });
   try {
-    const snap = await trialDocRef(fingerprint).get();
-    if (!snap.exists) {
+    const result = await getTrialWithKey(fingerprint);
+    if (!result) {
       log.debug("getTrial returning", { fingerprint, found: false });
       return null;
     }
-    const doc = snap.data() as FirestoreTrialDoc;
-    const result: StoredTrial = {
-      startDate: doc.startDate,
-      ...(doc.convertedDate ? { convertedDate: doc.convertedDate } : {}),
-      ...(doc.userId ? { userId: doc.userId } : {}),
-    };
-    log.debug("getTrial returning", { fingerprint, found: true, startDate: result.startDate });
-    return result;
+    log.debug("getTrial returning", { fingerprint, found: true, startDate: result.trial.startDate });
+    return result.trial;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("getTrial failed", { fingerprint, error: message });
@@ -98,7 +140,7 @@ export async function getTrial(fingerprint: string): Promise<StoredTrial | null>
  * If `userId` is provided, it is stored on the trial and allows reverse-lookup
  * via a Firestore query on the `userId` field.
  *
- * @param fingerprint - 64-char SHA-256 hex fingerprint
+ * @param fingerprint - UUID v4 or legacy 64-char hex fingerprint
  * @param userId - Google OAuth `sub` (optional; present when user is signed in)
  * @returns The stored trial record (existing or newly created)
  */
@@ -141,17 +183,17 @@ export async function initTrial(fingerprint: string, userId?: string): Promise<S
  * Links an existing anonymous trial to a Google user ID.
  * Patches the trial record with `userId`. No-op if already linked to this user.
  *
- * @param fingerprint - 64-char SHA-256 hex fingerprint
+ * @param fingerprint - UUID v4 or legacy 64-char hex fingerprint
  * @param userId - Google OAuth `sub`
  */
 export async function linkTrialToUser(fingerprint: string, userId: string): Promise<void> {
   log.debug("linkTrialToUser called", { fingerprint, userId });
   try {
-    const existing = await getTrial(fingerprint);
-    if (!existing) return;
-    if (existing.userId === userId) return;
+    const result = await getTrialWithKey(fingerprint);
+    if (!result) return;
+    if (result.trial.userId === userId) return;
 
-    await trialDocRef(fingerprint).update({ userId });
+    await trialDocRef(result.key).update({ userId });
     log.debug("linkTrialToUser success", { fingerprint, userId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -192,26 +234,26 @@ export async function getFingerprintByUserId(userId: string): Promise<string | n
  * Marks a trial as converted by setting the convertedDate field.
  * Called after a successful Stripe subscription from a trial user.
  *
- * @param fingerprint - 64-char SHA-256 hex fingerprint
+ * @param fingerprint - UUID v4 or legacy 64-char hex fingerprint
  * @returns true if the trial was found and updated, false otherwise
  */
 export async function markTrialConverted(fingerprint: string): Promise<boolean> {
   log.debug("markTrialConverted called", { fingerprint });
 
-  const existing = await getTrial(fingerprint);
-  if (!existing) {
+  const result = await getTrialWithKey(fingerprint);
+  if (!result) {
     log.debug("markTrialConverted: no trial found", { fingerprint });
     return false;
   }
 
-  if (existing.convertedDate) {
+  if (result.trial.convertedDate) {
     log.debug("markTrialConverted: already converted", { fingerprint });
     return true;
   }
 
   try {
     const convertedDate = new Date().toISOString();
-    await trialDocRef(fingerprint).update({ convertedDate });
+    await trialDocRef(result.key).update({ convertedDate });
     log.debug("markTrialConverted success", { fingerprint, convertedDate });
     return true;
   } catch (err) {
