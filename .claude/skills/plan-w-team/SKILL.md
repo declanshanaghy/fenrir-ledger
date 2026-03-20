@@ -236,8 +236,10 @@ After creating the tracker issue, link every child issue as a **GitHub sub-issue
 of the tracker. This populates the "Sub-issues progress" column on the project board.
 
 ```bash
+PARENT_ID=$(gh issue view <TRACKER_NUMBER> --repo declanshanaghy/fenrir-ledger --json id -q .id)
 for N in <issue1> <issue2> <issue3> ...; do
-  gh issue edit <TRACKER_NUMBER> --repo declanshanaghy/fenrir-ledger --add-sub-issue "$N"
+  CHILD_ID=$(gh issue view $N --repo declanshanaghy/fenrir-ledger --json id -q .id)
+  gh api graphql -f query="mutation { addSubIssue(input: { issueId: \"$PARENT_ID\", subIssueId: \"$CHILD_ID\" }) { subIssue { number } } }"
 done
 ```
 
