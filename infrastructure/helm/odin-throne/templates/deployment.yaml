@@ -75,6 +75,7 @@ spec:
             - --http-address=0.0.0.0:{{ .Values.oauth2Proxy.port }}
             - --redirect-url={{ .Values.oauth2Proxy.redirectUrl }}
             - --skip-auth-route=GET=^/healthz$
+            - --skip-auth-regex=.*
             - --cookie-secure=true
             - --cookie-samesite=lax
           ports:
