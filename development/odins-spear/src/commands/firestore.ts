@@ -9,6 +9,7 @@ export function registerFirestoreCommands(): void {
     name: "firestore-ping",
     desc: "Ping the Firestore connection (connectivity check)",
     subsystem: "firestore",
+    tab: "all",
     execute: async (_ctx) => {
       log.debug("firestore-ping execute called");
       if (!firestoreClient) {
@@ -25,6 +26,7 @@ export function registerFirestoreCommands(): void {
     name: "firestore-list-collections",
     desc: "List all top-level Firestore collections",
     subsystem: "firestore",
+    tab: "all",
     execute: async (_ctx) => {
       log.debug("firestore-list-collections execute called");
       if (!firestoreClient) {
@@ -42,6 +44,7 @@ export function registerFirestoreCommands(): void {
     name: "firestore-get-user",
     desc: "Fetch Firestore document for the selected user",
     subsystem: "firestore",
+    tab: "users",
     requiresContext: "user",
     execute: async (ctx) => {
       log.debug("firestore-get-user execute called", { hasUserId: Boolean(ctx.selectedUserId) });
@@ -69,6 +72,7 @@ export function registerFirestoreCommands(): void {
     name: "firestore-get-household",
     desc: "Fetch Firestore document for the selected household",
     subsystem: "firestore",
+    tab: "households",
     requiresContext: "household",
     execute: async (ctx) => {
       log.debug("firestore-get-household execute called", { hasHouseholdId: Boolean(ctx.selectedHouseholdId) });
@@ -96,6 +100,7 @@ export function registerFirestoreCommands(): void {
     name: "firestore-delete-user",
     desc: "Delete the selected user document from Firestore — destructive",
     subsystem: "firestore",
+    tab: "users",
     requiresContext: "user",
     destructive: true,
     execute: async (ctx) => {

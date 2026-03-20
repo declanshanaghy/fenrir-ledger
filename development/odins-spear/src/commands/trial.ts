@@ -44,6 +44,7 @@ export function registerTrialCommands(): void {
     name: "trial-adjust",
     desc: "Shift trial start date by +N / -N days (+N ages, -N restores)",
     subsystem: "trial",
+    tab: "users",
     requiresContext: "trial",
     needsInput: true,
     execute: async (ctx) => {
@@ -100,6 +101,7 @@ export function registerTrialCommands(): void {
     name: "trial-complete",
     desc: `Expire trial immediately (>${TRIAL_DURATION_DAYS} days ago)`,
     subsystem: "trial",
+    tab: "users",
     requiresContext: "trial",
     execute: async (ctx) => {
       log.debug("trial-complete execute called", { hasFp: Boolean(ctx.selectedFp) });
@@ -139,6 +141,7 @@ export function registerTrialCommands(): void {
     name: "trial-progress",
     desc: `Advance to next phase boundary (day ${TRIAL_NUDGE_DAY} or expiry)`,
     subsystem: "trial",
+    tab: "users",
     requiresContext: "trial",
     execute: async (ctx) => {
       log.debug("trial-progress execute called", { hasFp: Boolean(ctx.selectedFp) });

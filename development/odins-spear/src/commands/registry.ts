@@ -4,6 +4,13 @@ import { log } from "@fenrir/logger";
 
 export type Subsystem = "firestore" | "stripe" | "system" | "trial";
 export type RequiresContext = "user" | "household" | "trial";
+/**
+ * Which TUI tab this command is relevant to.
+ * "users"      — shown only on the Users tab
+ * "households" — shown only on the Households tab
+ * "all"        — global system command, always shown (default)
+ */
+export type CommandTab = "users" | "households" | "all";
 
 export interface PaletteCommand {
   /** Unique slug, e.g. "firestore-ping", "firestore-delete-user" */
@@ -14,6 +21,12 @@ export interface PaletteCommand {
   subsystem: Subsystem;
   /** If set, command is greyed out until the named context is selected */
   requiresContext?: RequiresContext;
+  /**
+   * Which tab this command is relevant to. Defaults to "all" (global).
+   * Commands tagged "users" only appear when the Users tab is active;
+   * "households" only when the Households tab is active.
+   */
+  tab?: CommandTab;
   /** If true, routes through ConfirmDialog (type "delete" to confirm) */
   destructive?: boolean;
   /** If true, routes through TrialInputDialog to collect a day-offset input */
@@ -99,5 +112,35 @@ export function filterCommands(query: string): readonly PaletteCommand[] {
     fuzzyMatch(cmd.name + " " + cmd.desc, query)
   );
   log.debug("filterCommands returning", { resultCount: result.length });
+  return result;
+}
+
+/**
+ * Return commands relevant to a given tab index.
+ * tabIndex 0 → Users, 1 → Households.
+ * "all" commands are always included (global system commands).
+ */
+export function getCommandsForTab(tabIndex: number): readonly PaletteCommand[] {
+  const tabName: CommandTab = tabIndex === 0 ? "users" : "households";
+  log.debug("getCommandsForTab called", { tabIndex, tabName });
+  const result = PALETTE_COMMANDS.filter((cmd) => {
+    const t = cmd.tab ?? "all";
+    return t === "all" || t === tabName;
+  });
+  log.debug("getCommandsForTab returning", { resultCount: result.length });
+  return result;
+}
+
+/**
+ * Fuzzy-filter commands that are relevant to the given tab.
+ * Combines getCommandsForTab + fuzzyMatch.
+ */
+export function filterCommandsForTab(query: string, tabIndex: number): readonly PaletteCommand[] {
+  log.debug("filterCommandsForTab called", { queryLength: query.length, tabIndex });
+  const tabCommands = getCommandsForTab(tabIndex);
+  const result = tabCommands.filter((cmd) =>
+    fuzzyMatch(cmd.name + " " + cmd.desc, query)
+  );
+  log.debug("filterCommandsForTab returning", { resultCount: result.length });
   return result;
 }

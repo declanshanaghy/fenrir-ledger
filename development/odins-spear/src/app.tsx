@@ -190,11 +190,12 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
 
   let mainContent: React.JSX.Element;
   if (overlay.kind === "help") {
-    mainContent = <HelpOverlay onClose={closeOverlay} />;
+    mainContent = <HelpOverlay activeTab={activeTab} onClose={closeOverlay} />;
   } else if (overlay.kind === "palette") {
     mainContent = (
       <CommandPalette
         ctx={cmdCtx}
+        activeTab={activeTab}
         onClose={closeOverlay}
         onReadResult={handleReadResult}
         onDestructive={handleDestructive}

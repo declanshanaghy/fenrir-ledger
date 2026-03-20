@@ -9,6 +9,7 @@ export function registerStripeCommands(): void {
     name: "stripe-check-key",
     desc: "Verify Stripe secret key is available",
     subsystem: "stripe",
+    tab: "all",
     execute: async (_ctx) => {
       log.debug("stripe-check-key execute called");
       const key = await getStripeKey();
@@ -22,6 +23,7 @@ export function registerStripeCommands(): void {
     name: "stripe-list-customers",
     desc: "List recent Stripe customers (up to 10)",
     subsystem: "stripe",
+    tab: "users",
     execute: async (_ctx) => {
       log.debug("stripe-list-customers execute called");
       const key = await getStripeKey();
@@ -46,6 +48,7 @@ export function registerStripeCommands(): void {
     name: "stripe-cancel-subscription",
     desc: "Cancel the selected Stripe subscription — destructive",
     subsystem: "stripe",
+    tab: "users",
     requiresContext: "trial",
     destructive: true,
     execute: async (ctx) => {
