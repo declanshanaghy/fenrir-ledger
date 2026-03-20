@@ -154,6 +154,7 @@ FiremanDecko writes tests alongside implementation. Loki augments gaps only.
 - Loki will review and add only what's missing — no duplication
 - **Never write Playwright E2E tests** — that's Loki's domain (and he writes few)
 - **Never write tests for monitor-ui or odins-spear** — `development/monitor-ui/` and `development/odins-spear/` have no test infrastructure agents should use
+- **Never write tests for infrastructure** — Helm charts (`infrastructure/helm/`), Terraform (`infrastructure/*.tf`), K8s manifests (`infrastructure/k8s/`), Dockerfiles, and CI/CD workflows (`.github/workflows/`) are not testable via Vitest. Validate infra changes via tsc + build only.
 
 ### jest-dom Assertion Library (UNBREAKABLE)
 
