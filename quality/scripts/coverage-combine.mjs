@@ -107,6 +107,7 @@ function main() {
     `genhtml "${mergedLcovPath}"`,
     `--output-directory "${COMBINED_DIR}"`,
     "--quiet",
+    "--flat", // no directory hierarchy — prevents misleading directory-level aggregation
     // genhtml 2.3.x requires each error type twice to fully suppress (promote from fatal → ignored)
     "--ignore-errors inconsistent,inconsistent,corrupt,corrupt,source,source,count,count,category,category",
     "--keep-going",

@@ -10,8 +10,14 @@ Generate code coverage reports via `coverage.mjs` directly.
 ## Usage
 
 ```
-/coverage-report [--unit-only | --e2e-only] [-- playwright args...]
+/coverage-report                    # Full run: Vitest + Playwright + merge (default)
+/coverage-report --unit-only        # Vitest only (fast, no browser)
+/coverage-report --e2e-only         # Playwright only (needs build)
 ```
+
+**No args = full combined run.** Always runs both Vitest and Playwright with coverage
+AND HTML test reporters enabled. No partial reports — all or nothing every time.
+`--combined` is accepted but redundant (it's the default).
 
 ## Modes
 
@@ -85,6 +91,7 @@ Every run automatically generates `quality/reports/quality-report.html` via `qua
 - **Coverage summary** — lines/functions/branches for Vitest, Playwright, and Combined, parsed directly from LCOV files with correct numbers
 - **Overlapping coverage** — automatically detected loki twin pairs, issue-numbered cluster files, and over-tested sources (BUILT-IN, no manual step needed)
 - **Coverage gaps** — files below 20% coverage with >10 lines, sorted by coverage ascending, with risk labels (BUILT-IN)
+- **Test reports** — links to Vitest and Playwright HTML test reports (when generated)
 
 Can also be regenerated standalone (does NOT re-run tests, uses existing LCOV):
 
