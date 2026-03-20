@@ -151,10 +151,10 @@ Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.
 On failure: fix, commit+push, re-run that step. Repeat until green.
 Do NOT proceed to handoff with ANY failing Vitest tests.
 
-NO MONITOR-UI TESTS (UNBREAKABLE):
-NEVER write tests for `development/monitor-ui/` (Odin's Throne). It has NO test
-infrastructure — no vitest, no testing-library, no __tests__/ directory. All tests
-target `development/frontend/` only. For monitor-ui issues, validate via tsc + build only.
+NO MONITOR-UI / ODINS-SPEAR TESTS (UNBREAKABLE):
+NEVER write tests for `development/monitor-ui/` (Odin's Throne) or `development/odins-spear/`.
+These packages have no test infrastructure that agents should use. All tests target
+`development/frontend/` only. For monitor-ui or odins-spear issues, validate via tsc + build only.
 
 STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,
