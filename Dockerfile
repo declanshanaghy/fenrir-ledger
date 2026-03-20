@@ -77,12 +77,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Copy standalone output — includes server.js and required node_modules
+# Copy standalone output — with outputFileTracingRoot=repo root, server.js
+# lives at .next/standalone/development/frontend/server.js and node_modules
+# are at .next/standalone/node_modules/ (traced from the workspace root).
 COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/.next/standalone ./
-# Copy static assets
-COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/.next/static ./.next/static
-# Copy public assets
-COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/public ./public
+# Copy static assets to where Next.js expects them relative to server.js
+COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/.next/static ./development/frontend/.next/static
+# Copy public assets relative to server.js location
+COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/public ./development/frontend/public
 
 USER nextjs
 
@@ -92,4 +94,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
-CMD ["node", "server.js"]
+CMD ["node", "development/frontend/server.js"]
