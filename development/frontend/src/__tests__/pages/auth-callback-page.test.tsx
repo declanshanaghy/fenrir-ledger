@@ -28,15 +28,6 @@ vi.mock("@/lib/analytics/track", () => ({
   track: vi.fn(),
 }));
 
-vi.mock("@/lib/trial-utils", () => ({
-  computeFingerprint: vi.fn().mockResolvedValue("fp-abc"),
-  isValidFingerprint: vi.fn().mockReturnValue(false),
-}));
-
-vi.mock("@/hooks/useTrialStatus", () => ({
-  clearTrialStatusCache: vi.fn(),
-}));
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function setupSearchParams({

@@ -1,15 +1,14 @@
 /**
- * Tests for phantom trial fixes — Issue #1589
+ * Tests for phantom trial fixes — Issue #1589 / read-only status — Issue #1627
  *
  * Covers:
- *  - /api/trial/status returns 500 when auto-init Firestore write fails
- *    (previously silently fell through with status "none")
+ *  - /api/trial/status returns "none" when no trial exists (read-only, #1627)
  *  - /api/trial/status includes cacheVersion in every 200 response
  *  - cacheVersion equals TRIAL_CACHE_VERSION (2, the Firestore era)
  *  - useTrialStatus busts module-level cache when stored version mismatches
  *  - useTrialStatus persists cacheVersion to localStorage after successful fetch
  *
- * @ref Issue #1589
+ * @ref Issue #1589, Issue #1627
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
@@ -119,36 +118,32 @@ describe("POST /api/trial/status — issue #1589 fixes", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Auto-init failure: return 500, not silent "none"
+  // Read-only status endpoint: returns "none" when no trial exists (#1627)
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns 500 when auto-init Firestore write fails (not silent none)", async () => {
-    // getTrial: not found → triggers auto-init
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap) // getTrial in status route
-      .mockResolvedValueOnce(missingSnap); // getTrial inside initTrial
-    // Firestore SET fails
-    mockDocRef.set.mockRejectedValueOnce(new Error("Firestore quota exceeded"));
+  it("returns status none when no trial exists — status endpoint is read-only", async () => {
+    // getTrial: not found
+    mockDocRef.get.mockResolvedValueOnce(missingSnap);
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
 
-    expect(res.status).toBe(500);
-    expect(body.error).toBe("internal_error");
+    expect(res.status).toBe(200);
+    expect(body.status).toBe("none");
+    // Must not write to Firestore — status endpoint never initializes a trial
+    expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 
-  it("auto-init failure does NOT return status none (phantom prevention)", async () => {
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap)
-      .mockResolvedValueOnce(missingSnap);
-    mockDocRef.set.mockRejectedValueOnce(new Error("Permission denied"));
+  it("returns status none when Firestore is unavailable (getTrial swallows errors)", async () => {
+    // getTrial's internal catch returns null on Firestore error
+    mockDocRef.get.mockRejectedValueOnce(new Error("Firestore quota exceeded"));
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
 
-    // Must not return a 200 with status "none" — that could mask a write failure
-    expect(res.status).not.toBe(200);
-    expect(body.status).toBeUndefined();
+    expect(res.status).toBe(200);
+    expect(body.status).toBe("none");
+    expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -166,16 +161,14 @@ describe("POST /api/trial/status — issue #1589 fixes", () => {
     expect(body.cacheVersion).toBe(2);
   });
 
-  it("includes cacheVersion in 200 response after successful auto-init", async () => {
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap)
-      .mockResolvedValueOnce(missingSnap);
-    mockDocRef.set.mockResolvedValueOnce(undefined);
+  it("includes cacheVersion in 200 response when status is none (no trial)", async () => {
+    mockDocRef.get.mockResolvedValueOnce(missingSnap);
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
 
     expect(res.status).toBe(200);
+    expect(body.status).toBe("none");
     expect(body.cacheVersion).toBe(TRIAL_CACHE_VERSION);
   });
 
