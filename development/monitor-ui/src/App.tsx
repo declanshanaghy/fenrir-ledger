@@ -10,6 +10,7 @@ import { Sidebar } from "./components/Sidebar";
 import { LogViewer } from "./components/LogViewer";
 import { AgentProfileModal } from "./components/AgentProfileModal";
 import { RagnarokDialog } from "./components/RagnarokDialog";
+import { Toast } from "./components/Toast";
 import { useTheme } from "./hooks/useTheme";
 import {
   isPinned as checkIsPinned,
@@ -62,6 +63,8 @@ export function App() {
   const [isFixture, setIsFixture] = useState(false);
   const [pinnedSessionId, setPinnedSessionId] = useState<string | null>(null);
   const [storageWarning, setStorageWarning] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; id: number } | null>(null);
+  const [terminatingSessionIds, setTerminatingSessionIds] = useState<Set<string>>(new Set());
 
   // Sync pin state when active session changes
   useEffect(() => {
@@ -302,7 +305,19 @@ export function App() {
       const body = await res.json().catch(() => ({})) as { error?: string };
       throw new Error(body.error ?? `HTTP ${res.status}`);
     }
+    const { sessionId } = cancelTarget;
     setCancelTarget(null);
+    // Flash the card as terminating, then clear after 3s
+    setTerminatingSessionIds((prev) => new Set(prev).add(sessionId));
+    setTimeout(() => {
+      setTerminatingSessionIds((prev) => {
+        const next = new Set(prev);
+        next.delete(sessionId);
+        return next;
+      });
+    }, 3000);
+    // Show toast confirmation
+    setToast({ message: `Ragnarok unleashed — ${sessionId} terminated`, id: Date.now() });
   }, [cancelTarget]);
 
   return (
@@ -321,6 +336,7 @@ export function App() {
           onTogglePinSession={handleTogglePinForSession}
           pinnedSessionIds={pinnedSessionIds}
           onCancelJob={handleOpenCancelDialog}
+          terminatingSessionIds={terminatingSessionIds}
         />
         <ErrorBoundary>
           <LogViewer
@@ -358,6 +374,13 @@ export function App() {
           jobTitle={cancelTarget.jobTitle}
           onConfirm={handleConfirmCancel}
           onCancel={() => setCancelTarget(null)}
+        />
+      )}
+      {toast && (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          onDismiss={() => setToast(null)}
         />
       )}
     </ErrorBoundary>
