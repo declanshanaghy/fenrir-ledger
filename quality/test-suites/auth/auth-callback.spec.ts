@@ -132,8 +132,10 @@ test.describe("Auth Callback — PKCE Session Data Missing", () => {
     //       if (!raw) → "PKCE session data missing. Please try signing in again."
     // Note: callback page has a 100ms delay to prevent race conditions with React StrictMode
     // Navigate with valid-looking code + state but no PKCE session data
+    // Use "load" not "networkidle": page-level requests (analytics, etc.)
+    // prevent networkidle from settling within 30s. Error is client-side only.
     await page.goto("/ledger/auth/callback?code=fake_code&state=fake_state", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Wait for the error message to appear (100ms delay + React render time)
@@ -172,8 +174,10 @@ test.describe("Auth Callback — CSRF State Mismatch", () => {
     });
 
     // Navigate with a DIFFERENT state in the URL — triggers CSRF check
+    // Use "load" not "networkidle": page-level requests (analytics, etc.)
+    // prevent networkidle from settling within 30s. Error is client-side only.
     await page.goto("/ledger/auth/callback?code=fake_code&state=different-state-xyz", {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     await expect(
