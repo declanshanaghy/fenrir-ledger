@@ -145,7 +145,7 @@ jobs:
           fi
           CHANGED=$(git diff --name-only HEAD~1 HEAD)
           check() { echo "$CHANGED" | grep -qE "$1" && echo "true" || echo "false"; }
-          echo "app=$(check    '^development/frontend/|^Dockerfile$|^package\.json$|^package-lock\.json$')" >> "$GITHUB_OUTPUT"
+          echo "app=$(check    '^development/frontend/|^Dockerfile$|^package\.json$|^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$')" >> "$GITHUB_OUTPUT"
           echo "k8s-app=$(check '^infrastructure/k8s/app/|^infrastructure/helm/fenrir-app/')"               >> "$GITHUB_OUTPUT"
           echo "monitor=$(check '^development/monitor/')"                                                    >> "$GITHUB_OUTPUT"
           echo "monitor-ui=$(check '^development/monitor-ui/')"                                              >> "$GITHUB_OUTPUT"
@@ -333,12 +333,26 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: development/frontend/package-lock.json
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "store=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-
 
       - name: Install dependencies
-        working-directory: development/frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: TypeScript check
         run: bash quality/scripts/verify.sh --step tsc
@@ -524,12 +538,26 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: development/frontend/package-lock.json
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "store=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-
 
       - name: Install dependencies
-        working-directory: development/frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
         working-directory: development/frontend

@@ -3,18 +3,20 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts \
-    && npm ci --ignore-scripts
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+
+COPY package.json ./
+RUN pnpm install --ignore-scripts
 
 COPY tsconfig.json ./
 COPY src/ ./src/
 COPY public/ ./public/
 
-RUN npm run compile
+RUN pnpm run compile
 
-# Prune dev deps from node_modules
-RUN npm prune --omit=dev
+# Prune dev deps
+RUN pnpm prune --prod
 
 # ── Stage 2: Runtime ─────────────────────────────────────────────────────────
 FROM node:20-alpine AS runtime

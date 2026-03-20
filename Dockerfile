@@ -12,13 +12,28 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Install only production + build dependencies
-COPY development/frontend/package.json development/frontend/package-lock.json ./
-RUN npm ci --ignore-scripts
+# Install pnpm via corepack
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+
+# Copy workspace manifest and lockfile so pnpm can resolve the workspace
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+
+# Copy each package's package.json so pnpm can install all workspace deps
+COPY development/frontend/package.json ./development/frontend/
+COPY development/odins-spear/package.json ./development/odins-spear/
+COPY development/monitor/package.json ./development/monitor/
+COPY development/monitor-ui/package.json ./development/monitor-ui/
+
+# Install all workspace dependencies with frozen lockfile
+# pnpm-workspace.yaml allowBuilds is included so native modules (esbuild, sharp) build
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # ── Stage 2: Build ────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 
 # Accept build-time args for public env vars
 ARG NEXT_PUBLIC_BUILD_ID=unknown
@@ -33,14 +48,18 @@ ENV NEXT_PUBLIC_UMAMI_WEBSITE_ID=${NEXT_PUBLIC_UMAMI_WEBSITE_ID}
 # Next.js telemetry opt-out
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy deps from previous stage
+# Copy deps from previous stage (workspace node_modules at root)
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy source code — only what's needed for the build
-COPY development/frontend/ ./
+# Copy workspace manifests
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
-# Build the Next.js app in standalone mode
-RUN npm run build
+# Copy frontend source (outputFileTracingRoot points to workspace root /app,
+# so nft can trace pnpm symlinks in node_modules/.pnpm/)
+COPY development/frontend/ ./development/frontend/
+
+# Build the Next.js app in standalone mode via pnpm workspace filter
+RUN pnpm --filter fenrir-ledger run build
 
 # ── Stage 3: Production Runner ────────────────────────────────────────────
 FROM node:20-alpine AS runner
@@ -56,11 +75,11 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 # Copy standalone output — includes server.js and required node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/.next/standalone ./
 # Copy static assets
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/.next/static ./.next/static
 # Copy public assets
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/public ./public
 
 USER nextjs
 
