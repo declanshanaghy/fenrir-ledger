@@ -9,7 +9,7 @@ metadata:
     {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
 
 ---
-# Role that grants read access to jobs, pods, and pod logs in the agents namespace
+# Role that grants read+delete access to jobs, pods, and pod logs in the agents namespace
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -20,7 +20,7 @@ metadata:
 rules:
   - apiGroups: ["batch"]
     resources: ["jobs"]
-    verbs: ["get", "list", "watch"]
+    verbs: ["get", "list", "watch", "delete"]
   - apiGroups: [""]
     resources: ["pods", "pods/log"]
     verbs: ["get", "list", "watch"]
