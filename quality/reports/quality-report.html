@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fenrir Ledger — Quality Report</title>
+<style>
+  :root {
+    --void: #07070d;
+    --surface: #0f0f16;
+    --surface2: #161620;
+    --hover: #1a1a22;
+    --gold: #c9920a;
+    --gold-dim: #8b6a0a;
+    --stone: #8b8680;
+    --dirt: #3a2e22;
+    --green: #4ade80;
+    --green-dim: #1a3a24;
+    --red: #ef4444;
+    --red-dim: #3a1a1a;
+    --yellow: #f9cd0b;
+    --text: #e8e8e0;
+    --text-dim: #888;
+    --border: #2a2a34;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--void); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* Header */
+  .header { text-align: center; padding: 3rem 0 2rem; border-bottom: 2px solid var(--gold); margin-bottom: 2rem; }
+  .header h1 { font-family: 'Cinzel', serif; font-size: 1.8rem; color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; }
+  .header .subtitle { color: var(--stone); font-size: 0.85rem; margin-top: 0.5rem; }
+  .header .runes { font-size: 1.4rem; letter-spacing: 0.3em; color: var(--gold); opacity: 0.5; margin-bottom: 0.5rem; }
+
+  /* Decree */
+  .decree { background: var(--surface); border: 1px solid var(--gold); border-radius: 8px; padding: 2.5rem 2rem; margin-bottom: 2rem; text-align: center; position: relative; overflow: hidden; }
+  .decree::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .decree.secure { border-color: var(--green); }
+  .decree.secure::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+  .decree.wanting { border-color: var(--red); }
+  .decree.wanting::before { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+  .decree-type { font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--stone); margin-bottom: 0.5rem; }
+  .decree-title { font-family: 'Cinzel', serif; font-size: 1.6rem; color: var(--gold); letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+  .decree.secure .decree-title { color: var(--green); }
+  .decree.wanting .decree-title { color: var(--red); }
+  .decree-quote { font-style: italic; color: var(--text-dim); margin: 1.5rem 0; font-size: 1.05rem; }
+  .decree-verdict { font-family: 'Cinzel', serif; font-size: 1.1rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.6rem 1.5rem; display: inline-block; border: 1px solid; border-radius: 4px; margin: 1rem 0; }
+  .decree.secure .decree-verdict { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+  .decree.wanting .decree-verdict { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+  .decree-meta { display: flex; justify-content: center; gap: 2rem; margin: 1rem 0; font-size: 0.85rem; color: var(--stone); }
+  .decree-meta dt { font-weight: 700; color: var(--gold); }
+  .decree-closing { font-style: italic; color: var(--text-dim); margin-top: 1.5rem; }
+  .decree-seal { margin-top: 2rem; }
+  .decree-tagline { font-size: 0.8rem; color: var(--gold); opacity: 0.5; letter-spacing: 0.1em; margin-top: 0.5rem; }
+  .decree-seal-row { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-top: 2rem; flex-wrap: wrap; }
+  .loki-profile { width: 120px; height: 120px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; opacity: 0.9; box-shadow: 0 0 20px rgba(201, 146, 10, 0.2); }
+
+  /* Deficiencies */
+  .deficiencies { text-align: left; max-width: 500px; margin: 1.5rem auto; }
+  .deficiencies h4 { color: var(--gold); font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .deficiencies li { color: var(--text); margin: 0.3rem 0; font-size: 0.9rem; }
+  .deficiencies .actions li { color: var(--stone); }
+
+  /* Sections */
+  .section { margin-bottom: 2.5rem; }
+  .section-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  .section-header h2 { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--gold); letter-spacing: 0.08em; }
+
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; text-align: center; }
+  .stat-card .value { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700; }
+  .stat-card .label { font-size: 0.75rem; color: var(--stone); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.3rem; }
+  .stat-card.green .value { color: var(--green); }
+  .stat-card.gold .value { color: var(--gold); }
+  .stat-card.red .value { color: var(--red); }
+
+  /* Coverage gauges */
+  .gauges { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin: 1.5rem 0; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin: 1rem 0; }
+  th { background: var(--dirt); color: var(--gold); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.75rem; text-align: left; }
+  td { padding: 0.6rem 0.75rem; border-top: 1px solid var(--border); font-size: 0.85rem; }
+  tr:hover td { background: var(--hover); }
+  td.hi { color: var(--green); font-weight: 600; }
+  td.med { color: var(--gold); font-weight: 600; }
+  td.lo { color: var(--red); font-weight: 600; }
+  td.dim { color: var(--text-dim); }
+  .frac { font-size: 0.7rem; color: var(--stone); margin-left: 0.3rem; }
+  td a { color: var(--gold); text-decoration: none; }
+  td a:hover { text-decoration: underline; }
+
+  /* Cover bar */
+  .cover-bar { background: var(--border); height: 6px; border-radius: 3px; overflow: hidden; min-width: 80px; }
+  .cover-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
+  /* Category cards */
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+  .cat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
+  .cat-card .cat-icon { font-size: 1.2rem; }
+  .cat-card .cat-name { font-weight: 700; color: var(--text); font-size: 0.9rem; }
+  .cat-card .cat-count { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 700; color: var(--gold); margin: 0.3rem 0; }
+  .cat-card .cat-files { font-size: 0.75rem; color: var(--stone); }
+  .cat-card .cat-desc { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.3rem; }
+  .cat-card .cat-status { font-size: 0.7rem; margin-top: 0.3rem; }
+  .cat-card .cat-status.clean { color: var(--green); }
+  .cat-card .cat-status.flagged { color: var(--red); }
+
+  /* Footer */
+  .footer { text-align: center; padding: 2rem 0; border-top: 1px solid var(--border); margin-top: 2rem; font-size: 0.75rem; color: var(--text-dim); }
+
+  /* Quality shield */
+  .quality-shield { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 0.3rem 0.8rem; font-size: 0.8rem; }
+  .quality-shield.clean { border-color: var(--green); color: var(--green); }
+  .quality-shield.dirty { border-color: var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="runes">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
+    <h1>Quality Report</h1>
+    <div class="subtitle">Generated 3/20/2026, 23:28:51 UTC</div>
+  </div>
+
+  <!-- Loki's Decree -->
+  <div class="decree wanting">
+    <div class="decree-type">Formal Change Order</div>
+    <div class="decree-title">ᚦ Action Required ᚦ</div>
+    <div class="decree-quote">"The shield wall has been inspected and found WANTING."</div>
+
+    
+    <div class="deficiencies">
+      <h4>Deficiencies</h4>
+      <ul>
+        
+        <li>Combined line coverage at <strong>27.4%</strong> — below 50% threshold</li>
+      </ul>
+      <h4 style="margin-top:1rem">Required Actions</h4>
+      <ul class="actions">
+        
+        <li>Increase coverage to &ge;50% combined lines</li><li>Priority: auth flows, sync engine, import pipeline</li>
+      </ul>
+    </div>
+    
+
+    <div class="decree-verdict">THE LEDGER CANNOT BE TRUSTED.</div>
+
+    <div class="decree-meta">
+      <dl><dt>Tests</dt><dd>2296</dd></dl>
+      <dl><dt>Files</dt><dd>163</dd></dl>
+      <dl><dt>Coverage</dt><dd>27.4%</dd></dl>
+      <dl><dt>Hollow</dt><dd>0</dd></dl>
+    </div>
+
+    <div class="decree-closing">"The next inspection will not be so patient."</div>
+
+    <div class="decree-seal-row">
+      <img src="loki-dark.png" alt="Loki Laufeyson" class="loki-profile"/>
+      <div>
+        <svg width="320" height="160" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" style="background:#0b1f14;border-radius:8px">
+    <defs>
+      <linearGradient id="seal-border" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#2d6b4a"/>
+        <stop offset="35%" stop-color="#4a9e6e"/>
+        <stop offset="50%" stop-color="#7ecfa0"/>
+        <stop offset="65%" stop-color="#4a9e6e"/>
+        <stop offset="100%" stop-color="#2d6b4a"/>
+      </linearGradient>
+      <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="metallic-sheen" x1="0" y1="0" x2="0.3" y2="1">
+        <stop offset="0%" stop-color="#1e4d32" stop-opacity="0.5"/>
+        <stop offset="30%" stop-color="#133322" stop-opacity="0.15"/>
+        <stop offset="60%" stop-color="#1e4d32" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="#0e2a1a" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="320" height="160" rx="8" fill="#0b1f14"/>
+    <rect x="0" y="0" width="320" height="160" rx="8" fill="url(#metallic-sheen)"/>
+    <rect x="2" y="2" width="316" height="156" rx="8" fill="none" stroke="url(#seal-border)" stroke-width="1.5"/>
+    <rect x="5" y="5" width="310" height="150" rx="6" fill="none" stroke="#c9920a" stroke-width="0.3" opacity="0.2"/>
+    <line x1="30" y1="42" x2="290" y2="42" stroke="#c9920a" stroke-width="0.4" opacity="0.2"/>
+    <text x="160" y="32" text-anchor="middle" font-family="serif" font-size="20" letter-spacing="10" fill="#c9920a" opacity="0.8" filter="url(#glow)">ᛚ ᛟ ᚲ ᛁ</text>
+    <text x="160" y="64" text-anchor="middle" font-family="serif" font-size="14" fill="#c9920a" opacity="0.9" letter-spacing="2">Loki Laufeyson</text>
+    <text x="160" y="84" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8b8680">QA Tester</text>
+    <text x="160" y="104" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">2026-03-20</text>
+    <line x1="30" y1="115" x2="290" y2="115" stroke="#c9920a" stroke-width="0.3" opacity="0.15"/>
+    <text x="160" y="138" text-anchor="middle" font-family="serif" font-size="12" letter-spacing="4" fill="#ef4444" opacity="0.5" style="filter: drop-shadow(0 0 6px #ef444460)">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</text>
+    <text x="160" y="153" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#555" letter-spacing="2">OFFICIAL SEAL</text>
+  </svg>
+        <div class="decree-tagline">ᚠᛖᚾᚱᛁᚱ — the forge fires must be relit</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coverage Gauges -->
+  <div class="section">
+    <div class="section-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><h2>Code Coverage</h2></div>
+
+    <div class="gauges">
+      <svg width="100" height="124" viewBox="0 0 100 124">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#2a2a34" stroke-width="8"/>
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8"
+      stroke-dasharray="282.7433388230814" stroke-dashoffset="205.2716639855571"
+      stroke-linecap="round" transform="rotate(-90 50 50)"
+      style="transition: stroke-dashoffset 1s ease"/>
+    <text x="50" y="55" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" fill="#ef4444">27.4%</text>
+    <text x="50" y="118" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8b8680">Combined</text>
+  </svg>
+      <svg width="100" height="124" viewBox="0 0 100 124">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#2a2a34" stroke-width="8"/>
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8"
+      stroke-dasharray="282.7433388230814" stroke-dashoffset="134.02034260214057"
+      stroke-linecap="round" transform="rotate(-90 50 50)"
+      style="transition: stroke-dashoffset 1s ease"/>
+    <text x="50" y="55" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" fill="#ef4444">52.6%</text>
+    <text x="50" y="118" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8b8680">Vitest</text>
+  </svg>
+      <svg width="100" height="124" viewBox="0 0 100 124">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#2a2a34" stroke-width="8"/>
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="8"
+      stroke-dasharray="282.7433388230814" stroke-dashoffset="216.58139753848036"
+      stroke-linecap="round" transform="rotate(-90 50 50)"
+      style="transition: stroke-dashoffset 1s ease"/>
+    <text x="50" y="55" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" fill="#ef4444">23.4%</text>
+    <text x="50" y="118" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8b8680">Playwright</text>
+  </svg>
+    </div>
+
+    <table>
+      <thead><tr><th>Report</th><th>Files</th><th>Lines</th><th>Functions</th><th>Branches</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="coverage/combined/index.html">Combined</a></td>
+          <td>493</td>
+          <td class="lo">27.4% <span class="frac">12972/47270</span></td>
+          <td class="lo">43.4% <span class="frac">590/1361</span></td>
+          <td class="lo">45.0% <span class="frac">2139/4757</span></td>
+          <td><div class="cover-bar"><div class="cover-fill" style="width:27.4%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td><a href="coverage/vitest/index.html">Vitest</a></td>
+          <td>214</td>
+          <td class="lo">52.6% <span class="frac">3453/6559</span></td>
+          <td class="lo">43.4% <span class="frac">590/1361</span></td>
+          <td class="lo">45.6% <span class="frac">2062/4521</span></td>
+          <td><div class="cover-bar"><div class="cover-fill" style="width:52.6%;background:#ef4444"></div></div></td>
+        </tr>
+        <tr>
+          <td><a href="coverage/playwright/index.html">Playwright</a></td>
+          <td>279</td>
+          <td class="lo">23.4% <span class="frac">9519/40711</span></td>
+          <td class="lo">0.0% <span class="frac">0/0</span></td>
+          <td class="lo">32.6% <span class="frac">77/236</span></td>
+          <td><div class="cover-bar"><div class="cover-fill" style="width:23.4%;background:#ef4444"></div></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Test Quality -->
+  <div class="section">
+    <div class="section-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><h2>Test Quality</h2>
+      <span class="quality-shield clean">Clean — 0 hollow tests</span>
+    </div>
+    
+  </div>
+
+  <!-- Test Inventory -->
+  <div class="section">
+    <div class="section-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/></svg><h2>Test Inventory</h2></div>
+
+    <div class="stats-grid">
+      <div class="stat-card gold"><div class="value">163</div><div class="label">Test Files</div></div>
+      <div class="stat-card gold"><div class="value">2296</div><div class="label">Test Cases</div></div>
+      <div class="stat-card green"><div class="value">0</div><div class="label">Hollow Tests</div></div>
+      <div class="stat-card green"><div class="value">5</div><div class="label">Categories</div></div>
+    </div>
+
+    <div class="cat-grid">
+      <div class="cat-card">
+          <span class="cat-icon">⚡</span> <span class="cat-name">Unit</span>
+          <div class="cat-count">853</div>
+          <div class="cat-files">37 files · 37% of suite</div>
+          <div class="cat-desc">Pure logic, lib/, utilities</div>
+          <div class="cat-status clean">✓ clean</div>
+        </div>
+<div class="cat-card">
+          <span class="cat-icon">🪝</span> <span class="cat-name">Hook</span>
+          <div class="cat-count">131</div>
+          <div class="cat-files">7 files · 6% of suite</div>
+          <div class="cat-desc">React hooks</div>
+          <div class="cat-status clean">✓ clean</div>
+        </div>
+<div class="cat-card">
+          <span class="cat-icon">🧱</span> <span class="cat-name">Component</span>
+          <div class="cat-count">649</div>
+          <div class="cat-files">56 files · 28% of suite</div>
+          <div class="cat-desc">Render tests (.tsx)</div>
+          <div class="cat-status clean">✓ clean</div>
+        </div>
+<div class="cat-card">
+          <span class="cat-icon">🚪</span> <span class="cat-name">API / Route</span>
+          <div class="cat-count">645</div>
+          <div class="cat-files">55 files · 28% of suite</div>
+          <div class="cat-desc">Route handlers, auth, integration</div>
+          <div class="cat-status clean">✓ clean</div>
+        </div>
+<div class="cat-card">
+          <span class="cat-icon">🌐</span> <span class="cat-name">E2E</span>
+          <div class="cat-count">18</div>
+          <div class="cat-files">8 files · 1% of suite</div>
+          <div class="cat-desc">Playwright browser tests</div>
+          <div class="cat-status clean">✓ clean</div>
+        </div>
+    </div>
+
+    <table>
+      <thead><tr><th>Category</th><th>Files</th><th>Tests</th><th>Share</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+            <td>⚡ Unit</td>
+            <td>37</td>
+            <td>853</td>
+            <td>37.2%</td>
+            <td class="hi">✓ clean</td>
+          </tr>
+<tr>
+            <td>🪝 Hook</td>
+            <td>7</td>
+            <td>131</td>
+            <td>5.7%</td>
+            <td class="hi">✓ clean</td>
+          </tr>
+<tr>
+            <td>🧱 Component</td>
+            <td>56</td>
+            <td>649</td>
+            <td>28.3%</td>
+            <td class="hi">✓ clean</td>
+          </tr>
+<tr>
+            <td>🚪 API / Route</td>
+            <td>55</td>
+            <td>645</td>
+            <td>28.1%</td>
+            <td class="hi">✓ clean</td>
+          </tr>
+<tr>
+            <td>🌐 E2E</td>
+            <td>8</td>
+            <td>18</td>
+            <td>0.8%</td>
+            <td class="hi">✓ clean</td>
+          </tr>
+      </tbody>
+    </table>
+  </div>
+
+  
+  <div class="section">
+    <div class="section-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><circle cx="9" cy="9" r="6"/><circle cx="15" cy="15" r="6"/></svg><h2>Overlapping Coverage</h2></div>
+    <p style="color:var(--stone);font-size:0.85rem;margin-bottom:1rem">Test files fighting the same ground twice. Loki twins, issue-numbered clusters, and directory splits consume redundant test budget on already-covered sources.</p>
+
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat-card green"><div class="value">0</div><div class="label">Loki Twin Pairs</div></div>
+      <div class="stat-card green"><div class="value">0</div><div class="label">Issue Clusters</div></div>
+      <div class="stat-card gold"><div class="value">~0</div><div class="label">Redundant Tests (twins)</div></div>
+      <div class="stat-card gold"><div class="value">0</div><div class="label">Excess Cluster Files</div></div>
+    </div><h3 style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.08em;margin:1.5rem 0 0.75rem">Over-Tested Sources — stop adding tests here, focus on gaps</h3><table>
+      <thead><tr><th>Source File</th><th>Avg Hit ×</th><th>Coverage</th><th>Note</th></tr></thead>
+      <tbody><tr>
+        <td><code>src/components/marketing/MarketingNavLinks.tsx</code></td>
+        <td class="lo"><strong>240×</strong></td>
+        <td class="hi">88.9%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/app/api/sync/route.ts</code></td>
+        <td class="lo"><strong>214×</strong></td>
+        <td class="hi">100.0%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/lib/firebase/firestore-types.ts</code></td>
+        <td class="lo"><strong>145×</strong></td>
+        <td class="hi">83.3%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/components/layout/LedgerTopBar.tsx</code></td>
+        <td class="lo"><strong>76×</strong></td>
+        <td class="hi">85.5%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/components/ui/label.tsx</code></td>
+        <td class="lo"><strong>66×</strong></td>
+        <td class="hi">100.0%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/lib/sync/sync-engine.ts</code></td>
+        <td class="lo"><strong>66×</strong></td>
+        <td class="hi">100.0%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/components/ui/button.tsx</code></td>
+        <td class="lo"><strong>62×</strong></td>
+        <td class="hi">100.0%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/hooks/useCloudSync.ts</code></td>
+        <td class="lo"><strong>61×</strong></td>
+        <td class="hi">93.5%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/components/easter-eggs/HeilungModal.tsx</code></td>
+        <td class="lo"><strong>59×</strong></td>
+        <td class="hi">97.1%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/lib/realm-utils.ts</code></td>
+        <td class="lo"><strong>56×</strong></td>
+        <td class="med">50.0%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/app/ledger/settings/page.tsx</code></td>
+        <td class="lo"><strong>50×</strong></td>
+        <td class="hi">97.3%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr><tr>
+        <td><code>src/lib/chronicles.ts</code></td>
+        <td class="lo"><strong>37×</strong></td>
+        <td class="hi">100.0%</td>
+        <td class="dim">Transitive dep or multiple test owners — no new tests needed</td>
+      </tr></tbody></table></div>
+  <div class="section">
+    <div class="section-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><h2>Coverage Gaps — Priority Targets</h2></div>
+    <p style="color:var(--stone);font-size:0.85rem;margin-bottom:0.75rem">Files below 20% coverage with &gt;10 lines. Sorted by coverage ascending — these are where new tests deliver real value.</p><table>
+      <thead><tr><th>Source File</th><th>Lines Hit</th><th>Coverage</th><th>Risk</th></tr></thead>
+      <tbody><tr>
+        <td><code>src/app/(marketing)/page.tsx</code></td>
+        <td>0/15</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/app/(marketing)/about/page.tsx</code></td>
+        <td>0/52</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/app/(marketing)/chronicles/[slug]/page.tsx</code></td>
+        <td>0/20</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/app/(marketing)/features/page.tsx</code></td>
+        <td>0/23</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/app/(marketing)/free-trial/FreeTrialContent.tsx</code></td>
+        <td>0/23</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/app/(marketing)/pricing/page.tsx</code></td>
+        <td>0/19</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/components/admin/PackStatusDashboard.tsx</code></td>
+        <td>0/107</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/components/cards/GleipnirBearSinews.tsx</code></td>
+        <td>0/17</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/components/cards/GleipnirBirdSpittle.tsx</code></td>
+        <td>0/17</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/components/dashboard/AnimatedCardGrid.tsx</code></td>
+        <td>0/11</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/components/dashboard/CardUrgencyBar.tsx</code></td>
+        <td>0/11</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr><tr>
+        <td><code>src/components/dashboard/Dashboard.tsx</code></td>
+        <td>0/203</td>
+        <td class="lo">0.0%</td>
+        <td class="hi">LOW</td>
+      </tr></tbody></table><p style="color:var(--stone);font-size:0.8rem;margin-top:0.75rem">0 HIGH-risk files below 20%. Covering them closes real auth/payment attack surface, not just a number.</p></div>
+
+  <!-- Test Reports -->
+  <div class="section">
+    <div class="section-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/></svg><h2>Test Reports</h2></div>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem">
+      Interactive HTML test reports from the last test run.
+      Served via <code>npx serve quality/reports -p 7463</code> (started automatically by /coverage-report).
+    </p>
+    <table>
+      <thead><tr><th>Report</th><th>Location</th><th>View</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Vitest (unit/integration)</td>
+          <td><code>test-report-vitest/</code></td>
+          <td><a href="http://localhost:7463/test-report-vitest/" style="color:var(--gold)">Open</a></td>
+        </tr>
+        <tr>
+          <td>Playwright (E2E)</td>
+          <td><code>test-report-playwright/</code></td>
+          <td><a href="http://localhost:7463/test-report-playwright/" style="color:var(--gold)">Open</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Generated by <code>quality/scripts/quality-report-html.mjs</code> ·
+    <a href="http://localhost:7463/coverage/index.html" style="color:var(--gold)">Coverage Index</a> ·
+    Fenrir Ledger 2026-03-20
+  </div>
+
+</div>
+</body>
+</html>
