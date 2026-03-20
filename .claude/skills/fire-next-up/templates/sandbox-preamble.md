@@ -48,6 +48,9 @@ Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.
   cd /workspace/repo/development/frontend && pnpm run verify:unit
 On failure: fix, commit+push, re-run that step. Repeat until green.
 Do NOT proceed to handoff with ANY failing Vitest tests.
+**All verify steps MUST run in the foreground (blocking).** NEVER use `run_in_background`
+for tsc, build, or Vitest commands. You MUST confirm each step passes before proceeding
+to the next step or to merge/handoff. Background verify = unverified merge = bug.
 
 STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,
