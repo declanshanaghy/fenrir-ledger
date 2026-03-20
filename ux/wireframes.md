@@ -618,19 +618,11 @@ Key layout decisions:
 
 ## Navigation Structure
 
-Sidebar (always visible, collapsible):
-- Logo: `ᛟ FENRIR LEDGER` + `Credit Card Tracker` subtitle
-- Nav items (grow as routes ship):
-  - Cards (active: `/`)
-  - Valhalla (Sprint 3: `/valhalla`)
-  - The Ravens (Sprint 4: `/settings`)
-- `[Collapse]` button pinned to sidebar bottom — collapses to icon-only rail
+> **Note (Sprint 8, Issue #403):** The persistent sidebar described here was removed. The current shell has no fixed sidebar. Navigation now lives in a top-bar dropdown with a rotary theme toggle. See [`wireframes/chrome/sidebar-removal-dropdown-settings.html`](wireframes/chrome/sidebar-removal-dropdown-settings.html) and [`wireframes/chrome/sidebar-removal-interaction-spec.md`](wireframes/chrome/sidebar-removal-interaction-spec.md) for the canonical current shell spec.
 
 Content header (per-page):
 - Page title left (Cinzel, gold)
 - `[ADD CARD]` primary CTA right (cards page only)
-
-Mobile: sidebar hidden by default; hamburger toggle opens overlay drawer.
 
 ---
 
