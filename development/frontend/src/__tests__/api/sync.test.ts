@@ -353,6 +353,12 @@ describe("PUT /api/sync — last-write-wins logic", () => {
 // ── Edge cases (consolidated from sync-route-edge-cases.loki.test.ts) ────────
 
 describe("PUT /api/sync — 403 when user not in Firestore", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authSuccess();
+    karlEntitlement();
+  });
+
   it("returns 403 when getUser returns null", async () => {
     mockGetUser.mockResolvedValue(null);
     const res = await PUT(makePutRequest({ cards: [] }));
@@ -376,6 +382,9 @@ describe("PUT /api/sync — 403 when user not in Firestore", () => {
 
 describe("PUT /api/sync — large batch (500+ cards)", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    authSuccess();
+    karlEntitlement();
     userExists();
     mockSetCards.mockResolvedValue(undefined);
   });
@@ -415,6 +424,9 @@ describe("PUT /api/sync — large batch (500+ cards)", () => {
 
 describe("PUT /api/sync — empty card array (edge case)", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    authSuccess();
+    karlEntitlement();
     userExists();
     mockGetCards.mockResolvedValue([]);
     mockSetCards.mockResolvedValue(undefined);
@@ -438,6 +450,9 @@ describe("PUT /api/sync — empty card array (edge case)", () => {
 
 describe("GET /api/sync — response shape", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    authSuccess();
+    karlEntitlement();
     userExists();
   });
 
