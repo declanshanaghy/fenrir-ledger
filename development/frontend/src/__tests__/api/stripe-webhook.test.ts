@@ -1,8 +1,8 @@
 /**
  * Unit tests for POST /api/stripe/webhook route.
  *
- * Validates the webhook handler correctly persists entitlements to Redis
- * via ioredis for checkout.session.completed, subscription.updated,
+ * Validates the webhook handler correctly persists entitlements to Firestore
+ * via entitlement-store for checkout.session.completed, subscription.updated,
  * and subscription.deleted events.
  *
  * Deduplication is handled via Firestore processedEvents/{eventId} — mocked here.
@@ -10,28 +10,46 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type Stripe from "stripe";
+import type { StoredStripeEntitlement } from "@/lib/stripe/types";
 
-// ── Mock Redis client (entitlement store) ─────────────────────────────────
-
-const mockRedis = vi.hoisted(() => ({
-  get: vi.fn(),
-  set: vi.fn(),
-  del: vi.fn(),
-}));
-
-vi.mock("@/lib/kv/redis-client", () => ({
-  getRedisClient: () => mockRedis,
-}));
-
-// ── Mock Firestore dedup helpers ──────────────────────────────────────────
+// ── Mock Firestore dedup helpers ──────────────────────────────────────────────
 
 const mockIsEventProcessed = vi.hoisted(() => vi.fn());
 const mockMarkEventProcessed = vi.hoisted(() => vi.fn());
+
+// ── Mock entitlement store ────────────────────────────────────────────────
+
+const mockGetStripeEntitlement = vi.fn();
+const mockSetStripeEntitlement = vi.fn();
+const mockGetGoogleSubByStripeCustomerId = vi.fn();
+const mockSetAnonymousStripeEntitlement = vi.fn();
+const mockGetAnonymousStripeEntitlement = vi.fn();
+
+vi.mock("@/lib/kv/entitlement-store", () => ({
+  getStripeEntitlement: (...args: unknown[]) => mockGetStripeEntitlement(...args),
+  setStripeEntitlement: (...args: unknown[]) => mockSetStripeEntitlement(...args),
+  getGoogleSubByStripeCustomerId: (...args: unknown[]) =>
+    mockGetGoogleSubByStripeCustomerId(...args),
+  setAnonymousStripeEntitlement: (...args: unknown[]) =>
+    mockSetAnonymousStripeEntitlement(...args),
+  getAnonymousStripeEntitlement: (...args: unknown[]) =>
+    mockGetAnonymousStripeEntitlement(...args),
+  isAnonymousStripeReverseIndex: (v: string) => v.startsWith("stripe:"),
+  extractStripeCustomerIdFromReverseIndex: (v: string) => v.slice("stripe:".length),
+}));
+
+// ── Mock Firestore (dedup + syncHouseholdTierToFirestore) ─────────────────
+
+const mockFirestoreUpdate = vi.fn().mockResolvedValue(undefined);
+const mockFirestoreDoc = vi.fn().mockReturnValue({ update: mockFirestoreUpdate });
+const mockGetUser = vi.fn().mockResolvedValue(null);
 
 vi.mock("@/lib/firebase/firestore", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/firebase/firestore")>();
   return {
     ...actual,
+    getUser: (...args: unknown[]) => mockGetUser(...args),
+    getFirestore: () => ({ doc: mockFirestoreDoc }),
     isEventProcessed: mockIsEventProcessed,
     markEventProcessed: mockMarkEventProcessed,
   };
@@ -63,6 +81,12 @@ vi.mock("@/lib/stripe/webhook", async (importOriginal) => {
     verifyWebhookSignature: vi.fn(),
   };
 });
+
+// ── Mock logger ───────────────────────────────────────────────────────────
+
+vi.mock("@/lib/logger", () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
 
 // ── Import after mocks ───────────────────────────────────────────────────
 
@@ -126,9 +150,12 @@ describe("POST /api/stripe/webhook", () => {
     // Default: event not yet processed (no duplicate)
     mockIsEventProcessed.mockResolvedValue(false);
     mockMarkEventProcessed.mockResolvedValue(undefined);
-    // Default: entitlement store Redis operations succeed
-    mockRedis.get.mockResolvedValue(null);
-    mockRedis.set.mockResolvedValue("OK");
+    // Default: entitlement store calls succeed
+    mockSetStripeEntitlement.mockResolvedValue(undefined);
+    mockSetAnonymousStripeEntitlement.mockResolvedValue(undefined);
+    mockGetStripeEntitlement.mockResolvedValue(null);
+    mockGetAnonymousStripeEntitlement.mockResolvedValue(null);
+    mockGetGoogleSubByStripeCustomerId.mockResolvedValue(null);
   });
 
   it("returns 400 when stripe-signature header is missing", async () => {
@@ -200,20 +227,15 @@ describe("POST /api/stripe/webhook", () => {
       expect(json.active).toBe(true);
       expect(json.anonymous).toBe(false);
 
-      // Verify entitlement was stored under Google sub key
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        "entitlement:google-sub-123",
-        expect.any(String),
-        "EX",
-        expect.any(Number),
-      );
-
-      // Verify reverse index was created
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        "stripe-customer:cus_test456",
-        JSON.stringify("google-sub-123"),
-        "EX",
-        expect.any(Number),
+      // Verify entitlement was stored under Google sub
+      expect(mockSetStripeEntitlement).toHaveBeenCalledWith(
+        "google-sub-123",
+        expect.objectContaining({
+          tier: "karl",
+          active: true,
+          stripeCustomerId: "cus_test456",
+          stripeSubscriptionId: "sub_test789",
+        }),
       );
     });
 
@@ -236,11 +258,13 @@ describe("POST /api/stripe/webhook", () => {
       expect(json.anonymous).toBe(true);
 
       // Verify entitlement stored under anonymous key
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        "entitlement:stripe:cus_test456",
-        expect.any(String),
-        "EX",
-        expect.any(Number),
+      expect(mockSetAnonymousStripeEntitlement).toHaveBeenCalledWith(
+        "cus_test456",
+        expect.objectContaining({
+          tier: "karl",
+          active: true,
+          stripeCustomerId: "cus_test456",
+        }),
       );
     });
 
@@ -269,10 +293,9 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("customer.subscription.updated", sub);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
-      // reverse index lookup, then existing entitlement
-      mockRedis.get
-        .mockResolvedValueOnce(JSON.stringify("google-sub-123")) // reverse index
-        .mockResolvedValueOnce(null); // existing entitlement
+      // Reverse index lookup returns Google sub
+      mockGetGoogleSubByStripeCustomerId.mockResolvedValueOnce("google-sub-123");
+      mockGetStripeEntitlement.mockResolvedValueOnce(null); // no existing entitlement
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
@@ -282,11 +305,9 @@ describe("POST /api/stripe/webhook", () => {
       expect(json.tier).toBe("karl");
 
       // Verify entitlement was updated
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        "entitlement:google-sub-123",
-        expect.any(String),
-        "EX",
-        expect.any(Number),
+      expect(mockSetStripeEntitlement).toHaveBeenCalledWith(
+        "google-sub-123",
+        expect.objectContaining({ tier: "karl" }),
       );
     });
 
@@ -295,8 +316,8 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("customer.subscription.updated", sub);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
-      // reverse index returns null (unknown customer)
-      mockRedis.get.mockResolvedValueOnce(null); // reverse index
+      // Reverse index returns null — unknown customer
+      mockGetGoogleSubByStripeCustomerId.mockResolvedValueOnce(null);
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
@@ -313,9 +334,8 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("customer.subscription.deleted", sub);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
-      mockRedis.get
-        .mockResolvedValueOnce(JSON.stringify("google-sub-123")) // reverse index
-        .mockResolvedValueOnce(null); // existing entitlement
+      mockGetGoogleSubByStripeCustomerId.mockResolvedValueOnce("google-sub-123");
+      mockGetStripeEntitlement.mockResolvedValueOnce(null); // no existing entitlement
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
@@ -326,13 +346,10 @@ describe("POST /api/stripe/webhook", () => {
       expect(json.active).toBe(false);
 
       // Verify thrall entitlement was written
-      const setCall = mockRedis.set.mock.calls.find(
-        (c: string[]) => c[0] === "entitlement:google-sub-123",
+      expect(mockSetStripeEntitlement).toHaveBeenCalledWith(
+        "google-sub-123",
+        expect.objectContaining({ tier: "thrall", active: false }),
       );
-      expect(setCall).toBeDefined();
-      const stored = JSON.parse(setCall![1] as string);
-      expect(stored.tier).toBe("thrall");
-      expect(stored.active).toBe(false);
     });
   });
 
@@ -386,8 +403,8 @@ describe("POST /api/stripe/webhook", () => {
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
       mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
 
-      // Mock entitlement storage failure
-      mockRedis.set.mockRejectedValueOnce(new Error("Redis write failed"));
+      // Entitlement store throws
+      mockSetStripeEntitlement.mockRejectedValueOnce(new Error("Firestore write failed"));
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(500);
@@ -408,7 +425,7 @@ describe("POST /api/stripe/webhook", () => {
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
       mockStripe.subscriptions.retrieve.mockResolvedValue(sub);
 
-      // Dedup write fails after successful processing — response should still be 200
+      // Dedup write fails but response should still be 200
       mockMarkEventProcessed.mockRejectedValueOnce(new Error("Firestore write failed"));
 
       const res = await POST(makeRequest("{}") as never);
@@ -416,12 +433,10 @@ describe("POST /api/stripe/webhook", () => {
 
       const json = await res.json();
       expect(json.status).toBe("processed");
-      // Verify entitlement was written
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        "entitlement:google-sub-123",
-        expect.any(String),
-        "EX",
-        expect.any(Number),
+      // Verify entitlement was written to Firestore
+      expect(mockSetStripeEntitlement).toHaveBeenCalledWith(
+        "google-sub-123",
+        expect.objectContaining({ tier: "karl" }),
       );
       // Verify dedup marker was attempted
       expect(mockMarkEventProcessed).toHaveBeenCalledWith("evt_test123");
@@ -503,17 +518,18 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("customer.subscription.updated", sub);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
-      mockRedis.get.mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
+      mockGetGoogleSubByStripeCustomerId.mockResolvedValueOnce("google-sub-123");
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
 
-      const setCall = mockRedis.set.mock.calls.find(
-        (c: string[]) => c[0] === "entitlement:google-sub-123",
+      const storedEntitlement = mockSetStripeEntitlement.mock.calls.find(
+        (c: unknown[]) => c[0] === "google-sub-123",
+      )?.[1] as StoredStripeEntitlement | undefined;
+      expect(storedEntitlement?.currentPeriodEnd).toBe(
+        new Date(cancelAtTimestamp * 1000).toISOString(),
       );
-      const stored = JSON.parse(setCall![1] as string);
-      expect(stored.currentPeriodEnd).toBe(new Date(cancelAtTimestamp * 1000).toISOString());
-      expect(stored.cancelAtPeriodEnd).toBe(true);
+      expect(storedEntitlement?.cancelAtPeriodEnd).toBe(true);
     });
 
     it("uses current_period_end from first subscription item when cancel_at is null", async () => {
@@ -531,16 +547,17 @@ describe("POST /api/stripe/webhook", () => {
       const event = makeStripeEvent("customer.subscription.updated", sub);
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
-      mockRedis.get.mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
+      mockGetGoogleSubByStripeCustomerId.mockResolvedValueOnce("google-sub-123");
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
 
-      const setCall = mockRedis.set.mock.calls.find(
-        (c: string[]) => c[0] === "entitlement:google-sub-123",
+      const storedEntitlement = mockSetStripeEntitlement.mock.calls.find(
+        (c: unknown[]) => c[0] === "google-sub-123",
+      )?.[1] as StoredStripeEntitlement | undefined;
+      expect(storedEntitlement?.currentPeriodEnd).toBe(
+        new Date(periodEndTimestamp * 1000).toISOString(),
       );
-      const stored = JSON.parse(setCall![1] as string);
-      expect(stored.currentPeriodEnd).toBe(new Date(periodEndTimestamp * 1000).toISOString());
     });
 
     it("falls back to current time when no period_end or cancel_at available", async () => {
@@ -554,17 +571,16 @@ describe("POST /api/stripe/webhook", () => {
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
       const beforeDate = new Date();
-      mockRedis.get.mockResolvedValueOnce(JSON.stringify("google-sub-123")); // reverse index
+      mockGetGoogleSubByStripeCustomerId.mockResolvedValueOnce("google-sub-123");
 
       const res = await POST(makeRequest("{}") as never);
       const afterDate = new Date();
       expect(res.status).toBe(200);
 
-      const setCall = mockRedis.set.mock.calls.find(
-        (c: string[]) => c[0] === "entitlement:google-sub-123",
-      );
-      const stored = JSON.parse(setCall![1] as string);
-      const resultDate = new Date(stored.currentPeriodEnd);
+      const storedEntitlement = mockSetStripeEntitlement.mock.calls.find(
+        (c: unknown[]) => c[0] === "google-sub-123",
+      )?.[1] as StoredStripeEntitlement | undefined;
+      const resultDate = new Date(storedEntitlement?.currentPeriodEnd ?? "");
       expect(resultDate.getTime()).toBeGreaterThanOrEqual(beforeDate.getTime());
       expect(resultDate.getTime()).toBeLessThanOrEqual(afterDate.getTime());
     });
@@ -577,20 +593,27 @@ describe("POST /api/stripe/webhook", () => {
       vi.mocked(verifyWebhookSignature).mockReturnValue(event);
 
       const originalLinkedAt = "2024-01-01T00:00:00Z";
-      const existingEntitlement = JSON.stringify({ linkedAt: originalLinkedAt });
 
-      mockRedis.get
-        .mockResolvedValueOnce(JSON.stringify("stripe:cus_test456")) // reverse index (anonymous)
-        .mockResolvedValueOnce(existingEntitlement); // existing entitlement
+      // Reverse index returns anonymous identity
+      mockGetGoogleSubByStripeCustomerId.mockResolvedValueOnce("stripe:cus_test456");
+      // Existing anonymous entitlement with originalLinkedAt
+      mockGetAnonymousStripeEntitlement.mockResolvedValueOnce({
+        tier: "karl",
+        active: true,
+        stripeCustomerId: "cus_test456",
+        stripeSubscriptionId: "sub_test789",
+        stripeStatus: "active",
+        linkedAt: originalLinkedAt,
+        checkedAt: "2024-06-01T00:00:00Z",
+      } satisfies StoredStripeEntitlement);
 
       const res = await POST(makeRequest("{}") as never);
       expect(res.status).toBe(200);
 
-      const setCall = mockRedis.set.mock.calls.find(
-        (c: string[]) => c[0] === "entitlement:stripe:cus_test456",
-      );
-      const stored = JSON.parse(setCall![1] as string);
-      expect(stored.linkedAt).toBe(originalLinkedAt);
+      const storedEntitlement = mockSetAnonymousStripeEntitlement.mock.calls.find(
+        (c: unknown[]) => c[0] === "cus_test456",
+      )?.[1] as StoredStripeEntitlement | undefined;
+      expect(storedEntitlement?.linkedAt).toBe(originalLinkedAt);
     });
 
     it("sets linkedAt for new anonymous entitlements", async () => {
@@ -611,11 +634,10 @@ describe("POST /api/stripe/webhook", () => {
       const afterDate = new Date();
       expect(res.status).toBe(200);
 
-      const setCall = mockRedis.set.mock.calls.find(
-        (c: string[]) => c[0] === "entitlement:stripe:cus_test456",
-      );
-      const stored = JSON.parse(setCall![1] as string);
-      const linkedDate = new Date(stored.linkedAt);
+      const storedEntitlement = mockSetAnonymousStripeEntitlement.mock.calls.find(
+        (c: unknown[]) => c[0] === "cus_test456",
+      )?.[1] as StoredStripeEntitlement | undefined;
+      const linkedDate = new Date(storedEntitlement?.linkedAt ?? "");
       expect(linkedDate.getTime()).toBeGreaterThanOrEqual(beforeDate.getTime());
       expect(linkedDate.getTime()).toBeLessThanOrEqual(afterDate.getTime());
     });
