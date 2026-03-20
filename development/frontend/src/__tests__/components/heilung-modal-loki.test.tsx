@@ -57,7 +57,7 @@ function openModal() {
 }
 
 function activateVideoPortal() {
-  const btn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+  const btn = screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube");
   act(() => { fireEvent.click(btn); });
 }
 
@@ -75,7 +75,7 @@ describe("HeilungModal — Loki QA edge cases", () => {
     openModal();
     activateVideoPortal();
     // Verify iframe is showing
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+    expect(screen.getByTitle("Heilung — Norupo LIFA")).toBeDefined();
 
     // Click backdrop
     const dialog = screen.getByRole("dialog");
@@ -84,15 +84,15 @@ describe("HeilungModal — Loki QA edge cases", () => {
 
     // Reopen — should show thumbnail, not iframe
     openModal();
-    expect(screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube")).toBeDefined();
-    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
+    expect(screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube")).toBeDefined();
+    expect(screen.queryByTitle("Heilung — Norupo LIFA")).toBeNull();
   });
 
   it("Escape key while playing resets video to thumbnail on reopen", () => {
     render(<HeilungModal />);
     openModal();
     activateVideoPortal();
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+    expect(screen.getByTitle("Heilung — Norupo LIFA")).toBeDefined();
 
     act(() => {
       fireEvent.keyDown(window, { key: "Escape" });
@@ -100,29 +100,29 @@ describe("HeilungModal — Loki QA edge cases", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
 
     openModal();
-    expect(screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube")).toBeDefined();
-    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
+    expect(screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube")).toBeDefined();
+    expect(screen.queryByTitle("Heilung — Norupo LIFA")).toBeNull();
   });
 
   it("HEIÐR button while playing resets video to thumbnail on reopen", () => {
     render(<HeilungModal />);
     openModal();
     activateVideoPortal();
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+    expect(screen.getByTitle("Heilung — Norupo LIFA")).toBeDefined();
 
     fireEvent.click(screen.getByLabelText("Dismiss — honour given"));
     expect(screen.queryByRole("dialog")).toBeNull();
 
     openModal();
-    expect(screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube")).toBeDefined();
-    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
+    expect(screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube")).toBeDefined();
+    expect(screen.queryByTitle("Heilung — Norupo LIFA")).toBeNull();
   });
 
   it("second Ctrl+Shift+L toggle while playing resets video to thumbnail on reopen", () => {
     render(<HeilungModal />);
     openModal();
     activateVideoPortal();
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeDefined();
+    expect(screen.getByTitle("Heilung — Norupo LIFA")).toBeDefined();
 
     // Second trigger closes modal (toggle)
     act(() => triggerHeilungKey());
@@ -130,8 +130,8 @@ describe("HeilungModal — Loki QA edge cases", () => {
 
     // Third trigger reopens — thumbnail state
     openModal();
-    expect(screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube")).toBeDefined();
-    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).toBeNull();
+    expect(screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube")).toBeDefined();
+    expect(screen.queryByTitle("Heilung — Norupo LIFA")).toBeNull();
   });
 
   // ── URL encoding ──────────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ describe("HeilungModal — Loki QA edge cases", () => {
     render(<HeilungModal />);
     openModal();
     activateVideoPortal();
-    const iframe = screen.getByTitle("Heilung — Krigsgaldr LIFA") as HTMLIFrameElement;
+    const iframe = screen.getByTitle("Heilung — Norupo LIFA") as HTMLIFrameElement;
     // allowFullScreen is a boolean attribute — rendered as empty string or "true"
     expect(iframe.hasAttribute("allowfullscreen")).toBe(true);
   });
@@ -158,7 +158,7 @@ describe("HeilungModal — Loki QA edge cases", () => {
     render(<HeilungModal />);
     openModal();
     activateVideoPortal();
-    const iframe = screen.getByTitle("Heilung — Krigsgaldr LIFA") as HTMLIFrameElement;
+    const iframe = screen.getByTitle("Heilung — Norupo LIFA") as HTMLIFrameElement;
     expect(iframe.getAttribute("src")).toContain("rel=0");
   });
 
@@ -237,12 +237,12 @@ describe("HeilungModal — Loki QA edge cases", () => {
     expect(img!.getAttribute("alt")).toBe("");
   });
 
-  // ── Kriegsgaldr link ──────────────────────────────────────────────────────
+  // ── Norupo link ──────────────────────────────────────────────────────
 
-  it("Krigsgaldr link has aria-label 'Krigsgaldr on Wikipedia' and opens in new tab", () => {
+  it("Norupo link has aria-label 'Heilung on Wikipedia' and opens in new tab", () => {
     render(<HeilungModal />);
     openModal();
-    const link = screen.getByLabelText("Krigsgaldr on Wikipedia") as HTMLAnchorElement;
+    const link = screen.getAllByLabelText("Heilung on Wikipedia")[0] as HTMLAnchorElement;
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toBe("noopener noreferrer");
   });
