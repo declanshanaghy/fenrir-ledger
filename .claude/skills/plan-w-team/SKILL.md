@@ -40,7 +40,7 @@ TEAM_MEMBERS:
 - Think deeply about the best approach before breaking work into issues.
 - Understand the codebase directly (no subagents) to understand existing patterns.
 - Each issue must be small enough for a single agent chain to complete (1 branch, 1 PR).
-- Max 5 issues per plan. If the work is larger, split into phases and plan one phase at a time.
+- Break the work into as many issues as needed — no cap. Each issue must be small enough for a single agent chain.
 - Issues must have correct type and priority labels so `/fire-next-up` routes them to the right agent chain.
 
 ## Workflow
@@ -49,7 +49,7 @@ TEAM_MEMBERS:
 
 Parse the USER_PROMPT. Determine:
 - Work type: feature, bug, ux, security, test, chore
-- Complexity: simple (1 issue), medium (2-3 issues), complex (4-5 issues)
+- Complexity: simple (1 issue), medium (2-5 issues), complex (6+ issues)
 - Whether UI changes are involved (triggers Luna in Step 3)
 
 ### Step 2 — Freya Interviews Odin
@@ -135,7 +135,7 @@ git checkout main && git pull origin main
 
 ### Step 4 — Break Into Issues
 
-Using Freya's brief (and Luna's wireframes if applicable), break the work into 1-5 issues.
+Using Freya's brief (and Luna's wireframes if applicable), break the work into as many issues as the scope requires.
 
 **Issue sizing rules:**
 - Each issue = 1 branch + 1 PR + 1 agent chain
@@ -266,8 +266,8 @@ To start execution:
 
 ## Rules
 
-1. **Max 5 issues per plan** — if the work is bigger, plan in phases
-2. **Each issue must be self-contained** — one branch, one PR, one agent chain
+1. **No issue cap** — create as many issues as the scope requires; each must be self-contained (one branch, one PR, one agent chain)
+2. **Each issue must be self-contained** — one branch, one PR, one agent chain; split anything larger
 3. **Labels are mandatory** — every issue gets one type label and one priority label
 4. **Use `/file-issue`** — every issue is created via `/file-issue`, which handles labels, board placement, and auto-dispatch prompts
 5. **Sequential creation** — create issues one at a time to capture numbers for dependencies
