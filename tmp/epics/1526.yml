@@ -1,5 +1,6 @@
 epic:
-  number: 1386
+  number: 1526
+  tracker_issue: 1526
   title: Odin's Spear TUI
   description: >
     Full rewrite of the Odin's Spear admin TUI as a proper Ink-based Node.js application, extracted into a standalone
