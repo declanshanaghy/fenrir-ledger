@@ -62,3 +62,22 @@ resource "google_firebaserules_release" "firestore" {
 
   depends_on = [google_firestore_database.main]
 }
+
+# --------------------------------------------------------------------------
+# TTL Policy — processedEvents collection auto-purges after expiresAt
+#
+# Firestore native TTL: documents in processedEvents/ are automatically
+# deleted once their expiresAt Timestamp field is in the past (within ~72h).
+# The webhook handler sets expiresAt to now + 24h on each write.
+# --------------------------------------------------------------------------
+
+resource "google_firestore_field" "processed_events_ttl" {
+  project    = var.project_id
+  database   = google_firestore_database.main.name
+  collection = "processedEvents"
+  field      = "expiresAt"
+
+  ttl_config {}
+
+  depends_on = [google_firestore_database.main]
+}

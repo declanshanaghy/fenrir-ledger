@@ -21,7 +21,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { getRedisClient } from "@/lib/kv/redis-client";
 import { stripe } from "@/lib/stripe/api";
 import { verifyWebhookSignature, buildEntitlementFromSubscription, mapStripeStatusToTier } from "@/lib/stripe/webhook";
 import {
@@ -33,13 +32,10 @@ import {
   isAnonymousStripeReverseIndex,
   extractStripeCustomerIdFromReverseIndex,
 } from "@/lib/kv/entitlement-store";
-import { getUser, getFirestore } from "@/lib/firebase/firestore";
+import { getUser, getFirestore, isEventProcessed, markEventProcessed } from "@/lib/firebase/firestore";
 import { FIRESTORE_PATHS } from "@/lib/firebase/firestore-types";
 import type { StripeTier } from "@/lib/stripe/types";
 import { log } from "@/lib/logger";
-
-/** 24 hours in seconds - TTL for processed webhook events deduplication cache */
-const WEBHOOK_EVENT_DEDUP_TTL_SECONDS = 24 * 60 * 60;
 
 // ─── Firestore household tier sync ───────────────────────────────────────────
 
@@ -365,10 +361,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // --- Check for duplicate event (deduplication cache) ---
-  const deduplicationKey = `stripe-event-processed:${event.id}`;
   try {
-    const redis = getRedisClient();
-    const alreadyProcessed = await redis.get(deduplicationKey);
+    const alreadyProcessed = await isEventProcessed(event.id);
     if (alreadyProcessed) {
       log.info("Stripe webhook event already processed (duplicate detected)", {
         eventId: event.id,
@@ -461,10 +455,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // --- Mark event as processed in deduplication cache (with 24h TTL) ---
+  // --- Mark event as processed in deduplication cache (24h TTL via Firestore) ---
   try {
-    const dedupRedis = getRedisClient();
-    await dedupRedis.set(deduplicationKey, "1", "EX", WEBHOOK_EVENT_DEDUP_TTL_SECONDS);
+    await markEventProcessed(event.id);
     log.debug("Stripe webhook event marked as processed", {
       eventId: event.id,
       eventType: event.type,
