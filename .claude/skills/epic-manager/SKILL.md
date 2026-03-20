@@ -166,16 +166,43 @@ Wave-by-wave table with icons:
 **Always use `AskUserQuestion` when asking Odin anything.** Never output a question as
 plain text and wait — use the `AskUserQuestion` tool so Odin gets a proper prompt.
 
+**Always show a summary before asking.** Before every `AskUserQuestion`, output a brief
+markdown summary of the issues in question so Odin has context without needing to look
+them up. Format:
+
+```
+**Ready to dispatch (Wave N):**
+- #X — <title> (type/priority) — <1-line summary from issue body>
+- #Y — <title> (type/priority) — <1-line summary from issue body>
+```
+
+or for duplicates:
+```
+**Duplicates detected:**
+- #X — <title> — duplicate of #Y
+```
+
+or for stalls:
+```
+**Epic stalled — nothing ready or running:**
+- N done, N blocked, 0 ready, 0 running
+- Next unblock: #X needs #Y to close first
+```
+
+Then immediately follow with the `AskUserQuestion` call. The summary and the question
+should appear in the same response — no extra round-trip.
+
 Read the output and:
 
-1. **If duplicates are flagged** — use `AskUserQuestion` to confirm closing them. Options:
-   "Close duplicates", "Skip". If confirmed, close with the suggested `gh issue close`
-   command, then re-run.
-2. **If stories are ready** — use `AskUserQuestion`: *"Wave N is unblocked. Dispatch?"*
+1. **If duplicates are flagged** — summarize which issues are duplicates and of what, then
+   use `AskUserQuestion` to confirm closing them. Options: "Close duplicates", "Skip".
+   If confirmed, close with the suggested `gh issue close` command, then re-run.
+2. **If stories are ready** — summarize the ready issues with titles, types, and priorities,
+   then use `AskUserQuestion`: *"Wave N is unblocked. Dispatch?"*
    Options: "Dispatch #X", "Dispatch all in parallel", "Skip". Then invoke `/dispatch`
    or `/fire-next-up #X #Y` accordingly.
-3. **If nothing is ready and nothing is running** — use `AskUserQuestion` to flag the
-   stall. Options: "Re-check", "Close epic".
+3. **If nothing is ready and nothing is running** — summarize the blockage chain, then use
+   `AskUserQuestion` to flag the stall. Options: "Re-check", "Close epic".
 4. **If epic is complete** — congratulate, update the epic file `state` fields, and HKR.
 
 ## Epic File Format
