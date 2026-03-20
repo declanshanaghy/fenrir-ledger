@@ -38,6 +38,7 @@ stories:
       - 1388
       - 1389
       - 1472
+      - 1519
     blocked_by:
       - 1496
     note: >
@@ -88,6 +89,16 @@ stories:
       - 1495
     parallel_with:
       - 1387
+  - number: 1519
+    title: Remove Redis client, ioredis dependency, and Odin's Spear Redis commands
+    state: open
+    wave: 3
+    blocks: []
+    blocked_by:
+      - 1495
+    parallel_with: []
+    duplicate_of: null
+    note: "Redis removal from Odin's Spear — tracked in Remove Redis epic #1527 as well"
   - number: 1389
     title: "Odin's Spear TUI: Card drill-down view"
     state: open
