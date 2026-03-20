@@ -922,8 +922,8 @@ jobs:
   update-deploy-marker:
     name: "Update deploy/last marker"
     runs-on: ubuntu-latest
-    needs: [deploy-app, deploy-monitor, deploy-n8n]
-    if: always() && (needs.deploy-app.result == 'success' || needs.deploy-monitor.result == 'success' || needs.deploy-n8n.result == 'success')
+    needs: [app-deploy, odins-throne, marketing-engine]
+    if: always() && (needs.app-deploy.result == 'success' || needs.odins-throne.result == 'success' || needs.marketing-engine.result == 'success')
     permissions:
       contents: write
     steps:
