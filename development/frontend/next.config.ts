@@ -1,4 +1,5 @@
 // Next.js configuration for Fenrir Ledger
+import path from "path";
 import type { NextConfig } from "next";
 import { buildSecurityHeaders } from "./src/lib/csp-headers";
 import { CACHE_CONTROL } from "./src/lib/cache-headers";
@@ -28,9 +29,9 @@ const nextConfig: NextConfig = {
   // Produces a self-contained server.js with only required node_modules
   output: "standalone",
 
-  // Pin the workspace root so Next.js doesn't infer it from stray lockfiles
-  // in parent directories. This is the frontend directory itself.
-  outputFileTracingRoot: __dirname,
+  // pnpm workspaces: set tracing root to workspace root so nft can follow
+  // pnpm symlinks (node_modules/.pnpm/) that live above this package directory.
+  outputFileTracingRoot: path.join(__dirname, "../.."),
 
   // Non-CSP security headers — static, same on every response.
   // CSP is set per-request in middleware (needs nonce for RSC scripts).

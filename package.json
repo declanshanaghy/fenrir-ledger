@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm --filter fenrir-ledger run test"
+  }
+}

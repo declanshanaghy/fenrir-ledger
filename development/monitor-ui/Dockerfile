@@ -3,14 +3,17 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+
+COPY package.json ./
+RUN pnpm install --ignore-scripts
 
 COPY tsconfig.json vite.config.ts index.html ./
 COPY src/ ./src/
 COPY public/ ./public/
 
-RUN npm run build
+RUN pnpm run build
 
 # ── Stage 2: Serve ────────────────────────────────────────────────────────────
 FROM nginx:1.27-alpine AS runtime

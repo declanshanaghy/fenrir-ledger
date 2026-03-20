@@ -92,12 +92,15 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# 4. Install frontend dependencies
+# 4. Install workspace dependencies (pnpm workspaces)
 # --------------------------------------------------------------------------
-cd /workspace/repo/development/frontend
-npm ci --prefer-offline 2>/dev/null || npm ci
-echo "[ok] frontend dependencies installed"
 cd /workspace/repo
+# Install pnpm if not already available (agent sandbox images use node:20)
+if ! command -v pnpm &>/dev/null; then
+  corepack enable && corepack prepare pnpm@10.32.1 --activate
+fi
+pnpm install --frozen-lockfile --prefer-offline 2>/dev/null || pnpm install --frozen-lockfile
+echo "[ok] workspace dependencies installed"
 
 # --------------------------------------------------------------------------
 # 5. Handle Spot/preemptible pod eviction gracefully
