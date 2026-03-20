@@ -165,27 +165,91 @@ and auto-dispatch prompt for bugs.
 gh issue comment <N> --body "Blocks #M — <one-line summary of dependent issue>"
 ```
 
+### Step 5b — Write Epic Graph File
+
+After all issues are created and their numbers are known, write the epic dependency
+graph to `tmp/epics/<root-issue-number>.json`.
+
+The **root issue** is the foundational story — wave 0, the first issue that everything
+else depends on (directly or transitively). If there is no single root, use the lowest
+issue number.
+
+**Schema:**
+
+```json
+{
+  "epic": {
+    "number": <root-issue-number>,
+    "title": "<epic title>",
+    "description": "<one-sentence description>"
+  },
+  "stories": [
+    {
+      "number": <N>,
+      "title": "<GitHub issue title>",
+      "state": "open",
+      "wave": <0-based wave index>,
+      "blocks": [<issue numbers this story unblocks>],
+      "blocked_by": [<issue numbers that must close before this starts>],
+      "parallel_with": [<issue numbers in the same wave that run in parallel>],
+      "duplicate_of": null,
+      "note": "<optional human note>"
+    }
+  ]
+}
+```
+
+**Wave assignment rules:**
+- Wave 0 — root / foundation story (no `blocked_by`)
+- Wave N+1 — stories whose last blocker is in wave N
+- Stories in the same wave with no dependency between them get the same wave number
+  and list each other in `parallel_with`
+
+**Write the file:**
+
+```bash
+mkdir -p tmp/epics
+# write JSON via Write tool — do NOT use bash heredoc or echo
+```
+
+Use the Write tool directly with the JSON content. Do not shell-escape or base64 encode.
+
+After writing, verify:
+```bash
+node -e "JSON.parse(require('fs').readFileSync('tmp/epics/<N>.json','utf8')); console.log('valid JSON')"
+```
+
+Commit the file on `main` so agents can find it:
+```bash
+git add tmp/epics/<N>.json
+git commit -m "chore: add epic graph for #<N> — <title>
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+git push
+```
+
 ### Step 6 — Report
 
-After all issues are created, report:
+After all issues are created and the epic file is written, report:
 
 ```
 ## Plan Filed
 
 **Topic:** <brief description>
 **Issues created:** N
+**Epic graph:** tmp/epics/<root-N>.json
 
-| # | Title | Type | Priority | Chain | Depends On |
-|---|-------|------|----------|-------|------------|
-| #N | ... | enhancement | normal | Decko -> Loki | — |
-| #M | ... | ux | high | Luna -> Decko -> Loki | #N |
+| # | Title | Type | Priority | Chain | Wave | Depends On |
+|---|-------|------|----------|-------|------|------------|
+| #N | ... | enhancement | normal | Decko -> Loki | 0 | — |
+| #M | ... | ux | high | Luna -> Decko -> Loki | 1 | #N |
 
 **Wireframes:** <path or "none">
 
 To start execution:
-- `/fire-next-up` — pick the top unblocked issue
-- `/fire-next-up --batch 3` — pick top 3 unblocked issues in parallel
-- `/fire-next-up --peek` — preview the queue
+- `/epic-manager <root-N>` — dashboard + next dispatch recommendation
+- `/epic-manager <root-N> --dispatch` — dashboard + ready dispatch commands
+- `/fire-next-up` — pick the top unblocked issue from the board
 ```
 
 ## Rules
@@ -200,3 +264,4 @@ To start execution:
 8. **Freya always interviews** — never skip the product owner interview
 9. **Luna only for UI** — skip wireframes for pure backend/infra/test work
 10. **Use the issue template** — all required sections must be present for agents to work from
+11. **Always write the epic graph** — `tmp/epics/<N>.json` is mandatory output for every plan. `/epic-manager` depends on it.
