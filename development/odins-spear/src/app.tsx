@@ -13,6 +13,7 @@ import { HouseholdsTab } from "./tabs/HouseholdsTab.js";
 import { CardDrilldownView } from "./tabs/CardDrilldownView.js";
 import { SelectionProvider, useSelection } from "./context/SelectionContext.js";
 import type { PaletteCommand, CommandContext } from "./commands/registry.js";
+import { getCommands } from "./commands/registry.js";
 import type { ConnStatus, Counts } from "./components/StatusBar.js";
 
 const TUI_TABS = ["Users", "Households"] as const;
@@ -250,6 +251,10 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
         onJumpToHousehold={() => { setActiveTab(1); }}
         onCardsView={(householdId, filterUserId, ownerEmail) => {
           setCardDrilldown({ householdId, filterUserId, breadcrumbFrom: ownerEmail, ownerEmail });
+        }}
+        onTrialAdjust={() => {
+          const cmd = getCommands().find((c) => c.name === "trial-adjust");
+          if (cmd) handleTrialInput(cmd);
         }}
       />
     );

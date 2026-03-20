@@ -228,7 +228,7 @@ function UserDetailPanel({
       {actionMode === "none" ? (
         <Box>
           <Text color={GRAY}>
-            {"[d] Delete  [t] Tier"}
+            {"[d] Delete  [t] Tier  [a] adjust trial"}
             {user.stripeCustomerId ? "  [s] Cancel sub" : ""}
             {detail?.household ? "  [h] Household  [c] Cards" : ""}
           </Text>
@@ -267,6 +267,7 @@ interface UsersTabProps {
   onInputCapture?: (captured: boolean) => void;
   onJumpToHousehold?: () => void;
   onCardsView?: (householdId: string, filterUserId: string, ownerEmail: string) => void;
+  onTrialAdjust?: () => void;
 }
 
 export function UsersTab({
@@ -274,6 +275,7 @@ export function UsersTab({
   onInputCapture,
   onJumpToHousehold,
   onCardsView,
+  onTrialAdjust,
 }: UsersTabProps): React.JSX.Element {
   log.debug("UsersTab render");
 
@@ -612,6 +614,10 @@ export function UsersTab({
       }
       if (input === "c" && detail?.household && user.householdId) {
         onCardsView?.(user.householdId, user.id, user.email);
+        return;
+      }
+      if (input === "a") {
+        onTrialAdjust?.();
         return;
       }
     }
