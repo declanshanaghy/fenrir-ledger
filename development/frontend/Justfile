@@ -48,7 +48,7 @@ verify-fast:
 
 # Odin's Spear — Interactive REPL for managing trials, entitlements, and Stripe (auto port-forwards)
 odins-spear *args:
-    node "{{frontend}}/scripts/odins-spear.mjs" {{args}}
+    cd "{{repo_root}}/development/odins-spear" && npx tsx src/index.ts {{args}}
 
 # ── Utilities ───────────────────────────────────────────────────────────────
 

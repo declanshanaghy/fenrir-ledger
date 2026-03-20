@@ -1,0 +1,30 @@
+{
+  "name": "odins-spear",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev":   "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc --noEmit",
+    "lint":  "tsc --noEmit"
+  },
+  "dependencies": {
+    "fenrir-ledger": "file:../frontend",
+    "ink": "^6.8.0",
+    "ink-select-input": "^6.2.0",
+    "ink-text-input": "^6.0.0",
+    "ioredis": "^5.6.1",
+    "@google-cloud/firestore": "^8.3.0",
+    "stripe": "^20.4.0",
+    "tslog": "^4.10.2",
+    "react": "^19.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "tsx": "^4.19.3",
+    "typescript": "5.9.3"
+  }
+}
