@@ -355,13 +355,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: TypeScript check
-        run: bash quality/scripts/verify.sh --step tsc
+        working-directory: development/frontend
+        run: pnpm run verify:tsc
 
       - name: Build check
-        run: bash quality/scripts/verify.sh --step build
+        working-directory: development/frontend
+        run: pnpm run verify:build
 
       - name: Unit tests
-        run: bash quality/scripts/verify.sh --step unit
+        working-directory: development/frontend
+        run: pnpm run verify:unit
 
       - name: Upload reports on failure
         if: failure()
@@ -564,7 +567,8 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: E2E tests
-        run: bash quality/scripts/verify.sh --step e2e
+        working-directory: development/frontend
+        run: pnpm run verify:e2e
 
       - name: Upload reports on failure
         if: failure()

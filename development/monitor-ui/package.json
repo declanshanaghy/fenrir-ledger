@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify": "pnpm run verify:tsc && pnpm run verify:build",
+    "verify:tsc": "tsc --noEmit",
+    "verify:build": "vite build"
   },
   "dependencies": {
     "react": "^19.0.0",

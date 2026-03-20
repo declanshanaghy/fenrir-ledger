@@ -2,10 +2,11 @@
 # CI Tests — TypeScript Check + Unit Tests + Playwright E2E against GKE Prod
 #
 # Runs on every push to PR branches and workflow_dispatch:
-#   1. TypeScript type-checking (tsc --noEmit)
-#   2. Vitest unit tests
+#   1. TypeScript type-checking (pnpm run verify:tsc)
+#   2. Vitest unit tests (pnpm run verify:unit)
 #   3. Playwright E2E tests against https://www.fenrirledger.com
 #   4. Upload test artifacts + upsert PR comment with results
+#   5. odins-spear verify (tsc + unit) when development/odins-spear/** changes
 #
 # Replaces the former Vercel-deployment-based CI workflow (Issue #734).
 #
@@ -24,6 +25,7 @@ on:
     branches-ignore: [main]
     paths:
       - "development/frontend/**"
+      - "development/odins-spear/**"
       - "quality/test-suites/**"
       - ".github/workflows/ci-tests.yml"
   workflow_dispatch:
@@ -68,12 +70,12 @@ jobs:
       - name: TypeScript check
         id: tsc
         working-directory: development/frontend
-        run: npx tsc --noEmit
+        run: pnpm run verify:tsc
 
       - name: Run unit tests
         id: unit
         working-directory: development/frontend
-        run: pnpm run test:unit
+        run: pnpm run verify:unit
 
       - name: Install Playwright browsers
         working-directory: development/frontend
@@ -84,7 +86,7 @@ jobs:
         working-directory: development/frontend
         env:
           SERVER_URL: https://www.fenrirledger.com
-        run: npx playwright test
+        run: pnpm run verify:e2e
 
       - name: Upload Playwright report
         if: always()
@@ -155,3 +157,46 @@ jobs:
                 body,
               });
             }
+
+  odins-spear-ci:
+    name: Odin's Spear — TypeScript + Unit
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(toJSON(github.event.commits.*.modified), 'development/odins-spear') ||
+      contains(toJSON(github.event.commits.*.added), 'development/odins-spear')
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "store=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify odins-spear
+        working-directory: development/odins-spear
+        run: pnpm run verify

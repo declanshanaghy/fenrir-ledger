@@ -9,7 +9,10 @@
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify": "pnpm run verify:tsc && pnpm run verify:unit",
+    "verify:tsc": "tsc --noEmit",
+    "verify:unit": "vitest run"
   },
   "dependencies": {
     "@google-cloud/firestore": "^8.3.0",
