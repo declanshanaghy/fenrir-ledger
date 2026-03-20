@@ -330,19 +330,17 @@ describe("POST /api/trial/status", () => {
   // Auto-init failure: Firestore unavailable
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns none status when both getTrial and auto-init fail due to Firestore error", async () => {
-    // getTrial fails — Firestore error (caught, returns null)
-    mockDocRef.get.mockRejectedValueOnce(new Error("Firestore unavailable"));
+  it("returns 500 when getTrial fails and auto-init Firestore write also fails", async () => {
+    // getTrial fails — error is caught in getTrial, returns null
+    // initTrial is then attempted; its Firestore SET also fails → throws
+    mockDocRef.get.mockRejectedValue(new Error("Firestore unavailable"));
+    mockDocRef.set.mockRejectedValue(new Error("Firestore unavailable"));
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
 
-    // getTrial error is caught and returns null, then initTrial is called
-    // but the outer try-catch wraps both; status depends on implementation
-    expect([200, 500]).toContain(res.status);
-    if (res.status === 200) {
-      // If auto-init also fails, should return "none"
-      expect(["none", "active"]).toContain(body.status);
-    }
+    // Auto-init failure is now surfaced as a 500 (fixes #1589: no silent "none")
+    expect(res.status).toBe(500);
+    expect(body.error).toBe("internal_error");
   });
 });
