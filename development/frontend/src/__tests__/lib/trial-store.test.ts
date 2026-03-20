@@ -341,3 +341,102 @@ describe("getTrial — malformed/missing data error handling", () => {
     expect(result).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Migration tests — issue #1624 dual-format UUID ↔ SHA-256 fallback
+// ---------------------------------------------------------------------------
+
+import { createHash } from "crypto";
+
+const UUID_FP = "a3f4e891-bc12-4d9a-87c3-1f5e209b3d7a"; // UUID v4 format (new)
+const UUID_LEGACY_KEY = createHash("sha256").update(UUID_FP).digest("hex"); // SHA-256 of UUID
+
+describe("migration — UUID fingerprint falls back to legacy SHA-256 key (#1624)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDocRef.get.mockResolvedValue(missingSnap);
+    mockDocRef.set.mockResolvedValue(undefined);
+    mockDocRef.update.mockResolvedValue(undefined);
+  });
+
+  describe("getTrial", () => {
+    it("returns null when not found at either UUID or legacy SHA-256 key", async () => {
+      // Both lookups return missing
+      mockDocRef.get
+        .mockResolvedValueOnce(missingSnap) // UUID key
+        .mockResolvedValueOnce(missingSnap); // legacy SHA-256 key
+
+      const result = await getTrial(UUID_FP);
+      expect(result).toBeNull();
+      // Both keys were tried
+      expect(mockDocRef.get).toHaveBeenCalledTimes(2);
+    });
+
+    it("returns trial found at legacy SHA-256 key when UUID key is empty", async () => {
+      const trial: StoredTrial = { startDate: "2025-01-01T00:00:00.000Z" };
+      mockDocRef.get
+        .mockResolvedValueOnce(missingSnap)       // UUID key: not found
+        .mockResolvedValueOnce(existingSnap(trial)); // legacy SHA-256 key: found
+
+      const result = await getTrial(UUID_FP);
+      expect(result).toEqual(trial);
+
+      // First lookup: UUID key; second: legacy SHA-256 key
+      expect(mockDb.doc).toHaveBeenNthCalledWith(1, `trials/${UUID_FP}`);
+      expect(mockDb.doc).toHaveBeenNthCalledWith(2, `trials/${UUID_LEGACY_KEY}`);
+    });
+
+    it("returns trial found at UUID key without trying legacy key", async () => {
+      const trial: StoredTrial = { startDate: "2025-02-01T00:00:00.000Z" };
+      mockDocRef.get.mockResolvedValueOnce(existingSnap(trial)); // UUID key: found
+
+      const result = await getTrial(UUID_FP);
+      expect(result).toEqual(trial);
+      // Only one get — no legacy fallback needed
+      expect(mockDocRef.get).toHaveBeenCalledTimes(1);
+    });
+
+    it("does NOT attempt legacy fallback for 64-char hex fingerprints", async () => {
+      mockDocRef.get.mockResolvedValueOnce(missingSnap);
+
+      const result = await getTrial(FINGERPRINT); // 64-char hex
+      expect(result).toBeNull();
+      // Only one get — no UUID pattern match, so no legacy fallback
+      expect(mockDocRef.get).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("markTrialConverted", () => {
+    it("updates doc at legacy SHA-256 key when UUID fingerprint resolves there", async () => {
+      const trial: StoredTrial = { startDate: "2025-01-01T00:00:00.000Z" };
+      mockDocRef.get
+        .mockResolvedValueOnce(missingSnap)       // UUID key: not found
+        .mockResolvedValueOnce(existingSnap(trial)); // legacy SHA-256 key: found
+
+      const result = await markTrialConverted(UUID_FP);
+      expect(result).toBe(true);
+      expect(mockDocRef.update).toHaveBeenCalledWith(
+        expect.objectContaining({ convertedDate: expect.any(String) }),
+      );
+      // Update should target the legacy key doc
+      const docCalls = mockDb.doc.mock.calls.map((c) => c[0] as string);
+      expect(docCalls).toContain(`trials/${UUID_LEGACY_KEY}`);
+    });
+  });
+
+  describe("linkTrialToUser", () => {
+    it("updates doc at legacy SHA-256 key when UUID fingerprint resolves there", async () => {
+      const trial: StoredTrial = { startDate: "2025-01-01T00:00:00.000Z" };
+      mockDocRef.get
+        .mockResolvedValueOnce(missingSnap)       // UUID key: not found
+        .mockResolvedValueOnce(existingSnap(trial)); // legacy SHA-256 key: found
+
+      await linkTrialToUser(UUID_FP, "user-789");
+      expect(mockDocRef.update).toHaveBeenCalledWith({ userId: "user-789" });
+
+      // Update should target the legacy key doc
+      const docCalls = mockDb.doc.mock.calls.map((c) => c[0] as string);
+      expect(docCalls).toContain(`trials/${UUID_LEGACY_KEY}`);
+    });
+  });
+});

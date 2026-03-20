@@ -1,24 +1,23 @@
 /**
- * QA tests for issue #1615 — Stable fingerprint: SHA-256(deviceId) only.
+ * Tests for fingerprint stability and correctness.
  *
- * These tests validate the acceptance criteria from issue #1615:
- *   - Fingerprint is SHA-256(deviceId) only — no userAgent
- *   - Fingerprint is stable across browser updates
+ * Validates issue #1615 (userAgent independence) and the issue #1624
+ * simplification: fingerprint is now the raw deviceId (UUID v4), not SHA-256.
  *
- * Complementary to trial-utils.test.ts (which covers isValidFingerprint +
- * clearTrialStatusCache). These tests focus on the correctness and
- * stability properties of the fixed fingerprint computation.
+ * Key properties:
+ *   - computeFingerprint() returns the raw deviceId directly (no hash)
+ *   - Fingerprint is stable across browser updates (no userAgent involvement)
+ *   - Fingerprint is synchronous
  *
- * @ref Issue #1615
+ * @ref Issue #1615, #1624
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { computeFingerprint } from "@/lib/trial-utils";
 
-// Pre-computed SHA-256("test-device-abc-999") — used as regression anchor.
-// Computed via: echo -n "test-device-abc-999" | sha256sum
-const KNOWN_DEVICE_ID = "test-device-abc-999";
-const KNOWN_SHA256 = "2fd2ad3abfb98b6c3ca920c9d701c73275ff34998dad54f551f3dc37dc45c86c";
+const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+const KNOWN_DEVICE_ID = "c7f1a823-45de-4b9c-a1f2-9e0d3c8b2a71";
 
 function setupBrowserEnv(deviceId: string) {
   Object.defineProperty(globalThis, "window", {
@@ -36,52 +35,49 @@ function setupBrowserEnv(deviceId: string) {
   });
 }
 
-describe("issue #1615 — stable fingerprint (SHA-256(deviceId) only)", () => {
+describe("issue #1624 — fingerprint = raw deviceId (no SHA-256)", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  describe("hash correctness", () => {
+  describe("fingerprint identity", () => {
     beforeEach(() => setupBrowserEnv(KNOWN_DEVICE_ID));
 
-    it("produces the known SHA-256 value for a fixed deviceId", async () => {
+    it("returns the exact deviceId (no transformation)", async () => {
       const fp = await computeFingerprint();
-      expect(fp).toBe(KNOWN_SHA256);
+      expect(fp).toBe(KNOWN_DEVICE_ID);
     });
 
-    it("output is exactly 64 characters", async () => {
+    it("output matches UUID v4 format", async () => {
       const fp = await computeFingerprint();
-      expect(fp).toHaveLength(64);
+      expect(fp).toMatch(UUID_V4_RE);
     });
 
-    it("output is lowercase hex only", async () => {
+    it("output is 36 characters (UUID with dashes)", async () => {
       const fp = await computeFingerprint();
-      expect(fp).toMatch(/^[0-9a-f]{64}$/);
+      expect(fp).toHaveLength(36);
     });
   });
 
   describe("uniqueness", () => {
     it("different deviceIds produce different fingerprints", async () => {
-      setupBrowserEnv("device-alpha-001");
+      setupBrowserEnv("device-alpha-0001-aaaa-bbbbbbbbbbbb".replace(/-/g, "").slice(0, 8) + "-0001-4000-8000-" + "a".repeat(12));
+      // Use real UUIDs for this test
+      const id1 = "11111111-1111-4111-8111-111111111111";
+      const id2 = "22222222-2222-4222-8222-222222222222";
+
+      setupBrowserEnv(id1);
       const fp1 = await computeFingerprint();
 
-      setupBrowserEnv("device-beta-002");
+      setupBrowserEnv(id2);
       const fp2 = await computeFingerprint();
 
       expect(fp1).not.toBe(fp2);
     });
-
-    it("empty deviceId produces a distinct fingerprint (not empty string)", async () => {
-      setupBrowserEnv("");
-      const fp = await computeFingerprint();
-      // SHA-256("") is a valid 64-char hex — not the same as the SSR guard ""
-      expect(fp).toHaveLength(64);
-      expect(fp).toMatch(/^[0-9a-f]{64}$/);
-    });
   });
 
-  describe("browser-update stability (userAgent independence)", () => {
-    beforeEach(() => setupBrowserEnv("stable-device-xyz"));
+  describe("browser-update stability (userAgent independence) — issue #1615", () => {
+    beforeEach(() => setupBrowserEnv(KNOWN_DEVICE_ID));
 
     it("fingerprint is unchanged when userAgent is Chrome 100", async () => {
       Object.defineProperty(globalThis, "navigator", {
@@ -90,7 +86,7 @@ describe("issue #1615 — stable fingerprint (SHA-256(deviceId) only)", () => {
         configurable: true,
       });
       const fp = await computeFingerprint();
-      expect(fp).toMatch(/^[0-9a-f]{64}$/);
+      expect(fp).toBe(KNOWN_DEVICE_ID);
     });
 
     it("fingerprint is identical when userAgent changes to Chrome 200 (future)", async () => {
