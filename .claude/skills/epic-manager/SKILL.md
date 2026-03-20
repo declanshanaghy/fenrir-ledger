@@ -1,7 +1,7 @@
 ---
 name: epic-manager
 description: >
-  Monitor epic progress and dispatch next ready stories. Reads tmp/epics/<N>.json,
+  Monitor epic progress and dispatch next ready stories. Reads tmp/epics/<N>.yml,
   cross-references live GitHub issue states and active GKE K8s jobs, prints a
   wave-by-wave dashboard, and identifies what's ready to dispatch next.
   Use when the user says 'epic status', 'epic manager', 'what's next in epic',
@@ -22,7 +22,7 @@ the next wave of stories for dispatch.
 
 | Arg | Required | Description |
 |-----|----------|-------------|
-| `<N>` | Yes | Root issue number — reads `tmp/epics/<N>.json` |
+| `<N>` | Yes | Root issue number — reads `tmp/epics/<N>.yml` |
 | `--dispatch` | No | Print ready `/dispatch` commands after the dashboard |
 | `--add <N>` | No | Add issue #N to the graph (title fetched from GitHub) |
 | `--blocked-by <N>[,N...]` | With `--add` | Comma-separated blockers for the new story |
@@ -48,7 +48,7 @@ follow-up action (e.g., closing a duplicate, dispatching a ready story).
 ## What the Script Does
 
 ### Phase 1 — Load epic graph
-Reads `tmp/epics/<N>.json`. Fails with a clear message if missing.
+Reads `tmp/epics/<N>.yml`. Fails with a clear message if missing.
 
 ### Phase 2 — GitHub state sync
 For every issue number in the graph (stories + their blockers), calls:
@@ -130,7 +130,7 @@ Read the output and:
 
 ## Epic File Format
 
-The epic file `tmp/epics/<N>.json` must match this schema:
+The epic file `tmp/epics/<N>.yml` must match this schema:
 
 ```json
 {

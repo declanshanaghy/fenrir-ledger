@@ -2,7 +2,7 @@
 /**
  * epic-manager.mjs — Epic dependency graph tracker + dispatch advisor
  *
- * Reads tmp/epics/<N>.json, cross-references live GitHub issue states and
+ * Reads tmp/epics/<N>.yml, cross-references live GitHub issue states and
  * active GKE K8s jobs, then prints a dashboard showing what is done,
  * running, blocked, or ready to dispatch.
  *
@@ -20,9 +20,10 @@
  *   --note "..."      Optional note for the new story
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, unlinkSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { resolve } from "node:path";
+import yaml from "js-yaml";
 
 // ── CLI args ────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -59,14 +60,25 @@ if (!rootIssue) {
 }
 
 // ── Load epic graph ─────────────────────────────────────────────────────────
-const epicFile = resolve(`tmp/epics/${rootIssue}.json`);
-if (!existsSync(epicFile)) {
-  console.error(`Epic file not found: ${epicFile}`);
-  console.error(`Run /plan-w-team or create it manually.`);
-  process.exit(1);
+const epicFileYml = resolve(`tmp/epics/${rootIssue}.yml`);
+const epicFileJson = resolve(`tmp/epics/${rootIssue}.json`);
+
+let epicFile = epicFileYml;
+if (!existsSync(epicFileYml)) {
+  if (existsSync(epicFileJson)) {
+    // Migrate: convert .json → .yml and delete the .json
+    const data = JSON.parse(readFileSync(epicFileJson, "utf8"));
+    writeFileSync(epicFileYml, yaml.dump(data, { lineWidth: 120, quotingType: '"' }), "utf8");
+    unlinkSync(epicFileJson);
+    console.log(`  Migrated ${epicFileJson} → ${epicFileYml}`);
+  } else {
+    console.error(`Epic file not found: ${epicFileYml}`);
+    console.error(`Run /plan-w-team or create it manually.`);
+    process.exit(1);
+  }
 }
 
-const epic = JSON.parse(readFileSync(epicFile, "utf8"));
+const epic = yaml.load(readFileSync(epicFile, "utf8"));
 const stories = epic.stories ?? [];
 
 // ── Helper: run a command and return stdout, or null on error ───────────────
@@ -164,7 +176,7 @@ if (flagAdd) {
   }
 
   epic.stories = stories;
-  writeFileSync(epicFile, JSON.stringify(epic, null, 2) + "\n", "utf8");
+  writeFileSync(epicFile, yaml.dump(epic, { lineWidth: 120, quotingType: '"' }), "utf8");
   console.log(`  ✅ Added #${flagAdd} "${newTitle}" at wave ${newWave} to ${epicFile}`);
   if (flagBlockedBy.length > 0) {
     console.log(`     blocked_by: [${flagBlockedBy.join(", ")}]`);
