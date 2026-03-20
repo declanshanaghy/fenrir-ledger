@@ -20,9 +20,8 @@ Helm manages Kubernetes workloads. GitHub Actions orchestrates every deployment.
 │  │  │  fenrir-app      │  │  fenrir-agents               │  │  │
 │  │  │                 │  │                              │  │  │
 │  │  │  Next.js app    │  │  Agent sandbox GKE Jobs      │  │  │
-│  │  │  Redis StatefulSet  │  (ephemeral, fire-and-forget)|  │  │
-│  │  │  Ingress (GCE)  │  └──────────────────────────────┘  │  │
-│  │  │  PDB, WarmNode  │                                     │  │
+│  │  │  Ingress (GCE)  │  │  (ephemeral, fire-and-forget)|  │  │
+│  │  │  PDB, WarmNode  │  └──────────────────────────────┘  │  │
 │  │  └─────────────────┘  ┌──────────────────────────────┐  │  │
 │  │                        │  fenrir-analytics            │  │  │
 │  │  ┌─────────────────┐  │                              │  │  │
@@ -53,7 +52,7 @@ Helm manages Kubernetes workloads. GitHub Actions orchestrates every deployment.
 
 | Namespace | Contents | Managed by |
 |---|---|---|
-| `fenrir-app` | Next.js app, Redis StatefulSet, Ingress, PDB, warm-node-pool placeholder | `helm/fenrir-app` |
+| `fenrir-app` | Next.js app, Ingress, PDB, warm-node-pool placeholder | `helm/fenrir-app` |
 | `fenrir-agents` | Ephemeral agent sandbox GKE Jobs (fire-and-forget) | `k8s/agents/dispatch-job.sh` (not Helm) |
 | `fenrir-analytics` | Umami self-hosted analytics + PostgreSQL | `helm/umami` |
 | `fenrir-monitor` | Odin's Throne monitor backend + UI + oauth2-proxy | `helm/odin-throne` |

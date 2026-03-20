@@ -36,7 +36,7 @@ This single command sets up everything: Node deps, environment files, GKE auth, 
 
 ## QA Handoffs
 
-- [docs/qa-handoff.md](docs/qa-handoff.md) — Landmarks, aria-labels, and stale E2E selector fixes (#589).
+- [docs/qa-handoff.md](docs/qa-handoff.md) — QA handoff for issue #1259: MetadataLookupWarning fix in Odin's Spear ADC auth.
 - [docs/qa-handoff-statusline.md](docs/qa-handoff-statusline.md) — Norse statusline script for Claude Code.
 - [docs/qa-handoff-splash.md](docs/qa-handoff-splash.md) — Elder Futhark FENRIR splash screen.
 - [docs/qa-handoff-palette.md](docs/qa-handoff-palette.md) — Terminal color palette config files.

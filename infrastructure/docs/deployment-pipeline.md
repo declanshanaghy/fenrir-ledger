@@ -131,14 +131,13 @@ All secrets are GitHub repository secrets injected into the workflow via `${{ se
 | `GOOGLE_CLIENT_SECRET`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | deploy-fenrir-app | OAuth |
 | `GOOGLE_PICKER_API_KEY` | deploy-fenrir-app | Drive Picker |
 | `ENTITLEMENT_ENCRYPTION_KEY` | deploy-fenrir-app | AES-256 key |
+| `FIRESTORE_PROJECT_ID` | deploy-fenrir-app | GCP project for Firestore (entitlements + cloud sync) |
 | `CLAUDE_CODE_OAUTH_TOKEN` | deploy-fenrir-app (agent-secrets) | Claude Code CLI token for agents |
 | `GH_TOKEN_AGENTS` | deploy-fenrir-app (agent-secrets) | GitHub PAT for agent operations |
 | `UMAMI_OAUTH2_PROXY_COOKIE_SECRET` | deploy-umami | 32-byte oauth2-proxy cookie secret |
 | `MONITOR_OAUTH2_PROXY_COOKIE_SECRET` | deploy-odin-throne | 32-byte oauth2-proxy cookie secret |
 | `ODINS_THRONE_CLIENT_ID/SECRET` | deploy-odin-throne | Google OAuth for Odin's Throne |
 | `TF_VAR_BILLING_ACCOUNT_ID` | terraform | GCP billing account |
-
-> `REDIS_URL` is set inline in the deploy step (not a secret): `redis://redis.fenrir-app.svc.cluster.local:6379`
 
 ---
 

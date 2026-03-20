@@ -25,7 +25,7 @@ helm upgrade --install <release-name> ./infrastructure/helm/<chart> \
 
 **Path:** `infrastructure/helm/fenrir-app/`
 
-The main application chart. Deploys the Next.js standalone app, in-cluster Redis, GCE Ingress with managed TLS, PodDisruptionBudget, and a warm-node-pool placeholder pod.
+The main application chart. Deploys the Next.js standalone app, GCE Ingress with managed TLS, PodDisruptionBudget, and a warm-node-pool placeholder pod.
 
 ### What it deploys
 
@@ -34,21 +34,11 @@ The main application chart. Deploys the Next.js standalone app, in-cluster Redis
 | `deployment.yaml` | `fenrir-app` Deployment (Next.js, 2 replicas) |
 | `service.yaml` | ClusterIP Service on port 80 |
 | `ingress.yaml` | GCE Ingress + BackendConfig, routes `fenrirledger.com` + `www.fenrirledger.com` |
-| `managed-certificate.yaml` | Google-managed TLS cert for both domains |
-| `redis.yaml` | Redis StatefulSet + Service + PVC (in-cluster, `fenrir-app` namespace) |
 | `pdb.yaml` | PodDisruptionBudget — minAvailable: 1 |
 | `warm-node-pool.yaml` | Low-priority `pause` pod to prevent Autopilot scale-to-zero cold starts |
 | `warm-node-pool-rbac.yaml` | RBAC for idle-detector CronJob |
 | `idle-detector-cronjob.yaml` | CronJob that scales down the warm-node pod after 3h of agent inactivity |
 | `secrets.yaml` | Secret skeleton (real values injected by CI before helm runs) |
-
-### Redis — authoritative source
-
-Redis is managed **by this Helm chart** (`helm/fenrir-app/templates/redis.yaml`). It deploys a `StatefulSet` named `redis` in the `fenrir-app` namespace with a 1Gi PVC.
-
-Connection URL injected into the app: `redis://redis.fenrir-app.svc.cluster.local:6379`
-
-There are no separate raw-manifest Redis files in use. The historical `k8s/app/redis-statefulset.yaml` was deleted in PR #1243. See [legacy-manifests.md](legacy-manifests.md).
 
 ### Key values (`values.yaml` → `values-prod.yaml` overrides)
 
@@ -58,8 +48,9 @@ There are no separate raw-manifest Redis files in use. The historical `k8s/app/r
 | `app.image.repository` | `…/fenrir-app` | (same) |
 | `app.image.tag` | `latest` | Set by CI to `$IMAGE_TAG` (git SHA) |
 | `ingress.backendConfig.cdn.enabled` | `false` | `true` |
-| `redis.enabled` | `true` | `true` |
 | `warmNodePool.enabled` | `true` | (same) |
+
+> **Note:** Redis was removed in issue #1521 (PR #1568). Entitlements and trial state are now stored in Firestore via the app's `FIRESTORE_PROJECT_ID` env var. See [legacy-manifests.md](legacy-manifests.md) for history.
 
 ### Upgrade
 

@@ -1,6 +1,6 @@
 # ADR-005: In-Cluster Redis over Vercel KV
 
-**Status:** Accepted
+**Status:** Superseded — Redis fully removed; entitlements/trials migrated to Firestore (issues #1516–#1521, PRs #1533–#1568)
 **Date:** 2026-03-14
 **Issue:** [#858](https://github.com/declanshanaghy/fenrir-ledger/issues/858)
 

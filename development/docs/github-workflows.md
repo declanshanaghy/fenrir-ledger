@@ -18,7 +18,6 @@ graph LR
     detect ==> build-monitor[Build Monitor Image]
     detect ==> build-monitor-ui[Build Monitor UI Image]
     detect ==> terraform[Terraform]
-    detect ==> deploy-redis[Deploy Redis]
     detect ==> deploy-umami[Deploy Umami]
 
     build-app ==> test-app[Test App]
@@ -30,7 +29,7 @@ graph LR
     class detect background
     class build-app,build-monitor,build-monitor-ui primary
     class test-app warning
-    class deploy-app,deploy-odin,deploy-redis,deploy-umami,terraform healthy
+    class deploy-app,deploy-odin,deploy-umami,terraform healthy
 ```
 
 ### Change Detection
@@ -50,21 +49,19 @@ graph TD
     diff --> monui{monitor-ui?}
     diff --> helmodin{helm-odin?}
     diff --> infra{infra?}
-    diff --> redis{redis?}
     diff --> umami{umami?}
 
     app -->|"development/frontend/ - Dockerfile - package*.json"| build-app[build-app]
-    k8sapp -->|"infrastructure/k8s/app/"| build-app
+    k8sapp -->|"infrastructure/helm/fenrir-app/"| build-app
     monitor -->|"development/monitor/"| build-monitor[build-monitor]
     monui -->|"development/monitor-ui/"| build-monitor-ui[build-monitor-ui]
     helmodin -->|"infrastructure/helm/odin-throne/"| deploy-odin[deploy-odin-throne]
-    infra -->|"infrastructure/terraform/ - infrastructure/monitoring/"| terraform[terraform]
-    redis -->|"infrastructure/k8s/app/redis-statefulset.yaml"| deploy-redis[deploy-redis]
+    infra -->|"infrastructure/terraform/ - infrastructure/firestore/"| terraform[terraform]
     umami -->|"infrastructure/helm/umami/"| deploy-umami[deploy-umami]
 
     class diff background
-    class app,k8sapp,monitor,monui,helmodin,infra,redis,umami primary
-    class build-app,build-monitor,build-monitor-ui,deploy-odin,terraform,deploy-redis,deploy-umami healthy
+    class app,k8sapp,monitor,monui,helmodin,infra,umami primary
+    class build-app,build-monitor,build-monitor-ui,deploy-odin,terraform,deploy-umami healthy
 ```
 
 | Output | Paths | Consumer |
@@ -75,7 +72,6 @@ graph TD
 | `monitor-ui` | `development/monitor-ui/` | build-monitor-ui |
 | `helm-odin` | `infrastructure/helm/odin-throne/` | deploy-odin-throne |
 | `infra` | `infrastructure/terraform/`, `infrastructure/monitoring/` | terraform |
-| `redis` | `infrastructure/k8s/app/redis-statefulset.yaml` | deploy-redis |
 | `umami` | `infrastructure/helm/umami/` | deploy-umami |
 
 ### App Pipeline — Build, Test, Deploy
@@ -148,7 +144,7 @@ graph TD
 
 ### Infrastructure Jobs
 
-Terraform, Redis, and Umami run independently — no cross-dependencies with app or monitor pipelines.
+Terraform and Umami run independently — no cross-dependencies with app or monitor pipelines.
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
@@ -157,11 +153,10 @@ graph LR
     classDef background fill:#2C2C2C,stroke:#444,color:#FFF
 
     detect([Detect Changes]) -->|"infra changed"| terraform[Terraform Plan + Apply]
-    detect -->|"redis manifest changed"| redis[Deploy Redis StatefulSet]
     detect -->|"umami chart changed"| umami[Deploy Umami - Helm]
 
     class detect background
-    class terraform,redis,umami healthy
+    class terraform,umami healthy
 ```
 
 ### Job Dependency Summary
@@ -176,7 +171,6 @@ graph LR
 | `build-monitor` | detect-changes | `monitor == true` |
 | `build-monitor-ui` | detect-changes | `monitor-ui == true` |
 | `deploy-odin-throne` | build-monitor, build-monitor-ui, detect-changes | Any build succeeded OR `helm-odin == true` (no failures) |
-| `deploy-redis` | detect-changes | `redis == true` |
 | `deploy-umami` | detect-changes | `umami == true` |
 
 ### Concurrency

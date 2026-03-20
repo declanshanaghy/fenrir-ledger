@@ -111,8 +111,7 @@ Required variables for local development:
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
 | `STRIPE_PRICE_ID` | Stripe price ID for Karl tier |
-| `REDIS_URL` | Redis connection URL (in-cluster: `redis://redis.fenrir-app.svc.cluster.local:6379`) |
-| `FIRESTORE_PROJECT_ID` | GCP project ID for Firestore cloud sync (Karl tier) |
+| `FIRESTORE_PROJECT_ID` | GCP project ID for Firestore (entitlement store + Karl cloud sync) |
 
 ## Dev Server with Stripe
 
@@ -147,7 +146,7 @@ fenrir-ledger/
     gke.tf              # GKE Autopilot cluster
     iam.tf              # Workload Identity + IAM
     variables.tf        # Terraform variables
-    k8s/app/            # K8s manifests (deployment, service, ingress)
+    helm/               # Helm charts (fenrir-app, odin-throne, umami, n8n)
     k8s/agents/         # Agent sandbox job template + dispatch script
   scripts/
     gke-setup.sh        # GKE CLI setup (kubectl, k9s, auth)
