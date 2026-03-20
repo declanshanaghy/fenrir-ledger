@@ -79,6 +79,17 @@ This is the moment that separates Fenrir Ledger from every other fintech tool.
 Fenrir Ledger has two user states: **anonymous** and **signed-in**. Both states are
 fully supported. The header must surface the correct identity affordance for each.
 
+### Tier Access Model
+
+| Tier | Identity required | What it unlocks |
+|------|------------------|-----------------|
+| **Thrall** (free, permanent) | None — anonymous UUID | Full app access: add cards, track fees, view dashboard |
+| **Karl** (30-day trial preview) | **Google sign-in required** | Trial features unlocked upon authentication |
+
+Anonymous users always land in the Thrall tier with zero friction. The trial (Karl
+preview) is the only feature gated behind Google sign-in. There are no other sign-in
+gates in the product.
+
 ### Anonymous State (default for all users)
 
 An anonymous user has no account. Their `householdId` is a locally-generated UUID
@@ -133,12 +144,27 @@ Avatar rendering rules for signed-in state:
 
 ### Cloud Sync Upsell
 
-Login is surfaced as a non-blocking upsell only — it must never gate any feature. The
-upsell copy pattern (for future implementation):
+Login is surfaced as a non-blocking upsell for Thrall-tier users — it must never gate
+any Thrall tier feature. The upsell copy pattern (for future implementation):
 
 - Banner or settings option: *"Keep your ledger safe across all your devices."*
 - CTA: "Sign in to sync" (functional Voice 1 label)
 - Dismissible; once dismissed, not shown again until user navigates to settings.
+
+### Trial (Karl Preview) Sign-In Gate
+
+The 30-day Karl preview is the **only** feature that requires Google sign-in. When an
+anonymous user attempts to activate the trial, they are prompted to sign in first.
+This is not a barrier to the app — it is a deliberate, scoped gate on the premium
+preview only.
+
+- Gate trigger: anonymous user taps "Start 30-day trial" (or equivalent CTA)
+- Gate action: Google OIDC sign-in flow
+- On success: trial activates, user lands on Karl-tier dashboard
+- On dismissal: user returns to Thrall tier with no loss of data
+
+**Do not fingerprint devices or use anonymous UUIDs to track trial eligibility.**
+Trial state is always tied to an authenticated Google account.
 
 ### Responsive Requirements
 
@@ -160,7 +186,9 @@ Signing in is not required to belong to the hall.
 - [ ] Anonymous user sees the rune ᛟ avatar in the header at all breakpoints ≥ 375 px
 - [ ] Rune ᛟ avatar renders with gold `#c9920a` on void-black `#07070d`, circular crop
 - [ ] No name, email, or "Sign out" is visible in the anonymous state
-- [ ] No sign-in gate, redirect, or modal blocks an anonymous user from using any feature
+- [ ] No sign-in gate, redirect, or modal blocks an anonymous user from using any **Thrall tier** feature
+- [ ] Trial (Karl preview) requires Google sign-in — anonymous users are prompted to sign in before the trial activates
+- [ ] Trial eligibility is tied to authenticated Google account only — no device fingerprinting, no anonymous trial
 - [ ] The locally-generated `householdId` UUID is stored under `fenrir:household` in
       localStorage on first anonymous visit
 - [ ] All card data is scoped to the anonymous `householdId` exactly as it would be for
@@ -194,7 +222,7 @@ The mythology rewards exploration. It never blocks a task.
 | Empty states | Edda quotes + myth context | The emotional hook that makes the brand memorable |
 | Easter eggs | Discoverable, not obtrusive | Reward exploration; never break task flow |
 | Wikipedia enrichment | `.myth-link` class on Norse proper nouns | Faint gold dotted underline + `cursor: help` links curious users to myth context; see `mythology-map.md` |
-| Authentication model | Anonymous-first; login is optional cloud-sync upsell | Zero friction on first use; no login gate; householdId is a locally-generated UUID; Google OIDC + Firestore sync is live |
+| Authentication model | Anonymous-first for Thrall tier; trial (Karl preview) requires Google sign-in | Thrall tier: zero friction, no gate, householdId is locally-generated UUID. Trial: scoped sign-in gate on premium preview only. Google OIDC + Firestore sync is live. No fingerprint-based trial. |
 | Anonymous identity display | Rune ᛟ avatar in header; non-interactive | The wolf runs unnamed — present and powerful, not broken or incomplete |
 | Signed-in identity display | Avatar + name in header; rune ᛟ fallback | Trust signal: the wolf knows who roams the hall; upgrade state, not required state |
 
