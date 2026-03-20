@@ -119,9 +119,9 @@ describe("redactInfraDetails", () => {
 
   it("redacts internal service DNS", async () => {
     const { redactInfraDetails } = await importSanitize();
-    const text = "redis://redis.fenrir-app.svc.cluster.local:6379";
+    const text = "grpc://api.fenrir-app.svc.cluster.local:8080";
     const result = redactInfraDetails(text);
-    expect(result).not.toContain("redis.fenrir-app.svc.cluster.local");
+    expect(result).not.toContain("api.fenrir-app.svc.cluster.local");
     expect(result).toContain("[REDACTED-SVC]");
   });
 

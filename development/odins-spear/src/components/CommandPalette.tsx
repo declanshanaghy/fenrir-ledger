@@ -18,7 +18,6 @@ const RED = "#ef4444";
 const GREEN = "#22c55e";
 
 const SUBSYSTEM_COLOR: Record<string, string> = {
-  redis: "#f97316",
   firestore: "#3b82f6",
   stripe: "#8b5cf6",
   system: GOLD,
