@@ -45,11 +45,11 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    title: "Trial Actions  (trial in scope)",
+    title: "Trial Actions  (user selected)",
     tabs: "users",
     shortcuts: [
+      { key: "a",  desc: "Open trial-adjust dialog (shift trial start date)" },
       { key: "s",  desc: "Cancel active Stripe subscription" },
-      { key: "e",  desc: "Extend trial period" },
     ],
   },
   {
