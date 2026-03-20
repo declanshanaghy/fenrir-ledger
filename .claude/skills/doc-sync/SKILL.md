@@ -52,16 +52,32 @@ Roles and their owned directories:
 
 Each role issue should:
 - Title: "Doc sync: <Agent Name>"
-- Labels: enhancement, low
-- Body: "Run /doc-sync --role <role>. Update all markdown in <DEST>. Remove stale content, ensure README index is accurate."
-- Include "skip-refinement" in the body
+- Labels: documentation, low
+- Body must include ALL of these lines:
+  - "Run /doc-sync --role <role>. Update all markdown in <DEST>. Remove stale content, ensure README index is accurate."
+  - "Agent: <agent-name> (dispatch with --agent <agent-name>)"
+  - "Chain: single agent, NO Loki QA step. Merge PR directly on completion."
+  - "skip-refinement"
 
 The consolidator issue should:
 - Title: "Consolidate doc-sync outputs into top-level README.md"
-- Labels: enhancement, low
+- Labels: documentation, low
 - Be blocked by all 5 role issues
-- Body: "Read all {DEST}/.sync-report.md files and update root README.md based on the hints."
-- Include "skip-refinement" in the body
+- Body must include ALL of these lines:
+  - "Read all {DEST}/.sync-report.md files and update root README.md based on the hints."
+  - "Agent: firemandecko (dispatch with --agent firemandecko)"
+  - "Chain: single agent, NO Loki QA step. Merge PR directly on completion."
+  - "skip-refinement"
+
+IMPORTANT — Doc-sync chain rules:
+- Use `documentation` label, NOT `enhancement` — this prevents the standard
+  FiremanDecko → Loki chain inference from kicking in.
+- Each role issue is dispatched with `--agent <role-agent>` explicitly — the agent
+  is the role's own agent (freya, luna, firemandecko, loki, heimdall), NOT the
+  default chain agent.
+- There is NO Loki QA step. Doc-sync agents merge their own PR and close the issue
+  directly. The sandbox preamble's CHAIN CONTINUATION rule does NOT apply — doc-sync
+  agents must NOT run `/fire-next-up --resume`.
 
 Wave 0: All 5 role issues (parallel — no dependencies between them)
 Wave 1: Consolidator (blocked by all 5 role issues)

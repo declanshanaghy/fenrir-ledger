@@ -70,6 +70,12 @@ loop mode is guaranteed to be **1 tool call** — no Read, no fetch, just spawn 
 | `ux` | luna | firemandecko | loki |
 | `security` | heimdall | loki | -- |
 | `research` | freya or firemandecko | -- | -- |
+| `documentation` | *(from `--agent` flag)* | -- | -- |
+
+**`documentation` label:** Single-agent, no chain. The agent MUST be specified via
+`--agent` flag (parsed from issue body: "Agent: <name>"). There is NO Loki QA step.
+The agent merges its own PR and closes the issue directly. Do NOT run chain
+continuation (`/fire-next-up --resume`) for documentation issues.
 
 If agent cannot be inferred, error and tell user to use `--agent`.
 
@@ -159,6 +165,10 @@ CHAIN CONTINUATION (UNBREAKABLE):
 Every agent template includes a final chain continuation step. It is MANDATORY when
 conditions are met (success verdict) and FORBIDDEN when they are not (failure/partial).
 
+- **Documentation issues (label: `documentation`):** NO chain continuation. The agent
+  merges its own PR and closes the issue directly:
+  `gh pr merge <PR_NUMBER> --squash --delete-branch && gh issue close <NUMBER>`
+  Do NOT run `/fire-next-up --resume`. There is no Loki QA step for doc-sync work.
 - Non-final agents (Luna, FiremanDecko, Heimdall): run `/fire-next-up --resume #<NUMBER>`
   as the final step ONLY when all verify steps pass and the handoff comment is posted.
   This dispatches the next agent in the chain on the same branch.
