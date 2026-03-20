@@ -131,7 +131,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Detect changed paths
         id: filter
@@ -143,7 +143,10 @@ jobs:
             echo "### Manual dispatch — all services will deploy" >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
-          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          # Compare against the last successful deploy tag (updated after each deploy).
+          # If the tag doesn't exist yet, fall back to HEAD~1 for first run.
+          LAST_DEPLOY=$(git rev-parse deploy/last 2>/dev/null || echo "HEAD~1")
+          CHANGED=$(git diff --name-only "$LAST_DEPLOY" HEAD)
           check() { echo "$CHANGED" | grep -qE "$1" && echo "true" || echo "false"; }
           echo "app=$(check    '^development/frontend/|^Dockerfile$|^package\.json$|^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$')" >> "$GITHUB_OUTPUT"
           echo "k8s-app=$(check '^infrastructure/k8s/app/|^infrastructure/helm/fenrir-app/')"               >> "$GITHUB_OUTPUT"
@@ -909,3 +912,27 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           kubectl rollout status deployment/n8n -n fenrir-marketing --timeout=60s || true
           kubectl rollout status deployment/n8n-oauth2-proxy -n fenrir-marketing --timeout=60s || true
+
+  # ============================================================================
+  # SECTION 7 — UPDATE DEPLOY MARKER
+  # Tags the current commit as deploy/last so the next run's change detection
+  # compares against the last successful deploy, not just HEAD~1.
+  # ============================================================================
+
+  update-deploy-marker:
+    name: "Update deploy/last marker"
+    runs-on: ubuntu-latest
+    needs: [deploy-app, deploy-monitor, deploy-n8n]
+    if: always() && (needs.deploy-app.result == 'success' || needs.deploy-monitor.result == 'success' || needs.deploy-n8n.result == 'success')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Update deploy/last tag
+        run: |
+          git tag -f deploy/last HEAD
+          git push -f origin deploy/last
+          echo "### Deploy marker updated" >> $GITHUB_STEP_SUMMARY
+          echo "Tagged \`$(git rev-parse --short HEAD)\` as \`deploy/last\`" >> $GITHUB_STEP_SUMMARY
