@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { DisplayJob } from "../lib/types";
 import { AGENT_COLORS, AGENT_AVATARS, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
+import type { DisplayMode } from "./Sidebar";
 
 interface Props {
   job: DisplayJob;
@@ -11,10 +12,27 @@ interface Props {
   isPinned?: boolean;
   onTogglePin?: () => void;
   onCancelJob?: (sessionId: string) => void;
-  collapsed?: boolean;
+  displayMode?: DisplayMode;
 }
 
-export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin, onCancelJob, collapsed = false }: Props) {
+function formatElapsed(startTime: number | null, completionTime: number | null): string {
+  if (!startTime) return "—";
+  const end = completionTime ?? Date.now();
+  const ms = end - startTime;
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${minutes % 60}m`;
+}
+
+function formatTimestamp(ts: number | null): string {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin, onCancelJob, displayMode = "normal" }: Props) {
   const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
   const avatar = AGENT_AVATARS[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
@@ -22,12 +40,11 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
   const sLabel = STATUS_LABELS[job.status] || job.status;
   const pulse = job.status === "running" ? " pulse" : "";
   const displayTitle = resolveSessionTitle(job);
-  // Shorten to issue + short title for card (trim trailing "– Step N" from full title)
   const cardTitle = job.issueTitle
     ? `#${job.issue} \u2013 ${job.issueTitle}`
     : displayTitle;
 
-  if (collapsed) {
+  if (displayMode === "compact") {
     return (
       <div
         className={`card card--minimal${isActive ? " active" : ""}`}
@@ -62,6 +79,8 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
       </div>
     );
   }
+
+  const shortSessionId = job.sessionId.length > 8 ? job.sessionId.slice(0, 8) + "…" : job.sessionId;
 
   return (
     <div
@@ -122,6 +141,21 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
           <CardPinButton isPinned={isPinned} onTogglePin={onTogglePin} />
         )}
       </div>
+      {displayMode === "extended" && (
+        <div className="card-extended-meta">
+          <span className="card-extended-session-id" title={job.sessionId}>
+            {shortSessionId}
+          </span>
+          <span className="card-extended-elapsed" title="Elapsed time">
+            {formatElapsed(job.startTime, job.completionTime)}
+          </span>
+          {(job.startTime || job.completionTime) && (
+            <span className="card-extended-timestamp" title="Last activity">
+              {formatTimestamp(job.completionTime ?? job.startTime)}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -129,7 +163,6 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
 function CardPinButton({ isPinned, onTogglePin }: { isPinned: boolean; onTogglePin: () => void }) {
   const [confirming, setConfirming] = useState(false);
 
-  // Reset confirmation state whenever pin state changes externally
   useEffect(() => {
     setConfirming(false);
   }, [isPinned]);
