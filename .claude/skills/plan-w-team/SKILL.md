@@ -230,6 +230,21 @@ node "$SCRIPT_DIR/pack-status.mjs" --move <TRACKER_NUMBER> in-progress
 The tracker issue number is the **epic number** used by `/epic-manager`.
 The tracker issue body IS the dependency graph — no local YAML files needed.
 
+### Step 5c — Link Sub-Issues (MANDATORY)
+
+After creating the tracker issue, link every child issue as a **GitHub sub-issue**
+of the tracker. This populates the "Sub-issues progress" column on the project board.
+
+```bash
+for N in <issue1> <issue2> <issue3> ...; do
+  gh issue edit <TRACKER_NUMBER> --repo declanshanaghy/fenrir-ledger --add-sub-issue "$N"
+done
+```
+
+**This step is not optional.** Without it, the "Sub-issues progress" column on the
+project board shows empty. The markdown checklist in the body is for visual tracking
+only — GitHub's native sub-issues feature is what drives the progress column.
+
 ### Step 5d — Set Up Auto-Close Workflow
 
 Check if `.github/workflows/close-epic-tracker.yml` already exists. If not, create it.

@@ -183,6 +183,9 @@ if (flagAdd) {
     process.exit(1);
   }
 
+  // Link as GitHub sub-issue (populates "Sub-issues progress" on project board)
+  run(`gh issue edit ${rootIssue} --add-sub-issue ${flagAdd} 2>/dev/null`);
+
   console.log(`  ✅ Added #${flagAdd} "${newTitle}" at wave ${newWave} to tracker #${rootIssue}`);
   if (flagBlockedBy.length > 0) console.log(`     blocked_by: [${flagBlockedBy.join(", ")}]`);
   console.log();
