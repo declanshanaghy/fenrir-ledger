@@ -74,6 +74,7 @@ stories:
     wave: 3
     blocks:
       - 1389
+      - 1560
     blocked_by:
       - 1496
       - 1495
@@ -83,7 +84,8 @@ stories:
     title: "Odin's Spear TUI: Households tab — list + detail panel"
     state: open
     wave: 3
-    blocks: []
+    blocks:
+      - 1560
     blocked_by:
       - 1496
       - 1495
@@ -112,11 +114,24 @@ stories:
     title: Odin's Spear — trial manipulation controls for user admin
     state: open
     wave: 4
-    blocks: []
+    blocks:
+      - 1560
     blocked_by:
       - 1495
     parallel_with:
       - 1389
+  - number: 1560
+    title: "Odin's Spear: context-aware help and commands — show only what's relevant per screen"
+    state: open
+    wave: 5
+    blocks: []
+    blocked_by:
+      - 1387
+      - 1388
+      - 1472
+    parallel_with: []
+    duplicate_of: null
+    note: Context-aware help — needs all tabs implemented first
 execution_order:
   - wave: 0
     status: done
