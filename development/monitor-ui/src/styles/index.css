@@ -333,10 +333,14 @@ body {
   flex-direction: column; gap: 4px;
   padding: 0.45rem 0.3rem; border-radius: 4px; cursor: pointer;
   margin-bottom: 2px; border-left: 3px solid transparent;
-  transition: background 0.15s;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 .card--minimal:hover { background: var(--chain); }
-.card--minimal.active { background: var(--chain); border-left-color: var(--gold); }
+.card--minimal.active {
+  background: var(--gold-subtle-bg);
+  border-left-color: var(--gold-bright);
+  box-shadow: 0 0 10px rgba(201, 146, 10, 0.18), inset 0 0 16px rgba(201, 146, 10, 0.06);
+}
 .card-minimal-issue {
   font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
   font-weight: 700; color: var(--text-saga);
@@ -363,10 +367,14 @@ body {
 .card {
   padding: 0.6rem 0.75rem; border-radius: 4px; cursor: pointer;
   margin-bottom: 2px; border-left: 3px solid transparent;
-  transition: background 0.15s;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 .card:hover { background: var(--chain); }
-.card.active { background: var(--chain); border-left-color: var(--gold); }
+.card.active {
+  background: var(--gold-subtle-bg);
+  border-left-color: var(--gold-bright);
+  box-shadow: 0 0 10px rgba(201, 146, 10, 0.18), inset 0 0 16px rgba(201, 146, 10, 0.06);
+}
 .card-top { display: flex; align-items: center; gap: 0.5rem; }
 .card-avatar {
   width: 24px; height: 24px; border-radius: 50%;
