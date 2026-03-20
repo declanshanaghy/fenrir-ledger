@@ -286,7 +286,11 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
         role="menuitem"
         onClick={() => {
           onClose();
-          router.push("/ledger/settings#account");
+          if (onSettingsPage) {
+            window.location.hash = "account";
+          } else {
+            router.push("/ledger/settings#account");
+          }
         }}
         className={[
           "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-[color,border-color] font-body flex items-center gap-2 border-b border-border relative",
@@ -311,7 +315,11 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
         role="menuitem"
         onClick={() => {
           onClose();
-          router.push("/ledger/settings#household");
+          if (onSettingsPage) {
+            window.location.hash = "household";
+          } else {
+            router.push("/ledger/settings#household");
+          }
         }}
         className={[
           "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-[color,border-color] font-body flex items-center gap-2 border-b border-border relative",
@@ -336,7 +344,11 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
         role="menuitem"
         onClick={() => {
           onClose();
-          router.push("/ledger/settings#settings");
+          if (onSettingsPage) {
+            window.location.hash = "settings";
+          } else {
+            router.push("/ledger/settings#settings");
+          }
         }}
         className={[
           "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-[color,border-color] font-body flex items-center gap-2 border-b border-border relative",

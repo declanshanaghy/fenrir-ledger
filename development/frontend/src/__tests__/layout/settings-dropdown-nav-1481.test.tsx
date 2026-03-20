@@ -274,6 +274,54 @@ describe("Issue #1481 — ProfileDropdown nav pushes correct routes", () => {
   });
 });
 
+// ── Issue #1617 — Same-page navigation: direct hash update when already on settings ──
+
+describe("Issue #1617 — ProfileDropdown same-page tab navigation", () => {
+  beforeEach(() => {
+    mockAuthStatus = "authenticated";
+    mockSession = { user: { name: "Odin Allfather", email: "odin@asgard.com" } };
+    mockPathname = "/ledger/settings";
+    mockPush.mockClear();
+    window.location.hash = "";
+  });
+
+  afterEach(() => {
+    window.location.hash = "";
+  });
+
+  it("clicking Account on settings page sets window.location.hash to #account (not router.push)", () => {
+    render(<LedgerTopBar />);
+    openDropdown();
+    fireEvent.click(screen.getByRole("menuitem", { name: /^Account$/i }));
+    expect(window.location.hash).toBe("#account");
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("clicking Household on settings page sets window.location.hash to #household (not router.push)", () => {
+    render(<LedgerTopBar />);
+    openDropdown();
+    fireEvent.click(screen.getByRole("menuitem", { name: /^Household$/i }));
+    expect(window.location.hash).toBe("#household");
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("clicking Settings on settings page sets window.location.hash to #settings (not router.push)", () => {
+    render(<LedgerTopBar />);
+    openDropdown();
+    fireEvent.click(screen.getByRole("menuitem", { name: /^Settings$/i }));
+    expect(window.location.hash).toBe("#settings");
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("clicking Account from other pages still uses router.push", () => {
+    mockPathname = "/ledger";
+    render(<LedgerTopBar />);
+    openDropdown();
+    fireEvent.click(screen.getByRole("menuitem", { name: /^Account$/i }));
+    expect(mockPush).toHaveBeenCalledWith("/ledger/settings#account");
+  });
+});
+
 // ── SettingsPage hashchange listener ─────────────────────────────────────────
 
 describe("Issue #1481 — SettingsPage responds to hashchange events", () => {
