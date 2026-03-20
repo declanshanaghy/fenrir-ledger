@@ -230,7 +230,7 @@ function UserDetailPanel({
           <Text color={GRAY}>
             {"[d] Delete  [t] Tier"}
             {user.stripeCustomerId ? "  [s] Cancel sub" : ""}
-            {detail?.household ? "  [h] Household" : ""}
+            {detail?.household ? "  [h] Household  [c] Cards" : ""}
           </Text>
         </Box>
       ) : actionMode === "delete_confirm" ? (
@@ -266,12 +266,14 @@ interface UsersTabProps {
   cmdStatus: string | null;
   onInputCapture?: (captured: boolean) => void;
   onJumpToHousehold?: () => void;
+  onCardsView?: (householdId: string, filterUserId: string, ownerEmail: string) => void;
 }
 
 export function UsersTab({
   cmdStatus,
   onInputCapture,
   onJumpToHousehold,
+  onCardsView,
 }: UsersTabProps): React.JSX.Element {
   log.debug("UsersTab render");
 
@@ -606,6 +608,10 @@ export function UsersTab({
       }
       if (input === "h" && detail?.household) {
         onJumpToHousehold?.();
+        return;
+      }
+      if (input === "c" && detail?.household && user.householdId) {
+        onCardsView?.(user.householdId, user.id, user.email);
         return;
       }
     }

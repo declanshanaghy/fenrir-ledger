@@ -10,6 +10,7 @@ import { ConfirmDialog } from "./components/ConfirmDialog.js";
 import { TrialInputDialog } from "./components/TrialInputDialog.js";
 import { UsersTab } from "./tabs/UsersTab.js";
 import { HouseholdsTab } from "./tabs/HouseholdsTab.js";
+import { CardDrilldownView } from "./tabs/CardDrilldownView.js";
 import { SelectionProvider, useSelection } from "./context/SelectionContext.js";
 import type { PaletteCommand, CommandContext } from "./commands/registry.js";
 import type { ConnStatus, Counts } from "./components/StatusBar.js";
@@ -43,6 +44,12 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
   const [connState, setConnState] = useState<ConnStatus>(initialConnStatus);
   const [countState, setCountState] = useState<Counts>(initialCounts);
   const [inputCaptured, setInputCaptured] = useState(false);
+  const [cardDrilldown, setCardDrilldown] = useState<{
+    householdId: string;
+    filterUserId: string | null;
+    breadcrumbFrom: string;
+    ownerEmail: string;
+  } | null>(null);
 
   // Suppress unused-variable warnings for setters wired in later stories
   void setConnState;
@@ -222,16 +229,38 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
         onCancel={closeOverlay}
       />
     );
+  } else if (cardDrilldown) {
+    mainContent = (
+      <CardDrilldownView
+        householdId={cardDrilldown.householdId}
+        filterUserId={cardDrilldown.filterUserId}
+        breadcrumbFrom={cardDrilldown.breadcrumbFrom}
+        ownerEmail={cardDrilldown.ownerEmail}
+        onBack={() => setCardDrilldown(null)}
+        onInputCapture={setInputCaptured}
+        cmdStatus={cmdStatus}
+      />
+    );
   } else if (activeTab === 0) {
     mainContent = (
       <UsersTab
         cmdStatus={cmdStatus}
         onInputCapture={setInputCaptured}
         onJumpToHousehold={() => { setActiveTab(1); }}
+        onCardsView={(householdId, filterUserId, ownerEmail) => {
+          setCardDrilldown({ householdId, filterUserId, breadcrumbFrom: ownerEmail, ownerEmail });
+        }}
       />
     );
   } else {
-    mainContent = <HouseholdsTab cmdStatus={cmdStatus} />;
+    mainContent = (
+      <HouseholdsTab
+        cmdStatus={cmdStatus}
+        onCardsView={(householdId, householdName) => {
+          setCardDrilldown({ householdId, filterUserId: null, breadcrumbFrom: householdName, ownerEmail: householdName });
+        }}
+      />
+    );
   }
 
   return (
