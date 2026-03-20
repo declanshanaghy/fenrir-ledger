@@ -15,7 +15,6 @@ vi.mock('@/lib/auth/authz', () => ({
 vi.mock('@/lib/kv/entitlement-store', () => ({
   getStripeEntitlement: vi.fn(),
   setStripeEntitlement: vi.fn(),
-  migrateStripeEntitlement: vi.fn(),
 }));
 
 vi.mock('@/lib/stripe/api', () => ({
@@ -178,67 +177,6 @@ describe('GET /api/stripe/membership', () => {
       expect(data.tier).toBe('thrall');
       expect(data.active).toBe(false);
       expect(data.platform).toBe('stripe');
-    });
-  });
-
-  describe('Migration via session_id', () => {
-    it('should migrate anonymous entitlement to Google sub when session_id is provided', async () => {
-      const mockSessionId = 'cs_test_migration';
-      const mockCustomerId = 'cus_migrate';
-
-      // Initially no entitlement for the Google sub
-      vi.mocked(kvStore.getStripeEntitlement)
-        .mockResolvedValueOnce(null) // First call returns null
-        .mockResolvedValueOnce({ // After migration, return the entitlement
-          tier: 'karl',
-          active: true,
-          stripeCustomerId: mockCustomerId,
-          stripeSubscriptionId: 'sub_migrate',
-          stripeStatus: 'active',
-          linkedAt: '2024-01-01T00:00:00Z',
-          checkedAt: '2024-01-01T00:00:00Z',
-        });
-
-      // Checkout session has the customer ID
-      vi.mocked(stripe.checkout.sessions.retrieve).mockResolvedValue({
-        id: mockSessionId,
-        customer: mockCustomerId,
-      } as any);
-
-      // Migration succeeds
-      vi.mocked(kvStore.migrateStripeEntitlement).mockResolvedValue({
-        migrated: true,
-      });
-
-      const request = createMockRequest({ session_id: mockSessionId });
-      const response = await GET(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.tier).toBe('karl');
-      expect(data.active).toBe(true);
-      expect(data.customerId).toBe(mockCustomerId);
-
-      // Verify migration was attempted
-      expect(kvStore.migrateStripeEntitlement).toHaveBeenCalledWith(mockCustomerId, mockGoogleSub);
-    });
-
-    it('should handle failed migration gracefully', async () => {
-      const mockSessionId = 'cs_test_fail';
-
-      // No entitlement
-      vi.mocked(kvStore.getStripeEntitlement).mockResolvedValue(null);
-
-      // Checkout session retrieval fails
-      vi.mocked(stripe.checkout.sessions.retrieve).mockRejectedValue(new Error('Session not found'));
-
-      const request = createMockRequest({ session_id: mockSessionId });
-      const response = await GET(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.tier).toBe('thrall');
-      expect(data.active).toBe(false);
     });
   });
 

@@ -28,7 +28,6 @@ vi.mock("@/lib/stripe/api", () => ({
 vi.mock("@/lib/kv/entitlement-store", () => ({
   getStripeEntitlement: vi.fn(),
   setStripeEntitlement: vi.fn(),
-  migrateStripeEntitlement: vi.fn(),
 }));
 
 vi.mock("@/lib/rate-limit", () => ({
@@ -39,7 +38,6 @@ import { stripe } from "@/lib/stripe/api";
 import {
   getStripeEntitlement,
   setStripeEntitlement,
-  migrateStripeEntitlement,
 } from "@/lib/kv/entitlement-store";
 
 describe("GET /api/stripe/membership", () => {
@@ -191,65 +189,6 @@ describe("GET /api/stripe/membership", () => {
       expect(response.status).toBe(200);
       expect(result.cancelAtPeriodEnd).toBe(true);
       expect(result.currentPeriodEnd).toBe(new Date(mockPeriodEnd * 1000).toISOString());
-    });
-  });
-
-  describe("Migration scenarios", () => {
-    it("should migrate anonymous entitlement to Google sub via session_id param", async () => {
-      (getStripeEntitlement as Mock)
-        .mockResolvedValueOnce(null) // First call: no entitlement
-        .mockResolvedValueOnce({ // Second call after migration: entitlement exists
-          tier: "karl",
-          active: true,
-          stripeCustomerId: mockCustomerId,
-          stripeSubscriptionId: mockSubscriptionId,
-          stripeStatus: "active",
-          cancelAtPeriodEnd: false,
-          currentPeriodEnd: new Date(mockPeriodEnd * 1000).toISOString(),
-          linkedAt: "2024-01-15T10:00:00.000Z",
-          checkedAt: "2024-01-15T10:00:00.000Z",
-        });
-
-      (stripe.checkout.sessions.retrieve as Mock).mockResolvedValue({
-        id: mockSessionId,
-        customer: mockCustomerId,
-      });
-
-      (migrateStripeEntitlement as Mock).mockResolvedValue({
-        migrated: true,
-        from: `stripe:${mockCustomerId}`,
-        to: mockGoogleSub,
-      });
-
-      const request = createMockRequest({ session_id: mockSessionId });
-      const response = await GET(request);
-      const result = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(result.tier).toBe("karl");
-      expect(result.active).toBe(true);
-
-      expect(stripe.checkout.sessions.retrieve).toHaveBeenCalledWith(mockSessionId);
-      expect(migrateStripeEntitlement).toHaveBeenCalledWith(mockCustomerId, mockGoogleSub);
-      expect(getStripeEntitlement).toHaveBeenCalledTimes(2);
-    });
-
-    it("should handle failed migration gracefully", async () => {
-      (getStripeEntitlement as Mock).mockResolvedValue(null);
-      (stripe.checkout.sessions.retrieve as Mock).mockRejectedValue(new Error("Session not found"));
-
-      const request = createMockRequest({ session_id: "invalid_session" });
-      const response = await GET(request);
-      const result = await response.json();
-
-      // Should still return thrall tier
-      expect(response.status).toBe(200);
-      expect(result).toEqual({
-        tier: "thrall",
-        active: false,
-        platform: "stripe",
-        checkedAt: "2024-01-15T10:00:00.000Z",
-      });
     });
   });
 
