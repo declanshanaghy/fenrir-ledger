@@ -68,6 +68,13 @@ vi.mock("@/lib/entitlement/cache", () => ({
   clearEntitlementCache: vi.fn(),
 }));
 
+// Mock MarketingNavLinks — isolate LedgerTopBar from marketing nav transitive deps
+vi.mock("@/components/marketing/MarketingNavLinks", () => ({
+  MarketingNavLinks: () => null,
+  NAV_LINKS: [],
+  isNavLinkActive: () => false,
+}));
+
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("LedgerTopBar — Anonymous state", () => {

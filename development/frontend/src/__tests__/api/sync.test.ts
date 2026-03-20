@@ -8,8 +8,10 @@
  *   - PUT applies last-write-wins, writes only newer cards
  *   - PUT enforces householdId consistency
  *   - PUT rejects invalid body
+ *   - Edge cases: 403 when user not found, large batches, empty arrays, response shape
  *
  * Issue #1119
+ * Consolidated: sync-route-edge-cases.loki.test.ts (issue #1656)
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -345,5 +347,107 @@ describe("PUT /api/sync — last-write-wins logic", () => {
 
     await PUT(makePutRequest({ cards: [olderCard] }));
     expect(mockSetCards).not.toHaveBeenCalled();
+  });
+});
+
+// ── Edge cases (consolidated from sync-route-edge-cases.loki.test.ts) ────────
+
+describe("PUT /api/sync — 403 when user not in Firestore", () => {
+  it("returns 403 when getUser returns null", async () => {
+    mockGetUser.mockResolvedValue(null);
+    const res = await PUT(makePutRequest({ cards: [] }));
+    expect(res.status).toBe(403);
+    const body = await res.json() as { error: string };
+    expect(body.error).toBe("forbidden");
+  });
+
+  it("does not call getCards when user not found", async () => {
+    mockGetUser.mockResolvedValue(null);
+    await PUT(makePutRequest({ cards: [makeCard("c1", "2025-06-01T00:00:00.000Z")] }));
+    expect(mockGetCards).not.toHaveBeenCalled();
+  });
+
+  it("does not call setCards when user not found", async () => {
+    mockGetUser.mockResolvedValue(null);
+    await PUT(makePutRequest({ cards: [makeCard("c1", "2025-06-01T00:00:00.000Z")] }));
+    expect(mockSetCards).not.toHaveBeenCalled();
+  });
+});
+
+describe("PUT /api/sync — large batch (500+ cards)", () => {
+  beforeEach(() => {
+    userExists();
+    mockSetCards.mockResolvedValue(undefined);
+  });
+
+  it("writes all 500 new cards when Firestore is empty", async () => {
+    mockGetCards.mockResolvedValue([]);
+    const cards = Array.from({ length: 500 }, (_, i) =>
+      makeCard(`card-${i}`, "2025-06-01T00:00:00.000Z")
+    );
+    const res = await PUT(makePutRequest({ cards }));
+    expect(res.status).toBe(200);
+    const body = await res.json() as { written: number; skipped: number };
+    expect(body.written).toBe(500);
+    expect(body.skipped).toBe(0);
+  });
+
+  it("correctly splits written/skipped in 500-card mixed batch", async () => {
+    const existingCards = Array.from({ length: 500 }, (_, i) =>
+      makeCard(`card-${i}`, "2025-01-01T00:00:00.000Z")
+    );
+    mockGetCards.mockResolvedValue(existingCards);
+    const submitted = [
+      ...Array.from({ length: 250 }, (_, i) =>
+        makeCard(`card-${i}`, "2025-12-01T00:00:00.000Z")
+      ),
+      ...Array.from({ length: 250 }, (_, i) =>
+        makeCard(`card-${250 + i}`, "2024-01-01T00:00:00.000Z")
+      ),
+    ];
+    const res = await PUT(makePutRequest({ cards: submitted }));
+    expect(res.status).toBe(200);
+    const body = await res.json() as { written: number; skipped: number };
+    expect(body.written).toBe(250);
+    expect(body.skipped).toBe(250);
+  });
+});
+
+describe("PUT /api/sync — empty card array (edge case)", () => {
+  beforeEach(() => {
+    userExists();
+    mockGetCards.mockResolvedValue([]);
+    mockSetCards.mockResolvedValue(undefined);
+  });
+
+  it("returns 200 with written:0, skipped:0", async () => {
+    const res = await PUT(makePutRequest({ cards: [] }));
+    expect(res.status).toBe(200);
+    const body = await res.json() as { written: number; skipped: number; householdId: string; syncedAt: string };
+    expect(body.written).toBe(0);
+    expect(body.skipped).toBe(0);
+    expect(body.householdId).toBe(TEST_HOUSEHOLD_ID);
+    expect(body.syncedAt).toBeDefined();
+  });
+
+  it("does not call setCards for empty array", async () => {
+    await PUT(makePutRequest({ cards: [] }));
+    expect(mockSetCards).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/sync — response shape", () => {
+  beforeEach(() => {
+    userExists();
+  });
+
+  it("response includes householdId, cards, and valid ISO syncedAt", async () => {
+    mockGetCards.mockResolvedValue([makeCard("c1", "2025-06-01T00:00:00.000Z")]);
+    const res = await GET(makeGetRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { householdId: string; cards: Card[]; syncedAt: string };
+    expect(typeof body.householdId).toBe("string");
+    expect(Array.isArray(body.cards)).toBe(true);
+    expect(body.syncedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
   });
 });
