@@ -420,7 +420,7 @@ export function TopBar() {
               ref={avatarTriggerRef}
               type="button"
               onClick={() => setPanelOpen((prev) => !prev)}
-              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-secondary/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 cursor-pointer"
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-secondary/50 transition-[color,border-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 cursor-pointer"
               aria-label={`Open user menu, signed in as ${user.email}`}
               aria-expanded={panelOpen}
               aria-haspopup="true"
@@ -494,7 +494,7 @@ export function TopBar() {
                 type="button"
                 role="menuitem"
                 onClick={() => setTheme(cycleTheme(theme))}
-                className="flex items-center justify-between px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer w-full text-left"
+                className="flex items-center justify-between px-4 py-3 border-b border-border hover:bg-secondary/50 transition-[color,border-color] cursor-pointer w-full text-left"
                 style={{ minHeight: 44 }}
               >
                 <span className="text-sm text-muted-foreground font-body">Theme</span>
@@ -510,7 +510,7 @@ export function TopBar() {
                   router.push("/ledger/settings");
                 }}
                 className={[
-                  "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center justify-between border-b border-border",
+                  "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-[color,border-color] font-body flex items-center justify-between border-b border-border",
                   pathname === "/ledger/settings" ? "text-gold" : "text-muted-foreground hover:text-foreground",
                 ].join(" ")}
                 style={{ minHeight: 44 }}
@@ -530,7 +530,7 @@ export function TopBar() {
                   setPanelOpen(false);
                   signOut();
                 }}
-                className="px-4 py-3 text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 text-left transition-colors font-body"
+                className="px-4 py-3 text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 text-left transition-[color,border-color] font-body"
                 style={{ minHeight: 44 }}
               >
                 Sign out
