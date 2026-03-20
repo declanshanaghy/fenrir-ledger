@@ -418,7 +418,27 @@ function runUnitCoverage() {
   log("  - LCOV:  quality/reports/coverage/vitest/lcov.info");
 }
 
+function cleanReports() {
+  const reportsRoot = path.join(REPO_ROOT, "quality/reports");
+  const toDelete = [
+    "test-report-playwright",
+    "test-report-vitest",
+    "quality-report.html",
+    "cull-list.json",
+    "coverage",
+  ];
+  for (const name of toDelete) {
+    const target = path.join(reportsRoot, name);
+    if (existsSync(target)) {
+      rmSync(target, { recursive: true, force: true });
+    }
+  }
+  log("Cleaned previous reports");
+}
+
 async function main() {
+  cleanReports();
+
   if (unitOnly) {
     log("Running in --unit-only mode (Vitest coverage only)");
     runUnitCoverage();
