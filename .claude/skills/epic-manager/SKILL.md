@@ -126,12 +126,19 @@ Wave-by-wave table with icons:
 
 ## After the Dashboard
 
+**Always use `AskUserQuestion` when asking Odin anything.** Never output a question as
+plain text and wait — use the `AskUserQuestion` tool so Odin gets a proper prompt.
+
 Read the output and:
 
-1. **If duplicates are flagged** — close them with the suggested `gh issue close` command, then re-run.
-2. **If stories are ready** — ask Odin: *"Wave N is unblocked. Dispatch #X [and #Y in parallel]?"*
-   Then invoke `/dispatch #X` (or `/fire-next-up #X #Y` for parallel dispatch).
-3. **If nothing is ready and nothing is running** — flag to Odin that the epic may be stalled.
+1. **If duplicates are flagged** — use `AskUserQuestion` to confirm closing them. Options:
+   "Close duplicates", "Skip". If confirmed, close with the suggested `gh issue close`
+   command, then re-run.
+2. **If stories are ready** — use `AskUserQuestion`: *"Wave N is unblocked. Dispatch?"*
+   Options: "Dispatch #X", "Dispatch all in parallel", "Skip". Then invoke `/dispatch`
+   or `/fire-next-up #X #Y` accordingly.
+3. **If nothing is ready and nothing is running** — use `AskUserQuestion` to flag the
+   stall. Options: "Re-check", "Close epic".
 4. **If epic is complete** — congratulate, update the epic file `state` fields, and HKR.
 
 ## Epic File Format
