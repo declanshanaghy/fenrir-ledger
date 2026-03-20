@@ -9,7 +9,7 @@
  * Help/usage: see SKILL.md (help is displayed by the orchestrator, not this script).
  */
 
-import { readFileSync, writeFileSync, existsSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, unlinkSync, readdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { resolve } from "node:path";
 import yaml from "js-yaml";
@@ -65,6 +65,22 @@ if (!existsSync(epicFileYml)) {
     unlinkSync(epicFileJson);
     console.log(`  Migrated ${epicFileJson} → ${epicFileYml}`);
   } else {
+    // Check if this issue number is a story inside another epic
+    const epicsDir = resolve("tmp/epics");
+    try {
+      const epicFiles = readdirSync(epicsDir).filter((f) => f.endsWith(".yml"));
+      for (const ef of epicFiles) {
+        const content = yaml.load(readFileSync(resolve(epicsDir, ef), "utf8"));
+        const stories = content?.stories ?? [];
+        const match = stories.find((s) => String(s.number) === rootIssue);
+        if (match) {
+          const epicNum = ef.replace(".yml", "");
+          console.error(`#${rootIssue} is a story inside epic #${epicNum} ("${content?.epic?.title ?? "unknown"}").`);
+          console.error(`Run: /epic-manager ${epicNum}`);
+          process.exit(1);
+        }
+      }
+    } catch { /* epics dir doesn't exist or unreadable */ }
     console.error(`Epic file not found: ${epicFileYml}`);
     console.error(`Run /plan-w-team or create it manually.`);
     process.exit(1);
