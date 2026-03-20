@@ -12,7 +12,7 @@
  * extracted and stored on the trial record + a reverse-lookup key is written
  * so the trial can be found by user ID in admin tools.
  *
- * Request body: { fingerprint: string } (64-char SHA-256 hex)
+ * Request body: { fingerprint: string } (UUID v4 or legacy 64-char SHA-256 hex)
  *
  * Response: { startDate: string, isNew: boolean }
  *
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       {
         error: "invalid_fingerprint",
-        error_description: "Fingerprint must be a 64-character lowercase hex string.",
+        error_description: "Fingerprint must be a UUID v4 or 64-character lowercase hex string.",
       },
       { status: 400 },
     );
