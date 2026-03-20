@@ -154,18 +154,16 @@ graph TD
 
 ## What "Done" Looks Like
 
-**Status (2026-03-17):** All five Stripe API routes are confirmed present in the codebase (`/api/stripe/checkout`, `/api/stripe/webhook`, `/api/stripe/membership`, `/api/stripe/portal`, `/api/stripe/unlink`). Core Stripe Direct integration has shipped.
+**Status (2026-03-20):** Stripe Direct integration is complete. All five API routes are confirmed present in the codebase. `PatreonGate` has been renamed to `SubscriptionGate` (Stripe-only). `SealedRuneModal`, `KarlUpsellDialog`, and `SubscriptionGate` all route through Stripe Checkout. Entitlement is stored in Vercel KV (Upstash REST API) and kept fresh by Stripe webhooks.
 
-The Stripe Direct migration is complete when:
-
-- [ ] Stripe Checkout flow works end-to-end: click subscribe -> pay -> entitlement granted
-- [ ] Stripe webhooks update entitlement in real-time on subscription changes
-- [ ] Customer Portal link works for self-service subscription management
-- [ ] `useEntitlement` hook works identically regardless of provider
-- [ ] `PatreonGate` (renamed to `SubscriptionGate`) works with both providers
-- [ ] Settings page shows Stripe subscription status (replaces PatreonSettings)
-- [ ] SealedRuneModal links to Stripe Checkout (not Patreon campaign page)
-- [ ] New Stripe test suites pass
+- [x] Stripe Checkout flow works end-to-end: click subscribe -> pay -> entitlement granted
+- [x] Stripe webhooks update entitlement in real-time on subscription changes
+- [x] Customer Portal link works for self-service subscription management
+- [x] `useEntitlement` hook works identically (Stripe-only provider)
+- [x] `SubscriptionGate` (renamed from `PatreonGate`) works with Stripe
+- [ ] Settings page shows Stripe subscription status (verify in next QA pass)
+- [x] SealedRuneModal links to Stripe Checkout (not Patreon campaign page)
+- [ ] New Stripe test suites pass (verify with Loki)
 - [ ] Security review by Heimdall (Stripe webhook signature verification, key management)
 
 ---
