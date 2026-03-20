@@ -35,7 +35,7 @@ function makeRequest(headers: Record<string, string> = {}): NextRequest {
 
 const MOCK_USER = { sub: "user-123", email: "test@test.com", name: "Test User", picture: "" };
 const MOCK_FIRESTORE_USER = {
-  clerkUserId: "user-123",
+  userId: "user-123",
   email: "test@test.com",
   displayName: "Test User",
   householdId: "hh-test",

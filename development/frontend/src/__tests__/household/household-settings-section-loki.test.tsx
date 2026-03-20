@@ -40,7 +40,7 @@ const soloHouseholdData = {
   inviteCodeExpiresAt: "2026-04-01T00:00:00.000Z",
   members: [
     {
-      clerkUserId: "u_me",
+      userId: "u_me",
       displayName: "Björn",
       email: "bjorn@saga.com",
       role: "owner" as const,

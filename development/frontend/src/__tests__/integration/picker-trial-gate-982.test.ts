@@ -69,7 +69,7 @@ let GET: typeof import("@/app/api/config/picker/route").GET;
 
 // ── Setup ────────────────────────────────────────────────────────────────────
 
-const MOCK_FIRESTORE_USER = { clerkUserId: MOCK_USER.sub, email: MOCK_USER.email, displayName: "Trial User", householdId: "hh-trial", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" };
+const MOCK_FIRESTORE_USER = { userId: MOCK_USER.sub, email: MOCK_USER.email, displayName: "Trial User", householdId: "hh-trial", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" };
 
 beforeEach(async () => {
   // Default: authenticated + Karl-or-trial passes

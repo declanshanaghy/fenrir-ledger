@@ -120,7 +120,7 @@ function stubWebhookEvent(type: string, data: object): void {
 
 function userExists(): void {
   mockGetUser.mockResolvedValue({
-    clerkUserId: MOCK_GOOGLE_SUB,
+    userId: MOCK_GOOGLE_SUB,
     householdId: MOCK_HOUSEHOLD_ID,
     email: "loki@test.com",
     displayName: "Loki Test",

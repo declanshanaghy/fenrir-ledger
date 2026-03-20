@@ -50,7 +50,7 @@ vi.mock("@/lib/kv/entitlement-store", () => ({
 const mockRequireAuthz = vi.hoisted(() => vi.fn().mockResolvedValue({
   ok: true,
   user: { sub: "google-sub-123", email: "test@example.com", name: "Test User", picture: "" },
-  firestoreUser: { clerkUserId: "google-sub-123", email: "test@example.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
+  firestoreUser: { userId: "google-sub-123", email: "test@example.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
 }));
 vi.mock("@/lib/auth/authz", () => ({
   requireAuthz: mockRequireAuthz,

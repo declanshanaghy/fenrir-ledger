@@ -59,7 +59,7 @@ const baseHousehold = {
 };
 
 const ownerUserDoc = {
-  clerkUserId: OWNER_ID,
+  userId: OWNER_ID,
   email: "thor@example.com",
   displayName: "Thorvald",
   householdId: HOUSEHOLD_ID,
@@ -69,7 +69,7 @@ const ownerUserDoc = {
 };
 
 const memberUserDoc = {
-  clerkUserId: MEMBER_ID,
+  userId: MEMBER_ID,
   email: "sigrid@example.com",
   displayName: "Sigrid",
   householdId: HOUSEHOLD_ID,
@@ -108,7 +108,7 @@ describe("GET /api/household/members", () => {
       maxMembers: number;
       isFull: boolean;
       isOwner: boolean;
-      members: Array<{ clerkUserId: string; role: string; isCurrentUser: boolean }>;
+      members: Array<{ userId: string; role: string; isCurrentUser: boolean }>;
       inviteCode: string;
       inviteCodeExpiresAt: string;
     };
@@ -126,9 +126,9 @@ describe("GET /api/household/members", () => {
   it("marks caller as isCurrentUser", async () => {
     const res = await GET(makeRequest());
     const body = await res.json() as {
-      members: Array<{ clerkUserId: string; isCurrentUser: boolean }>;
+      members: Array<{ userId: string; isCurrentUser: boolean }>;
     };
-    const callerMember = body.members.find((m) => m.clerkUserId === OWNER_ID);
+    const callerMember = body.members.find((m) => m.userId === OWNER_ID);
     expect(callerMember?.isCurrentUser).toBe(true);
   });
 
@@ -148,7 +148,7 @@ describe("GET /api/household/members", () => {
       memberIds: [OWNER_ID, MEMBER_ID, "user_third"],
     };
     mockGetHousehold.mockResolvedValue(fullHousehold);
-    mockGetUsersByHouseholdId.mockResolvedValue([ownerUserDoc, memberUserDoc, { ...memberUserDoc, clerkUserId: "user_third", displayName: "Third" }]);
+    mockGetUsersByHouseholdId.mockResolvedValue([ownerUserDoc, memberUserDoc, { ...memberUserDoc, userId: "user_third", displayName: "Third" }]);
     const res = await GET(makeRequest());
     expect(res.status).toBe(200);
     const body = await res.json() as { isFull: boolean; inviteCode?: string };
@@ -181,7 +181,7 @@ describe("GET /api/household/members", () => {
 
     // ensureSoloHousehold must be called with sub, email, name from auth token
     expect(mockEnsureSoloHousehold).toHaveBeenCalledWith({
-      clerkUserId: OWNER_ID,
+      userId: OWNER_ID,
       email: "thor@example.com",
       displayName: "Thorvald",
     });

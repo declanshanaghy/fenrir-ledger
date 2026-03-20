@@ -59,7 +59,7 @@ function makeCard(overrides: Partial<Card> = {}): Card {
 function makeUser(overrides: Partial<FirestoreUser> = {}): FirestoreUser {
   const now = new Date().toISOString();
   return {
-    clerkUserId: "user-001",
+    userId: "user-001",
     email: "test@example.com",
     displayName: "Test User",
     householdId: TEST_HOUSEHOLD,
@@ -185,12 +185,12 @@ describe("mockGetUser / mockSetUser", () => {
   });
 
   it("stores and retrieves a user", async () => {
-    const user = makeUser({ clerkUserId: "user-xyz" });
+    const user = makeUser({ userId: "user-xyz" });
     await mockSetUser(user);
 
     const result = await mockGetUser("user-xyz");
     expect(result).not.toBeNull();
-    expect(result!.clerkUserId).toBe("user-xyz");
+    expect(result!.userId).toBe("user-xyz");
     expect(result!.email).toBe("test@example.com");
   });
 });

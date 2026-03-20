@@ -84,7 +84,7 @@ function makeRequest(body: Record<string, unknown> = {}, token = "valid-token"):
   });
 }
 
-const MOCK_FIRESTORE_USER = { clerkUserId: "google-sub-123", email: "test@test.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" };
+const MOCK_FIRESTORE_USER = { userId: "google-sub-123", email: "test@test.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" };
 
 function authOk() {
   mockRequireAuthz.mockResolvedValue({ ok: true, user: { sub: "google-sub-123" }, firestoreUser: MOCK_FIRESTORE_USER });

@@ -55,7 +55,7 @@ function makeCard(id: string, householdId: string, deletedAt?: string): Card {
 function makeUser(id: string, overrides: Partial<FirestoreUser> = {}): FirestoreUser {
   const now = new Date().toISOString();
   return {
-    clerkUserId: id,
+    userId: id,
     email: `${id}@example.com`,
     displayName: id,
     householdId: HH_A,

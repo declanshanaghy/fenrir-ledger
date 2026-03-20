@@ -96,7 +96,7 @@ function karlEntitlement(): void {
 
 function userExists(): void {
   mockGetUser.mockResolvedValue({
-    clerkUserId: TEST_USER_SUB,
+    userId: TEST_USER_SUB,
     householdId: TEST_HOUSEHOLD_ID,
     email: "loki@test.com",
     displayName: "Loki",

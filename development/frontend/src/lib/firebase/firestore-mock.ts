@@ -33,7 +33,7 @@ import type {
 /** Per-household card storage (household ID → card ID → card). */
 const _cards = new Map<string, Map<string, FirestoreCard>>();
 
-/** User document storage (clerkUserId → user). */
+/** User document storage (userId → user). */
 const _users = new Map<string, FirestoreUser>();
 
 /** Household document storage (householdId → household). */
@@ -99,13 +99,13 @@ export async function mockSetCards(cards: Card[]): Promise<void> {
 // ─── User operations ──────────────────────────────────────────────────────────
 
 /**
- * Returns a user by clerk user ID, or null if not found.
+ * Returns a user by user ID, or null if not found.
  * Mirrors `getUser()` in firestore.ts.
  */
 export async function mockGetUser(
-  clerkUserId: string
+  userId: string
 ): Promise<FirestoreUser | null> {
-  return _users.get(clerkUserId) ?? null;
+  return _users.get(userId) ?? null;
 }
 
 /**
@@ -113,7 +113,7 @@ export async function mockGetUser(
  * Mirrors `setUser()` in firestore.ts.
  */
 export async function mockSetUser(user: FirestoreUser): Promise<void> {
-  _users.set(user.clerkUserId, user);
+  _users.set(user.userId, user);
 }
 
 // ─── Household operations ─────────────────────────────────────────────────────

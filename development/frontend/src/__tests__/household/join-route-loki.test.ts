@@ -50,7 +50,7 @@ describe("POST /api/household/join — Loki edge cases", () => {
     mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: { sub: "user_owner", email: "owner@example.com", name: "Thor", picture: "" },
-      firestoreUser: { clerkUserId: "user_owner", email: "owner@example.com", displayName: "Thor", householdId: "hh-solo", role: "owner" as const, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
+      firestoreUser: { userId: "user_owner", email: "owner@example.com", displayName: "Thor", householdId: "hh-solo", role: "owner" as const, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
     });
   });
 

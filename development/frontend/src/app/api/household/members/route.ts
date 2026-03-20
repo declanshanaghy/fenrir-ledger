@@ -16,7 +16,7 @@
  *   inviteCode?: string,          — omitted for non-owners and when household is full
  *   inviteCodeExpiresAt?: string, — omitted for non-owners and when household is full
  *   members: Array<{
- *     clerkUserId: string,
+ *     userId: string,
  *     displayName: string,
  *     email: string,
  *     role: "owner" | "member",
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // First sign-in: bootstrap a solo household atomically, then continue normal flow.
     log.debug("GET /api/household/members: user not found, bootstrapping solo household", { userId });
     const bootstrapped = await ensureSoloHousehold({
-      clerkUserId: userId,
+      userId: userId,
       email: auth.user.email,
       displayName: auth.user.name,
     });
@@ -83,11 +83,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return 0;
     })
     .map((m) => ({
-      clerkUserId: m.clerkUserId,
+      userId: m.userId,
       displayName: m.displayName,
       email: m.email,
       role: m.role,
-      isCurrentUser: m.clerkUserId === userId,
+      isCurrentUser: m.userId === userId,
     }));
 
   const response: Record<string, unknown> = {

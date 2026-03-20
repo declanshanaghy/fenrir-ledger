@@ -601,9 +601,9 @@ describe("users command — Firestore query spec", () => {
     expect(query.limit).toBe(50);
   });
 
-  it("user document path is users/{clerkUserId}", () => {
-    const clerkUserId = "user_2abc123xyz";
-    const path = `users/${clerkUserId}`;
+  it("user document path is users/{userId}", () => {
+    const userId = "user_2abc123xyz";
+    const path = `users/${userId}`;
     expect(path).toBe("users/user_2abc123xyz");
   });
 });

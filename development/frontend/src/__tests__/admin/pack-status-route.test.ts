@@ -100,7 +100,7 @@ describe("GET /api/admin/pack-status", () => {
     mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: { ...ADMIN_USER, email: "loki@fenrir.dev" },
-      firestoreUser: { clerkUserId: ADMIN_USER.sub, email: "loki@fenrir.dev", displayName: "Loki", householdId: "hh-1", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
+      firestoreUser: { userId: ADMIN_USER.sub, email: "loki@fenrir.dev", displayName: "Loki", householdId: "hh-1", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
     vi.mocked(isAdmin).mockReturnValue(false);
 
@@ -120,7 +120,7 @@ describe("GET /api/admin/pack-status", () => {
     mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: ADMIN_USER,
-      firestoreUser: { clerkUserId: ADMIN_USER.sub, email: ADMIN_USER.email, displayName: ADMIN_USER.name, householdId: "hh-admin", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
+      firestoreUser: { userId: ADMIN_USER.sub, email: ADMIN_USER.email, displayName: ADMIN_USER.name, householdId: "hh-admin", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
     vi.mocked(isAdmin).mockReturnValue(true);
     vi.mocked(getPackStatus).mockResolvedValue(MOCK_PACK_STATUS);
@@ -144,7 +144,7 @@ describe("GET /api/admin/pack-status", () => {
     mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: ADMIN_USER,
-      firestoreUser: { clerkUserId: ADMIN_USER.sub, email: ADMIN_USER.email, displayName: ADMIN_USER.name, householdId: "hh-admin", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
+      firestoreUser: { userId: ADMIN_USER.sub, email: ADMIN_USER.email, displayName: ADMIN_USER.name, householdId: "hh-admin", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
     vi.mocked(isAdmin).mockReturnValue(true);
     vi.mocked(getPackStatus).mockRejectedValue(new Error("GitHub API down"));
@@ -164,7 +164,7 @@ describe("GET /api/admin/pack-status", () => {
     mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: ADMIN_USER,
-      firestoreUser: { clerkUserId: ADMIN_USER.sub, email: ADMIN_USER.email, displayName: ADMIN_USER.name, householdId: "hh-admin", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
+      firestoreUser: { userId: ADMIN_USER.sub, email: ADMIN_USER.email, displayName: ADMIN_USER.name, householdId: "hh-admin", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
     vi.mocked(isAdmin).mockReturnValue(true);
     vi.mocked(getPackStatus).mockResolvedValue(MOCK_PACK_STATUS);

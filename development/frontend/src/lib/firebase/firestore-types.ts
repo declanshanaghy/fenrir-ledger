@@ -7,7 +7,7 @@
  * ADR-014 documents the Redis-vs-Firestore decision.
  *
  * Collections:
- *   /users/{clerkUserId}
+ *   /users/{userId}
  *   /households/{householdId}
  *   /households/{householdId}/cards/{cardId}
  *   /entitlements/{googleSub}  (or /entitlements/stripe:{customerId} for anonymous)
@@ -19,17 +19,17 @@ import type { StripeTier } from "@/lib/stripe/types";
 // ─── User document ────────────────────────────────────────────────────────────
 
 /**
- * Stored at /users/{clerkUserId}.
+ * Stored at /users/{userId}.
  *
- * One document per Clerk user. A user belongs to exactly one household.
+ * One document per user. A user belongs to exactly one household.
  * Created on first sign-in via ensureSoloHousehold().
  */
 export interface FirestoreUser {
-  /** Document ID — Clerk's immutable user ID (e.g. "user_2abc...") */
-  clerkUserId: string;
-  /** User's email address from Clerk */
+  /** Document ID — Google OAuth sub claim */
+  userId: string;
+  /** User's email address */
   email: string;
-  /** Display name from Clerk (firstName + lastName, or username) */
+  /** Display name */
   displayName: string;
   /** Foreign key → /households/{householdId} — exactly one per user */
   householdId: string;
@@ -96,10 +96,10 @@ export interface FirestoreHousehold {
   id: string;
   /** Human-readable household name (e.g. "The Shanaghys") */
   name: string;
-  /** clerkUserId of the household owner */
+  /** userId of the household owner */
   ownerId: string;
   /**
-   * clerkUserIds of all members, including the owner.
+   * userIds of all members, including the owner.
    * Maximum 3 entries — enforced by security rules.
    */
   memberIds: string[];
@@ -136,8 +136,8 @@ export type FirestoreCard = Card;
 
 /** Canonical Firestore collection/document paths */
 export const FIRESTORE_PATHS = {
-  /** /users/{clerkUserId} */
-  user: (clerkUserId: string) => `users/${clerkUserId}` as const,
+  /** /users/{userId} */
+  user: (userId: string) => `users/${userId}` as const,
   /** /households/{householdId} */
   household: (householdId: string) => `households/${householdId}` as const,
   /** /households/{householdId}/cards */

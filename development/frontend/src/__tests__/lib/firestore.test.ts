@@ -105,7 +105,7 @@ describe("isInviteCodeValid", () => {
 describe("FirestoreUser shape", () => {
   it("accepts a valid user object", () => {
     const user: FirestoreUser = {
-      clerkUserId: "user_abc",
+      userId: "user_abc",
       email: "test@example.com",
       displayName: "Test User",
       householdId: "hh-uuid",
@@ -120,7 +120,7 @@ describe("FirestoreUser shape", () => {
 
   it("accepts member role", () => {
     const user: FirestoreUser = {
-      clerkUserId: "user_xyz",
+      userId: "user_xyz",
       email: "member@example.com",
       displayName: "Member",
       householdId: "hh-uuid",
@@ -244,7 +244,7 @@ describe("getUser", () => {
 
   it("returns user data when the user document exists", async () => {
     const mockUser: FirestoreUser = {
-      clerkUserId: "user_found",
+      userId: "user_found",
       email: "found@example.com",
       displayName: "Found User",
       householdId: "hh-1",
@@ -289,7 +289,7 @@ describe("setUser", () => {
     const { setUser, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
     _resetFirestoreForTests();
     const user: FirestoreUser = {
-      clerkUserId: "user_write",
+      userId: "user_write",
       email: "write@example.com",
       displayName: "Write User",
       householdId: "hh-write",
@@ -492,7 +492,7 @@ describe("ensureSoloHousehold — data integrity guard", () => {
 
   it("throws a data integrity error when user exists but household is missing", async () => {
     const existingUser: FirestoreUser = {
-      clerkUserId: "user_orphan",
+      userId: "user_orphan",
       email: "orphan@example.com",
       displayName: "Orphan",
       householdId: "hh-gone",
@@ -517,7 +517,7 @@ describe("ensureSoloHousehold — data integrity guard", () => {
     const { ensureSoloHousehold, _resetFirestoreForTests } = await import("@/lib/firebase/firestore");
     _resetFirestoreForTests();
     await expect(
-      ensureSoloHousehold({ clerkUserId: "user_orphan", email: "orphan@example.com", displayName: "Orphan" })
+      ensureSoloHousehold({ userId: "user_orphan", email: "orphan@example.com", displayName: "Orphan" })
     ).rejects.toThrow("Data integrity error");
   });
 });
@@ -560,13 +560,13 @@ describe("ensureSoloHousehold", () => {
     _resetFirestoreForTests();
 
     const result = await ensureSoloHousehold({
-      clerkUserId: "user_new",
+      userId: "user_new",
       email: "new@example.com",
       displayName: "New User",
     });
 
     expect(result.created).toBe(true);
-    expect(result.user.clerkUserId).toBe("user_new");
+    expect(result.user.userId).toBe("user_new");
     expect(result.user.role).toBe("owner");
     expect(result.household.ownerId).toBe("user_new");
     expect(result.household.memberIds).toEqual(["user_new"]);
@@ -583,7 +583,7 @@ describe("ensureSoloHousehold", () => {
 
   it("returns existing user + household on subsequent sign-ins (idempotent)", async () => {
     const existingUser: FirestoreUser = {
-      clerkUserId: "user_existing",
+      userId: "user_existing",
       email: "existing@example.com",
       displayName: "Existing User",
       householdId: "hh-existing",
@@ -624,7 +624,7 @@ describe("ensureSoloHousehold", () => {
     _resetFirestoreForTests();
 
     const result = await ensureSoloHousehold({
-      clerkUserId: "user_existing",
+      userId: "user_existing",
       email: "existing@example.com",
       displayName: "Existing User",
     });
@@ -657,7 +657,7 @@ describe("ensureSoloHousehold", () => {
     _resetFirestoreForTests();
 
     const result = await ensureSoloHousehold({
-      clerkUserId: "user_alice",
+      userId: "user_alice",
       email: "alice@example.com",
       displayName: "Alice",
     });
@@ -686,7 +686,7 @@ describe("ensureSoloHousehold", () => {
     _resetFirestoreForTests();
 
     const result = await ensureSoloHousehold({
-      clerkUserId: "user_solo",
+      userId: "user_solo",
       email: "solo@example.com",
       displayName: "Solo User",
     });

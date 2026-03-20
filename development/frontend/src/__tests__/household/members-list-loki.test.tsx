@@ -16,14 +16,14 @@ import { InviteCodeDisplay } from "@/components/household/InviteCodeDisplay";
 describe("MembersList — behaviour", () => {
   const members = [
     {
-      clerkUserId: "u_thor",
+      userId: "u_thor",
       displayName: "Thorvald Eriksen",
       email: "thor@example.com",
       role: "owner" as const,
       isCurrentUser: false,
     },
     {
-      clerkUserId: "u_me",
+      userId: "u_me",
       displayName: "Björn Andersen",
       email: "bjorn@example.com",
       role: "member" as const,
@@ -66,7 +66,7 @@ describe("MembersList — behaviour", () => {
   it("renders initials for single-word name (first 2 chars)", () => {
     const singleName = [
       {
-        clerkUserId: "u_odin",
+        userId: "u_odin",
         displayName: "Odin",
         email: "odin@valhalla.com",
         role: "member" as const,

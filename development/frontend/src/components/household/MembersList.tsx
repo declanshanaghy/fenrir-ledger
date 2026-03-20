@@ -10,7 +10,7 @@
  */
 
 interface HouseholdMember {
-  clerkUserId: string;
+  userId: string;
   displayName: string;
   email: string;
   role: "owner" | "member";
@@ -32,7 +32,7 @@ export function MembersList({ members }: MembersListProps) {
     <div className="flex flex-col gap-2" role="list" aria-label="Household members">
       {members.map((member) => (
         <div
-          key={member.clerkUserId}
+          key={member.userId}
           role="listitem"
           className="flex items-center gap-3 border border-border px-3 py-2.5"
         >
