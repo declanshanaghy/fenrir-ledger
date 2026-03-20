@@ -229,7 +229,7 @@ function UserDetailPanel({
       {actionMode === "none" ? (
         <Box>
           <Text color={GRAY}>
-            {"[d] Delete  [t] Tier  [a] adjust trial"}
+            {"[x] Delete  [t] Tier  [a] adjust trial"}
             {user.stripeCustomerId ? "  [s] Cancel sub" : ""}
             {detail?.household ? "  [h] Household  [c] Cards" : ""}
           </Text>
@@ -302,6 +302,10 @@ export function UsersTab({
 
   // Load users on mount
   useEffect(() => {
+    // Capture selected user ID synchronously (before effects that clear context run)
+    // so we can restore the selection after loading if we're returning from an overlay.
+    const restoreUserId = selection.selectedUserId;
+
     void (async () => {
       log.debug("UsersTab: loading users");
       setLoading(true);
@@ -357,13 +361,25 @@ export function UsersTab({
 
         log.debug("UsersTab: users loaded", { count: enriched.length });
         setUsers(enriched);
+
+        // Restore selection when returning from an overlay (non-destructive actions).
+        // If the previously selected user no longer exists (was deleted), findIndex
+        // returns -1 and selection stays cleared — correct behaviour for delete.
+        if (restoreUserId) {
+          const idx = enriched.findIndex((u) => u.id === restoreUserId);
+          if (idx >= 0) {
+            log.debug("UsersTab: restoring selection", { userId: restoreUserId, idx });
+            setSelectedIdx(idx);
+            setScrollOffset(Math.max(0, Math.min(idx, enriched.length - LIST_HEIGHT)));
+          }
+        }
       } catch (err) {
         log.error("UsersTab: load error", err as Error);
         setError((err as Error).message);
       }
       setLoading(false);
     })();
-  }, []);
+  }, []); // intentionally mount-only; restoreUserId captured synchronously above
 
   // Load detail when selection changes
   useEffect(() => {
@@ -628,7 +644,7 @@ export function UsersTab({
       const user = users[selectedIdx];
       if (!user) return;
 
-      if (input === "d") {
+      if (input === "x") {
         setActionMode("delete_confirm");
         return;
       }
