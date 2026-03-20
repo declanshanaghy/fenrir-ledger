@@ -80,20 +80,19 @@ export async function ensureAuthenticated(): Promise<void> {
     }
   }
 
-  log.debug("ensureAuthenticated: opening browser for Google auth");
-  console.log("Opening browser for Google authentication...");
+  log.info("Opening browser for Google authentication…");
   const { execSync } = require("child_process") as typeof import("child_process");
   try {
     execSync("gcloud auth application-default login", { stdio: "inherit" });
-    log.debug("ensureAuthenticated: gcloud login complete");
+    log.info("gcloud login complete");
   } catch (err) {
     const msg = (err as Error).message ?? String(err);
     if (/gcloud/.test(msg) || /ENOENT/.test(msg) || /not found/.test(msg)) {
-      console.error("gcloud CLI not found. Install it from https://cloud.google.com/sdk/docs/install");
+      log.fatal("gcloud CLI not found — install from https://cloud.google.com/sdk/docs/install");
     } else if (/cancelled|cancel|abort/i.test(msg)) {
-      console.error("Authentication cancelled. Odin's Spear requires Google credentials to access Firestore.");
+      log.fatal("Authentication cancelled — Odin's Spear requires Google credentials for Firestore");
     } else {
-      console.error(`Authentication failed: ${msg}`);
+      log.fatal("Authentication failed", { error: msg });
     }
     process.exit(1);
   }

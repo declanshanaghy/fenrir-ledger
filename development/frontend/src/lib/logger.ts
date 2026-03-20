@@ -21,7 +21,7 @@
  */
 
 import { Logger } from "tslog";
-import { appendFileSync, mkdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, existsSync, renameSync, unlinkSync } from "node:fs";
 import { dirname } from "node:path";
 
 /**
@@ -97,16 +97,49 @@ export const log = new Logger({
   hideLogPositionForProduction: isProd,
 });
 
+const MAX_LOG_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_LOG_FILES = 5;
+
 /**
- * Create a named logger that writes JSON lines to a file instead of stdout.
+ * Rotate log files: foo.jsonl → foo.1.jsonl → foo.2.jsonl … foo.5.jsonl (deleted).
+ * Called at startup and when the active file exceeds MAX_LOG_SIZE.
+ */
+function rotateLogFile(logPath: string): void {
+  if (!existsSync(logPath)) return;
+  const base = logPath.replace(/\.jsonl$/, "");
+  // Delete oldest if at capacity
+  const oldest = `${base}.${MAX_LOG_FILES}.jsonl`;
+  if (existsSync(oldest)) unlinkSync(oldest);
+  // Shift .4→.5, .3→.4, .2→.3, .1→.2
+  for (let i = MAX_LOG_FILES - 1; i >= 1; i--) {
+    const src = `${base}.${i}.jsonl`;
+    if (existsSync(src)) renameSync(src, `${base}.${i + 1}.jsonl`);
+  }
+  // Active → .1
+  renameSync(logPath, `${base}.1.jsonl`);
+}
+
+/**
+ * Create a named logger that writes JSONL to a file instead of stdout.
  * Console output is suppressed — all output goes to the file.
+ *
+ * The file extension is forced to `.jsonl` regardless of what is passed.
+ * Rotates the existing log at startup and when the file exceeds 10 MB.
+ * Keeps up to 5 previous log files (foo.1.jsonl … foo.5.jsonl).
  *
  * Usage:
  *   import { createFileLogger } from "@fenrir/logger";
- *   const log = createFileLogger("odins-spear", "tmp/logs/odins-spear.log");
+ *   const log = createFileLogger("odins-spear", "tmp/logs/odins-spear");
  */
 export function createFileLogger(name: string, filePath: string) {
-  mkdirSync(dirname(filePath), { recursive: true });
+  const normalised = filePath.replace(/\.(log|jsonl?)$/i, "") + ".jsonl";
+  mkdirSync(dirname(normalised), { recursive: true });
+
+  // Rotate on startup so each run gets a fresh file
+  rotateLogFile(normalised);
+
+  let bytesWritten = 0;
+
   const fileLogger = new Logger({
     name,
     type: "hidden",           // suppress console output
@@ -117,7 +150,40 @@ export function createFileLogger(name: string, filePath: string) {
     maskPlaceholder: "[***]",
   });
   fileLogger.attachTransport((logObj) => {
-    appendFileSync(filePath, JSON.stringify(logObj) + "\n");
+    const meta = (logObj as Record<string, unknown>)["_meta"] as Record<string, unknown> | undefined;
+    const metaPath = meta?.["path"] as Record<string, unknown> | undefined;
+
+    const args: unknown[] = [];
+    for (let i = 0; i in (logObj as Record<string, unknown>); i++) {
+      args.push((logObj as Record<string, unknown>)[String(i)]);
+    }
+    const message = args.length === 1 && typeof args[0] === "string"
+      ? args[0]
+      : args.map(a => typeof a === "string" ? a : JSON.stringify(a)).join(" ");
+
+    const entry: Record<string, unknown> = {
+      datetime: meta?.["date"],
+      runtimeVersion: meta?.["runtimeVersion"],
+      hostname: meta?.["hostname"],
+      name: meta?.["name"],
+      logLevelId: meta?.["logLevelId"],
+      level: meta?.["logLevelName"],
+      message,
+      codeLocation: metaPath?.["fullFilePath"] ?? undefined,
+    };
+    if (args.length > 1 && typeof args[args.length - 1] === "object" && args[args.length - 1] !== null) {
+      entry["data"] = args[args.length - 1];
+    }
+
+    // Size-based rotation
+    if (bytesWritten >= MAX_LOG_SIZE) {
+      rotateLogFile(normalised);
+      bytesWritten = 0;
+    }
+
+    const line = JSON.stringify(entry) + "\n";
+    appendFileSync(normalised, line);
+    bytesWritten += Buffer.byteLength(line);
   });
   return fileLogger;
 }
