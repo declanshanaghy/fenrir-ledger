@@ -28,7 +28,7 @@ spec:
                   set -e
 
                   # Get the timestamp of the last completed agent job
-                  LAST_JOB=$(kubectl get jobs -n fenrir-app -l app=agent-job \
+                  LAST_JOB=$(kubectl get jobs -n fenrir-agents -l app.kubernetes.io/component=agent-sandbox \
                     --sort-by=.status.completionTime \
                     -o jsonpath='{.items[-1:].status.completionTime}' 2>/dev/null || echo "")
 
