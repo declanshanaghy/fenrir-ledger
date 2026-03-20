@@ -192,22 +192,13 @@ describe("Issue #1609 Fix 2 — ProfileDropdown: no transition-colors on menu it
   it("Theme menu row uses transition-[color,border-color] not transition-colors", () => {
     render(<LedgerTopBar />);
     openDropdown();
-    // The Theme row has a ThemeToggle dropdown-icon variant — find by role
-    const themeRow = screen.getByRole("menuitem", { name: /^$/i }) as HTMLElement | null
-      ?? (screen.queryAllByRole("menuitem").find((el) =>
-          el.textContent?.includes("Theme")
-        ) as HTMLElement | undefined);
-    if (themeRow) {
-      expect(themeRow.className).toContain("transition-[color,border-color]");
-      expect(themeRow.className).not.toMatch(/\btransition-colors\b/);
-    } else {
-      // Theme row is present but may render without an explicit name — find by text content
-      const allMenuItems = screen.getAllByRole("menuitem");
-      const themeItem = allMenuItems.find((el) => el.textContent?.includes("Theme"));
-      expect(themeItem).toBeDefined();
-      if (themeItem) {
-        expect(themeItem.className).toContain("transition-[color,border-color]");
-      }
+    // The Theme row button has text content "Theme" — find by that text
+    const allMenuItems = screen.getAllByRole("menuitem");
+    const themeItem = allMenuItems.find((el) => el.textContent?.includes("Theme"));
+    expect(themeItem).toBeDefined();
+    if (themeItem) {
+      expect(themeItem.className).toContain("transition-[color,border-color]");
+      expect(themeItem.className).not.toMatch(/\btransition-colors\b/);
     }
   });
 
