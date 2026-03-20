@@ -805,7 +805,7 @@ for (const t of turns) {
 }
 
 // ---------------------------------------------------------------------------
-// Stats — verify.sh runs
+// Stats — verify runs
 // ---------------------------------------------------------------------------
 let tscRuns = 0, tscPass = 0, tscFail = 0;
 let buildRuns = 0, buildPass = 0, buildFail = 0;

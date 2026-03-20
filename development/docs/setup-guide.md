@@ -152,7 +152,7 @@ fenrir-ledger/
   scripts/
     gke-setup.sh        # GKE CLI setup (kubectl, k9s, auth)
   quality/
-    scripts/            # verify.sh, test runners
+    scripts/            # coverage-combine.mjs, test runners
     test-suites/        # Playwright E2E tests
   .github/workflows/    # CI/CD pipelines
 ```

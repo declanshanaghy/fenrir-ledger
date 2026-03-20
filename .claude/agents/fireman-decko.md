@@ -371,6 +371,6 @@ SIGNOFF: Forged in fire, tempered by craft
 
 Rules:
 - VERDICT is always `DONE` for FiremanDecko (implementation complete)
-- CHECKS must reflect actual verify.sh results from this session
+- CHECKS must reflect actual verify:tsc, verify:build, verify:unit results from this session
 - SEAL rune signature is fixed: `ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ`
 - Omit PR line if no PR was created (use `N/A`)

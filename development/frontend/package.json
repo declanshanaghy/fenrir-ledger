@@ -12,7 +12,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run",
-    "test:unit:coverage": "vitest run --coverage"
+    "test:unit:coverage": "vitest run --coverage",
+    "verify": "pnpm run verify:tsc && pnpm run verify:build && pnpm run verify:unit",
+    "verify:tsc": "tsc --noEmit",
+    "verify:build": "next build",
+    "verify:unit": "vitest run --pool threads --maxWorkers 4",
+    "verify:e2e": "playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

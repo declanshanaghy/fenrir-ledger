@@ -80,7 +80,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Do NOT write or run any Playwright E2E tests. Vitest only. E2E is on lockdown.
 
 **Step 3b — tsc check:**
-  `cd <REPO_ROOT> && bash quality/scripts/verify.sh --step tsc`
+  `cd <REPO_ROOT>/development/frontend && pnpm run verify:tsc`
 On failure: fix, commit+push, re-run.
 
 **Step 3c — Rebase:**

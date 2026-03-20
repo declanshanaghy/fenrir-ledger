@@ -6,8 +6,8 @@ Compose this into every agent prompt, immediately after the role line.
 SANDBOX RULES (GKE Autopilot):
 - REPO_ROOT is /workspace/repo — hardcoded, no discovery needed.
 - Each Bash tool call = fresh shell. ALWAYS prefix: cd /workspace/repo && <command>
-- Set timeout: 600000 (10 min) on long-running commands (verify.sh, playwright, next build).
-- The entrypoint already handled: git clone, branch checkout, npm ci, git identity.
+- Set timeout: 600000 (10 min) on long-running commands (playwright, next build).
+- The entrypoint already handled: git clone, branch checkout, pnpm install, git identity.
 
 **Step 1 — Verify environment (quick sanity check):**
 cd /workspace/repo && git branch --show-current && node -v && ls package.json 2>/dev/null || ls development/frontend/package.json
@@ -34,7 +34,7 @@ state shows exactly where you stopped.
 INCREMENTAL COMMIT + VERIFY LOOP (UNBREAKABLE):
 After every logical chunk of implementation work (~5-10 min or 1-3 files changed):
   1. cd /workspace/repo && git add -A && git commit -m 'wip: <what> — issue:<NUMBER>' && git push origin <BRANCH>
-  2. cd /workspace/repo && bash quality/scripts/verify.sh --step tsc
+  2. cd /workspace/repo/development/frontend && pnpm run verify:tsc
   3. If tsc fails: fix immediately, commit+push, re-run tsc.
   4. Update your todo progress.
 Do NOT batch all changes into one commit at the end. Sessions can die at any time —
@@ -43,9 +43,9 @@ uncommitted work is lost work.
 VERIFY — tsc + build + Vitest (UNBREAKABLE):
 All agents run tsc, build, AND the full Vitest suite before handoff.
 Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.
-  cd /workspace/repo && bash quality/scripts/verify.sh --step tsc
-  cd /workspace/repo && bash quality/scripts/verify.sh --step build
-  cd /workspace/repo/development/frontend && npx vitest run --reporter=verbose
+  cd /workspace/repo/development/frontend && pnpm run verify:tsc
+  cd /workspace/repo/development/frontend && pnpm run verify:build
+  cd /workspace/repo/development/frontend && pnpm run verify:unit
 On failure: fix, commit+push, re-run that step. Repeat until green.
 Do NOT proceed to handoff with ANY failing Vitest tests.
 
