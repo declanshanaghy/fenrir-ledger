@@ -18,6 +18,7 @@ import type {
   FirestoreUser,
   FirestoreHousehold,
   FirestoreCard,
+  FirestoreEntitlement,
 } from "./firestore-types";
 import {
   FIRESTORE_PATHS,
@@ -488,4 +489,78 @@ export async function ensureSoloHousehold(
   await batch.commit();
 
   return { user, household, created: true };
+}
+
+// ─── Entitlement operations ───────────────────────────────────────────────────
+
+/**
+ * Fetches an entitlement document by doc ID.
+ * docId is either:
+ *   - a Google sub for authenticated users
+ *   - `stripe:{stripeCustomerId}` for anonymous users
+ *
+ * Returns null if the document does not exist.
+ */
+export async function getEntitlement(
+  docId: string
+): Promise<FirestoreEntitlement | null> {
+  const db = getFirestore();
+  const snap = await db.doc(FIRESTORE_PATHS.entitlement(docId)).get();
+  if (!snap.exists) return null;
+  return snap.data() as FirestoreEntitlement;
+}
+
+/**
+ * Creates or overwrites an entitlement document.
+ * docId is either a Google sub or `stripe:{stripeCustomerId}`.
+ */
+export async function setEntitlement(
+  docId: string,
+  entitlement: FirestoreEntitlement
+): Promise<void> {
+  const db = getFirestore();
+  await db.doc(FIRESTORE_PATHS.entitlement(docId)).set(entitlement);
+}
+
+/**
+ * Deletes an entitlement document.
+ * docId is either a Google sub or `stripe:{stripeCustomerId}`.
+ */
+export async function deleteEntitlement(docId: string): Promise<void> {
+  const db = getFirestore();
+  await db.doc(FIRESTORE_PATHS.entitlement(docId)).delete();
+}
+
+/**
+ * Finds a user document whose stripeCustomerId field matches the given value.
+ * Used by webhook handlers for Stripe customer → Google sub reverse lookup.
+ *
+ * Returns null if no user document has this stripeCustomerId.
+ */
+export async function findUserByStripeCustomerId(
+  stripeCustomerId: string
+): Promise<FirestoreUser | null> {
+  const db = getFirestore();
+  const snap = await db
+    .collection("users")
+    .where("stripeCustomerId", "==", stripeCustomerId)
+    .limit(1)
+    .get();
+  if (snap.empty || !snap.docs[0]) return null;
+  return snap.docs[0].data() as FirestoreUser;
+}
+
+/**
+ * Updates the stripeCustomerId field on a user document.
+ * Called when an authenticated user's Stripe entitlement is first set.
+ *
+ * @param userId - The user document ID (Google sub / clerkUserId)
+ * @param stripeCustomerId - The Stripe customer ID to store
+ */
+export async function setUserStripeCustomerId(
+  userId: string,
+  stripeCustomerId: string
+): Promise<void> {
+  const db = getFirestore();
+  await db.doc(FIRESTORE_PATHS.user(userId)).update({ stripeCustomerId });
 }

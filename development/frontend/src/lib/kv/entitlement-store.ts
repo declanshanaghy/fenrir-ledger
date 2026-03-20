@@ -1,70 +1,66 @@
 /**
- * Redis entitlement store -- server-side persistence for subscription entitlements.
+ * Firestore entitlement store -- server-side persistence for subscription entitlements.
  *
- * Stores and retrieves entitlement records keyed by Google user sub (authenticated)
- * or Stripe customer ID (anonymous).
+ * Stores and retrieves entitlement records in Firestore, keyed by Google user sub
+ * (authenticated) or Stripe customer ID (anonymous).
  *
- * Key format:
- *   - `entitlement:{googleSub}` -> StoredStripeEntitlement (authenticated users)
- *   - `entitlement:stripe:{stripeCustomerId}` -> StoredStripeEntitlement (anonymous Stripe users)
- *   - `stripe-customer:{stripeCustomerId}` -> `{googleSub}` (authenticated Stripe reverse index)
- *   - `stripe-customer:{stripeCustomerId}` -> `stripe:{stripeCustomerId}` (anonymous Stripe reverse index)
+ * Document paths:
+ *   - `entitlements/{googleSub}` → FirestoreEntitlement (authenticated users)
+ *   - `entitlements/stripe:{stripeCustomerId}` → FirestoreEntitlement (anonymous Stripe users)
  *
- * TTL: Entitlements expire after 30 days if not refreshed.
+ * Reverse lookup (Stripe customer → Google sub):
+ *   - Query `users` collection where `stripeCustomerId == customerId`
+ *   - Falls back to checking the `entitlements/stripe:{customerId}` doc for anonymous users
+ *
+ * No TTL: subscription records are persistent (unlike trials).
+ *
+ * Firestore IS the authoritative billing source.
+ * Stripe webhooks write here; `requireKarl` reads from here.
  *
  * @module kv/entitlement-store
  */
 
-import { getRedisClient } from "@/lib/kv/redis-client";
+import {
+  getEntitlement,
+  setEntitlement,
+  deleteEntitlement,
+  findUserByStripeCustomerId,
+  setUserStripeCustomerId,
+} from "@/lib/firebase/firestore";
+import type { FirestoreEntitlement } from "@/lib/firebase/firestore-types";
 import type { StoredStripeEntitlement } from "@/lib/stripe/types";
 import { log } from "@/lib/logger";
 
-/** 30 days in seconds */
-const ENTITLEMENT_TTL_SECONDS = 30 * 24 * 60 * 60;
-
-/**
- * Builds the primary KV key for an authenticated user's entitlement.
- *
- * @param googleSub - Google account immutable ID
- * @returns KV key string
- */
-function entitlementKey(googleSub: string): string {
-  return `entitlement:${googleSub}`;
-}
-
 // ---------------------------------------------------------------------------
-// Stripe entitlement operations
+// Type bridge
 // ---------------------------------------------------------------------------
 
 /**
- * Builds the primary KV key for an anonymous Stripe user's entitlement.
- *
- * @param stripeCustomerId - Stripe customer ID (cus_xxx)
- * @returns KV key string
+ * FirestoreEntitlement and StoredStripeEntitlement have the same shape.
+ * This cast is safe — both represent the same billing record.
  */
-function stripeAnonymousEntitlementKey(stripeCustomerId: string): string {
-  return `entitlement:stripe:${stripeCustomerId}`;
+function toStoredEntitlement(
+  e: FirestoreEntitlement
+): StoredStripeEntitlement {
+  return e as unknown as StoredStripeEntitlement;
 }
 
-/**
- * Builds the secondary index key for Stripe customer ID -> identity mapping.
- *
- * For authenticated users, the value is the Google sub.
- * For anonymous users, the value is `stripe:{stripeCustomerId}`.
- *
- * @param stripeCustomerId - Stripe customer ID (cus_xxx)
- * @returns KV key string
- */
-function stripeCustomerKey(stripeCustomerId: string): string {
-  return `stripe-customer:${stripeCustomerId}`;
+function toFirestoreEntitlement(
+  e: StoredStripeEntitlement
+): FirestoreEntitlement {
+  return e as unknown as FirestoreEntitlement;
 }
 
+// ---------------------------------------------------------------------------
+// Anonymous identity helpers (public API — unchanged contract)
+// ---------------------------------------------------------------------------
+
 /**
- * Checks whether a Stripe reverse index value points to an anonymous user.
- * Anonymous entries are stored as `stripe:{stripeCustomerId}`, while
- * authenticated entries store the raw `googleSub`.
+ * Checks whether a reverse-lookup identity value points to an anonymous user.
+ * Anonymous entries are represented as `stripe:{stripeCustomerId}`, while
+ * authenticated entries hold the raw Google sub.
  *
- * @param reverseIndexValue - The value from the `stripe-customer:{id}` key
+ * @param reverseIndexValue - Identity string returned by getGoogleSubByStripeCustomerId
  * @returns true if the value indicates an anonymous Stripe user
  */
 export function isAnonymousStripeReverseIndex(reverseIndexValue: string): boolean {
@@ -72,30 +68,33 @@ export function isAnonymousStripeReverseIndex(reverseIndexValue: string): boolea
 }
 
 /**
- * Extracts the Stripe customer ID from an anonymous reverse index value.
+ * Extracts the Stripe customer ID from an anonymous identity value.
  * The value format is `stripe:{stripeCustomerId}`.
  *
- * @param reverseIndexValue - The anonymous reverse index value
+ * @param reverseIndexValue - The anonymous identity value
  * @returns The Stripe customer ID
  */
 export function extractStripeCustomerIdFromReverseIndex(reverseIndexValue: string): string {
   return reverseIndexValue.slice("stripe:".length);
 }
 
+// ---------------------------------------------------------------------------
+// Authenticated user entitlement operations
+// ---------------------------------------------------------------------------
+
 /**
- * Retrieves a Stripe entitlement for a Google user.
+ * Retrieves a Stripe entitlement for an authenticated Google user.
  *
  * @param googleSub - Google account immutable ID
- * @returns The stored Stripe entitlement or null if not found / expired
+ * @returns The stored entitlement or null if not found
  */
 export async function getStripeEntitlement(
   googleSub: string,
 ): Promise<StoredStripeEntitlement | null> {
   log.debug("getStripeEntitlement called", { googleSub });
   try {
-    const redis = getRedisClient();
-    const raw = await redis.get(entitlementKey(googleSub));
-    const result: StoredStripeEntitlement | null = raw ? JSON.parse(raw) : null;
+    const doc = await getEntitlement(googleSub);
+    const result = doc ? toStoredEntitlement(doc) : null;
     log.debug("getStripeEntitlement returning", {
       googleSub,
       found: result !== null,
@@ -106,14 +105,13 @@ export async function getStripeEntitlement(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("getStripeEntitlement failed", { googleSub, error: message });
-    log.debug("getStripeEntitlement returning", { googleSub, found: false, reason: "error" });
     return null;
   }
 }
 
 /**
- * Stores a Stripe entitlement record for a Google user.
- * Also maintains the secondary index (Stripe customer ID -> Google sub).
+ * Stores a Stripe entitlement record for an authenticated Google user.
+ * Also updates the user document with the Stripe customer ID for reverse lookup.
  *
  * @param googleSub - Google account immutable ID
  * @param entitlement - The Stripe entitlement record to store
@@ -127,16 +125,13 @@ export async function setStripeEntitlement(
     tier: entitlement.tier,
     active: entitlement.active,
     stripeCustomerId: entitlement.stripeCustomerId,
-    stripeSubscriptionId: entitlement.stripeSubscriptionId,
   });
   try {
-    const redis = getRedisClient();
+    // Write entitlement document
+    await setEntitlement(googleSub, toFirestoreEntitlement(entitlement));
 
-    // Store the entitlement with TTL
-    await redis.set(entitlementKey(googleSub), JSON.stringify(entitlement), "EX", ENTITLEMENT_TTL_SECONDS);
-
-    // Maintain the reverse index: Stripe customer ID -> Google sub
-    await redis.set(stripeCustomerKey(entitlement.stripeCustomerId), JSON.stringify(googleSub), "EX", ENTITLEMENT_TTL_SECONDS);
+    // Maintain reverse index: set stripeCustomerId on user document
+    await setUserStripeCustomerId(googleSub, entitlement.stripeCustomerId);
 
     log.debug("setStripeEntitlement returning", { googleSub, success: true });
   } catch (err) {
@@ -147,33 +142,15 @@ export async function setStripeEntitlement(
 }
 
 /**
- * Deletes a Stripe entitlement record for a Google user.
- * Also removes the Stripe customer reverse index entry.
+ * Deletes a Stripe entitlement record for an authenticated Google user.
  *
  * @param googleSub - Google account immutable ID
  */
 export async function deleteStripeEntitlement(googleSub: string): Promise<void> {
   log.debug("deleteStripeEntitlement called", { googleSub });
   try {
-    const redis = getRedisClient();
-
-    // First, get the existing entitlement to find the Stripe customer ID for cleanup
-    const raw = await redis.get(entitlementKey(googleSub));
-    const existing: StoredStripeEntitlement | null = raw ? JSON.parse(raw) : null;
-
-    // Delete the primary entitlement record
-    await redis.del(entitlementKey(googleSub));
-
-    // Delete the reverse index if we found the Stripe customer ID
-    if (existing?.stripeCustomerId) {
-      await redis.del(stripeCustomerKey(existing.stripeCustomerId));
-    }
-
-    log.debug("deleteStripeEntitlement returning", {
-      googleSub,
-      success: true,
-      hadReverseIndex: !!existing?.stripeCustomerId,
-    });
+    await deleteEntitlement(googleSub);
+    log.debug("deleteStripeEntitlement returning", { googleSub, success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("deleteStripeEntitlement failed", { googleSub, error: message });
@@ -181,31 +158,58 @@ export async function deleteStripeEntitlement(googleSub: string): Promise<void> 
   }
 }
 
+// ---------------------------------------------------------------------------
+// Reverse lookup: Stripe customer → identity
+// ---------------------------------------------------------------------------
+
 /**
- * Looks up a Google sub from a Stripe customer ID using the secondary index.
+ * Looks up the identity for a Stripe customer ID.
+ *
+ * Returns one of:
+ *   - The Google sub string (authenticated user — found via users.stripeCustomerId query)
+ *   - `"stripe:{stripeCustomerId}"` (anonymous user — entitlements/stripe:{id} doc exists)
+ *   - null (unknown customer)
  *
  * Used by webhook handlers to map incoming Stripe events to our users.
  *
  * @param stripeCustomerId - Stripe customer ID from webhook payload
- * @returns Google sub or null if no mapping exists
+ * @returns Identity string or null
  */
 export async function getGoogleSubByStripeCustomerId(
   stripeCustomerId: string,
 ): Promise<string | null> {
   log.debug("getGoogleSubByStripeCustomerId called", { stripeCustomerId });
   try {
-    const redis = getRedisClient();
-    const raw = await redis.get(stripeCustomerKey(stripeCustomerId));
-    const result: string | null = raw ? JSON.parse(raw) : null;
+    // 1. Query users collection by stripeCustomerId field (authenticated path)
+    const user = await findUserByStripeCustomerId(stripeCustomerId);
+    if (user) {
+      const googleSub = user.clerkUserId;
+      log.debug("getGoogleSubByStripeCustomerId returning (authenticated)", {
+        stripeCustomerId,
+        found: true,
+      });
+      return googleSub;
+    }
+
+    // 2. Check if anonymous entitlement doc exists
+    const anonDocId = `stripe:${stripeCustomerId}`;
+    const anonDoc = await getEntitlement(anonDocId);
+    if (anonDoc) {
+      log.debug("getGoogleSubByStripeCustomerId returning (anonymous)", {
+        stripeCustomerId,
+        found: true,
+      });
+      return anonDocId;
+    }
+
     log.debug("getGoogleSubByStripeCustomerId returning", {
       stripeCustomerId,
-      found: result !== null,
+      found: false,
     });
-    return result;
+    return null;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("getGoogleSubByStripeCustomerId failed", { stripeCustomerId, error: message });
-    log.debug("getGoogleSubByStripeCustomerId returning", { stripeCustomerId, found: false, reason: "error" });
     return null;
   }
 }
@@ -216,19 +220,18 @@ export async function getGoogleSubByStripeCustomerId(
 
 /**
  * Retrieves a stored entitlement for an anonymous Stripe user
- * (keyed by Stripe customer ID).
+ * (keyed by `stripe:{stripeCustomerId}`).
  *
  * @param stripeCustomerId - Stripe customer ID (cus_xxx)
- * @returns The stored Stripe entitlement or null if not found / expired
+ * @returns The stored entitlement or null if not found
  */
 export async function getAnonymousStripeEntitlement(
   stripeCustomerId: string,
 ): Promise<StoredStripeEntitlement | null> {
   log.debug("getAnonymousStripeEntitlement called", { stripeCustomerId });
   try {
-    const redis = getRedisClient();
-    const raw = await redis.get(stripeAnonymousEntitlementKey(stripeCustomerId));
-    const result: StoredStripeEntitlement | null = raw ? JSON.parse(raw) : null;
+    const doc = await getEntitlement(`stripe:${stripeCustomerId}`);
+    const result = doc ? toStoredEntitlement(doc) : null;
     log.debug("getAnonymousStripeEntitlement returning", {
       stripeCustomerId,
       found: result !== null,
@@ -239,15 +242,13 @@ export async function getAnonymousStripeEntitlement(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("getAnonymousStripeEntitlement failed", { stripeCustomerId, error: message });
-    log.debug("getAnonymousStripeEntitlement returning", { stripeCustomerId, found: false, reason: "error" });
     return null;
   }
 }
 
 /**
  * Stores an entitlement record for an anonymous Stripe user
- * (keyed by Stripe customer ID).
- * Also maintains the reverse index with the `stripe:` prefix to indicate anonymous.
+ * (keyed by `stripe:{stripeCustomerId}`).
  *
  * @param stripeCustomerId - Stripe customer ID (cus_xxx)
  * @param entitlement - The Stripe entitlement record to store
@@ -262,15 +263,7 @@ export async function setAnonymousStripeEntitlement(
     active: entitlement.active,
   });
   try {
-    const redis = getRedisClient();
-
-    // Store the entitlement with TTL under the anonymous key
-    await redis.set(stripeAnonymousEntitlementKey(stripeCustomerId), JSON.stringify(entitlement), "EX", ENTITLEMENT_TTL_SECONDS);
-
-    // Maintain the reverse index: Stripe customer ID -> stripe:{stripeCustomerId}
-    // The `stripe:` prefix indicates this is an anonymous user
-    await redis.set(stripeCustomerKey(stripeCustomerId), JSON.stringify(`stripe:${stripeCustomerId}`), "EX", ENTITLEMENT_TTL_SECONDS);
-
+    await setEntitlement(`stripe:${stripeCustomerId}`, toFirestoreEntitlement(entitlement));
     log.debug("setAnonymousStripeEntitlement returning", { stripeCustomerId, success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -280,17 +273,18 @@ export async function setAnonymousStripeEntitlement(
 }
 
 // ---------------------------------------------------------------------------
-// Stripe entitlement migration (anonymous -> authenticated)
+// Stripe entitlement migration (anonymous → authenticated)
 // ---------------------------------------------------------------------------
 
 /**
  * Migrates an anonymous Stripe entitlement to an authenticated (Google-keyed) entitlement.
  *
  * Steps:
- *   1. Read from `entitlement:stripe:{stripeCustomerId}`
- *   2. Copy to `entitlement:{googleSub}`
- *   3. Update reverse index from `stripe:{stripeCustomerId}` to `{googleSub}`
- *   4. Delete the anonymous key
+ *   1. Check if `entitlements/{googleSub}` already exists (idempotent)
+ *   2. Read from `entitlements/stripe:{stripeCustomerId}`
+ *   3. Copy to `entitlements/{googleSub}`
+ *   4. Set `stripeCustomerId` on `users/{googleSub}` for reverse lookup
+ *   5. Delete `entitlements/stripe:{stripeCustomerId}`
  *
  * Idempotent: if the Google-keyed entry already exists, returns success.
  *
@@ -305,30 +299,25 @@ export async function migrateStripeEntitlement(
   log.debug("migrateStripeEntitlement called", { stripeCustomerId, googleSub });
 
   try {
-    const redis = getRedisClient();
-
-    // Check if Google-keyed entry already exists (idempotent)
-    const existingRaw = await redis.get(entitlementKey(googleSub));
-    const existingGoogle: StoredStripeEntitlement | null = existingRaw ? JSON.parse(existingRaw) : null;
-    if (existingGoogle) {
+    // 1. Check if Google-keyed entry already exists (idempotent)
+    const existing = await getEntitlement(googleSub);
+    if (existing) {
       log.debug("migrateStripeEntitlement returning", {
         migrated: true,
         reason: "already_migrated",
-        tier: existingGoogle.tier,
-        active: existingGoogle.active,
+        tier: existing.tier,
+        active: existing.active,
       });
       return {
         migrated: true,
-        tier: existingGoogle.tier,
-        active: existingGoogle.active,
+        tier: existing.tier,
+        active: existing.active,
       };
     }
 
-    // Read the anonymous entitlement
-    const anonymousRaw = await redis.get(stripeAnonymousEntitlementKey(stripeCustomerId));
-    const anonymousEntitlement: StoredStripeEntitlement | null = anonymousRaw ? JSON.parse(anonymousRaw) : null;
-
-    if (!anonymousEntitlement) {
+    // 2. Read the anonymous entitlement
+    const anonDoc = await getEntitlement(`stripe:${stripeCustomerId}`);
+    if (!anonDoc) {
       log.debug("migrateStripeEntitlement returning", {
         migrated: false,
         reason: "not_found",
@@ -336,27 +325,27 @@ export async function migrateStripeEntitlement(
       return { migrated: false, reason: "not_found" };
     }
 
-    // Copy to Google-keyed entry
-    await redis.set(entitlementKey(googleSub), JSON.stringify(anonymousEntitlement), "EX", ENTITLEMENT_TTL_SECONDS);
+    // 3. Copy to Google-keyed entry
+    await setEntitlement(googleSub, anonDoc);
 
-    // Update reverse index to point to Google sub instead of anonymous
-    await redis.set(stripeCustomerKey(stripeCustomerId), JSON.stringify(googleSub), "EX", ENTITLEMENT_TTL_SECONDS);
+    // 4. Set stripeCustomerId on user document for future reverse lookups
+    await setUserStripeCustomerId(googleSub, stripeCustomerId);
 
-    // Delete the anonymous key
-    await redis.del(stripeAnonymousEntitlementKey(stripeCustomerId));
+    // 5. Delete the anonymous doc
+    await deleteEntitlement(`stripe:${stripeCustomerId}`);
 
     log.debug("migrateStripeEntitlement returning", {
       migrated: true,
       stripeCustomerId,
       googleSub,
-      tier: anonymousEntitlement.tier,
-      active: anonymousEntitlement.active,
+      tier: anonDoc.tier,
+      active: anonDoc.active,
     });
 
     return {
       migrated: true,
-      tier: anonymousEntitlement.tier,
-      active: anonymousEntitlement.active,
+      tier: anonDoc.tier,
+      active: anonDoc.active,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

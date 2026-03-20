@@ -10,9 +10,11 @@
  *   /users/{clerkUserId}
  *   /households/{householdId}
  *   /households/{householdId}/cards/{cardId}
+ *   /entitlements/{googleSub}  (or /entitlements/stripe:{customerId} for anonymous)
  */
 
 import type { Card } from "@/lib/types";
+import type { StripeTier } from "@/lib/stripe/types";
 
 // ─── User document ────────────────────────────────────────────────────────────
 
@@ -33,10 +35,50 @@ export interface FirestoreUser {
   householdId: string;
   /** Role within the household */
   role: "owner" | "member";
+  /**
+   * Stripe customer ID (cus_xxx) — set when the user first subscribes.
+   * Enables fast reverse lookup: Stripe customer → Google sub via Firestore query.
+   * Optional: absent for users who have never subscribed via Stripe.
+   */
+  stripeCustomerId?: string;
   /** UTC ISO 8601 timestamp when this document was created */
   createdAt: string;
   /** UTC ISO 8601 timestamp when this document was last modified */
   updatedAt: string;
+}
+
+// ─── Entitlement document ─────────────────────────────────────────────────────
+
+/**
+ * Stored at /entitlements/{googleSub} for authenticated users.
+ * Stored at /entitlements/stripe:{stripeCustomerId} for anonymous users
+ * (i.e., users who subscribed before signing in with Google).
+ *
+ * Authoritative billing source — written by Stripe webhook handlers.
+ * No TTL: subscription records are persistent (unlike trials).
+ *
+ * On first sign-in after an anonymous purchase, migrateStripeEntitlement()
+ * moves the document from stripe:{customerId} to {googleSub}.
+ */
+export interface FirestoreEntitlement {
+  /** Current subscription tier */
+  tier: StripeTier;
+  /** Whether the subscription is currently active */
+  active: boolean;
+  /** Stripe customer ID (cus_xxx) */
+  stripeCustomerId: string;
+  /** Stripe subscription ID (sub_xxx) */
+  stripeSubscriptionId: string;
+  /** Raw Stripe subscription status string */
+  stripeStatus: string;
+  /** Whether the subscription is set to cancel at period end */
+  cancelAtPeriodEnd?: boolean;
+  /** ISO 8601 timestamp of current billing period end */
+  currentPeriodEnd?: string;
+  /** ISO 8601 timestamp when Stripe was first linked */
+  linkedAt: string;
+  /** ISO 8601 timestamp of last status check / write */
+  checkedAt: string;
 }
 
 // ─── Household document ───────────────────────────────────────────────────────
@@ -103,6 +145,13 @@ export const FIRESTORE_PATHS = {
   /** /households/{householdId}/cards/{cardId} */
   card: (householdId: string, cardId: string) =>
     `households/${householdId}/cards/${cardId}` as const,
+  /**
+   * /entitlements/{docId}
+   * docId is either:
+   *   - the Google sub for authenticated users
+   *   - `stripe:{stripeCustomerId}` for anonymous users
+   */
+  entitlement: (docId: string) => `entitlements/${docId}` as const,
 } as const;
 
 // ─── Invite code helpers ──────────────────────────────────────────────────────

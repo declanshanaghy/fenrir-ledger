@@ -1,25 +1,35 @@
 /**
- * Unit tests for kv/entitlement-store.ts — Redis entitlement CRUD operations.
+ * Unit tests for kv/entitlement-store.ts — Firestore entitlement CRUD operations.
  *
- * Mocks ioredis via redis-client to test all get/set/delete paths, cache behavior, and error handling.
+ * Mocks @/lib/firebase/firestore helpers to test all get/set/delete paths,
+ * the reverse lookup logic, anonymous user path, migration flow, and error handling.
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { StoredStripeEntitlement } from "@/lib/stripe/types";
+import type { FirestoreEntitlement, FirestoreUser } from "@/lib/firebase/firestore-types";
 
-// ── Mock Redis client ─────────────────────────────────────────────────────
+// ── Mock Firestore helpers ────────────────────────────────────────────────
 
-const mockRedis = vi.hoisted(() => ({
-  get: vi.fn(),
-  set: vi.fn(),
-  del: vi.fn(),
+const mockGetEntitlement = vi.fn();
+const mockSetEntitlement = vi.fn();
+const mockDeleteEntitlement = vi.fn();
+const mockFindUserByStripeCustomerId = vi.fn();
+const mockSetUserStripeCustomerId = vi.fn();
+
+vi.mock("@/lib/firebase/firestore", () => ({
+  getEntitlement: (...args: unknown[]) => mockGetEntitlement(...args),
+  setEntitlement: (...args: unknown[]) => mockSetEntitlement(...args),
+  deleteEntitlement: (...args: unknown[]) => mockDeleteEntitlement(...args),
+  findUserByStripeCustomerId: (...args: unknown[]) => mockFindUserByStripeCustomerId(...args),
+  setUserStripeCustomerId: (...args: unknown[]) => mockSetUserStripeCustomerId(...args),
 }));
 
-vi.mock("@/lib/kv/redis-client", () => ({
-  getRedisClient: () => mockRedis,
+vi.mock("@/lib/logger", () => ({
+  log: { debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
-// ── Import after mock ────────────────────────────────────────────────────
+// ── Import after mocks ────────────────────────────────────────────────────
 
 import {
   getStripeEntitlement,
@@ -33,7 +43,7 @@ import {
   extractStripeCustomerIdFromReverseIndex,
 } from "@/lib/kv/entitlement-store";
 
-// ── Test data ────────────────────────────────────────────────────────────
+// ── Test data ─────────────────────────────────────────────────────────────
 
 const GOOGLE_SUB = "google-sub-123";
 const STRIPE_CUSTOMER_ID = "cus_test456";
@@ -50,6 +60,20 @@ function makeFakeEntitlement(
     stripeStatus: "active",
     linkedAt: "2025-01-01T00:00:00.000Z",
     checkedAt: "2025-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function makeFakeUser(overrides: Partial<FirestoreUser> = {}): FirestoreUser {
+  return {
+    clerkUserId: GOOGLE_SUB,
+    email: "test@example.com",
+    displayName: "Test User",
+    householdId: "household-123",
+    role: "owner",
+    stripeCustomerId: STRIPE_CUSTOMER_ID,
+    createdAt: "2025-01-01T00:00:00.000Z",
+    updatedAt: "2025-01-01T00:00:00.000Z",
     ...overrides,
   };
 }
@@ -79,9 +103,7 @@ describe("entitlement-store", () => {
 
   describe("extractStripeCustomerIdFromReverseIndex", () => {
     it("extracts customer ID from anonymous reverse index value", () => {
-      expect(extractStripeCustomerIdFromReverseIndex("stripe:cus_abc")).toBe(
-        "cus_abc"
-      );
+      expect(extractStripeCustomerIdFromReverseIndex("stripe:cus_abc")).toBe("cus_abc");
     });
 
     it("returns empty string for plain stripe: prefix", () => {
@@ -92,24 +114,24 @@ describe("entitlement-store", () => {
   // ── getStripeEntitlement ──────────────────────────────────────────────
 
   describe("getStripeEntitlement", () => {
-    it("returns entitlement when found in Redis", async () => {
+    it("returns entitlement when found in Firestore", async () => {
       const ent = makeFakeEntitlement();
-      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent));
+      mockGetEntitlement.mockResolvedValueOnce(ent as FirestoreEntitlement);
 
       const result = await getStripeEntitlement(GOOGLE_SUB);
       expect(result).toEqual(ent);
-      expect(mockRedis.get).toHaveBeenCalledWith(`entitlement:${GOOGLE_SUB}`);
+      expect(mockGetEntitlement).toHaveBeenCalledWith(GOOGLE_SUB);
     });
 
-    it("returns null when not found", async () => {
-      mockRedis.get.mockResolvedValueOnce(null);
+    it("returns null when document not found", async () => {
+      mockGetEntitlement.mockResolvedValueOnce(null);
 
       const result = await getStripeEntitlement(GOOGLE_SUB);
       expect(result).toBeNull();
     });
 
-    it("returns null on Redis failure (does not throw)", async () => {
-      mockRedis.get.mockRejectedValueOnce(new Error("Redis connection failed"));
+    it("returns null on Firestore failure (does not throw)", async () => {
+      mockGetEntitlement.mockRejectedValueOnce(new Error("Firestore unavailable"));
 
       const result = await getStripeEntitlement(GOOGLE_SUB);
       expect(result).toBeNull();
@@ -119,69 +141,58 @@ describe("entitlement-store", () => {
   // ── setStripeEntitlement ──────────────────────────────────────────────
 
   describe("setStripeEntitlement", () => {
-    it("stores entitlement with TTL and creates reverse index", async () => {
+    it("writes entitlement doc and updates user stripeCustomerId", async () => {
       const ent = makeFakeEntitlement();
-      mockRedis.set.mockResolvedValue("OK");
+      mockSetEntitlement.mockResolvedValue(undefined);
+      mockSetUserStripeCustomerId.mockResolvedValue(undefined);
 
       await setStripeEntitlement(GOOGLE_SUB, ent);
 
-      // Primary entitlement key
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        `entitlement:${GOOGLE_SUB}`,
-        JSON.stringify(ent),
-        "EX",
-        30 * 24 * 60 * 60
-      );
-      // Reverse index
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        `stripe-customer:${STRIPE_CUSTOMER_ID}`,
-        JSON.stringify(GOOGLE_SUB),
-        "EX",
-        30 * 24 * 60 * 60
+      expect(mockSetEntitlement).toHaveBeenCalledWith(GOOGLE_SUB, ent);
+      expect(mockSetUserStripeCustomerId).toHaveBeenCalledWith(
+        GOOGLE_SUB,
+        STRIPE_CUSTOMER_ID
       );
     });
 
-    it("throws on Redis failure", async () => {
+    it("throws on Firestore write failure", async () => {
       const ent = makeFakeEntitlement();
-      mockRedis.set.mockRejectedValueOnce(new Error("Redis write failed"));
+      mockSetEntitlement.mockRejectedValueOnce(new Error("Firestore write failed"));
 
       await expect(setStripeEntitlement(GOOGLE_SUB, ent)).rejects.toThrow(
-        "Redis write failed"
+        "Firestore write failed"
       );
+    });
+
+    it("does NOT set a TTL (no expiry for entitlements)", async () => {
+      const ent = makeFakeEntitlement();
+      mockSetEntitlement.mockResolvedValue(undefined);
+      mockSetUserStripeCustomerId.mockResolvedValue(undefined);
+
+      await setStripeEntitlement(GOOGLE_SUB, ent);
+
+      // setEntitlement is called with exactly 2 args — no TTL parameter
+      expect(mockSetEntitlement).toHaveBeenCalledWith(GOOGLE_SUB, ent);
+      expect(mockSetEntitlement.mock.calls[0]).toHaveLength(2);
     });
   });
 
   // ── deleteStripeEntitlement ───────────────────────────────────────────
 
   describe("deleteStripeEntitlement", () => {
-    it("deletes primary key and reverse index", async () => {
-      const ent = makeFakeEntitlement();
-      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent));
-      mockRedis.del.mockResolvedValue(1);
+    it("deletes the entitlement document", async () => {
+      mockDeleteEntitlement.mockResolvedValue(undefined);
 
       await deleteStripeEntitlement(GOOGLE_SUB);
 
-      expect(mockRedis.del).toHaveBeenCalledWith(`entitlement:${GOOGLE_SUB}`);
-      expect(mockRedis.del).toHaveBeenCalledWith(
-        `stripe-customer:${STRIPE_CUSTOMER_ID}`
-      );
+      expect(mockDeleteEntitlement).toHaveBeenCalledWith(GOOGLE_SUB);
     });
 
-    it("only deletes primary key when no existing entitlement found", async () => {
-      mockRedis.get.mockResolvedValueOnce(null);
-      mockRedis.del.mockResolvedValue(0);
-
-      await deleteStripeEntitlement(GOOGLE_SUB);
-
-      expect(mockRedis.del).toHaveBeenCalledTimes(1);
-      expect(mockRedis.del).toHaveBeenCalledWith(`entitlement:${GOOGLE_SUB}`);
-    });
-
-    it("throws on Redis failure", async () => {
-      mockRedis.get.mockRejectedValueOnce(new Error("Redis read failed"));
+    it("throws on Firestore failure", async () => {
+      mockDeleteEntitlement.mockRejectedValueOnce(new Error("Firestore delete failed"));
 
       await expect(deleteStripeEntitlement(GOOGLE_SUB)).rejects.toThrow(
-        "Redis read failed"
+        "Firestore delete failed"
       );
     });
   });
@@ -189,54 +200,79 @@ describe("entitlement-store", () => {
   // ── getGoogleSubByStripeCustomerId ────────────────────────────────────
 
   describe("getGoogleSubByStripeCustomerId", () => {
-    it("returns Google sub from reverse index", async () => {
-      mockRedis.get.mockResolvedValueOnce(JSON.stringify(GOOGLE_SUB));
+    it("returns Google sub when user has stripeCustomerId set (authenticated path)", async () => {
+      const user = makeFakeUser();
+      mockFindUserByStripeCustomerId.mockResolvedValueOnce(user);
 
       const result = await getGoogleSubByStripeCustomerId(STRIPE_CUSTOMER_ID);
+
       expect(result).toBe(GOOGLE_SUB);
-      expect(mockRedis.get).toHaveBeenCalledWith(
-        `stripe-customer:${STRIPE_CUSTOMER_ID}`
-      );
+      expect(mockFindUserByStripeCustomerId).toHaveBeenCalledWith(STRIPE_CUSTOMER_ID);
+      // Should NOT check anonymous doc since user was found
+      expect(mockGetEntitlement).not.toHaveBeenCalled();
     });
 
-    it("returns null when no mapping exists", async () => {
-      mockRedis.get.mockResolvedValueOnce(null);
+    it("returns stripe:{customerId} when anonymous entitlement doc exists", async () => {
+      mockFindUserByStripeCustomerId.mockResolvedValueOnce(null);
+      const anonEnt = makeFakeEntitlement();
+      mockGetEntitlement.mockResolvedValueOnce(anonEnt as FirestoreEntitlement);
+
+      const result = await getGoogleSubByStripeCustomerId(STRIPE_CUSTOMER_ID);
+
+      expect(result).toBe(`stripe:${STRIPE_CUSTOMER_ID}`);
+      expect(mockGetEntitlement).toHaveBeenCalledWith(`stripe:${STRIPE_CUSTOMER_ID}`);
+    });
+
+    it("returns null when no user and no anonymous doc", async () => {
+      mockFindUserByStripeCustomerId.mockResolvedValueOnce(null);
+      mockGetEntitlement.mockResolvedValueOnce(null);
+
+      const result = await getGoogleSubByStripeCustomerId(STRIPE_CUSTOMER_ID);
+
+      expect(result).toBeNull();
+    });
+
+    it("returns null on Firestore failure (does not throw)", async () => {
+      mockFindUserByStripeCustomerId.mockRejectedValueOnce(new Error("Firestore error"));
 
       const result = await getGoogleSubByStripeCustomerId(STRIPE_CUSTOMER_ID);
       expect(result).toBeNull();
     });
 
-    it("returns null on Redis failure (does not throw)", async () => {
-      mockRedis.get.mockRejectedValueOnce(new Error("Redis error"));
+    it("the returned anonymous value passes isAnonymousStripeReverseIndex", async () => {
+      mockFindUserByStripeCustomerId.mockResolvedValueOnce(null);
+      mockGetEntitlement.mockResolvedValueOnce(makeFakeEntitlement() as FirestoreEntitlement);
 
       const result = await getGoogleSubByStripeCustomerId(STRIPE_CUSTOMER_ID);
-      expect(result).toBeNull();
+
+      expect(result).not.toBeNull();
+      expect(isAnonymousStripeReverseIndex(result!)).toBe(true);
+      expect(extractStripeCustomerIdFromReverseIndex(result!)).toBe(STRIPE_CUSTOMER_ID);
     });
   });
 
   // ── Anonymous entitlement operations ──────────────────────────────────
 
   describe("getAnonymousStripeEntitlement", () => {
-    it("reads from anonymous key", async () => {
+    it("reads from stripe:{customerId} doc", async () => {
       const ent = makeFakeEntitlement();
-      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent));
+      mockGetEntitlement.mockResolvedValueOnce(ent as FirestoreEntitlement);
 
       const result = await getAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID);
+
       expect(result).toEqual(ent);
-      expect(mockRedis.get).toHaveBeenCalledWith(
-        `entitlement:stripe:${STRIPE_CUSTOMER_ID}`
-      );
+      expect(mockGetEntitlement).toHaveBeenCalledWith(`stripe:${STRIPE_CUSTOMER_ID}`);
     });
 
     it("returns null when not found", async () => {
-      mockRedis.get.mockResolvedValueOnce(null);
+      mockGetEntitlement.mockResolvedValueOnce(null);
 
       const result = await getAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID);
       expect(result).toBeNull();
     });
 
-    it("returns null on Redis failure (does not throw)", async () => {
-      mockRedis.get.mockRejectedValueOnce(new Error("Redis error"));
+    it("returns null on Firestore failure (does not throw)", async () => {
+      mockGetEntitlement.mockRejectedValueOnce(new Error("Firestore error"));
 
       const result = await getAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID);
       expect(result).toBeNull();
@@ -244,33 +280,33 @@ describe("entitlement-store", () => {
   });
 
   describe("setAnonymousStripeEntitlement", () => {
-    it("stores under anonymous key and creates reverse index with stripe: prefix", async () => {
+    it("stores under stripe:{customerId} doc with no TTL", async () => {
       const ent = makeFakeEntitlement();
-      mockRedis.set.mockResolvedValue("OK");
+      mockSetEntitlement.mockResolvedValue(undefined);
 
       await setAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID, ent);
 
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        `entitlement:stripe:${STRIPE_CUSTOMER_ID}`,
-        JSON.stringify(ent),
-        "EX",
-        30 * 24 * 60 * 60
+      expect(mockSetEntitlement).toHaveBeenCalledWith(
+        `stripe:${STRIPE_CUSTOMER_ID}`,
+        ent
       );
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        `stripe-customer:${STRIPE_CUSTOMER_ID}`,
-        JSON.stringify(`stripe:${STRIPE_CUSTOMER_ID}`),
-        "EX",
-        30 * 24 * 60 * 60
-      );
+      // Exactly 2 args — no TTL
+      expect(mockSetEntitlement.mock.calls[0]).toHaveLength(2);
     });
 
-    it("throws on Redis failure", async () => {
+    it("does NOT update user stripeCustomerId (anonymous — no user doc yet)", async () => {
+      mockSetEntitlement.mockResolvedValue(undefined);
+      await setAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID, makeFakeEntitlement());
+      expect(mockSetUserStripeCustomerId).not.toHaveBeenCalled();
+    });
+
+    it("throws on Firestore failure", async () => {
       const ent = makeFakeEntitlement();
-      mockRedis.set.mockRejectedValueOnce(new Error("Redis write failed"));
+      mockSetEntitlement.mockRejectedValueOnce(new Error("Firestore write failed"));
 
       await expect(
         setAnonymousStripeEntitlement(STRIPE_CUSTOMER_ID, ent)
-      ).rejects.toThrow("Redis write failed");
+      ).rejects.toThrow("Firestore write failed");
     });
   });
 
@@ -279,41 +315,38 @@ describe("entitlement-store", () => {
   describe("migrateStripeEntitlement", () => {
     it("returns already_migrated when Google-keyed entry exists", async () => {
       const ent = makeFakeEntitlement();
-      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent)); // existingGoogle
+      mockGetEntitlement.mockResolvedValueOnce(ent as FirestoreEntitlement);
 
-      const result = await migrateStripeEntitlement(
-        STRIPE_CUSTOMER_ID,
-        GOOGLE_SUB
-      );
+      const result = await migrateStripeEntitlement(STRIPE_CUSTOMER_ID, GOOGLE_SUB);
+
       expect(result).toEqual({
         migrated: true,
         tier: ent.tier,
         active: ent.active,
       });
+      // Only one Firestore read — no write needed
+      expect(mockSetEntitlement).not.toHaveBeenCalled();
     });
 
     it("returns not_found when anonymous entitlement does not exist", async () => {
-      mockRedis.get.mockResolvedValueOnce(null); // existingGoogle
-      mockRedis.get.mockResolvedValueOnce(null); // anonymousEntitlement
+      mockGetEntitlement.mockResolvedValueOnce(null); // googleSub doc
+      mockGetEntitlement.mockResolvedValueOnce(null); // anonymous doc
 
-      const result = await migrateStripeEntitlement(
-        STRIPE_CUSTOMER_ID,
-        GOOGLE_SUB
-      );
+      const result = await migrateStripeEntitlement(STRIPE_CUSTOMER_ID, GOOGLE_SUB);
+
       expect(result).toEqual({ migrated: false, reason: "not_found" });
+      expect(mockSetEntitlement).not.toHaveBeenCalled();
     });
 
     it("migrates anonymous entitlement to Google-keyed entry", async () => {
       const ent = makeFakeEntitlement();
-      mockRedis.get.mockResolvedValueOnce(null); // existingGoogle — not yet migrated
-      mockRedis.get.mockResolvedValueOnce(JSON.stringify(ent)); // anonymousEntitlement
-      mockRedis.set.mockResolvedValue("OK");
-      mockRedis.del.mockResolvedValue(1);
+      mockGetEntitlement.mockResolvedValueOnce(null); // googleSub doc — not yet migrated
+      mockGetEntitlement.mockResolvedValueOnce(ent as FirestoreEntitlement); // anonymous doc
+      mockSetEntitlement.mockResolvedValue(undefined);
+      mockSetUserStripeCustomerId.mockResolvedValue(undefined);
+      mockDeleteEntitlement.mockResolvedValue(undefined);
 
-      const result = await migrateStripeEntitlement(
-        STRIPE_CUSTOMER_ID,
-        GOOGLE_SUB
-      );
+      const result = await migrateStripeEntitlement(STRIPE_CUSTOMER_ID, GOOGLE_SUB);
 
       expect(result).toEqual({
         migrated: true,
@@ -321,32 +354,34 @@ describe("entitlement-store", () => {
         active: ent.active,
       });
 
-      // Copies to Google key
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        `entitlement:${GOOGLE_SUB}`,
-        JSON.stringify(ent),
-        "EX",
-        30 * 24 * 60 * 60
-      );
-      // Updates reverse index
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        `stripe-customer:${STRIPE_CUSTOMER_ID}`,
-        JSON.stringify(GOOGLE_SUB),
-        "EX",
-        30 * 24 * 60 * 60
-      );
-      // Deletes anonymous key
-      expect(mockRedis.del).toHaveBeenCalledWith(
-        `entitlement:stripe:${STRIPE_CUSTOMER_ID}`
-      );
+      // Copies to Google-keyed doc
+      expect(mockSetEntitlement).toHaveBeenCalledWith(GOOGLE_SUB, ent);
+
+      // Sets stripeCustomerId on user doc
+      expect(mockSetUserStripeCustomerId).toHaveBeenCalledWith(GOOGLE_SUB, STRIPE_CUSTOMER_ID);
+
+      // Deletes anonymous doc
+      expect(mockDeleteEntitlement).toHaveBeenCalledWith(`stripe:${STRIPE_CUSTOMER_ID}`);
     });
 
-    it("throws on Redis failure during migration", async () => {
-      mockRedis.get.mockRejectedValueOnce(new Error("Redis read failed"));
+    it("throws on Firestore failure during migration", async () => {
+      mockGetEntitlement.mockRejectedValueOnce(new Error("Firestore read failed"));
 
       await expect(
         migrateStripeEntitlement(STRIPE_CUSTOMER_ID, GOOGLE_SUB)
-      ).rejects.toThrow("Redis read failed");
+      ).rejects.toThrow("Firestore read failed");
+    });
+
+    it("is idempotent — second call with existing Google doc returns migrated:true without re-writing", async () => {
+      const ent = makeFakeEntitlement();
+      // First call: already migrated
+      mockGetEntitlement.mockResolvedValueOnce(ent as FirestoreEntitlement);
+
+      const result = await migrateStripeEntitlement(STRIPE_CUSTOMER_ID, GOOGLE_SUB);
+
+      expect(result.migrated).toBe(true);
+      expect(mockSetEntitlement).not.toHaveBeenCalled();
+      expect(mockDeleteEntitlement).not.toHaveBeenCalled();
     });
   });
 });

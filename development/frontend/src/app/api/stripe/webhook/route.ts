@@ -42,7 +42,7 @@ import { log } from "@/lib/logger";
 /**
  * Updates households/{householdId}.tier in Firestore when a subscription
  * status changes. Best-effort — errors are logged but do NOT fail the webhook
- * response (Redis is the authoritative billing source; Firestore is derived).
+ * response (Firestore is the authoritative billing source; household tier is derived).
  *
  * Only runs for authenticated users (those with a googleSub mapping).
  *
@@ -84,7 +84,7 @@ async function syncHouseholdTierToFirestore(
       stripeTier,
       error: message,
     });
-    // Best-effort — do not rethrow; Redis remains authoritative
+    // Best-effort — do not rethrow; entitlements/ remains the authoritative source
   }
 }
 
