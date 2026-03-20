@@ -18,8 +18,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-/** YouTube video ID for Heilung — Krigsgaldr LIFA */
-const HEILUNG_VIDEO_ID = "QRg_8NNPTD8";
+/** YouTube video ID for Heilung — Norupo LIFA */
+const HEILUNG_VIDEO_ID = "2wy-W-pYlds";
 
 /** Elder Futhark 22-rune sequence (forward) */
 const FUTHARK_FORWARD = "ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ";
@@ -162,10 +162,10 @@ export function HeilungModal() {
             <div className="heilung-title-block">
               <h1
                 id="heilung-title"
-                aria-label="Heyra Stríðsgaldr — Hear the War-Chant"
+                aria-label="Heyra Norðupo — Hear the Invocation"
                 className="heilung-norse-title"
               >
-                Heyra Stríðsgaldr
+                Heyra Norðupo
               </h1>
               <div aria-hidden="true" className="heilung-title-rune-row">
                 ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ
@@ -183,8 +183,8 @@ export function HeilungModal() {
             {/* ── Section 3: Wolf's invitation ─────────────────── */}
             <section aria-label="Wolf's invitation" className="heilung-wolf-invitation">
               <p>
-                Before there were words, there was the war-cry. Before iron was forged, the drums
-                spoke. Hear now the song that stirred the blood of warriors beneath the branches
+                Before there were names, there were sounds — guttural, sacred, older than memory.
+                Hear now the invocation that summoned the spirits beneath the branches
                 of{" "}
                 <a
                   href="https://en.wikipedia.org/wiki/Yggdrasil"
@@ -197,15 +197,15 @@ export function HeilungModal() {
                 </a>{" "}
                 —{" "}
                 <a
-                  href="https://en.wikipedia.org/wiki/Futha"
+                  href="https://en.wikipedia.org/wiki/Heilung"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Krigsgaldr on Wikipedia"
+                  aria-label="Heilung on Wikipedia"
                   className="heilung-wiki-link"
                 >
-                  <span className="heilung-gold-term">Krigsgaldr</span>
+                  <span className="heilung-gold-term">Norupo</span>
                 </a>
-                , the war-chant of{" "}
+                , the invocation of{" "}
                 <a
                   href="https://en.wikipedia.org/wiki/Heilung"
                   target="_blank"
@@ -271,7 +271,7 @@ export function HeilungModal() {
                   {playing ? (
                     <iframe
                       src={`https://www.youtube.com/embed/${HEILUNG_VIDEO_ID}?autoplay=1&rel=0`}
-                      title="Heilung — Krigsgaldr LIFA"
+                      title="Heilung — Norupo LIFA"
                       allow="autoplay; encrypted-media"
                       allowFullScreen
                       className="w-full h-full"
@@ -290,7 +290,7 @@ export function HeilungModal() {
                       <div
                         role="button"
                         tabIndex={0}
-                        aria-label="Watch Heilung — Krigsgaldr LIFA on YouTube"
+                        aria-label="Watch Heilung — Norupo LIFA on YouTube"
                         className="heilung-thumbnail-btn"
                         onClick={handlePortalActivate}
                         onKeyDown={handlePortalActivate}
@@ -311,7 +311,7 @@ export function HeilungModal() {
               </div>
 
               <p className="heilung-video-caption" aria-hidden="true">
-                Heilung — Krigsgaldr LIFA
+                Heilung — Norupo LIFA
               </p>
             </div>
 

@@ -169,16 +169,16 @@ describe("HeilungModal", () => {
 
   // ── Content ──────────────────────────────────────────────────────────────
 
-  it("renders Old Norse title 'Heyra Stríðsgaldr'", () => {
+  it("renders Old Norse title 'Heyra Norðupo'", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    expect(screen.getByText("Heyra Stríðsgaldr")).toBeInTheDocument();
+    expect(screen.getByText("Heyra Norðupo")).toBeInTheDocument();
   });
 
   it("renders Norse title with correct aria-label (with English translation)", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    const title = screen.getByLabelText("Heyra Stríðsgaldr — Hear the War-Chant");
+    const title = screen.getByLabelText("Heyra Norðupo — Hear the Invocation");
     expect(title).toBeInTheDocument();
   });
 
@@ -253,9 +253,9 @@ describe("HeilungModal", () => {
   it("shows thumbnail portal button initially (not iframe)", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    const portalBtn = screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube");
     expect(portalBtn).toBeInTheDocument();
-    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).not.toBeInTheDocument();
+    expect(screen.queryByTitle("Heilung — Norupo LIFA")).not.toBeInTheDocument();
   });
 
   it("shows YouTube thumbnail image in portal state A", () => {
@@ -263,49 +263,49 @@ describe("HeilungModal", () => {
     act(() => triggerHeilungKey());
     const img = document.querySelector(".heilung-thumbnail-img") as HTMLImageElement | null;
     expect(img).toBeInTheDocument();
-    expect(img).toHaveAttribute("src", expect.stringContaining("QRg_8NNPTD8"));
+    expect(img).toHaveAttribute("src", expect.stringContaining("2wy-W-pYlds"));
   });
 
   it("clicking portal thumbnail shows iframe (state B)", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    const portalBtn = screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube");
     act(() => { fireEvent.click(portalBtn); });
-    const iframe = screen.getByTitle("Heilung — Krigsgaldr LIFA") as HTMLIFrameElement;
+    const iframe = screen.getByTitle("Heilung — Norupo LIFA") as HTMLIFrameElement;
     expect(iframe).toBeInTheDocument();
     expect(iframe.getAttribute("src")).toContain("autoplay=1");
-    expect(iframe.getAttribute("src")).toContain("QRg_8NNPTD8");
+    expect(iframe.getAttribute("src")).toContain("2wy-W-pYlds");
   });
 
   it("Enter key on portal thumbnail shows iframe", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    const portalBtn = screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube");
     act(() => { fireEvent.keyDown(portalBtn, { key: "Enter" }); });
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeInTheDocument();
+    expect(screen.getByTitle("Heilung — Norupo LIFA")).toBeInTheDocument();
   });
 
   it("Space key on portal thumbnail shows iframe", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    const portalBtn = screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube");
     act(() => { fireEvent.keyDown(portalBtn, { key: " " }); });
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeInTheDocument();
+    expect(screen.getByTitle("Heilung — Norupo LIFA")).toBeInTheDocument();
   });
 
   it("dismissing modal resets video to thumbnail state", () => {
     render(<HeilungModal />);
     act(() => triggerHeilungKey());
-    const portalBtn = screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube");
+    const portalBtn = screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube");
     act(() => { fireEvent.click(portalBtn); });
-    expect(screen.getByTitle("Heilung — Krigsgaldr LIFA")).toBeInTheDocument();
+    expect(screen.getByTitle("Heilung — Norupo LIFA")).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText("Close — return from the wolf's hall"));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     act(() => triggerHeilungKey());
-    expect(screen.getByLabelText("Watch Heilung — Krigsgaldr LIFA on YouTube")).toBeInTheDocument();
-    expect(screen.queryByTitle("Heilung — Krigsgaldr LIFA")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube")).toBeInTheDocument();
+    expect(screen.queryByTitle("Heilung — Norupo LIFA")).not.toBeInTheDocument();
   });
 
   // ── Accessibility ─────────────────────────────────────────────────────────
