@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import { isValidFingerprint, TRIAL_CACHE_VERSION } from "@/lib/trial-utils";
-import { getTrial, initTrial, computeTrialStatus } from "@/lib/kv/trial-store";
+import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/trial/status called");
@@ -76,27 +76,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // Retrieve trial and compute status.
-  // If no trial exists yet (e.g. the auth-callback keepalive fetch was dropped),
-  // auto-initialize it here as a defense-in-depth fallback (#944).
-  // initTrial is idempotent — it is a no-op if a trial already exists.
+  // This endpoint is read-only — it never initializes a trial.
+  // Trial initialization happens exclusively via /api/trial/init, which is
+  // called from the card creation code path (CardForm + handleConfirmImport).
+  // If no trial exists, return { status: "none" } (issue #1627).
   try {
-    let trial = await getTrial(fingerprint);
+    const trial = await getTrial(fingerprint);
     if (!trial) {
-      log.debug("POST /api/trial/status: no trial found, auto-initializing", { fingerprint });
-      try {
-        trial = await initTrial(fingerprint);
-      } catch (initErr) {
-        const msg = initErr instanceof Error ? initErr.message : String(initErr);
-        log.error("POST /api/trial/status: auto-init failed — returning 500", { fingerprint, error: msg });
-        // Surface the error: a failed Firestore write means we cannot guarantee
-        // the trial state is accurate. Return 500 so the client retries rather
-        // than silently showing "no trial" for a write that may have partially
-        // succeeded (fixes phantom-trial issue #1589).
-        return NextResponse.json(
-          { error: "internal_error", error_description: "Failed to initialize trial." },
-          { status: 500 },
-        );
-      }
+      log.debug("POST /api/trial/status: no trial found, returning none", { fingerprint });
+      return NextResponse.json(
+        { status: "none", cacheVersion: TRIAL_CACHE_VERSION },
+        { headers: { "Cache-Control": "no-store" } },
+      );
     }
     const result = computeTrialStatus(trial);
 

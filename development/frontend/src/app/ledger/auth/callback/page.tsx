@@ -25,8 +25,6 @@ import { useSearchParams } from "next/navigation";
 import { setSession } from "@/lib/auth/session";
 import { validateReturnTo } from "@/lib/auth/sign-in-url";
 import { track } from "@/lib/analytics/track";
-import { computeFingerprint, isValidFingerprint } from "@/lib/trial-utils";
-import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 import type { FenrirSession } from "@/lib/types";
 
 /** sessionStorage key written by /sign-in */
@@ -202,31 +200,8 @@ function AuthCallbackContent() {
           track("auth-login");
         }
 
-        // Fire-and-forget trial init on first sign-in (#922 / #944).
-        // Idempotent — if a trial already exists for this fingerprint it is preserved.
-        // keepalive:true ensures the request completes even after window.location.replace()
-        // navigates away — without it the browser aborts in-flight requests on navigation
-        // (regression root cause for #944).
-        void (async () => {
-          try {
-            const fingerprint = await computeFingerprint();
-            if (isValidFingerprint(fingerprint)) {
-              await fetch("/api/trial/init", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${tokens.id_token}`,
-                },
-                body: JSON.stringify({ fingerprint }),
-                keepalive: true,
-              });
-              // Clear cached trial status so the next useTrialStatus fetch is fresh.
-              clearTrialStatusCache();
-            }
-          } catch {
-            // Non-fatal — trial will be auto-initialized on first /api/trial/status call.
-          }
-        })();
+        // Trial initialization is NOT done on sign-in (issue #1627).
+        // Trial starts exclusively when the first card is added (CardForm / handleConfirmImport).
 
         // Clean up PKCE transient data only after successful exchange.
         sessionStorage.removeItem(PKCE_SESSION_KEY);

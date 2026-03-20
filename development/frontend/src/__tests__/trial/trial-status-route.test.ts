@@ -3,17 +3,16 @@
  *
  * Covers:
  *  - Returns active status with remaining days for an existing trial
- *  - Auto-initializes trial when none exists (defense-in-depth fallback, #944)
- *  - Canceled Stripe customers receive an active trial (no blocking)
+ *  - Returns { status: "none" } when no trial exists (read-only, issue #1627)
  *  - Returns correct status for expired trial
  *  - Returns correct status for converted trial
  *  - Invalid fingerprint returns 400
  *  - Missing fingerprint returns 400
  *  - Rate limit returns 429
- *  - Firestore failure falls through gracefully
+ *  - Firestore failure returns "none" (getTrial swallows errors)
  *
  * @see src/app/api/trial/status/route.ts
- * @ref Issue #944 (regression of #922), #1516
+ * @ref Issue #1627 (status is now read-only, no auto-init)
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -142,66 +141,31 @@ describe("POST /api/trial/status", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Defense-in-depth: auto-init when trial is missing (#944)
+  // Read-only: returns "none" when no trial exists (issue #1627)
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("auto-initializes trial when none exists and returns active status", async () => {
-    // First GET (status route's getTrial) returns null
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap) // getTrial in status route: not found
-      .mockResolvedValueOnce(missingSnap); // getTrial inside initTrial: also not found
-    // Firestore SET succeeds for the new trial
-    mockDocRef.set.mockResolvedValueOnce(undefined);
+  it("returns status none when no trial exists — does NOT auto-initialize", async () => {
+    // getTrial returns null (not found)
+    mockDocRef.get.mockResolvedValueOnce(missingSnap);
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.status).toBe("active");
-    expect(body.remainingDays).toBe(30);
-    // Trial was written to Firestore
-    expect(mockDocRef.set).toHaveBeenCalledOnce();
-    expect(mockDb.doc).toHaveBeenCalledWith(`trials/${VALID_FINGERPRINT}`);
-  });
-
-  it("auto-init is idempotent: if trial exists between getTrial and initTrial, preserves original", async () => {
-    const originalStartDate = "2026-03-01T00:00:00.000Z";
-    // getTrial returns null (missed by callback), but initTrial finds it (race condition resolved)
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap) // getTrial in status route: not found
-      .mockResolvedValueOnce(existingSnap({ startDate: originalStartDate })); // getTrial inside initTrial: found
-
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
-    const body = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(body.status).toBe("active");
-    // No new Firestore write — initTrial returned the existing record
+    expect(body.status).toBe("none");
+    // Firestore set must NOT be called — status endpoint is read-only
     expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // Canceled Stripe customers can start a trial (#944 AC)
-  // ═══════════════════════════════════════════════════════════════════════
-
-  it("returns active trial for a user with a canceled Stripe subscription", async () => {
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap)
-      .mockResolvedValueOnce(missingSnap);
-    mockDocRef.set.mockResolvedValueOnce(undefined);
-
-    mockRequireAuthz.mockResolvedValue({
-      ok: true,
-      user: { sub: "google-sub-canceled-stripe", email: "user@example.com" },
-      firestoreUser: { ...MOCK_FIRESTORE_USER, clerkUserId: "google-sub-canceled-stripe", email: "user@example.com" },
-    });
+  it("returns status none and includes cacheVersion when no trial exists", async () => {
+    mockDocRef.get.mockResolvedValueOnce(missingSnap);
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.status).toBe("active");
-    expect(body.remainingDays).toBe(30);
+    expect(body.status).toBe("none");
+    expect(typeof body.cacheVersion).toBe("number");
   });
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -327,20 +291,20 @@ describe("POST /api/trial/status", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Auto-init failure: Firestore unavailable
+  // Firestore unavailable — getTrial swallows errors and returns null
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns 500 when getTrial fails and auto-init Firestore write also fails", async () => {
-    // getTrial fails — error is caught in getTrial, returns null
-    // initTrial is then attempted; its Firestore SET also fails → throws
+  it("returns status none when Firestore is unavailable (getTrial swallows errors)", async () => {
+    // getTrial's internal try-catch swallows Firestore errors and returns null
     mockDocRef.get.mockRejectedValue(new Error("Firestore unavailable"));
-    mockDocRef.set.mockRejectedValue(new Error("Firestore unavailable"));
 
     const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
     const body = await res.json();
 
-    // Auto-init failure is now surfaced as a 500 (fixes #1589: no silent "none")
-    expect(res.status).toBe(500);
-    expect(body.error).toBe("internal_error");
+    // Status endpoint returns "none" — Firestore errors are absorbed by getTrial
+    expect(res.status).toBe(200);
+    expect(body.status).toBe("none");
+    // No write attempt — status route is read-only
+    expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 });
