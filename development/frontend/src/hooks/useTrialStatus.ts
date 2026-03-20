@@ -14,7 +14,11 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { computeFingerprint } from "@/lib/trial-utils";
+import {
+  computeFingerprint,
+  LS_TRIAL_CACHE_VERSION,
+  TRIAL_CACHE_VERSION,
+} from "@/lib/trial-utils";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import type { TrialStatus, TrialStatusResponse } from "@/lib/trial-utils";
 
@@ -75,7 +79,17 @@ export function useTrialStatus(): UseTrialStatusReturn {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchStatus = useCallback(async () => {
-    // Check cache first
+    // Bust the module-level cache if the stored cache version differs from the
+    // current expected version. This handles post-migration scenarios where the
+    // server's backend changed (e.g. Redis → Firestore in #1516/#1589) and the
+    // in-memory cache may contain phantom trial data from the old store.
+    const storedVersion =
+      typeof window !== "undefined" ? localStorage.getItem(LS_TRIAL_CACHE_VERSION) : null;
+    if (storedVersion !== String(TRIAL_CACHE_VERSION)) {
+      cachedStatus = null;
+    }
+
+    // Check cache first (only if version is current)
     if (cachedStatus && Date.now() - cachedStatus.fetchedAt < CACHE_TTL_MS) {
       setData(cachedStatus.data);
       setIsLoading(false);
@@ -112,6 +126,12 @@ export function useTrialStatus(): UseTrialStatusReturn {
       }
 
       const result = (await response.json()) as TrialStatusResponse;
+
+      // Persist the server's cache version so future page loads can detect
+      // version mismatches without having to hit the network first.
+      if (typeof window !== "undefined" && result.cacheVersion !== undefined) {
+        localStorage.setItem(LS_TRIAL_CACHE_VERSION, String(result.cacheVersion));
+      }
 
       // Update cache
       cachedStatus = { data: result, fetchedAt: Date.now() };

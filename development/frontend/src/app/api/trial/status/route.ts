@@ -17,7 +17,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
-import { isValidFingerprint } from "@/lib/trial-utils";
+import { isValidFingerprint, TRIAL_CACHE_VERSION } from "@/lib/trial-utils";
 import { getTrial, initTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -87,8 +87,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         trial = await initTrial(fingerprint);
       } catch (initErr) {
         const msg = initErr instanceof Error ? initErr.message : String(initErr);
-        log.error("POST /api/trial/status: auto-init failed", { fingerprint, error: msg });
-        // Fall through with trial === null — computeTrialStatus returns "none"
+        log.error("POST /api/trial/status: auto-init failed — returning 500", { fingerprint, error: msg });
+        // Surface the error: a failed Firestore write means we cannot guarantee
+        // the trial state is accurate. Return 500 so the client retries rather
+        // than silently showing "no trial" for a write that may have partially
+        // succeeded (fixes phantom-trial issue #1589).
+        return NextResponse.json(
+          { error: "internal_error", error_description: "Failed to initialize trial." },
+          { status: 500 },
+        );
       }
     }
     const result = computeTrialStatus(trial);
@@ -99,9 +106,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       remainingDays: result.remainingDays,
     });
 
-    return NextResponse.json(result, {
-      headers: { "Cache-Control": "no-store" },
-    });
+    return NextResponse.json(
+      { ...result, cacheVersion: TRIAL_CACHE_VERSION },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log.error("POST /api/trial/status failed", { error: message });
