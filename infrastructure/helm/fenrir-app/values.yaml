@@ -124,33 +124,6 @@ secrets:
   enabled: false
   appBaseUrl: "https://www.fenrirledger.com"
 
-# -- Redis -----------------------------------------------------------------
-redis:
-  enabled: true
-  image: redis:7-alpine
-  replicas: 1
-  args: ["--appendonly", "yes"]
-
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "64Mi"
-      ephemeral-storage: "64Mi"
-    limits:
-      cpu: "100m"
-      memory: "128Mi"
-      ephemeral-storage: "128Mi"
-
-  persistence:
-    size: 1Gi
-    accessMode: ReadWriteOnce
-    # Custom StorageClass with reclaimPolicy: Retain — PV survives PVC deletion.
-    # Defined in templates/redis.yaml. Prevents cloud sync data loss on redeploy.
-    storageClassName: "redis-retain"
-
-  service:
-    port: 6379
-
 # -- Warm Node Pool (prevents cold starts) ----------------------------------
 # GKE Autopilot scales to zero when idle, causing 30-60s cold starts.
 # This placeholder keeps 1 node warm by running a low-priority pod.
