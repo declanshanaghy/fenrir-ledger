@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Box, Text, useInput } from "ink";
 import { log } from "@fenrir/logger";
 import { firestoreClient } from "../lib/firestore.js";
@@ -498,6 +498,7 @@ function generateRandomCode(): string {
 
 interface HouseholdsTabProps {
   cmdStatus: string | null;
+  initialHouseholdId?: string | null;
   onCardsView?: (householdId: string, householdName: string) => void;
 }
 
@@ -508,7 +509,7 @@ type LoadState = "idle" | "loading" | "loaded" | "error";
  * Left panel: scrollable list with tier badge + member count.
  * Right panel: full household detail with members, entitlements, Stripe info.
  */
-export function HouseholdsTab({ cmdStatus, onCardsView }: HouseholdsTabProps): React.JSX.Element {
+export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView }: HouseholdsTabProps): React.JSX.Element {
   log.debug("HouseholdsTab render");
 
   const selection = useSelection();
@@ -521,6 +522,9 @@ export function HouseholdsTab({ cmdStatus, onCardsView }: HouseholdsTabProps): R
   const [detailLoading, setDetailLoading] = useState(false);
   const [status, setStatus]         = useState<string | null>(cmdStatus);
   const [confirm, setConfirm]       = useState<ConfirmAction | null>(null);
+
+  // Track whether the initialHouseholdId has been applied — reset on each mount
+  const initialApplied = useRef(false);
 
   // Reload function — exported for Ctrl+R
   const doLoad = useCallback(() => {
@@ -545,6 +549,23 @@ export function HouseholdsTab({ cmdStatus, onCardsView }: HouseholdsTabProps): R
   useEffect(() => {
     doLoad();
   }, [doLoad]);
+
+  // Auto-select a household when navigating from the Users tab via H key
+  useEffect(() => {
+    if (!initialHouseholdId || initialApplied.current) return;
+    if (loadState !== "loaded" || households.length === 0) return;
+
+    const idx = households.findIndex((h) => h.id === initialHouseholdId);
+    if (idx >= 0) {
+      log.debug("HouseholdsTab: auto-selecting household from H key", { id: initialHouseholdId, idx });
+      setSelectedIdx(idx);
+      setScrollOffset(Math.max(0, Math.min(idx, households.length - LIST_HEIGHT)));
+    } else {
+      log.debug("HouseholdsTab: initialHouseholdId not found in list", { id: initialHouseholdId });
+      setStatus(`Household not found`);
+    }
+    initialApplied.current = true;
+  }, [initialHouseholdId, loadState, households]);
 
   // Load detail when selection changes
   useEffect(() => {

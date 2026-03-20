@@ -266,7 +266,7 @@ function UserDetailPanel({
 interface UsersTabProps {
   cmdStatus: string | null;
   onInputCapture?: (captured: boolean) => void;
-  onJumpToHousehold?: () => void;
+  onJumpToHousehold?: (householdId: string) => void;
   onCardsView?: (householdId: string, filterUserId: string, ownerEmail: string) => void;
   onTrialAdjust?: () => void;
 }
@@ -642,8 +642,12 @@ export function UsersTab({
         setActionMode("sub_cancel_confirm");
         return;
       }
-      if (input === "h" && detail?.household) {
-        onJumpToHousehold?.();
+      if (input === "h") {
+        if (detail?.household && user.householdId) {
+          onJumpToHousehold?.(user.householdId);
+        } else {
+          setStatusMsg("No household \u2014 this user is solo");
+        }
         return;
       }
       if (input === "c" && detail?.household && user.householdId) {
