@@ -27,6 +27,56 @@ import yaml from "js-yaml";
 
 // ── CLI args ────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
+
+// ── --help ───────────────────────────────────────────────────────────────────
+if (args.includes("--help") || args.includes("-h")) {
+  console.log(`
+epic-manager — Epic dependency graph tracker + dispatch advisor
+
+USAGE
+  node epic-manager.mjs <root-issue>              Show dashboard
+  node epic-manager.mjs <root-issue> --dispatch   Dashboard + copy-paste dispatch commands
+  node epic-manager.mjs <root-issue> --add <N>    Add a new story to the graph
+  node epic-manager.mjs <root-issue> --json       Machine-readable JSON output
+
+DASHBOARD EXAMPLES
+  # Show the live status of epic #1386
+  node epic-manager.mjs 1386
+
+  # Show dashboard and print ready dispatch commands
+  node epic-manager.mjs 1386 --dispatch
+
+ADD STORY EXAMPLES
+  # Add issue #1507 blocked by #1495 (wave auto-computed)
+  node epic-manager.mjs 1386 --add 1507 --blocked-by 1495
+
+  # Add issue #1508 running in parallel with #1507 at wave 3
+  node epic-manager.mjs 1386 --add 1508 --blocked-by 1495 --parallel-with 1507
+
+  # Add with explicit wave override and a note
+  node epic-manager.mjs 1386 --add 1509 --blocked-by 1495 --wave 3 --note "Extra context here"
+
+ADD FLAGS
+  --add <N>              Issue number to insert into the graph
+  --blocked-by <N>[,N]   Comma-separated blockers (must close before this starts)
+  --parallel-with <N>[,N] Peers in the same wave (bidirectional link)
+  --wave <N>             Override wave (default: max blocker wave + 1)
+  --note "..."           Optional note stored in the YAML
+
+DASHBOARD ICONS
+  ✅  done      — GitHub issue is CLOSED
+  🔄  running   — Active K8s job found for this issue
+  🟢  ready     — All blockers closed, not yet running
+  🔴  blocked   — One or more blockers still OPEN
+  ⚠️   duplicate — duplicate_of is set; close manually before dispatching
+
+EPIC FILE
+  Reads/writes tmp/epics/<root-issue>.yml
+  Auto-migrates legacy .json files to .yml on first run.
+`);
+  process.exit(0);
+}
+
 const rootIssue = args.find((a) => /^\d+$/.test(a));
 const flagDispatch = args.includes("--dispatch");
 const flagJson = args.includes("--json");
@@ -54,8 +104,8 @@ const noteIdx = args.indexOf("--note");
 const flagNote = noteIdx !== -1 ? (args[noteIdx + 1] ?? "") : "";
 
 if (!rootIssue) {
-  console.error("Usage: epic-manager.mjs <root-issue-number> [--dispatch] [--json]");
-  console.error("       epic-manager.mjs <root-issue-number> --add <N> --blocked-by <N>[,N...] [--wave <N>] [--parallel-with <N>[,N...]] [--note \"...\"]");
+  console.error("Usage: epic-manager.mjs <root-issue-number> [--dispatch|--add|--json]");
+  console.error("       epic-manager.mjs --help   for full usage and examples");
   process.exit(1);
 }
 
