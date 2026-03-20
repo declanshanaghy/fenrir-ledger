@@ -183,7 +183,7 @@ export async function getGoogleSubByStripeCustomerId(
     // 1. Query users collection by stripeCustomerId field (authenticated path)
     const user = await findUserByStripeCustomerId(stripeCustomerId);
     if (user) {
-      const googleSub = user.clerkUserId;
+      const googleSub = user.userId;
       log.debug("getGoogleSubByStripeCustomerId returning (authenticated)", {
         stripeCustomerId,
         found: true,

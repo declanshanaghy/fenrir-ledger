@@ -66,7 +66,7 @@ function makeFakeEntitlement(
 
 function makeFakeUser(overrides: Partial<FirestoreUser> = {}): FirestoreUser {
   return {
-    clerkUserId: GOOGLE_SUB,
+    userId: GOOGLE_SUB,
     email: "test@example.com",
     displayName: "Test User",
     householdId: "household-123",

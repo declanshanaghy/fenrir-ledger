@@ -71,7 +71,7 @@ const targetHousehold = {
 };
 
 const callerUser = {
-  clerkUserId: USER_ID,
+  userId: USER_ID,
   email: "joiner@example.com",
   displayName: "Björn",
   householdId: CALLER_HOUSEHOLD_ID,
@@ -81,7 +81,7 @@ const callerUser = {
 };
 
 const ownerUser = {
-  clerkUserId: OWNER_ID,
+  userId: OWNER_ID,
   email: "thor@example.com",
   displayName: "Thorvald",
   householdId: HOUSEHOLD_ID,

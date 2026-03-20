@@ -22,7 +22,7 @@ import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import Link from "next/link";
 
 interface HouseholdMember {
-  clerkUserId: string;
+  userId: string;
   displayName: string;
   email: string;
   role: "owner" | "member";

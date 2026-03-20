@@ -65,14 +65,14 @@ export function _resetFirestoreForTests(): void {
 // ─── User operations ──────────────────────────────────────────────────────────
 
 /**
- * Fetches a user document by Clerk user ID.
+ * Fetches a user document by user ID.
  * Returns null if the user document does not exist.
  */
 export async function getUser(
-  clerkUserId: string
+  userId: string
 ): Promise<FirestoreUser | null> {
   const db = getFirestore();
-  const snap = await db.doc(FIRESTORE_PATHS.user(clerkUserId)).get();
+  const snap = await db.doc(FIRESTORE_PATHS.user(userId)).get();
   if (!snap.exists) return null;
   return snap.data() as FirestoreUser;
 }
@@ -83,7 +83,7 @@ export async function getUser(
  */
 export async function setUser(user: FirestoreUser): Promise<void> {
   const db = getFirestore();
-  await db.doc(FIRESTORE_PATHS.user(user.clerkUserId)).set(user);
+  await db.doc(FIRESTORE_PATHS.user(user.userId)).set(user);
 }
 
 // ─── Household operations ─────────────────────────────────────────────────────
@@ -413,7 +413,7 @@ export async function markEventProcessed(eventId: string): Promise<void> {
 // ─── Auto-create solo household ───────────────────────────────────────────────
 
 export interface EnsureSoloHouseholdInput {
-  clerkUserId: string;
+  userId: string;
   email: string;
   displayName: string;
 }
@@ -441,15 +441,15 @@ export async function ensureSoloHousehold(
   input: EnsureSoloHouseholdInput
 ): Promise<EnsureSoloHouseholdResult> {
   const db = getFirestore();
-  const { clerkUserId, email, displayName } = input;
+  const { userId, email, displayName } = input;
 
   // Check if user already exists
-  const existingUser = await getUser(clerkUserId);
+  const existingUser = await getUser(userId);
   if (existingUser) {
     const household = await getHousehold(existingUser.householdId);
     if (!household) {
       throw new Error(
-        `User ${clerkUserId} references household ${existingUser.householdId} which does not exist. ` +
+        `User ${userId} references household ${existingUser.householdId} which does not exist. ` +
           "Data integrity error."
       );
     }
@@ -463,8 +463,8 @@ export async function ensureSoloHousehold(
   const household: FirestoreHousehold = {
     id: householdId,
     name: `${displayName}'s Household`,
-    ownerId: clerkUserId,
-    memberIds: [clerkUserId],
+    ownerId: userId,
+    memberIds: [userId],
     inviteCode: generateInviteCode(),
     inviteCodeExpiresAt: generateInviteCodeExpiry(),
     tier: "free",
@@ -473,7 +473,7 @@ export async function ensureSoloHousehold(
   };
 
   const user: FirestoreUser = {
-    clerkUserId,
+    userId,
     email,
     displayName,
     householdId,
@@ -485,7 +485,7 @@ export async function ensureSoloHousehold(
   // Atomic write — both docs succeed or both fail
   const batch = db.batch();
   batch.set(db.doc(FIRESTORE_PATHS.household(householdId)), household);
-  batch.set(db.doc(FIRESTORE_PATHS.user(clerkUserId)), user);
+  batch.set(db.doc(FIRESTORE_PATHS.user(userId)), user);
   await batch.commit();
 
   return { user, household, created: true };
@@ -554,7 +554,7 @@ export async function findUserByStripeCustomerId(
  * Updates the stripeCustomerId field on a user document.
  * Called when an authenticated user's Stripe entitlement is first set.
  *
- * @param userId - The user document ID (Google sub / clerkUserId)
+ * @param userId - The user document ID (Google sub)
  * @param stripeCustomerId - The Stripe customer ID to store
  */
 export async function setUserStripeCustomerId(

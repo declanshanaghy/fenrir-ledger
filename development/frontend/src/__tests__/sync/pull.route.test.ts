@@ -77,7 +77,7 @@ function authzSuccess(householdId = "hh-test") {
     ok: true,
     user: { sub: "google-123", email: "test@example.com" },
     firestoreUser: {
-      clerkUserId: "google-123",
+      userId: "google-123",
       householdId,
       email: "test@example.com",
       displayName: "Test User",
@@ -215,7 +215,7 @@ describe("GET /api/sync/pull — response", () => {
 import type { FirestoreUser } from "@/lib/firebase/firestore-types";
 
 const LOKI_FIRESTORE_USER: FirestoreUser = {
-  clerkUserId: "google-sub-karl",
+  userId: "google-sub-karl",
   email: "karl@fenrir.dev",
   displayName: "Karl the Worthy",
   householdId: "hh-resolved",

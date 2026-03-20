@@ -102,7 +102,7 @@ function thrallEntitlement() {
 }
 
 function userExists() {
-  mockGetUser.mockResolvedValue({ clerkUserId: TEST_USER_SUB, householdId: TEST_HOUSEHOLD_ID, email: "t@t.com", displayName: "Test", role: "owner", createdAt: "2025-01-01T00:00:00.000Z", updatedAt: "2025-01-01T00:00:00.000Z" });
+  mockGetUser.mockResolvedValue({ userId: TEST_USER_SUB, householdId: TEST_HOUSEHOLD_ID, email: "t@t.com", displayName: "Test", role: "owner", createdAt: "2025-01-01T00:00:00.000Z", updatedAt: "2025-01-01T00:00:00.000Z" });
 }
 
 // ── GET /api/sync tests ───────────────────────────────────────────────────────

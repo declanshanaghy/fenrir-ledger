@@ -49,7 +49,7 @@ function makeRequest(body: Record<string, unknown> = {}): NextRequest {
 }
 
 const baseUser = {
-  clerkUserId: OWNER_ID,
+  userId: OWNER_ID,
   email: "owner@example.com",
   displayName: "Thor",
   householdId: HOUSEHOLD_ID,
@@ -104,7 +104,7 @@ describe("POST /api/household/invite", () => {
 
   it("returns 403 when caller is not the owner", async () => {
     mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: MEMBER_ID, email: "member@example.com", name: "Sigrid", picture: "" } });
-    mockGetUser.mockResolvedValue({ ...baseUser, clerkUserId: MEMBER_ID, role: "member" });
+    mockGetUser.mockResolvedValue({ ...baseUser, userId: MEMBER_ID, role: "member" });
     // Household ownerId is still OWNER_ID
     const res = await POST(makeRequest({ action: "regenerate" }));
     expect(res.status).toBe(403);

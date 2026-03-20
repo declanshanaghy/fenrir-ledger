@@ -81,7 +81,7 @@ const THRALL_USER: VerifiedUser = {
 };
 
 const FIRESTORE_USER: FirestoreUser = {
-  clerkUserId: "google-sub-karl",
+  userId: "google-sub-karl",
   email: "karl@fenrir.dev",
   displayName: "Karl the Worthy",
   householdId: "household-abc",
@@ -91,7 +91,7 @@ const FIRESTORE_USER: FirestoreUser = {
 };
 
 const THRALL_FIRESTORE_USER: FirestoreUser = {
-  clerkUserId: "google-sub-thrall",
+  userId: "google-sub-thrall",
   email: "thrall@fenrir.dev",
   displayName: "Thrall the Free",
   householdId: "household-abc",

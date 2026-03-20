@@ -59,7 +59,7 @@ describe("GET /api/stripe/membership", () => {
     mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: { sub: mockGoogleSub, email: "test@example.com", name: "Test User", picture: "" },
-      firestoreUser: { clerkUserId: mockGoogleSub, email: "test@example.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
+      firestoreUser: { userId: mockGoogleSub, email: "test@example.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" },
     });
   });
 

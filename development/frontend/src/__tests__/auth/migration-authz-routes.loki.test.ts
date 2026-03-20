@@ -120,7 +120,7 @@ import { POST as convertPost } from "@/app/api/trial/convert/route";
 // ---------------------------------------------------------------------------
 
 const KARL_FIRESTORE_USER: FirestoreUser = {
-  clerkUserId: "google-sub-karl",
+  userId: "google-sub-karl",
   email: "karl@fenrir.dev",
   displayName: "Karl the Worthy",
   householdId: "household-abc",
@@ -134,7 +134,7 @@ const VALID_FINGERPRINT = "a".repeat(64);
 function authzOk(firestoreUser = KARL_FIRESTORE_USER) {
   mockRequireAuthz.mockResolvedValue({
     ok: true,
-    user: { sub: firestoreUser.clerkUserId, email: firestoreUser.email },
+    user: { sub: firestoreUser.userId, email: firestoreUser.email },
     firestoreUser,
   });
 }

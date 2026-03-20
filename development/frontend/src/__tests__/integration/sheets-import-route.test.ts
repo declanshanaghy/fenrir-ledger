@@ -64,7 +64,7 @@ let POST: typeof import("@/app/api/sheets/import/route").POST;
 // ── Setup ────────────────────────────────────────────────────────────────────
 
 const MOCK_FIRESTORE_USER = {
-  clerkUserId: MOCK_USER.sub,
+  userId: MOCK_USER.sub,
   email: MOCK_USER.email,
   displayName: "Test User",
   householdId: "hh-test",
