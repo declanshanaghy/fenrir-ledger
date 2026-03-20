@@ -8,7 +8,7 @@ Freya shapes the vision before the forge ever heats. Nothing moves downstream un
 
 - [README.md](README.md) — This index: all product artifacts owned by Freya.
 - [product-design-brief.md](product-design-brief.md) — The Saga Ledger product design brief: design philosophy, aesthetic direction, information architecture, target audience, tone rules, and key design decisions.
-- [product-design-brief-agent-chronicles.md](product-design-brief-agent-chronicles.md) — Product design brief for Agent Chronicle MDX parity: Norse ceremonial components (decree header, heckler bubbles, callback footer) for public-facing chronicles at fenrirledger.com.
+- [product-design-brief-agent-chronicles.md](product-design-brief-agent-chronicles.md) — Product design brief for Agent Chronicle MDX parity: Norse ceremonial components (decree header, heckler bubbles, callback footer) for public-facing chronicles at fenrirledger.com (shipped 2026-03-20).
 - [mythology-map.md](mythology-map.md) — Norse cosmology mapped to every card state, team role, and UI feature in Fenrir Ledger.
 - [copywriting.md](copywriting.md) — The two-voice rule, kenning vocabulary, status badge copy, action labels, empty states, and Edda quotes.
 - [platform-comparison.md](platform-comparison.md) — Subscription platform research: 8 platforms compared (Stripe Direct selected and implemented).

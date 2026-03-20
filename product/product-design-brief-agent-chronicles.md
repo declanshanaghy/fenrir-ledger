@@ -1,5 +1,9 @@
 # Product Design Brief: Agent Chronicle MDX Parity
 
+**Status (2026-03-20):** Shipped. `chronicle-norse.css` is live at `development/frontend/src/app/(marketing)/chronicles/chronicle-norse.css`. The `--publish` codepath in `generate-agent-report.mjs` emits decree header, agent callback footer, heckler chat bubbles, and explosion animations in MDX output. `sanitize-chronicle.mjs` handles secret sanitization. All Norse CSS is scoped under `.chronicle-page` and shared across chronicle tiers.
+
+---
+
 ## Problem Statement
 
 The `/brandify-agent` skill produces two outputs: (1) rich HTML reports with the full
@@ -54,19 +58,18 @@ Must match the existing HTML report aesthetic. The Dark Nordic War Room. Specifi
 
 ## Acceptance Criteria
 
-- [ ] `/brandify-agent <id> --publish` produces MDX with All-Father's Decree header
-- [ ] MDX includes agent callback footer with avatar and blood-seal declaration
-- [ ] Heckler chat bubbles render in MDX turns with correct identity/styling
-- [ ] Explosion animations render on heckler events in MDX chronicles
-- [ ] All Norse CSS components live in shared stylesheet(s) under `chronicles/`
-      (not inline in the generator script)
-- [ ] Shared components are reusable by Session and Saga chronicles (no agent-only coupling)
-- [ ] Secret sanitization: no API keys, tokens, env values, or sensitive paths in
-      published MDX (generator must strip/mask before writing)
+- [x] `/brandify-agent <id> --publish` produces MDX with All-Father's Decree header
+- [x] MDX includes agent callback footer with avatar and blood-seal declaration
+- [x] Heckler chat bubbles render in MDX turns with correct identity/styling
+- [x] Explosion animations render on heckler events in MDX chronicles
+- [x] All Norse CSS components live in shared stylesheet(s) under `chronicles/`
+      (`chronicle-norse.css` scoped under `.chronicle-page`)
+- [x] Shared components are reusable by Session and Saga chronicles (no agent-only coupling)
+- [x] Secret sanitization: `sanitize-chronicle.mjs` strips/masks secrets before writing MDX
 - [ ] Chronicle renders correctly at `/chronicles/agent-{slug}` on desktop and mobile
-      (375px minimum)
-- [ ] Luna provides wireframes for the chronicle page layout before engineering begins
-- [ ] Existing basic agent chronicles still render (no regression on current MDX files)
+      (375px minimum) — verify with Loki QA pass
+- [x] Luna provided wireframes (issue #1047 — `ux/wireframes/chronicles/`)
+- [x] Existing basic agent chronicles still render (no regression on current MDX files)
 
 ## Priority & Constraints
 
