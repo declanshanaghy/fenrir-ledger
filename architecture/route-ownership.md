@@ -1,8 +1,8 @@
 # Route Ownership — Fenrir Ledger
 
-**Date:** 2026-03-01 (updated: 2026-03-07 — added Stripe and picker routes)
+**Date:** 2026-03-01 (updated: 2026-03-07 — added Stripe and picker routes; 2026-03-20 — Redis removed, Firestore is entitlement store)
 **Author:** FiremanDecko (Principal Engineer)
-**Related:** ADR: `adr-backend-server.md` (superseded — serverless-only), ADR-008: `adr-api-auth.md`, ADR-010: `adr-010-stripe-direct.md`
+**Related:** ADR-008: `adrs/ADR-008-api-auth.md`, ADR-010: `adrs/ADR-010-stripe-direct.md`, ADR-014: `adrs/ADR-014-firestore-cloud-sync.md`
 
 ## Route Placement
 
@@ -14,7 +14,7 @@
 | `POST /api/sheets/import` | POST | requireAuth | Import pipeline: fetch CSV + Anthropic call + Zod validation (`maxDuration = 60`) |
 | `POST /api/stripe/checkout` | POST | requireAuth | Create Stripe Checkout session, return redirect URL |
 | `POST /api/stripe/webhook` | POST | Stripe signature only | Process Stripe webhook events — no Bearer auth, secured by SHA-256 HMAC |
-| `GET /api/stripe/membership` | GET | requireAuth | Return cached Stripe entitlement from Redis KV |
+| `GET /api/stripe/membership` | GET | requireAuth | Return Stripe entitlement from Firestore |
 | `POST /api/stripe/portal` | POST | requireAuth | Create Stripe Customer Portal session, return redirect URL |
 | `POST /api/stripe/unlink` | POST | requireAuth | Cancel Stripe subscription, delete KV entitlement record |
 | `GET /api/sync/pull` | GET | requireAuthz (Karl) | Download all Firestore cards for authenticated user's household; Karl-only |
@@ -32,8 +32,7 @@
 | `STRIPE_WEBHOOK_SECRET` | Next.js (server) | Server-side only | Webhook HMAC signature verification (`/api/stripe/webhook`) |
 | `STRIPE_PRICE_ID` | Next.js (server) | Server-side only | Stripe product price for checkout sessions |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Next.js (client) | Browser-exposed | Future: Stripe.js initialization |
-| `REDIS_URL` | Next.js (server) | Server-side only | In-cluster Redis connection (`redis://redis.fenrir-app.svc.cluster.local:6379`) |
-| `FIRESTORE_PROJECT_ID` | Next.js (server) | Server-side only | GCP project for Firestore cloud sync (`/api/sync/pull`, `/api/sync/push`) |
+| `FIRESTORE_PROJECT_ID` | Next.js (server) | Server-side only | GCP project for Firestore entitlement store + cloud sync (`/api/sync/pull`, `/api/sync/push`) |
 
 ## Design Principles
 

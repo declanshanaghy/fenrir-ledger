@@ -45,17 +45,16 @@ There is no separate `kubectl apply` for Redis. The Helm chart is the only deplo
 
 ---
 
-## Deleted: `k8s/namespaces.yaml` — Superseded by `helm/fenrir-bootstrap/`
+## Deleted: `k8s/namespaces.yaml` — Superseded by inline CI bootstrap
 
 `k8s/namespaces.yaml` was a raw manifest that defined the `fenrir-app` and `fenrir-agents` namespaces, RBAC, ResourceQuota, and NetworkPolicies.
 
-It was deleted in PR #1243 because `helm/fenrir-bootstrap` replaces it with a Helm chart that manages all cluster-level bootstrap resources. The bootstrap chart is deployed on every CI run (idempotent), replacing the one-time-apply pattern of the raw manifest.
+It was deleted in PR #1243. The cluster bootstrap is now handled inline in `deploy.yml` via the `Ensure namespaces, service accounts, and resource quotas` step, which runs idempotently on every deploy. (`helm/fenrir-bootstrap` was a short-lived intermediate approach that was also removed.)
 
-What the bootstrap chart now manages (that `namespaces.yaml` used to):
-- `fenrir-app`, `fenrir-agents`, `fenrir-analytics` namespaces
+What the inline CI bootstrap step manages (that `namespaces.yaml` used to):
+- `fenrir-app`, `fenrir-agents`, `fenrir-analytics`, `fenrir-monitor`, `fenrir-marketing` namespaces
 - `fenrir-app-sa` and `fenrir-agents-sa` service accounts with Workload Identity annotations
-- ResourceQuota for `fenrir-agents` (8 pods, 16 CPU, 32Gi)
-- NetworkPolicies: `deny-from-agents`, `agents-egress-only`, `analytics-isolation`
+- ResourceQuota for `fenrir-agents`
 - `agent-secrets` Secret skeleton
 
 ---
@@ -74,9 +73,13 @@ See [agent-sandbox.md](agent-sandbox.md) for full documentation.
 
 | PR | What happened |
 |---|---|
-| #1243 (issue #1242) | `helm/fenrir-bootstrap` added, `k8s/app/` and `k8s/namespaces.yaml` deleted |
-| (earlier) | `helm/fenrir-app` added (replacing `k8s/app/` raw manifests) |
-| (earlier) | `helm/odin-throne` and `helm/umami` added |
+| (early) | `helm/fenrir-app` added (replacing `k8s/app/` raw manifests) |
+| (early) | `helm/odin-throne` and `helm/umami` added |
+| #1243 (issue #1242) | `helm/fenrir-bootstrap` added (temporary), `k8s/app/` and `k8s/namespaces.yaml` deleted |
+| (later) | `helm/fenrir-bootstrap` removed; namespace bootstrap inlined into `deploy.yml` (`Ensure namespaces, service accounts, and resource quotas` step) |
+| #1533–#1539 (issues #1516–#1518) | Redis entitlement/trial stores migrated to Firestore |
+| #1558 (issue #1519) | Redis client (`ioredis`) and Odin's Spear Redis commands removed from app code |
+| #1568 (issue #1521) | `helm/fenrir-app/templates/redis.yaml`, `infrastructure/redis-backup.tf`, and `REDIS_URL` deploy step deleted |
 
 ---
 
@@ -85,8 +88,9 @@ See [agent-sandbox.md](agent-sandbox.md) for full documentation.
 **Do not `kubectl apply` any files from the old `k8s/app/` layout.** If you need to re-examine those files for historical reference, use `git show d91861b^:infrastructure/k8s/app/deployment.yaml` (the commit before deletion) to view them without affecting the live cluster.
 
 The authoritative deployment path for all workloads is:
-1. `helm/fenrir-bootstrap` — cluster bootstrap (namespaces, SAs, RBAC)
-2. `helm/fenrir-app` — Next.js app + Redis
+1. `deploy.yml` bootstrap step — inline namespace + SA + quota creation (idempotent)
+2. `helm/fenrir-app` — Next.js app (no Redis; Firestore for entitlements)
 3. `helm/odin-throne` — Odin's Throne monitor
 4. `helm/umami` — Umami analytics
-5. `k8s/agents/dispatch-job.sh` — agent sandbox Jobs only
+5. `helm/n8n` — Marketing engine
+6. `k8s/agents/dispatch-job.sh` — agent sandbox Jobs only

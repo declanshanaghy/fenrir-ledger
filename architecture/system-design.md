@@ -2,7 +2,7 @@
 
 ## Overview
 
-Fenrir Ledger is a client-side Next.js 15 application deployed on GKE Autopilot in `us-central1`. All user data is persisted in localStorage behind a typed abstraction layer, namespaced per household. Authentication is anonymous-first (ADR-006): users can use the app immediately without signing in. Optional Google OIDC sign-in (Authorization Code + PKCE, ADR-005) enables cloud sync and Stripe subscription management. Subscription entitlements are managed via Stripe Direct (ADR-010) with webhook-driven updates stored in Redis (in-cluster StatefulSet, `REDIS_URL`). SubscriptionGate is soft-only: it always renders children but prepends an upsell card for non-subscribers. The app includes a three-path import workflow (Google Sheets URL, CSV upload, manual entry), Framer Motion animations, and a deep Norse mythology easter egg layer. Patreon has been fully removed; Stripe is the sole subscription platform.
+Fenrir Ledger is a client-side Next.js 15 application deployed on GKE Autopilot in `us-central1`. All user data is persisted in localStorage behind a typed abstraction layer, namespaced per household. Authentication is anonymous-first (ADR-006): users can use the app immediately without signing in. Optional Google OIDC sign-in (Authorization Code + PKCE, ADR-005) enables cloud sync and Stripe subscription management. Subscription entitlements are managed via Stripe Direct (ADR-010) with webhook-driven updates stored in **Firestore** (server-side, keyed by Google `sub`). SubscriptionGate is soft-only: it always renders children but prepends an upsell card for non-subscribers. The app includes a three-path import workflow (Google Sheets URL, CSV upload, manual entry), Framer Motion animations, and a deep Norse mythology easter egg layer. Patreon has been fully removed; Stripe is the sole subscription platform.
 
 ---
 
@@ -32,7 +32,7 @@ graph LR
     app --> stripe[Stripe API]
     app --> google[Google APIs - OAuth + Sheets]
     app --> anthropic[Anthropic API - LLM Extraction]
-    app --> kv[Redis StatefulSet - Entitlements]
+    app --> firestore[Firestore - Entitlements + Sync]
 
     class lb gcp
     class gke gcp
@@ -43,7 +43,7 @@ graph LR
     class stripe ext
     class google ext
     class anthropic ext
-    class kv ext
+    class firestore ext
     class gh ci
     class actions ci
 ```
@@ -76,7 +76,7 @@ graph TD
     ns_app --> ingress[Ingress - GCE Load Balancer]
     ns_app --> cert[ManagedCertificate - fenrirledger.com]
     ns_app --> backend[BackendConfig - Health: /api/health]
-    ns_app --> secrets[Secret - fenrir-app-secrets - 13 keys]
+    ns_app --> secrets[Secret - fenrir-app-secrets]
     ns_app --> sa[ServiceAccount - fenrir-app-sa]
     sa --> wi[Workload Identity - fenrir-app-workload@GCP]
 
@@ -457,7 +457,7 @@ Every API route (except the token exchange proxy) enforces auth via `requireAuth
 
 ### Entitlement & Subscription
 
-Stripe Direct (ADR-010) is the sole subscription platform. Two tiers: Thrall (free) and Karl ($3.99/mo). Stripe webhooks update entitlement state in Redis (in-cluster StatefulSet, `REDIS_URL`) keyed by Google `sub`. The SubscriptionGate is soft-only — it always renders children but prepends a Norse-themed upsell card for non-subscribers. The SealedRuneModal presents locked features with a link to Stripe Checkout.
+Stripe Direct (ADR-010) is the sole subscription platform. Two tiers: Thrall (free) and Karl ($3.99/mo). Stripe webhooks update entitlement state in **Firestore** (server-side, keyed by Google `sub`). The SubscriptionGate is soft-only — it always renders children but prepends a Norse-themed upsell card for non-subscribers. The SealedRuneModal presents locked features with a link to Stripe Checkout.
 
 ### Import Pipeline
 
@@ -601,4 +601,4 @@ Cinzel Decorative (display), Cinzel (headings), Source Serif 4 (body), JetBrains
 - Docker image built and pushed to Google Artifact Registry on every merge to `main`.
 - 2-replica rolling deployment with zero-downtime updates.
 - Terraform manages all GCP infrastructure (cluster, networking, IAM, SSL).
-- Redis used for entitlement state (Stripe webhook updates, in-cluster StatefulSet, `REDIS_URL`).
+- Firestore used for entitlement state (Stripe webhook updates, keyed by Google `sub`). Redis was removed in issues #1516–#1521 (fully migrated to Firestore).

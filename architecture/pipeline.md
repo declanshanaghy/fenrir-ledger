@@ -18,10 +18,10 @@ Every agent must read this guide before creating diagrams in any deliverable.
 
 | Agent | Name | Model | Rationale |
 |-------|------|-------|-----------|
-| Product Owner | **Freya** | **Opus** | Product vision requires strong reasoning |
-| UX Designer | **Luna** | **Opus** | Wireframing and interaction design quality |
+| Product Owner | **Freya** | **Sonnet** | Product vision and backlog management |
+| UX Designer | **Luna** | **Sonnet** | Wireframing and interaction design |
 | Principal Engineer | **FiremanDecko** | **Opus** | Architecture + implementation is heaviest work |
-| QA Tester | **Loki** | **Sonnet** | Extra firepower for devil's advocate testing |
+| QA Tester | **Loki** | **Haiku** | Fast, thorough devil's advocate testing |
 
 When spawning agents, use the model specified above for each role.
 

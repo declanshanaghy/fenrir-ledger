@@ -9,9 +9,10 @@ GKE Autopilot infrastructure for Fenrir Ledger: Terraform manages cloud resource
 | What | Tool | Namespace | Files |
 |---|---|---|---|
 | Cloud infrastructure (cluster, DNS, CDN, IAM) | Terraform | — | `*.tf` |
-| Next.js app + Redis | Helm | `fenrir-app` | `helm/fenrir-app/` |
+| Next.js app | Helm | `fenrir-app` | `helm/fenrir-app/` |
 | Odin's Throne monitor | Helm | `fenrir-monitor` | `helm/odin-throne/` |
 | Umami analytics + PostgreSQL | Helm | `fenrir-analytics` | `helm/umami/` |
+| n8n marketing engine | Helm | `fenrir-marketing` | `helm/n8n/` |
 | Agent sandbox Jobs | Shell script | `fenrir-agents` | `k8s/agents/dispatch-job.sh` |
 | CI/CD pipeline | GitHub Actions | — | `.github/workflows/deploy.yml` |
 
@@ -53,7 +54,7 @@ Architecture decisions that shaped this infrastructure:
 - [ADR-002: Next.js Standalone Docker Builds](adrs/ADR-002-standalone-docker-builds.md)
 - [ADR-003: Helm for K8s Manifest Management](adrs/ADR-003-helm-k8s-manifest-management.md)
 - [ADR-004: GKE Jobs for Agent Execution](adrs/ADR-004-gke-jobs-agent-execution.md)
-- [ADR-005: In-cluster Redis (over Vercel KV)](adrs/ADR-005-redis-over-vercel-kv.md)
+- [ADR-005: In-cluster Redis (over Vercel KV)](adrs/ADR-005-redis-over-vercel-kv.md) — **Superseded** (Redis removed; Firestore is the entitlement store)
 - [ADR-006: Self-Hosted Umami Analytics](adrs/ADR-006-umami-self-hosted-analytics.md)
 - [ADR-007: Cloud DNS + Google-Managed Certs](adrs/ADR-007-gcloud-dns-managed-certs.md)
 
