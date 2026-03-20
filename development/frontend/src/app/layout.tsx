@@ -28,6 +28,7 @@ import { ThemeProvider } from "next-themes";
 import { UmamiScript } from "@/components/analytics/UmamiScript";
 import { ConsoleSignature } from "@/components/layout/ConsoleSignature";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { TrialStatusProvider } from "@/contexts/TrialStatusContext";
 import { EntitlementProvider } from "@/contexts/EntitlementContext";
 import { RagnarokProvider } from "@/contexts/RagnarokContext";
 import "./globals.css";
@@ -107,6 +108,10 @@ export default function RootLayout({
         >
           {/* AuthProvider — anonymous-first. No redirects. Resolves householdId for all users. */}
           <AuthProvider>
+            {/* TrialStatusProvider — fetches /api/trial/status once per page load.
+                Nested inside AuthProvider so ensureFreshToken works; wraps
+                EntitlementProvider which reads trial status via useTrialStatus (Issue #1616). */}
+            <TrialStatusProvider>
             {/* EntitlementProvider — platform-agnostic subscription tier. Nested inside AuthProvider. */}
             <EntitlementProvider>
               {/* RagnarokProvider — activates threshold mode when >=5 cards are urgent. */}
@@ -116,6 +121,7 @@ export default function RootLayout({
                 {children}
               </RagnarokProvider>
             </EntitlementProvider>
+            </TrialStatusProvider>
           </AuthProvider>
         </ThemeProvider>
         {/* GA4 — only rendered when NEXT_PUBLIC_GA4_MEASUREMENT_ID is set.

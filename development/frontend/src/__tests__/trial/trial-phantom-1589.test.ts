@@ -72,9 +72,15 @@ vi.mock("@/lib/auth/refresh-session", () => ({
 
 // ── Import after mocks ─────────────────────────────────────────────────────────
 
+import React from "react";
 import { POST } from "@/app/api/trial/status/route";
 import { useTrialStatus, clearTrialStatusCache } from "@/hooks/useTrialStatus";
+import { TrialStatusProvider } from "@/contexts/TrialStatusContext";
 import { TRIAL_CACHE_VERSION, LS_TRIAL_CACHE_VERSION } from "@/lib/trial-utils";
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  return React.createElement(TrialStatusProvider, null, children);
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -211,7 +217,7 @@ describe("useTrialStatus — cache version invalidation (issue #1589)", () => {
   });
 
   it("persists cacheVersion to localStorage after a successful fetch", async () => {
-    renderHook(() => useTrialStatus());
+    renderHook(() => useTrialStatus(), { wrapper });
 
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalled();
@@ -224,8 +230,8 @@ describe("useTrialStatus — cache version invalidation (issue #1589)", () => {
     // Simulate stale Redis-era version in localStorage
     localStorageMock[LS_TRIAL_CACHE_VERSION] = "1";
 
-    // Render hook — should bypass the module cache and fetch fresh
-    renderHook(() => useTrialStatus());
+    // Render provider — should bypass the module cache and fetch fresh
+    renderHook(() => useTrialStatus(), { wrapper });
 
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalled();
@@ -240,12 +246,12 @@ describe("useTrialStatus — cache version invalidation (issue #1589)", () => {
     localStorageMock[LS_TRIAL_CACHE_VERSION] = String(TRIAL_CACHE_VERSION);
 
     // First render: populates module-level cache
-    const { unmount } = renderHook(() => useTrialStatus());
+    const { unmount } = renderHook(() => useTrialStatus(), { wrapper });
     await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
     unmount();
 
     // Second render with same version: should use cache (no second fetch)
-    renderHook(() => useTrialStatus());
+    renderHook(() => useTrialStatus(), { wrapper });
     // Wait a tick
     await new Promise((r) => setTimeout(r, 50));
     expect(fetchSpy).toHaveBeenCalledTimes(1);
@@ -254,12 +260,11 @@ describe("useTrialStatus — cache version invalidation (issue #1589)", () => {
   it("fetches again after clearTrialStatusCache even if version matches", async () => {
     localStorageMock[LS_TRIAL_CACHE_VERSION] = String(TRIAL_CACHE_VERSION);
 
-    renderHook(() => useTrialStatus());
+    renderHook(() => useTrialStatus(), { wrapper });
     await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
 
     clearTrialStatusCache();
 
-    renderHook(() => useTrialStatus());
     await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(2));
   });
 });

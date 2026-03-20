@@ -1,15 +1,19 @@
 /**
- * useTrialStatus — anonymous access tests (Issue #1413)
+ * TrialStatusProvider — anonymous access tests (Issue #1413)
  *
  * Validates the dual-path behavior introduced in #1413:
  * - Anonymous users (no token) can fetch trial status without an Authorization header
  * - Authenticated users still send the Authorization header
- * - Hook handles fetch failure gracefully (no crash, isLoading → false)
- * - Hook returns default status when fingerprint computation fails
+ * - Provider handles fetch failure gracefully (no crash, isLoading → false)
+ * - Provider returns default status when fingerprint computation fails
  *
- * @ref Issue #1413
+ * After Issue #1616 the fetch logic lives in TrialStatusProvider, not the hook.
+ * Tests use TrialStatusProvider as the renderHook wrapper.
+ *
+ * @ref Issue #1413, #1616
  */
 
+import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 
@@ -35,13 +39,20 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: mockEnsureFreshToken,
 }));
 
-// ── Import hook after mocks ───────────────────────────────────────────────────
+// ── Import after mocks ────────────────────────────────────────────────────────
 
 import { useTrialStatus, clearTrialStatusCache } from "@/hooks/useTrialStatus";
+import { TrialStatusProvider } from "@/contexts/TrialStatusContext";
+
+// ── Wrapper ───────────────────────────────────────────────────────────────────
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  return React.createElement(TrialStatusProvider, null, children);
+}
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe("useTrialStatus — anonymous access (Issue #1413)", () => {
+describe("TrialStatusProvider — anonymous access (Issue #1413)", () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
   let capturedHeaders: Record<string, string>;
 
@@ -72,7 +83,7 @@ describe("useTrialStatus — anonymous access (Issue #1413)", () => {
   it("omits Authorization header when user is anonymous (no token)", async () => {
     mockEnsureFreshToken.mockResolvedValue(null); // anonymous
 
-    renderHook(() => useTrialStatus());
+    renderHook(() => useTrialStatus(), { wrapper });
 
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalled();
@@ -85,7 +96,7 @@ describe("useTrialStatus — anonymous access (Issue #1413)", () => {
   it("includes Authorization header when user is authenticated", async () => {
     mockEnsureFreshToken.mockResolvedValue("test-bearer-token");
 
-    renderHook(() => useTrialStatus());
+    renderHook(() => useTrialStatus(), { wrapper });
 
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalled();
@@ -97,7 +108,7 @@ describe("useTrialStatus — anonymous access (Issue #1413)", () => {
   it("sets isLoading to false after fetch completes (anon)", async () => {
     mockEnsureFreshToken.mockResolvedValue(null);
 
-    const { result } = renderHook(() => useTrialStatus());
+    const { result } = renderHook(() => useTrialStatus(), { wrapper });
 
     expect(result.current.isLoading).toBe(true);
 
@@ -109,13 +120,13 @@ describe("useTrialStatus — anonymous access (Issue #1413)", () => {
   it("returns default status when fingerprint computation returns null", async () => {
     mockComputeFingerprint.mockResolvedValueOnce(null as unknown as string);
 
-    const { result } = renderHook(() => useTrialStatus());
+    const { result } = renderHook(() => useTrialStatus(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Fetch should NOT be called — hook bails when fingerprint is null
+    // Fetch should NOT be called — provider bails when fingerprint is null
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(result.current.status).toBe("none");
     expect(result.current.remainingDays).toBe(0);
