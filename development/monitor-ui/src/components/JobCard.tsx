@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { DisplayJob } from "../lib/types";
-import { AGENT_COLORS, AGENT_AVATARS, STATUS_COLORS, STATUS_ICONS, STATUS_LABELS } from "../lib/constants";
+import { AGENT_COLORS, AGENT_AVATARS, STATUS_COLORS, STATUS_LABELS } from "../lib/constants";
+import { StatusIconSvg } from "./StatusIcon";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 import type { DisplayMode } from "./Sidebar";
 
@@ -37,7 +38,6 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
   const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
   const avatar = AGENT_AVATARS[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
-  const sIcon = STATUS_ICONS[job.status] || "\u2014";
   const sLabel = STATUS_LABELS[job.status] || job.status;
   const pulse = job.status === "running" ? " pulse" : "";
   const displayTitle = resolveSessionTitle(job);
@@ -55,7 +55,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
         title={cardTitle}
       >
         <span className={`card-status${pulse}`} style={{ color: sColor }} aria-hidden="true">
-          {sIcon}
+          <StatusIconSvg status={job.status} />
         </span>
         <span className="card-minimal-issue" aria-label={`Issue ${job.issue}`}>
           #{job.issue}
@@ -108,9 +108,16 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
         <span className="card-issue-title" title={cardTitle}>
           {cardTitle}
         </span>
+      </div>
+      <div className="card-meta-new">
+        <span className="card-agent-badge" style={{ color: agentColor }}>
+          {job.agentName}
+        </span>
+        <span>Step {job.step}</span>
+        {job.fixture && <span className="card-fixture-badge" title="Fixture (replayed log)">ᚠ</span>}
         {job.status === "running" && onCancelJob ? (
           <button
-            className={`card-status card-status--clickable${pulse}`}
+            className={`card-status-icon-btn card-status-icon-btn--cancel${pulse}`}
             style={{ color: sColor }}
             title="Invoke Ragnarök — click to cancel this job"
             aria-label="Cancel running job"
@@ -119,26 +126,18 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
               onCancelJob(job.sessionId);
             }}
           >
-            {sIcon} <span className="cancel-label">{sLabel}</span>
+            <StatusIconSvg status={job.status} />
           </button>
         ) : (
           <span
-            className={`card-status${pulse}`}
+            className={`card-status-icon-btn${pulse}`}
             style={{ color: sColor }}
             title={sLabel}
             aria-label={`Status: ${sLabel}`}
           >
-            {sIcon}
+            <StatusIconSvg status={job.status} />
           </span>
         )}
-      </div>
-      <div className="card-meta-new">
-        <span className="card-agent-badge" style={{ color: agentColor }}>
-          {job.agentName}
-        </span>
-        <span>Step {job.step}</span>
-        <span style={{ color: sColor }}>{sLabel}</span>
-        {job.fixture && <span className="card-fixture-badge" title="Fixture (replayed log)">ᚠ</span>}
         {onTogglePin && (
           <CardPinButton isPinned={isPinned} onTogglePin={onTogglePin} />
         )}

@@ -498,6 +498,65 @@ body {
   border: 1px solid currentColor; white-space: nowrap; flex-shrink: 0;
 }
 .job-status-badge.pulse { animation: pulse 1.5s ease-in-out infinite; }
+
+/* ── Status icon spin animation ─────────────────── */
+@keyframes status-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.status-svg-spin {
+  animation: status-spin 1.4s linear infinite;
+  transform-origin: center;
+  display: block;
+}
+
+/* ── Header status icon button ──────────────────────
+   Matches copy-session-btn / pin-btn sizing.
+   Hover = color change only (no zoom). */
+.job-status-icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 1.6rem; height: 1.6rem; padding: 0;
+  background: transparent; border: 1px solid currentColor;
+  border-radius: 3px; cursor: default; flex-shrink: 0;
+  transition: color 0.2s, border-color 0.2s, opacity 0.2s;
+  opacity: 0.8;
+}
+.job-status-icon-btn:hover { opacity: 1; }
+.job-status-icon-btn--cancel { cursor: pointer; }
+.job-status-icon-btn--cancel:hover {
+  color: var(--error-strong);
+  border-color: var(--error-strong);
+  opacity: 1;
+}
+.job-status-icon-btn:focus-visible {
+  outline: 2px solid var(--gold); outline-offset: 2px;
+}
+.job-status-icon-btn.pulse { animation: pulse 1.5s ease-in-out infinite; }
+@media (min-width: 640px) {
+  .job-status-icon-btn { min-width: 1.6rem; min-height: 1.6rem; }
+}
+
+/* ── Card status icon button (sidebar second line) ──
+   Matches card-pin-btn — inline, border, color-only hover. */
+.card-status-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 2px 3px;
+  background: transparent; border: 1px solid var(--rune-border);
+  border-radius: 2px; cursor: default;
+  line-height: 1; transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.card-status-icon-btn:hover { border-color: currentColor; }
+.card-status-icon-btn--cancel { cursor: pointer; }
+.card-status-icon-btn--cancel:hover {
+  color: var(--error-strong);
+  border-color: var(--error-strong);
+}
+.card-status-icon-btn:focus-visible {
+  outline: 2px solid var(--gold); outline-offset: 2px;
+}
+.card-status-icon-btn.pulse { animation: pulse 1.5s ease-in-out infinite; }
+
 /* ── Pin button (replaces download) ────────────────
    44x44 touch target via min-width/height on mobile,
    compact 1.6rem on desktop. */
