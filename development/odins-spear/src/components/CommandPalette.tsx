@@ -22,6 +22,7 @@ const SUBSYSTEM_COLOR: Record<string, string> = {
   firestore: "#3b82f6",
   stripe: "#8b5cf6",
   system: GOLD,
+  trial: "#22c55e",
 };
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ export interface CommandPaletteProps {
   onClose: () => void;
   onReadResult: (title: string, lines: string[]) => void;
   onDestructive: (cmd: PaletteCommand) => void;
+  onTrialInput: (cmd: PaletteCommand) => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -42,6 +44,7 @@ export function CommandPalette({
   onClose,
   onReadResult,
   onDestructive,
+  onTrialInput,
 }: CommandPaletteProps): React.JSX.Element {
   log.debug("CommandPalette render");
 
@@ -72,6 +75,12 @@ export function CommandPalette({
       if (cmd.destructive) {
         log.debug("CommandPalette handleSelect: routing to destructive confirm");
         onDestructive(cmd);
+        return;
+      }
+
+      if (cmd.needsInput) {
+        log.debug("CommandPalette handleSelect: routing to trial input dialog");
+        onTrialInput(cmd);
         return;
       }
 

@@ -2,7 +2,7 @@ import { log } from "@fenrir/logger";
 
 // ─── Command schema ───────────────────────────────────────────────────────────
 
-export type Subsystem = "redis" | "firestore" | "stripe" | "system";
+export type Subsystem = "redis" | "firestore" | "stripe" | "system" | "trial";
 export type RequiresContext = "user" | "household" | "trial";
 
 export interface PaletteCommand {
@@ -16,6 +16,8 @@ export interface PaletteCommand {
   requiresContext?: RequiresContext;
   /** If true, routes through ConfirmDialog (type "delete" to confirm) */
   destructive?: boolean;
+  /** If true, routes through TrialInputDialog to collect a day-offset input */
+  needsInput?: boolean;
   /** Execute the command and return output lines */
   execute: (ctx: CommandContext) => Promise<string[]>;
 }
@@ -25,6 +27,8 @@ export interface CommandContext {
   selectedHouseholdId: string | null;
   selectedFp: string | null;
   selectedSubId: string | null;
+  /** Optional free-form input collected by TrialInputDialog before execute. */
+  input?: string;
 }
 
 // ─── Registry ─────────────────────────────────────────────────────────────────

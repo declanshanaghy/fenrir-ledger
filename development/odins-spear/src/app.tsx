@@ -7,6 +7,7 @@ import { HelpOverlay } from "./components/HelpOverlay.js";
 import { CommandPalette } from "./components/CommandPalette.js";
 import { ResultsOverlay } from "./components/ResultsOverlay.js";
 import { ConfirmDialog } from "./components/ConfirmDialog.js";
+import { TrialInputDialog } from "./components/TrialInputDialog.js";
 import { UsersTab } from "./tabs/UsersTab.js";
 import { HouseholdsTab } from "./tabs/HouseholdsTab.js";
 import { SelectionProvider, useSelection } from "./context/SelectionContext.js";
@@ -41,7 +42,8 @@ type OverlayMode =
   | { kind: "help" }
   | { kind: "palette" }
   | { kind: "results"; title: string; lines: string[] }
-  | { kind: "confirm"; cmd: PaletteCommand };
+  | { kind: "confirm"; cmd: PaletteCommand }
+  | { kind: "trial-input"; cmd: PaletteCommand };
 
 function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): React.JSX.Element {
   log.debug("SpearInner render");
@@ -103,6 +105,28 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
     log.debug("SpearInner: handleDestructive called", { name: cmd.name });
     setOverlay({ kind: "confirm", cmd });
   }, []);
+
+  const handleTrialInput = useCallback((cmd: PaletteCommand) => {
+    log.debug("SpearInner: handleTrialInput called", { name: cmd.name });
+    setOverlay({ kind: "trial-input", cmd });
+  }, []);
+
+  const handleTrialInputConfirm = useCallback(async (cmd: PaletteCommand, dayInput: string) => {
+    log.debug("SpearInner: handleTrialInputConfirm called", { name: cmd.name, dayInput });
+    closeOverlay();
+    try {
+      const lines = await cmd.execute({ ...cmdCtx, input: dayInput });
+      log.debug("SpearInner: handleTrialInputConfirm done", { lineCount: lines.length });
+      setOverlay({ kind: "results", title: cmd.name, lines });
+    } catch (err) {
+      log.error("SpearInner: handleTrialInputConfirm error", err as Error);
+      setOverlay({
+        kind: "results",
+        title: cmd.name,
+        lines: [`ERROR: ${(err as Error).message ?? String(err)}`],
+      });
+    }
+  }, [cmdCtx, closeOverlay]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConfirmExecute = useCallback(async (cmd: PaletteCommand) => {
     log.debug("SpearInner: handleConfirmExecute called", { name: cmd.name });
@@ -190,6 +214,7 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
         onClose={closeOverlay}
         onReadResult={handleReadResult}
         onDestructive={handleDestructive}
+        onTrialInput={handleTrialInput}
       />
     );
   } else if (overlay.kind === "results") {
@@ -198,6 +223,17 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
         title={overlay.title}
         lines={overlay.lines}
         onClose={closeOverlay}
+      />
+    );
+  } else if (overlay.kind === "trial-input") {
+    mainContent = (
+      <TrialInputDialog
+        action={overlay.cmd.name}
+        onConfirm={(dayInput) => { void handleTrialInputConfirm(overlay.cmd, dayInput); }}
+        onCancel={() => {
+          closeOverlay();
+          setCmdStatusMsg("Cancelled");
+        }}
       />
     );
   } else if (overlay.kind === "confirm") {

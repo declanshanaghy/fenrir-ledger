@@ -28,6 +28,7 @@ import { getStripeKey } from "./lib/stripe.js";
 import { registerRedisCommands } from "./commands/redis.js";
 import { registerFirestoreCommands } from "./commands/firestore.js";
 import { registerStripeCommands } from "./commands/stripe.js";
+import { registerTrialCommands } from "./commands/trial.js";
 import { SpearApp, tuiLog } from "./app.js";
 
 const initialCounts = { users: 0, households: 0 };
@@ -92,6 +93,7 @@ async function startup(): Promise<void> {
   registerRedisCommands();
   registerFirestoreCommands();
   registerStripeCommands();
+  registerTrialCommands();
 
   log.debug("startup returning");
 }
