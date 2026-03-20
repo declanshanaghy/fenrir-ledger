@@ -30,22 +30,59 @@ the next wave of stories for dispatch.
 | `--parallel-with <N>[,N...]` | No | Peers in the same wave (bidirectional update) |
 | `--note "..."` | No | Optional note text for the new story |
 
+## Help
+
+If no issue number is provided, or `--help` / `-h` is passed, **display this help
+text directly** (do NOT run the script):
+
+```
+/epic-manager — Epic dependency graph tracker + dispatch advisor
+
+USAGE
+  /epic-manager <N>                          Show dashboard for epic #N
+  /epic-manager <N> --dispatch               Dashboard + copy-paste dispatch commands
+  /epic-manager <N> --json                   Machine-readable JSON output
+  /epic-manager <N> --add <M> --blocked-by <X>[,Y]   Add story #M to epic graph
+
+DASHBOARD EXAMPLES
+  /epic-manager 1386                         Live status of epic #1386
+  /epic-manager 1386 --dispatch              Dashboard + ready dispatch commands
+
+ADD STORY EXAMPLES
+  /epic-manager 1386 --add 1507 --blocked-by 1495
+  /epic-manager 1386 --add 1508 --blocked-by 1495 --parallel-with 1507
+  /epic-manager 1386 --add 1509 --blocked-by 1495 --wave 3 --note "Extra context"
+
+ADD FLAGS
+  --add <N>              Issue number to insert into the graph
+  --blocked-by <N>[,N]   Comma-separated blockers (must close before this starts)
+  --parallel-with <N>[,N] Peers in the same wave (bidirectional link)
+  --wave <N>             Override wave (default: max blocker wave + 1)
+  --note "..."           Optional note stored in the YAML
+
+DASHBOARD ICONS
+  ✅  done      — GitHub issue is CLOSED
+  🔄  running   — Active K8s job found for this issue
+  🟢  ready     — All blockers closed, not yet running
+  🔴  blocked   — One or more blockers still OPEN
+  ⚠️   duplicate — duplicate_of is set; close manually before dispatching
+
+EPIC FILE
+  Reads/writes tmp/epics/<root-issue>.yml
+  Auto-migrates legacy .json files to .yml on first run.
+```
+
 ## Speed Rules (UNBREAKABLE)
 
 1. **One tool call.** Run the MJS script directly — no pre-fetching, no narration between calls.
 2. **Never re-fetch what the script already fetches.** The script queries GitHub and K8s itself.
 3. **If the epic file is missing**, tell Odin to run `/plan-w-team` or check the issue number.
+4. **If no issue number or `--help`**, display the Help section above — do NOT run the script.
 
 ## Execution
 
 ```bash
 node .claude/skills/epic-manager/epic-manager.mjs <N> [--dispatch]
-```
-
-If `--help` is the only argument, run the script directly to show its built-in help:
-
-```bash
-node .claude/skills/epic-manager/epic-manager.mjs --help
 ```
 
 That is the entire execution. No other tool calls needed unless the output requires
