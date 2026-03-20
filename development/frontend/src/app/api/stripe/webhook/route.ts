@@ -8,13 +8,15 @@
  * stripe.webhooks.constructEvent() using STRIPE_WEBHOOK_SECRET.
  *
  * Handled events:
- *   - checkout.session.completed — new subscriber (create entitlement)
- *   - customer.subscription.updated — subscription status change (update entitlement)
- *   - customer.subscription.deleted — subscription cancelled (downgrade to thrall)
+ *   - checkout.session.completed — new subscriber (write Stripe fields to household)
+ *   - customer.subscription.updated — subscription status change (update household)
+ *   - customer.subscription.deleted — subscription cancelled (downgrade household to free)
  *
  * User mapping:
  *   - checkout.session.completed: uses metadata.googleSub from the session
- *   - subscription events: uses stripe-customer:{customerId} reverse index in KV
+ *   - subscription events: queries users collection by stripeCustomerId
+ *
+ * Stripe state is written directly to the household document — no /entitlements/ collection.
  *
  * @see ADR-010 for the Stripe Direct integration decision
  */
@@ -32,61 +34,8 @@ import {
   isAnonymousStripeReverseIndex,
   extractStripeCustomerIdFromReverseIndex,
 } from "@/lib/kv/entitlement-store";
-import { getUser, getFirestore, isEventProcessed, markEventProcessed } from "@/lib/firebase/firestore";
-import { FIRESTORE_PATHS } from "@/lib/firebase/firestore-types";
-import type { StripeTier } from "@/lib/stripe/types";
+import { isEventProcessed, markEventProcessed } from "@/lib/firebase/firestore";
 import { log } from "@/lib/logger";
-
-// ─── Firestore household tier sync ───────────────────────────────────────────
-
-/**
- * Updates households/{householdId}.tier in Firestore when a subscription
- * status changes. Best-effort — errors are logged but do NOT fail the webhook
- * response (Firestore is the authoritative billing source; household tier is derived).
- *
- * Only runs for authenticated users (those with a googleSub mapping).
- *
- * @param googleSub - Google account immutable ID
- * @param tier - New tier value ("karl" | "free")
- */
-/**
- * Maps a Stripe billing tier to the Firestore household tier.
- * "thrall" (inactive/cancelled) maps to "free" in Firestore.
- */
-function stripeTierToHouseholdTier(stripeTier: StripeTier): "karl" | "free" {
-  return stripeTier === "karl" ? "karl" : "free";
-}
-
-async function syncHouseholdTierToFirestore(
-  googleSub: string,
-  stripeTier: StripeTier,
-): Promise<void> {
-  const householdTier = stripeTierToHouseholdTier(stripeTier);
-  try {
-    const user = await getUser(googleSub);
-    if (!user) {
-      log.debug("syncHouseholdTierToFirestore: user not found in Firestore", { googleSub });
-      return;
-    }
-    const db = getFirestore();
-    await db.doc(FIRESTORE_PATHS.household(user.householdId)).update({
-      tier: householdTier,
-      updatedAt: new Date().toISOString(),
-    });
-    log.debug("syncHouseholdTierToFirestore: household tier updated", {
-      householdId: user.householdId,
-      householdTier,
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    log.error("syncHouseholdTierToFirestore: failed to update Firestore", {
-      googleSub,
-      stripeTier,
-      error: message,
-    });
-    // Best-effort — do not rethrow; entitlements/ remains the authoritative source
-  }
-}
 
 /** Valid webhook event types we process. */
 const HANDLED_EVENTS = new Set<string>([
@@ -98,13 +47,10 @@ const HANDLED_EVENTS = new Set<string>([
 
 /**
  * Handles checkout.session.completed — links the new Stripe customer to the
- * authenticated Google user (via metadata.googleSub) or stores as anonymous.
+ * authenticated Google user (via metadata.googleSub).
  *
- * Dual path:
- *   - metadata.googleSub present -> authenticated: store as entitlement:{googleSub},
- *     reverse index stripe-customer:{customerId} -> {googleSub}
- *   - metadata.googleSub absent -> anonymous: store as entitlement:stripe:{customerId},
- *     reverse index stripe-customer:{customerId} -> stripe:{customerId}
+ * Authenticated path: writes Stripe fields directly to the user's household doc.
+ * Anonymous path: no-op (anonymous subscriptions not supported — requires Google sign-in).
  */
 async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
@@ -146,10 +92,8 @@ async function handleCheckoutCompleted(
   const googleSub = session.metadata?.googleSub;
 
   if (googleSub) {
-    // Authenticated path: store under Google sub with reverse index
+    // Authenticated path: write Stripe fields to household doc
     await setStripeEntitlement(googleSub, entitlement);
-    // Sync tier to Firestore household (best-effort)
-    await syncHouseholdTierToFirestore(googleSub, entitlement.tier);
     log.debug("handleCheckoutCompleted returning (authenticated)", {
       status: 200,
       googleSub,
@@ -157,9 +101,9 @@ async function handleCheckoutCompleted(
       active: entitlement.active,
     });
   } else {
-    // Anonymous path: store under Stripe customer ID with anonymous reverse index
+    // Anonymous path: no-op — anonymous subscriptions not supported
     await setAnonymousStripeEntitlement(customerId, entitlement);
-    log.debug("handleCheckoutCompleted returning (anonymous)", {
+    log.debug("handleCheckoutCompleted returning (anonymous — no-op)", {
       status: 200,
       stripeCustomerId: customerId,
       tier: entitlement.tier,
@@ -177,8 +121,8 @@ async function handleCheckoutCompleted(
 }
 
 /**
- * Handles customer.subscription.updated — updates the entitlement tier/status.
- * Supports both authenticated and anonymous users via the reverse index.
+ * Handles customer.subscription.updated — updates Stripe fields on the household doc.
+ * Authenticated users only — anonymous subscriptions not supported.
  */
 async function handleSubscriptionUpdated(
   subscription: Stripe.Subscription,
@@ -221,24 +165,22 @@ async function handleSubscriptionUpdated(
   };
 
   if (isAnonymous) {
-    // Anonymous path: look up existing to preserve linkedAt, then store under Stripe customer ID
+    // Anonymous path: preserve linkedAt then no-op store
     const stripeId = extractStripeCustomerIdFromReverseIndex(identity);
     const existing = await getAnonymousStripeEntitlement(stripeId);
     entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
     await setAnonymousStripeEntitlement(stripeId, entitlement);
-    log.debug("handleSubscriptionUpdated returning (anonymous)", {
+    log.debug("handleSubscriptionUpdated returning (anonymous — no-op)", {
       status: 200,
       tier,
       active,
       stripeCustomerId: stripeId,
     });
   } else {
-    // Authenticated path: store under Google sub
+    // Authenticated path: write Stripe fields to household doc
     const existing = await getStripeEntitlement(identity);
     entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
     await setStripeEntitlement(identity, entitlement);
-    // Sync tier to Firestore household (best-effort)
-    await syncHouseholdTierToFirestore(identity, tier);
     log.debug("handleSubscriptionUpdated returning (authenticated)", {
       status: 200,
       tier,
@@ -256,8 +198,8 @@ async function handleSubscriptionUpdated(
 }
 
 /**
- * Handles customer.subscription.deleted — downgrades to thrall.
- * Supports both authenticated and anonymous users via the reverse index.
+ * Handles customer.subscription.deleted — clears Stripe fields on the household doc,
+ * reverting to free tier.
  */
 async function handleSubscriptionDeleted(
   subscription: Stripe.Subscription,
@@ -298,7 +240,7 @@ async function handleSubscriptionDeleted(
     const existing = await getAnonymousStripeEntitlement(stripeId);
     entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
     await setAnonymousStripeEntitlement(stripeId, entitlement);
-    log.debug("handleSubscriptionDeleted returning (anonymous)", {
+    log.debug("handleSubscriptionDeleted returning (anonymous — no-op)", {
       status: 200,
       tier: "thrall",
       active: false,
@@ -308,8 +250,6 @@ async function handleSubscriptionDeleted(
     const existing = await getStripeEntitlement(identity);
     entitlement.linkedAt = existing?.linkedAt ?? entitlement.linkedAt;
     await setStripeEntitlement(identity, entitlement);
-    // Sync tier downgrade to Firestore household (best-effort)
-    await syncHouseholdTierToFirestore(identity, "thrall");
     log.debug("handleSubscriptionDeleted returning (authenticated)", {
       status: 200,
       tier: "thrall",
