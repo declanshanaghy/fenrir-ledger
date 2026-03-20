@@ -1,0 +1,106 @@
+epic:
+  number: 1386
+  title: "Odin's Spear TUI"
+  description: >
+    Full rewrite of the Odin's Spear admin TUI as a proper Ink-based Node.js
+    application, extracted into a standalone package with modular architecture,
+    shared Fenrir logger, and a complete command palette + tab content layer.
+
+stories:
+  - number: 1386
+    title: "Odin's Spear TUI: foundation — Ink setup, auto-startup, tab shell"
+    state: closed
+    wave: 0
+    blocks: [1496]
+    blocked_by: []
+    note: "DONE — produces development/frontend/scripts/odins-spear.mjs"
+
+  - number: 1496
+    title: "Odin's Spear: extract into standalone package development/odins-spear with modular architecture"
+    state: open
+    wave: 1
+    blocks: [1495, 1387, 1388]
+    blocked_by: [1386]
+    note: >
+      Moves odins-spear.mjs (and any other odins-spear.* files) out of
+      development/frontend/scripts/ into a standalone development/odins-spear/
+      package. Wires @fenrir/logger path alias to frontend/src/lib/logger.ts.
+      Splits monolith into modules. Removes Ink deps from frontend package.json.
+      Must enumerate all odins-spear.* files before starting.
+
+  - number: 1495
+    title: "Odin's Spear: command & help subsystem — unified palette for Redis, Firestore, Stripe"
+    state: open
+    wave: 2
+    blocks: [1387, 1388, 1389, 1472]
+    blocked_by: [1496]
+    note: >
+      PALETTE_COMMANDS registry, CommandPalette (/ key), HelpOverlay (? key),
+      ResultsOverlay, ConfirmDialog. Context-gated commands. Structured logging
+      via @fenrir/logger throughout.
+
+  - number: 1390
+    title: "Odin's Spear TUI: command palette + confirmation dialogs"
+    state: open
+    wave: 2
+    blocks: []
+    blocked_by: [1496]
+    duplicate_of: 1495
+    note: >
+      WARNING: substantially overlaps #1495 which is the authoritative
+      implementation spec. Should be closed as duplicate before wave 2 begins.
+
+  - number: 1387
+    title: "Odin's Spear TUI: Users tab — list + detail panel"
+    state: open
+    wave: 3
+    blocks: [1389]
+    blocked_by: [1496, 1495]
+    parallel_with: [1388]
+
+  - number: 1388
+    title: "Odin's Spear TUI: Households tab — list + detail panel"
+    state: open
+    wave: 3
+    blocks: []
+    blocked_by: [1496, 1495]
+    parallel_with: [1387]
+
+  - number: 1389
+    title: "Odin's Spear TUI: Card drill-down view"
+    state: open
+    wave: 4
+    blocks: []
+    blocked_by: [1387]
+    parallel_with: [1472]
+
+  - number: 1472
+    title: "Odin's Spear — trial manipulation controls for user admin"
+    state: open
+    wave: 4
+    blocks: []
+    blocked_by: [1495]
+    parallel_with: [1389]
+
+execution_order:
+  - wave: 0
+    status: done
+    stories: [1386]
+  - wave: 1
+    status: ready
+    stories: [1496]
+  - wave: 2
+    status: blocked
+    stories: [1495]
+    notes: "Close #1390 as duplicate of #1495 before starting this wave"
+  - wave: 3
+    status: blocked
+    stories: [1387, 1388]
+    parallel: true
+  - wave: 4
+    status: blocked
+    stories: [1389, 1472]
+    parallel: true
+
+actions:
+  - Close #1390 as duplicate of #1495 before wave 2 begins
