@@ -77,12 +77,10 @@ BRANCH="${BRANCH:-main}"
 git fetch origin --prune
 
 if git ls-remote --exit-code --heads origin "${BRANCH}" >/dev/null 2>&1; then
-  # Branch exists on remote — check it out tracking the remote
+  # Branch exists on remote — check it out tracking the remote.
+  # Do NOT rebase here — the agent rebases in Step 5 before creating the PR.
+  # Premature rebase causes cascading failures when parallel branches diverge.
   git checkout -b "${BRANCH}" "origin/${BRANCH}"
-  git rebase origin/main || {
-    echo "[WARN] rebase conflict — aborting rebase, continuing on branch"
-    git rebase --abort || true
-  }
   echo "[ok] checked out existing branch: ${BRANCH}"
 else
   # Branch does not exist on remote — create fresh and push
@@ -99,8 +97,13 @@ cd /workspace/repo
 if ! command -v pnpm &>/dev/null; then
   corepack enable && corepack prepare pnpm@10.32.1 --activate
 fi
-pnpm install --frozen-lockfile --prefer-offline 2>/dev/null || pnpm install --frozen-lockfile
-echo "[ok] workspace dependencies installed"
+if pnpm install --frozen-lockfile --prefer-offline 2>/dev/null || pnpm install --frozen-lockfile 2>/dev/null; then
+  echo "[ok] workspace dependencies installed (frozen lockfile)"
+else
+  echo "[WARN] frozen-lockfile failed (likely lockfile drift from parallel branches) — running pnpm install"
+  pnpm install --no-frozen-lockfile
+  echo "[ok] workspace dependencies installed (regenerated lockfile)"
+fi
 
 # --------------------------------------------------------------------------
 # 5. Handle Spot/preemptible pod eviction gracefully
