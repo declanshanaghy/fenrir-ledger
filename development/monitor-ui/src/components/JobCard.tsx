@@ -141,6 +141,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
         {onTogglePin && (
           <CardPinButton isPinned={isPinned} onTogglePin={onTogglePin} />
         )}
+        <CardCopySessionIdButton sessionId={job.sessionId} />
       </div>
       {displayMode === "extended" && (
         <div className="card-extended-meta">
@@ -208,6 +209,50 @@ function CardPinButton({ isPinned, onTogglePin }: { isPinned: boolean; onToggleP
     >
       <CardPinIcon filled={isPinned} />
     </button>
+  );
+}
+
+function CardCopySessionIdButton({ sessionId }: { sessionId: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy(e: React.MouseEvent) {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(sessionId);
+      setCopied(true);
+      setTimeout(() => { setCopied(false); }, 2000);
+    } catch {
+      // Clipboard API unavailable — no-op
+    }
+  }
+
+  return (
+    <button
+      className={`copy-session-btn${copied ? " copied" : ""}`}
+      onClick={handleCopy}
+      title={copied ? "Copied!" : "Copy session ID"}
+      aria-label={copied ? "Session ID copied" : "Copy session ID"}
+    >
+      {copied ? <CardCheckIcon /> : <CardClipboardIcon />}
+    </button>
+  );
+}
+
+function CardClipboardIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <rect x="4" y="3" width="7" height="9" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M4 4H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M6 3V2h3v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CardCheckIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
