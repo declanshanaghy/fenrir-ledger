@@ -81,6 +81,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
   }
 
   const isExtended = displayMode === "extended";
+  const shortSessionId = job.sessionId.length > 8 ? job.sessionId.slice(0, 8) + "…" : job.sessionId;
 
   return (
     <div
@@ -182,14 +183,19 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
           </>
         )}
       </div>
-      {isExtended && (job.startTime || job.completionTime) && (
+      {isExtended && (
         <div className="card-extended-meta">
+          <span className="card-extended-session-id" title={job.sessionId}>
+            {shortSessionId}
+          </span>
           <span className="card-extended-elapsed" title="Elapsed time">
             {formatElapsed(job.startTime, job.completionTime)}
           </span>
-          <span className="card-extended-timestamp" title="Last activity">
-            {formatTimestamp(job.completionTime ?? job.startTime)}
-          </span>
+          {(job.startTime || job.completionTime) && (
+            <span className="card-extended-timestamp" title="Last activity">
+              {formatTimestamp(job.completionTime ?? job.startTime)}
+            </span>
+          )}
         </div>
       )}
       {isTerminating && (
