@@ -266,7 +266,7 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           router.push("/ledger");
         }}
         className={[
-          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border relative",
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-[color,border-color] font-body flex items-center gap-2 border-b border-border relative",
           isMyCardsActive ? "text-gold font-semibold" : "text-muted-foreground hover:text-foreground",
         ].join(" ")}
         style={{ minHeight: 44 }}
@@ -289,7 +289,7 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           router.push("/ledger/settings#account");
         }}
         className={[
-          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border relative",
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-[color,border-color] font-body flex items-center gap-2 border-b border-border relative",
           isAccountActive
             ? "text-gold font-semibold"
             : "text-muted-foreground hover:text-foreground",
@@ -314,7 +314,7 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           router.push("/ledger/settings#household");
         }}
         className={[
-          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border relative",
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-[color,border-color] font-body flex items-center gap-2 border-b border-border relative",
           isHouseholdActive
             ? "text-gold font-semibold"
             : "text-muted-foreground hover:text-foreground",
@@ -339,7 +339,7 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           router.push("/ledger/settings#settings");
         }}
         className={[
-          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2 border-b border-border relative",
+          "px-4 py-3 text-base hover:bg-secondary/50 text-left transition-[color,border-color] font-body flex items-center gap-2 border-b border-border relative",
           isSettingsTabActive
             ? "text-gold font-semibold"
             : "text-muted-foreground hover:text-foreground",
@@ -360,7 +360,7 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
         type="button"
         role="menuitem"
         onClick={() => setTheme(cycleTheme(theme))}
-        className="flex items-center gap-2 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer w-full text-left"
+        className="flex items-center gap-2 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-[color,border-color] cursor-pointer w-full text-left"
         style={{ minHeight: 44 }}
       >
         <ThemeToggle variant="dropdown-icon" />
@@ -374,7 +374,7 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
           onClose();
           onSignOut();
         }}
-        className="px-4 py-3 text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 text-left transition-colors font-body flex items-center gap-2"
+        className="px-4 py-3 text-base text-muted-foreground hover:text-foreground hover:bg-secondary/50 text-left transition-[color,border-color] font-body flex items-center gap-2"
         style={{ minHeight: 44 }}
       >
         <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />

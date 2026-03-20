@@ -52,7 +52,6 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
         role="listitem"
         aria-label={`Job: Issue ${job.issue} – ${job.agentName} – ${sLabel}`}
         onClick={onClick}
-        title={cardTitle}
       >
         <span className={`card-status${pulse}`} style={{ color: sColor }} aria-hidden="true">
           <StatusIconSvg status={job.status} />
@@ -68,7 +67,6 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
               onClick();
             }}
             aria-label={`Open session log for ${job.agentName} – Issue ${job.issue}`}
-            title={cardTitle}
           >
             <img className="card-avatar card-avatar--minimal" src={avatar} alt={job.agentName} />
           </button>

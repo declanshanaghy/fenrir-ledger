@@ -119,7 +119,6 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
                    text-muted-foreground hover:text-gold transition-colors"
         style={{ minWidth: 44, minHeight: 44 }}
         aria-label={`Theme: ${currentLabel}. Click to switch to ${nextLabel}.`}
-        title={`Theme: ${currentLabel}`}
       >
         <CurrentIcon className="h-4 w-4" />
       </button>
