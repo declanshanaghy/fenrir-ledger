@@ -3,7 +3,7 @@ import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
 import { log } from "@fenrir/logger";
 import {
-  filterCommands,
+  filterCommandsForTab,
   isAvailable,
   type PaletteCommand,
   type CommandContext,
@@ -28,6 +28,8 @@ const SUBSYSTEM_COLOR: Record<string, string> = {
 
 export interface CommandPaletteProps {
   ctx: CommandContext;
+  /** Active tab index: 0 = Users, 1 = Households. Filters command list to relevant commands. */
+  activeTab: number;
   onClose: () => void;
   onReadResult: (title: string, lines: string[]) => void;
   onDestructive: (cmd: PaletteCommand) => void;
@@ -40,19 +42,23 @@ const MAX_VISIBLE = 12;
 
 export function CommandPalette({
   ctx,
+  activeTab,
   onClose,
   onReadResult,
   onDestructive,
   onTrialInput,
 }: CommandPaletteProps): React.JSX.Element {
-  log.debug("CommandPalette render");
+  log.debug("CommandPalette render", { activeTab });
 
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
   const [executing, setExecuting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const allMatches = filterCommands(query);
+  // Filter to tab-relevant commands; fall back to all if query bypasses tab filter
+  const allMatches = query.length > 0
+    ? filterCommandsForTab(query, activeTab)
+    : filterCommandsForTab("", activeTab);
   // Stable per-render so hooks are unconditional
   const visibleStart = Math.max(0, cursor - MAX_VISIBLE + 1);
   const visible = allMatches.slice(visibleStart, visibleStart + MAX_VISIBLE);
@@ -211,7 +217,7 @@ export function CommandPalette({
           <Text color={GRAY} dimColor>Enter select</Text>
           <Text color={GRAY} dimColor>Esc close</Text>
           <Text color={GRAY} dimColor>
-            {allMatches.length}/{filterCommands("").length} commands
+            {allMatches.length}/{filterCommandsForTab("", activeTab).length} commands
           </Text>
         </Box>
       )}

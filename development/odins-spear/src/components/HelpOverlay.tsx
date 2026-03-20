@@ -16,12 +16,15 @@ interface Shortcut {
 
 interface Section {
   title: string;
+  /** Which tabs show this section. "all" = always visible. */
+  tabs: "all" | "users" | "households";
   shortcuts: Shortcut[];
 }
 
 const SECTIONS: Section[] = [
   {
     title: "Navigation",
+    tabs: "all",
     shortcuts: [
       { key: "Tab",      desc: "Switch tab (Users / Households)" },
       { key: "↑ / ↓",   desc: "Navigate list" },
@@ -34,6 +37,7 @@ const SECTIONS: Section[] = [
   },
   {
     title: "User Actions  (user selected)",
+    tabs: "users",
     shortcuts: [
       { key: "d",  desc: "Delete selected user" },
       { key: "t",  desc: "Update subscription tier" },
@@ -41,21 +45,24 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    title: "Household Actions  (household selected)",
-    shortcuts: [
-      { key: "d",  desc: "Delete selected household" },
-      { key: "u",  desc: "List household members" },
-    ],
-  },
-  {
     title: "Trial Actions  (trial in scope)",
+    tabs: "users",
     shortcuts: [
       { key: "s",  desc: "Cancel active Stripe subscription" },
       { key: "e",  desc: "Extend trial period" },
     ],
   },
   {
+    title: "Household Actions  (household selected)",
+    tabs: "households",
+    shortcuts: [
+      { key: "d",  desc: "Delete selected household" },
+      { key: "u",  desc: "List household members" },
+    ],
+  },
+  {
     title: "System Commands",
+    tabs: "all",
     shortcuts: [
       { key: "Ctrl+R",  desc: "Reload current view" },
       { key: "/firestore-ping",             desc: "Ping Firestore" },
@@ -65,19 +72,33 @@ const SECTIONS: Section[] = [
   },
 ];
 
+/**
+ * Return sections visible for a given tab index.
+ * tabIndex 0 → Users, 1 → Households.
+ */
+export function getSectionsForTab(tabIndex: number): Section[] {
+  const tabName = tabIndex === 0 ? "users" : "households";
+  return SECTIONS.filter((s) => s.tabs === "all" || s.tabs === tabName);
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export interface HelpOverlayProps {
+  /** Active tab index: 0 = Users, 1 = Households. Controls which sections are shown. */
+  activeTab: number;
   onClose: () => void;
 }
 
-export function HelpOverlay({ onClose }: HelpOverlayProps): React.JSX.Element {
-  log.debug("HelpOverlay render");
+export function HelpOverlay({ activeTab, onClose }: HelpOverlayProps): React.JSX.Element {
+  log.debug("HelpOverlay render", { activeTab });
 
   useInput((_input, _key) => {
     log.debug("HelpOverlay: key pressed, closing");
     onClose();
   });
+
+  const tabLabel = activeTab === 0 ? "Users" : "Households";
+  const sections = getSectionsForTab(activeTab);
 
   return (
     <Box
@@ -89,9 +110,11 @@ export function HelpOverlay({ onClose }: HelpOverlayProps): React.JSX.Element {
       marginX={4}
       marginY={1}
     >
-      <Text bold color={GOLD}>Keyboard Shortcuts — Odin{"'"}s Spear</Text>
+      <Text bold color={GOLD}>
+        Keyboard Shortcuts — Odin{"'"}s Spear  <Text color={DIM}>[{tabLabel} tab]</Text>
+      </Text>
 
-      {SECTIONS.map((section) => (
+      {sections.map((section) => (
         <Box key={section.title} flexDirection="column" marginTop={1}>
           {/* Section heading */}
           <Text color={GOLD} bold underline>{section.title}</Text>
