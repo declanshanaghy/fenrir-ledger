@@ -47,7 +47,7 @@ import { TRIAL_DURATION_DAYS } from "@/lib/trial-utils";
 // ── Test data ────────────────────────────────────────────────────────────────
 
 const USER_ID = "google-sub-abc123";
-const TRIAL_PATH = `households/${USER_ID}/trial`;
+const TRIAL_PATH = `households/${USER_ID}/trial/status`;
 
 function activeTrialSnap(overrides: Partial<StoredTrial> = {}) {
   const trial: StoredTrial = {
@@ -79,7 +79,7 @@ describe("getTrial", () => {
     mockDocRef.get.mockResolvedValue(missingSnap);
   });
 
-  it("reads from /households/{userId}/trial path", async () => {
+  it("reads from /households/{userId}/trial/status path", async () => {
     mockDocRef.get.mockResolvedValueOnce(activeTrialSnap());
 
     await getTrial(USER_ID);
