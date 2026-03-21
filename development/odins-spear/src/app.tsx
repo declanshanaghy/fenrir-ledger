@@ -263,11 +263,7 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
     mainContent = (
       <UsersTab
         cmdStatus={cmdStatus}
-        onInputCapture={setInputCaptured}
         onJumpToHousehold={(householdId) => { setJumpHouseholdId(householdId); setActiveTab(1); }}
-        onCardsView={(householdId, filterUserId, ownerEmail) => {
-          setCardDrilldown({ householdId, filterUserId, breadcrumbFrom: ownerEmail, ownerEmail });
-        }}
       />
     );
   } else {

@@ -28,7 +28,7 @@ interface UserDetail {
   stripeSubscriptionId: string | null;
 }
 
-type ActionMode = "none" | "delete_confirm" | "tier_input" | "sub_cancel_confirm";
+type ActionMode = "none" | "delete_confirm" | "sub_cancel_confirm";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -46,12 +46,6 @@ const TIER_STYLES: Record<string, { label: string; bg: string | undefined; color
 
 function getTierStyle(tier: string): { label: string; bg: string | undefined; color: string } {
   return TIER_STYLES[tier] ?? TIER_STYLES["thrall"]!;
-}
-
-function validateTierInput(raw: string): "karl" | "trial" | "thrall" | null {
-  const t = raw.trim().toLowerCase();
-  if (t === "karl" || t === "trial" || t === "thrall") return t;
-  return null;
 }
 
 // ─── TierBadge ────────────────────────────────────────────────────────────────
@@ -94,8 +88,6 @@ interface UserDetailPanelProps {
   user: EnrichedUser;
   detail: UserDetail | null;
   actionMode: ActionMode;
-  tierInput: string;
-  tierError: string | null;
   statusMsg: string | null;
 }
 
@@ -103,8 +95,6 @@ function UserDetailPanel({
   user,
   detail,
   actionMode,
-  tierInput,
-  tierError,
   statusMsg,
 }: UserDetailPanelProps): React.JSX.Element {
   const joinedDate = user.createdAt
@@ -230,9 +220,9 @@ function UserDetailPanel({
       {actionMode === "none" ? (
         <Box>
           <Text color={GRAY}>
-            {"[x] Delete  [t] Tier"}
+            {"[x] Delete"}
             {detail?.stripeSubscriptionId ? "  [s] Cancel sub" : ""}
-            {detail?.household ? "  [h] Household  [c] Cards" : ""}
+            {detail?.household ? "  [h] Household" : ""}
           </Text>
         </Box>
       ) : actionMode === "delete_confirm" ? (
@@ -240,16 +230,6 @@ function UserDetailPanel({
           <Text color="red">
             {"Delete "}{user.email}{"? [y] confirm  [Esc] cancel"}
           </Text>
-        </Box>
-      ) : actionMode === "tier_input" ? (
-        <Box flexDirection="column">
-          <Box>
-            <Text color={GRAY}>{"New tier (karl/trial/thrall): "}</Text>
-            <Text color="cyan">{tierInput}</Text>
-            <Text color="cyan">{"\u258C"}</Text>
-          </Box>
-          {tierError ? <Text color="red">{tierError}</Text> : null}
-          <Text color={GRAY}>{"[Enter] confirm  [Esc] cancel"}</Text>
         </Box>
       ) : actionMode === "sub_cancel_confirm" ? (
         <Box>
@@ -266,16 +246,12 @@ function UserDetailPanel({
 
 interface UsersTabProps {
   cmdStatus: string | null;
-  onInputCapture?: (captured: boolean) => void;
   onJumpToHousehold?: (householdId: string) => void;
-  onCardsView?: (householdId: string, filterUserId: string, ownerEmail: string) => void;
 }
 
 export function UsersTab({
   cmdStatus,
-  onInputCapture,
   onJumpToHousehold,
-  onCardsView,
 }: UsersTabProps): React.JSX.Element {
   log.debug("UsersTab render");
 
@@ -288,16 +264,7 @@ export function UsersTab({
   const [scrollOffset, setScrollOffset] = useState(0);
   const [detail, setDetail] = useState<UserDetail | null>(null);
   const [actionMode, setActionMode] = useState<ActionMode>("none");
-  const [tierInput, setTierInput] = useState("");
-  const [tierError, setTierError] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
-
-  const inputCaptured = actionMode === "tier_input";
-
-  // Notify parent when input is captured / released
-  useEffect(() => {
-    onInputCapture?.(inputCaptured);
-  }, [inputCaptured, onInputCapture]);
 
   // Load users on mount
   useEffect(() => {
@@ -515,71 +482,7 @@ export function UsersTab({
     [] // setters are stable
   );
 
-  // Update tier
-  const doUpdateTier = useCallback(
-    async (user: EnrichedUser, tier: "karl" | "trial" | "thrall"): Promise<void> => {
-      if (!firestoreClient) return;
-      try {
-        if (user.householdId) {
-          await firestoreClient
-            .collection("households")
-            .doc(user.householdId)
-            .update({ tier });
-          setUsers((prev) =>
-            prev.map((u) =>
-              u.householdId === user.householdId ? { ...u, tier } : u
-            )
-          );
-        } else {
-          await firestoreClient.collection("users").doc(user.id).update({ tier });
-          setUsers((prev) =>
-            prev.map((u) => (u.id === user.id ? { ...u, tier } : u))
-          );
-        }
-        // Success: close input bar, show status toast
-        setActionMode("none");
-        setTierInput("");
-        setTierError(null);
-        setStatusMsg(`Updated tier to ${tier}`);
-      } catch (err) {
-        // Failure: keep input bar open, show error inline
-        setTierError(`Error: ${(err as Error).message}`);
-      }
-    },
-    [] // setters are stable
-  );
-
   useInput((input, key) => {
-    // Tier prompt captures all input — global handlers must not fire
-    if (actionMode === "tier_input") {
-      if (key.escape) {
-        setActionMode("none");
-        setTierInput("");
-        setTierError(null);
-        return;
-      }
-      if (key.return) {
-        const valid = validateTierInput(tierInput);
-        if (!valid) {
-          setTierError("Invalid tier. Enter: karl, trial, or thrall");
-          return;
-        }
-        // Don't close the bar here — doUpdateTier controls actionMode.
-        // On success it clears actionMode/tierInput/tierError; on failure it sets tierError.
-        const user = users[selectedIdx];
-        if (user) void doUpdateTier(user, valid);
-        return;
-      }
-      if (key.backspace || key.delete) {
-        setTierInput((prev) => prev.slice(0, -1));
-        return;
-      }
-      if (input && !key.ctrl && !key.meta) {
-        setTierInput((prev) => prev + input);
-      }
-      return;
-    }
-
     // Delete confirmation
     if (actionMode === "delete_confirm") {
       if (key.escape || input === "n") {
@@ -649,12 +552,6 @@ export function UsersTab({
         setActionMode("delete_confirm");
         return;
       }
-      if (input === "t") {
-        setTierInput("");
-        setTierError(null);
-        setActionMode("tier_input");
-        return;
-      }
       if (input === "s" && detail?.stripeSubscriptionId) {
         setActionMode("sub_cancel_confirm");
         return;
@@ -665,10 +562,6 @@ export function UsersTab({
         } else {
           setStatusMsg("No household \u2014 this user is solo");
         }
-        return;
-      }
-      if (input === "c" && detail?.household && user.householdId) {
-        onCardsView?.(user.householdId, user.id, user.email);
         return;
       }
     }
@@ -740,8 +633,6 @@ export function UsersTab({
             user={selectedUser}
             detail={detail}
             actionMode={actionMode}
-            tierInput={tierInput}
-            tierError={tierError}
             statusMsg={statusMsg ?? cmdStatus}
           />
         ) : (
