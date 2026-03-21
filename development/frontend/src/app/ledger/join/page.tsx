@@ -18,7 +18,6 @@ import { useRouter } from "next/navigation";
 import { CodeCharInput } from "@/components/household/CodeCharInput";
 import {
   useJoinHouseholdPage,
-  CODE_LENGTH,
   type HouseholdPreview,
   type ValidationStatus,
 } from "./useJoinHouseholdPage";
