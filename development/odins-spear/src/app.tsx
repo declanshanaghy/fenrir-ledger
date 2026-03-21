@@ -4,7 +4,6 @@ import { log } from "@fenrir/logger";
 import { TopBar } from "./components/TopBar.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { HelpOverlay } from "./components/HelpOverlay.js";
-import { CommandPalette } from "./components/CommandPalette.js";
 import { ResultsOverlay } from "./components/ResultsOverlay.js";
 import { ConfirmDialog } from "./components/ConfirmDialog.js";
 import { TrialInputDialog } from "./components/TrialInputDialog.js";
@@ -28,7 +27,6 @@ interface SpearInnerProps {
 type OverlayMode =
   | { kind: "none" }
   | { kind: "help" }
-  | { kind: "palette" }
   | { kind: "results"; title: string; lines: string[] }
   | { kind: "confirm"; cmd: PaletteCommand }
   | { kind: "trial-input"; cmd: PaletteCommand };
@@ -72,11 +70,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
   const closeOverlay = useCallback(() => {
     log.debug("SpearInner: closeOverlay called");
     setOverlay({ kind: "none" });
-  }, []);
-
-  const openPalette = useCallback(() => {
-    log.debug("SpearInner: opening palette");
-    setOverlay({ kind: "palette" });
   }, []);
 
   const openHelp = useCallback(() => {
@@ -167,11 +160,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
       return;
     }
 
-    if (input === "/") {
-      openPalette();
-      return;
-    }
-
     if (key.tab) {
       const next = (activeTab + 1) % TUI_TABS.length;
       log.debug("SpearInner: switching tab", { from: activeTab, to: next });
@@ -201,17 +189,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
   let mainContent: React.JSX.Element;
   if (overlay.kind === "help") {
     mainContent = <HelpOverlay activeTab={activeTab} onClose={closeOverlay} />;
-  } else if (overlay.kind === "palette") {
-    mainContent = (
-      <CommandPalette
-        ctx={cmdCtx}
-        activeTab={activeTab}
-        onClose={closeOverlay}
-        onReadResult={handleReadResult}
-        onDestructive={handleDestructive}
-        onTrialInput={handleTrialInput}
-      />
-    );
   } else if (overlay.kind === "results") {
     mainContent = (
       <ResultsOverlay
