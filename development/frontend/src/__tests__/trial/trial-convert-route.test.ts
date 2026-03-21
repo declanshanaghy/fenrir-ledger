@@ -199,17 +199,18 @@ describe("POST /api/trial/convert", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Firestore failure
+  // Firestore failure — markTrialConverted swallows errors and returns false
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns 500 when Firestore update fails", async () => {
+  it("returns 200 with converted:false when Firestore update fails (error swallowed)", async () => {
     mockDocRef.update.mockRejectedValueOnce(new Error("Firestore unavailable"));
 
     const res = await POST(makeRequest());
     const body = await res.json();
 
-    expect(res.status).toBe(500);
-    expect(body.error).toBe("internal_error");
+    // markTrialConverted catches internal errors and returns false
+    expect(res.status).toBe(200);
+    expect(body.converted).toBe(false);
   });
 
   // ═══════════════════════════════════════════════════════════════════════
