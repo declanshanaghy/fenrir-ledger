@@ -43,6 +43,8 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
   const [jumpHouseholdId, setJumpHouseholdId] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<OverlayMode>({ kind: "none" });
   const [cmdStatus, setCmdStatusMsg] = useState<string | null>(null);
+  const [dialogExecuting, setDialogExecuting] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
   const [connState, setConnState] = useState<ConnStatus>(initialConnStatus);
   const [countState, setCountState] = useState<Counts>(initialCounts);
   const [inputCaptured, setInputCaptured] = useState(false);
@@ -89,45 +91,51 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
 
   const handleDestructive = useCallback((cmd: PaletteCommand) => {
     log.debug("SpearInner: handleDestructive called", { name: cmd.name });
+    setDialogExecuting(false);
+    setDialogError(null);
     setOverlay({ kind: "confirm", cmd });
   }, []);
 
   const handleTrialInput = useCallback((cmd: PaletteCommand) => {
     log.debug("SpearInner: handleTrialInput called", { name: cmd.name });
+    setDialogExecuting(false);
+    setDialogError(null);
     setOverlay({ kind: "trial-input", cmd });
   }, []);
 
   const handleTrialInputConfirm = useCallback(async (cmd: PaletteCommand, dayInput: string) => {
     log.debug("SpearInner: handleTrialInputConfirm called", { name: cmd.name, dayInput });
-    closeOverlay();
+    setDialogExecuting(true);
+    setDialogError(null);
     try {
       const lines = await cmd.execute({ ...cmdCtx, input: dayInput });
       log.debug("SpearInner: handleTrialInputConfirm done", { lineCount: lines.length });
-      setOverlay({ kind: "results", title: cmd.name, lines });
+      // Success: close dialog and show a status toast
+      closeOverlay();
+      setCmdStatusMsg(`${cmd.name}: ${lines[0] ?? "done"}`);
     } catch (err) {
       log.error("SpearInner: handleTrialInputConfirm error", err as Error);
-      setOverlay({
-        kind: "results",
-        title: cmd.name,
-        lines: [`ERROR: ${(err as Error).message ?? String(err)}`],
-      });
+      // Failure: keep dialog open with inline error
+      setDialogExecuting(false);
+      setDialogError((err as Error).message ?? String(err));
     }
   }, [cmdCtx, closeOverlay]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConfirmExecute = useCallback(async (cmd: PaletteCommand) => {
     log.debug("SpearInner: handleConfirmExecute called", { name: cmd.name });
-    closeOverlay();
+    setDialogExecuting(true);
+    setDialogError(null);
     try {
       const lines = await cmd.execute(cmdCtx);
       log.debug("SpearInner: handleConfirmExecute done", { lineCount: lines.length });
-      setOverlay({ kind: "results", title: cmd.name, lines });
+      // Success: close dialog and show a status toast
+      closeOverlay();
+      setCmdStatusMsg(`${cmd.name}: ${lines[0] ?? "done"}`);
     } catch (err) {
       log.error("SpearInner: handleConfirmExecute error", err as Error);
-      setOverlay({
-        kind: "results",
-        title: cmd.name,
-        lines: [`ERROR: ${(err as Error).message ?? String(err)}`],
-      });
+      // Failure: keep dialog open with inline error
+      setDialogExecuting(false);
+      setDialogError((err as Error).message ?? String(err));
     }
   }, [cmdCtx, closeOverlay]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -221,6 +229,8 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
           closeOverlay();
           setCmdStatusMsg("Cancelled");
         }}
+        executing={dialogExecuting}
+        error={dialogError}
       />
     );
   } else if (overlay.kind === "confirm") {
@@ -229,7 +239,12 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
         action={overlay.cmd.name}
         desc={overlay.cmd.desc}
         onConfirm={() => { void handleConfirmExecute(overlay.cmd); }}
-        onCancel={closeOverlay}
+        onCancel={() => {
+          closeOverlay();
+          setCmdStatusMsg("Cancelled");
+        }}
+        executing={dialogExecuting}
+        error={dialogError}
       />
     );
   } else if (cardDrilldown) {

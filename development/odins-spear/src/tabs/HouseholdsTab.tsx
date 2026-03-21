@@ -236,9 +236,11 @@ interface ConfirmBarProps {
   action: ConfirmAction;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Inline error shown when action failed — bar stays open for retry or cancel */
+  error?: string | null;
 }
 
-function ConfirmBar({ action, onConfirm, onCancel }: ConfirmBarProps): React.JSX.Element {
+function ConfirmBar({ action, onConfirm, onCancel, error = null }: ConfirmBarProps): React.JSX.Element {
   let label: string;
   switch (action.kind) {
     case "kick":        label = `Kick ${action.email}?`; break;
@@ -255,8 +257,7 @@ function ConfirmBar({ action, onConfirm, onCancel }: ConfirmBarProps): React.JSX
 
   return (
     <Box
-      flexDirection="row"
-      gap={2}
+      flexDirection="column"
       borderStyle="single"
       borderTop={true}
       borderBottom={false}
@@ -265,9 +266,14 @@ function ConfirmBar({ action, onConfirm, onCancel }: ConfirmBarProps): React.JSX
       borderColor={RED}
       paddingX={2}
     >
-      <Text color={RED} bold>{label}</Text>
-      <Text color={GREEN} bold>[y] yes</Text>
-      <Text color={GOLD}>[n/Esc] cancel</Text>
+      <Box flexDirection="row" gap={2}>
+        <Text color={RED} bold>{label}</Text>
+        <Text color={GREEN} bold>[y] yes</Text>
+        <Text color={GOLD}>[n/Esc] cancel</Text>
+      </Box>
+      {error ? (
+        <Text color={RED}>Error: {error}</Text>
+      ) : null}
     </Box>
   );
 }
@@ -388,11 +394,13 @@ async function executeAction(
   detail: HouseholdDetail | null,
   setStatus: (s: string) => void,
   reload: () => void,
+  setConfirm: (c: ConfirmAction | null) => void,
+  setConfirmError: (e: string | null) => void,
   returnTo?: () => void
 ): Promise<void> {
   log.debug("executeAction called", { kind: action.kind, hhId: hh.id });
   if (!firestoreClient) {
-    setStatus("ERROR: Firestore not connected");
+    setConfirmError("Firestore not connected");
     return;
   }
 
@@ -405,6 +413,9 @@ async function executeAction(
           const d = hhSnap.data() as Record<string, unknown>;
           const members = (d["memberIds"] as string[] | undefined) ?? [];
           await hhRef.update({ memberIds: members.filter((id) => id !== action.memberId) });
+          // Success: close confirm bar, set status toast
+          setConfirm(null);
+          setConfirmError(null);
           setStatus(`Kicked ${action.email} from household`);
           reload();
         }
@@ -414,6 +425,9 @@ async function executeAction(
         await firestoreClient.collection("households").doc(hh.id).update({ ownerId: action.memberId });
         await firestoreClient.collection("users").doc(action.memberId).update({ role: "owner" });
         await firestoreClient.collection("users").doc(hh.ownerId).update({ role: "member" });
+        // Success: close confirm bar, set status toast
+        setConfirm(null);
+        setConfirmError(null);
         setStatus(`Transferred ownership to ${action.email}`);
         reload();
         break;
@@ -425,6 +439,9 @@ async function executeAction(
           inviteCode: newCode,
           inviteCodeExpiresAt: expiresAt,
         });
+        // Success: close confirm bar, set status toast
+        setConfirm(null);
+        setConfirmError(null);
         setStatus(`New invite code: ${newCode}`);
         reload();
         break;
@@ -432,14 +449,23 @@ async function executeAction(
       case "cancel-sub": {
         const subId = detail?.stripeSubscriptionId ?? null;
         if (!subId) {
+          // No-op with explanation — treat as immediate close (no retry possible)
+          setConfirm(null);
+          setConfirmError(null);
           setStatus("No Stripe subscription ID — cannot cancel");
           return;
         }
+        // Success: close confirm bar, set status toast
+        setConfirm(null);
+        setConfirmError(null);
         setStatus(`Sub ${subId} — cancel via Stripe dashboard or API`);
         break;
       }
       case "delete": {
         await firestoreClient.collection("households").doc(hh.id).delete();
+        // Success: close confirm bar, navigate away, set status toast
+        setConfirm(null);
+        setConfirmError(null);
         setStatus(`Deleted household ${hh.name}`);
         // Navigate away first — entity no longer exists — then refresh the list
         returnTo?.();
@@ -450,7 +476,8 @@ async function executeAction(
   } catch (err) {
     const msg = (err as Error).message ?? String(err);
     log.error("executeAction failed", err as Error);
-    setStatus(`ERROR: ${msg}`);
+    // Failure: keep confirm bar open, show error inline
+    setConfirmError(msg);
   }
 }
 
@@ -492,6 +519,7 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView, onTr
   const [detailLoading, setDetailLoading] = useState(false);
   const [status, setStatus]         = useState<string | null>(cmdStatus);
   const [confirm, setConfirm]       = useState<ConfirmAction | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   // Track whether the initialHouseholdId has been applied — reset on each mount
   const initialApplied = useRef(false);
@@ -696,15 +724,18 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView, onTr
     const hh = selectedIdx >= 0 ? households[selectedIdx] : null;
     if (!hh) { setConfirm(null); return; }
     const pendingAction = confirm;
-    setConfirm(null);
+    // Don't pre-clear confirm here — executeAction controls it.
+    // On success it calls setConfirm(null); on failure it calls setConfirmError(msg).
+    setConfirmError(null); // clear any prior error when retrying
     // For delete, supply a returnTo that clears the selection — the entity won't exist after success.
     // Non-destructive actions (kick, xfer, etc.) preserve the current selection.
     const returnTo = pendingAction.kind === "delete" ? () => { setSelectedIdx(-1); } : undefined;
-    void executeAction(pendingAction, hh, detail, setStatus, doLoad, returnTo);
+    void executeAction(pendingAction, hh, detail, setStatus, doLoad, setConfirm, setConfirmError, returnTo);
   }, [confirm, selectedIdx, households, detail, doLoad]);
 
   const handleCancel = useCallback(() => {
     setConfirm(null);
+    setConfirmError(null);
   }, []);
 
   // Visible list slice
@@ -834,6 +865,7 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView, onTr
           action={confirm}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
+          error={confirmError}
         />
       ) : status && selectedIdx >= 0 ? (
         <Box paddingX={2} borderStyle="single" borderTop={true} borderBottom={false} borderLeft={false} borderRight={false} borderColor={DIM}>

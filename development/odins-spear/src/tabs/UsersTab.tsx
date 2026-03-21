@@ -504,12 +504,15 @@ export function UsersTab({
         await firestoreClient.collection("users").doc(user.id).delete();
         setUsers((prev) => prev.filter((u) => u.id !== user.id));
         setSelectedIdx(-1);
+        // Success: close confirm bar, show status toast
+        setActionMode("none");
         setStatusMsg(`Deleted ${user.id}`);
       } catch (err) {
+        // Failure: keep confirm bar open, show error inline
         setStatusMsg(`Error: ${(err as Error).message}`);
       }
     },
-    []
+    [] // setters are stable
   );
 
   // Update tier
@@ -533,12 +536,17 @@ export function UsersTab({
             prev.map((u) => (u.id === user.id ? { ...u, tier } : u))
           );
         }
+        // Success: close input bar, show status toast
+        setActionMode("none");
+        setTierInput("");
+        setTierError(null);
         setStatusMsg(`Updated tier to ${tier}`);
       } catch (err) {
-        setStatusMsg(`Error: ${(err as Error).message}`);
+        // Failure: keep input bar open, show error inline
+        setTierError(`Error: ${(err as Error).message}`);
       }
     },
-    []
+    [] // setters are stable
   );
 
   useInput((input, key) => {
@@ -556,9 +564,8 @@ export function UsersTab({
           setTierError("Invalid tier. Enter: karl, trial, or thrall");
           return;
         }
-        setActionMode("none");
-        setTierInput("");
-        setTierError(null);
+        // Don't close the bar here — doUpdateTier controls actionMode.
+        // On success it clears actionMode/tierInput/tierError; on failure it sets tierError.
         const user = users[selectedIdx];
         if (user) void doUpdateTier(user, valid);
         return;
@@ -580,9 +587,10 @@ export function UsersTab({
         return;
       }
       if (input === "y") {
+        // Don't close the bar here — doDeleteUser controls actionMode.
+        // On success it clears actionMode; on failure it sets statusMsg and keeps bar open.
         const user = users[selectedIdx];
         if (user) void doDeleteUser(user);
-        setActionMode("none");
       }
       return;
     }

@@ -25,6 +25,10 @@ export interface TrialInputDialogProps {
   action: string;
   onConfirm: (dayInput: string) => void;
   onCancel: () => void;
+  /** True while the command is executing — disables confirm, shows spinner */
+  executing?: boolean;
+  /** Inline error message to show when execution failed */
+  error?: string | null;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -33,8 +37,10 @@ export function TrialInputDialog({
   action,
   onConfirm,
   onCancel,
+  executing = false,
+  error = null,
 }: TrialInputDialogProps): React.JSX.Element {
-  log.debug("TrialInputDialog render", { action });
+  log.debug("TrialInputDialog render", { action, executing });
 
   const [dayInput, setDayInput] = useState("");
   const valid = isValidDayInput(dayInput);
@@ -43,12 +49,18 @@ export function TrialInputDialog({
     log.debug("TrialInputDialog useInput", { keyEscape: key.escape, keyReturn: key.return });
 
     if (key.escape) {
-      log.debug("TrialInputDialog: escape pressed, cancelling");
-      onCancel();
+      if (!executing) {
+        log.debug("TrialInputDialog: escape pressed, cancelling");
+        onCancel();
+      }
       return;
     }
 
     if (key.return) {
+      if (executing) {
+        log.debug("TrialInputDialog: return pressed while executing — ignoring");
+        return;
+      }
       if (valid) {
         log.debug("TrialInputDialog: confirmed with input", { dayInput });
         onConfirm(dayInput);
@@ -105,14 +117,26 @@ export function TrialInputDialog({
         <Text color={RED}>Enter a non-zero integer (e.g. +5 or -3)</Text>
       ) : null}
 
+      {/* Inline error (shown when command failed — dialog stays open) */}
+      {error ? (
+        <Box marginTop={1}>
+          <Text color={RED} bold>Error: </Text>
+          <Text color={RED}>{error}</Text>
+        </Box>
+      ) : null}
+
       <Box height={1} />
 
       {/* Footer */}
       <Box flexDirection="row" gap={3}>
-        <Text color={valid ? GREEN : DIM} bold={valid}>
-          {valid ? "Enter to apply" : "type a non-zero integer"}
-        </Text>
-        <Text color={GOLD}>Esc to cancel</Text>
+        {executing ? (
+          <Text color={GREEN}>Executing…</Text>
+        ) : (
+          <Text color={valid ? GREEN : DIM} bold={valid}>
+            {valid ? "Enter to apply" : "type a non-zero integer"}
+          </Text>
+        )}
+        {!executing && <Text color={GOLD}>Esc to cancel</Text>}
       </Box>
     </Box>
   );

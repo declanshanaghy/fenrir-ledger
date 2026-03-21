@@ -21,12 +21,16 @@ export interface ConfirmDialogProps {
   desc: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** True while the command is executing — disables confirm, shows spinner */
+  executing?: boolean;
+  /** Inline error message to show when execution failed */
+  error?: string | null;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function ConfirmDialog({ action, desc, onConfirm, onCancel }: ConfirmDialogProps): React.JSX.Element {
-  log.debug("ConfirmDialog render", { action, descLength: desc.length });
+export function ConfirmDialog({ action, desc, onConfirm, onCancel, executing = false, error = null }: ConfirmDialogProps): React.JSX.Element {
+  log.debug("ConfirmDialog render", { action, descLength: desc.length, executing });
 
   const [typed, setTyped] = useState("");
 
@@ -36,12 +40,18 @@ export function ConfirmDialog({ action, desc, onConfirm, onCancel }: ConfirmDial
     log.debug("ConfirmDialog useInput", { keyEscape: key.escape, keyReturn: key.return });
 
     if (key.escape) {
-      log.debug("ConfirmDialog: escape pressed, cancelling");
-      onCancel();
+      if (!executing) {
+        log.debug("ConfirmDialog: escape pressed, cancelling");
+        onCancel();
+      }
       return;
     }
 
     if (key.return) {
+      if (executing) {
+        log.debug("ConfirmDialog: return pressed while executing — ignoring");
+        return;
+      }
       if (isReady) {
         log.debug("ConfirmDialog: confirmed");
         onConfirm();
@@ -97,12 +107,24 @@ export function ConfirmDialog({ action, desc, onConfirm, onCancel }: ConfirmDial
 
       <Box height={1} />
 
+      {/* Inline error (shown when command failed — dialog stays open) */}
+      {error ? (
+        <Box marginTop={1}>
+          <Text color={RED} bold>Error: </Text>
+          <Text color={RED}>{error}</Text>
+        </Box>
+      ) : null}
+
       {/* Footer */}
       <Box flexDirection="row" gap={3}>
-        <Text color={isReady ? GREEN : GRAY} bold={isReady}>
-          {isReady ? "Enter to CONFIRM" : "type 'delete' then Enter"}
-        </Text>
-        <Text color={GOLD}>Esc to cancel</Text>
+        {executing ? (
+          <Text color={GREEN}>Executing…</Text>
+        ) : (
+          <Text color={isReady ? GREEN : GRAY} bold={isReady}>
+            {isReady ? "Enter to CONFIRM" : "type 'delete' then Enter"}
+          </Text>
+        )}
+        {!executing && <Text color={GOLD}>Esc to cancel</Text>}
       </Box>
     </Box>
   );
