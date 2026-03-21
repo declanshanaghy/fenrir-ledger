@@ -1,0 +1,160 @@
+---
+title: "The Stale Assertion & The Purge"
+date: "2026-03-21"
+rune: "ᚦ"
+excerpt: "A phantom 4th argument broke CI, odins-spear tests were purged, and agents learned to trust exit codes instead of parsing ANSI escape sequences like animals."
+slug: "fuckin-animals"
+---
+
+<div className="chronicle-page">
+
+<header className="session-header">
+  <span className="header-runes" aria-hidden="true">ᚦ ᛉ ᚺ ᛏ</span>
+  <h1 className="session-title">The Stale Assertion &amp; The Purge</h1>
+  <p className="session-subtitle">Session Chronicle · Fenrir Ledger</p>
+  <div className="session-meta">
+      <span>Date <span className="val">2026-03-21</span></span>
+      <span>Session <span className="val">fuckin-animals</span></span>
+      <span>Acts <span className="val">5</span></span>
+      <span>Files changed <span className="val">9</span></span>
+  </div>
+</header>
+
+<nav className="toc">
+  <div className="toc-title">Chronicle of Acts</div>
+  <ul className="toc-list">
+      <li><a href="#act-1"><span className="toc-rune">ᚦ</span> <span className="toc-num">I</span> The Phantom Fourth Argument</a></li>
+      <li><a href="#act-2"><span className="toc-rune">ᛉ</span> <span className="toc-num">II</span> The Odins-Spear Purge</a></li>
+      <li><a href="#act-3"><span className="toc-rune">ᚺ</span> <span className="toc-num">III</span> The Ragnarok Rebase</a></li>
+      <li><a href="#act-4"><span className="toc-rune">ᛏ</span> <span className="toc-num">IV</span> Loki Parses ANSI Like An Animal</a></li>
+      <li><a href="#act-5"><span className="toc-rune">ᛟ</span> <span className="toc-num">V</span> Apologies to the Animals</a></li>
+  </ul>
+</nav>
+
+<div className="timeline">
+
+    <section className="entry" id="act-1">
+      <div className="entry-rune" title="The Phantom Fourth Argument">ᚦ</div>
+      <div className="entry-body">
+        <p className="act-label">Act I · Bug Fix</p>
+        <h2 className="entry-title">The Phantom Fourth Argument</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">main fucked https://github.com/declanshanaghy/fenrir-ledger/actions/runs/23372822777/job/67999868384</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>CI on main was red. The unit test <span class="mono">card-form-card-limit-1416.test.tsx</span> expected <span class="mono">canAddCard</span> to be called with <span class="hl">four arguments</span> — but the actual call site in <span class="mono">useCardForm.ts</span> only passed three. PR #1716 had added an <span class="mono">isAnonymous</span> parameter to the test assertion without updating the code. The fourth param had a default value of <span class="mono">false</span>, so runtime was fine — but <span class="mono">toHaveBeenCalledWith</span> does exact matching.</p><p>One line deleted. Four tests green.</p></div>
+          <div className="code-block"><pre><span class="cr">-        false,       // isAnonymous=false when status is "authenticated"</span></pre></div>
+          <div className="bug-box">
+            <p className="bug-label">Bug Fixed</p>
+            <p className="bug-text">Test assertion expected 4 args to canAddCard but useCardForm only passes 3. Removed stale 4th isAnonymous arg from assertion.</p>
+          </div>
+          <div className="file-chips">
+            <span className="chip chip-mod">development/frontend/src/__tests__/components/card-form-card-limit-1416.test.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-2">
+      <div className="entry-rune" title="The Odins-Spear Purge">ᛉ</div>
+      <div className="entry-body">
+        <p className="act-label">Act II · Enforcement</p>
+        <h2 className="entry-title">The Odins-Spear Purge</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">delete all tests in odins spear no tests in odins spear or throne, that's in the rules right?</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>CI kept failing on <span class="mono">odins-spear</span> TypeScript errors — dozens of <span class="hl">TS2532: Object is possibly undefined</span> across 18 test files. But the rule was clear: <span class="hl">no tests in odins-spear or monitor-ui</span>. These tests should never have existed.</p><p>Deleted all 18 test files, removed <span class="mono">vitest</span> from dependencies, purged <span class="mono">vitest.config.ts</span>, stripped test scripts from <span class="mono">package.json</span>, and removed <span class="mono">__tests__</span> from <span class="mono">tsconfig.json</span> includes.</p><p>Then branded both packages with an unmistakable description: <span class="hl">TESTS ARE BANNED — DO NOT write tests for this package.</span></p></div>
+          <div className="code-block"><pre><span class="ca">+  "description": "TESTS ARE BANNED — DO NOT write tests for this package. Validate via tsc + build ONLY.",</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">development/odins-spear/package.json</span>
+            <span className="chip chip-mod">development/odins-spear/tsconfig.json</span>
+            <span className="chip chip-mod">development/monitor-ui/package.json</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-3">
+      <div className="entry-rune" title="The Ragnarok Rebase">ᚺ</div>
+      <div className="entry-body">
+        <p className="act-label">Act III · Maintenance</p>
+        <h2 className="entry-title">The Ragnarok Rebase</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">rebase 1545 then /dispatch it</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>PR #1545 — Ragnarok toast feedback for Odin's Throne — had merge conflicts from weeks of drift. Two rounds of rebase conflicts in <span class="mono">JobCard.tsx</span> and <span class="mono">Sidebar.tsx</span>, where main had introduced <span class="mono">displayMode</span> while the PR branch used <span class="mono">collapsed</span>.</p><p>Resolved by keeping main's <span class="mono">displayMode</span> architecture and merging in the PR's <span class="hl">session ID display</span> and <span class="hl">improved timestamp guards</span>. Force-pushed the rebased branch, then dispatched FiremanDecko to GKE to finish the implementation.</p></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">development/monitor-ui/src/components/JobCard.tsx</span>
+            <span className="chip chip-mod">development/monitor-ui/src/components/Sidebar.tsx</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-4">
+      <div className="entry-rune" title="Loki Parses ANSI Like An Animal">ᛏ</div>
+      <div className="entry-body">
+        <p className="act-label">Act IV · Tooling</p>
+        <h2 className="entry-title">Loki Parses ANSI Like An Animal</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">why is loki grepping for fail instead of depending on exit code?</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Loki was running vitest and then <span class="hl">parsing ANSI escape codes</span> to detect failures: <span class="mono">grep -oP "\[41m\[1m FAIL"</span>. Instead of just... checking the exit code.</p><p>Updated the sandbox preamble and both agent templates. Replaced <span class="mono">npx vitest run --reporter=verbose</span> with plain <span class="mono">npx vitest run</span>. Added explicit instruction: <span class="hl">Trust the exit code. Exit 0 = pass. Non-zero = fail. Do NOT grep for FAIL. Do NOT parse ANSI escape codes.</span></p></div>
+          <div className="code-block"><pre><span class="ca">+  cd /workspace/repo/development/frontend && npx vitest run</span>
+<span class="ca">+**Trust the exit code.** Exit 0 = all tests pass. Non-zero = failures.</span>
+<span class="ca">+Do NOT grep vitest output for FAIL, do NOT parse ANSI escape codes.</span>
+<span class="ca">+Just run the command and check whether it succeeded or failed.</span></pre></div>
+          <div className="file-chips">
+            <span className="chip chip-mod">.claude/skills/dispatch/SKILL.md</span>
+            <span className="chip chip-mod">.claude/skills/fire-next-up/templates/firemandecko.md</span>
+            <span className="chip chip-mod">.claude/skills/fire-next-up/templates/loki.md</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="entry" id="act-5">
+      <div className="entry-rune" title="Apologies to the Animals">ᛟ</div>
+      <div className="entry-body">
+        <p className="act-label">Act V · Identity</p>
+        <h2 className="entry-title">Apologies to the Animals</h2>
+
+        <div className="user-msg">
+          <div className="msg-role">
+            <span className="role-badge badge-fireman">Odin</span>
+          </div>
+          <p className="msg-text">hey fuck you im an animal</p>
+        </div>
+        <div className="work-card">
+          <div className="work-body"><p>Fair point. Apologies to the animals.</p></div>
+        </div>
+      </div>
+    </section>
+</div>
+
+<footer className="session-footer">
+  <div className="footer-cipher">ᚦ ᛉ ᚺ ᛏ</div>
+  <div className="footer-text">The Stale Assertion &amp; The Purge · Fenrir Ledger Session Chronicle</div>
+  <p className="footer-sub">The wolf remembers everything.</p>
+</footer>
+
+</div>
