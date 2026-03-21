@@ -442,6 +442,13 @@ async function main() {
   if (unitOnly) {
     log("Running in --unit-only mode (Vitest coverage only)");
     runUnitCoverage();
+    log("Running cyclomatic complexity analysis...");
+    const complexityScript2 = path.join(__dirname, "complexity-analysis.mjs");
+    try {
+      run(`node "${complexityScript2}"`, { cwd: REPO_ROOT });
+    } catch {
+      log("Complexity analysis had warnings");
+    }
     log("Generating quality report...");
     const qualityScript = path.join(__dirname, "quality-report-html.mjs");
     try {
@@ -504,6 +511,15 @@ async function main() {
     run(`node "${indexScript}"`, { cwd: REPO_ROOT });
   } catch {
     log("Index generation had warnings — master index may still be valid");
+  }
+
+  // Run cyclomatic complexity analysis
+  log("Running cyclomatic complexity analysis...");
+  const complexityScript = path.join(__dirname, "complexity-analysis.mjs");
+  try {
+    run(`node "${complexityScript}"`, { cwd: REPO_ROOT });
+  } catch {
+    log("Complexity analysis had warnings — report may still be valid");
   }
 
   // Generate quality report
