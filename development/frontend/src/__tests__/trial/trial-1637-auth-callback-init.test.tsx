@@ -216,6 +216,33 @@ describe("Issue #1637 — AuthCallbackPage trial init after Google login", () =>
     expect(screen.queryByText(/the bifröst trembled/i)).not.toBeInTheDocument();
   });
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // Issue #1707 — trial init must run even when mergeAnonymousCards throws
+  // ═══════════════════════════════════════════════════════════════════════
+
+  it("calls /api/trial/init even when mergeAnonymousCards throws (issue #1707)", async () => {
+    const { mergeAnonymousCards } = await import("@/lib/merge-anonymous");
+    vi.mocked(mergeAnonymousCards).mockImplementationOnce(() => {
+      throw new Error("localStorage unavailable in private browsing");
+    });
+
+    fetchSpy = mockFetchForTrialInit(200);
+    setupSearchParams();
+    setupPkce();
+
+    render(<AuthCallbackPage />);
+
+    await waitFor(
+      () => {
+        const trialInitCalls = fetchSpy.mock.calls.filter(([url]) =>
+          String(url).includes("/api/trial/init")
+        );
+        expect(trialInitCalls.length).toBeGreaterThan(0);
+      },
+      { timeout: 3000 }
+    );
+  });
+
   it("does NOT redirect to destination when trial init returns 409 (user stays on trial-expired page)", async () => {
     fetchSpy = mockFetchForTrialInit(409);
     setupSearchParams();
