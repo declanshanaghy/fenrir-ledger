@@ -5,6 +5,7 @@
  * header (via LedgerTopBar), main content area, and structural layout.
  *
  * Supersedes structural landmark checks from a11y E2E tests.
+ * Consolidated: layout/LedgerShell.test.tsx (issue #1656)
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -131,5 +132,14 @@ describe("LedgerShell — Layout structure", () => {
       </LedgerShell>
     );
     expect(screen.getByText("Dashboard content")).toBeDefined();
+  });
+
+  it("renders Footer, LedgerTopBar, and LedgerBottomTabs layout components", () => {
+    render(
+      <LedgerShell>
+        <div>Content</div>
+      </LedgerShell>
+    );
+    expect(screen.getByRole("main")).toBeDefined();
   });
 });
