@@ -10,8 +10,9 @@
     "compile": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "pnpm run verify:tsc",
-    "verify:tsc": "tsc --noEmit"
+    "verify": "pnpm run verify:tsc && pnpm run verify:build",
+    "verify:tsc": "tsc --noEmit",
+    "verify:build": "tsc --noEmit"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
