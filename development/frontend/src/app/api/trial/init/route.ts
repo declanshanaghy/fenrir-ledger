@@ -59,11 +59,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   } catch (err) {
     if (err instanceof TrialRestartError) {
-      log.debug("POST /api/trial/init returning", { status: 409, error: "trial_restart_blocked" });
+      log.debug("POST /api/trial/init returning", { status: 409, error: "trial_expired" });
       return NextResponse.json(
         {
-          error: "trial_restart_blocked",
-          error_description: "Your trial has already expired and cannot be restarted.",
+          error: "trial_expired",
+          message: "Contact customer service",
         },
         { status: 409 },
       );

@@ -1,16 +1,16 @@
 /**
- * Integration tests for POST /api/trial/init
+ * Integration tests for POST /api/trial/convert
  *
  * Covers:
- *  - Trial initializes for authenticated user (userId from auth token)
- *  - Idempotent: second call preserves original trial, returns isNew:false
+ *  - Successfully marks an active trial as converted
+ *  - Returns converted:false when no trial exists
  *  - Unauthenticated request returns 401
- *  - Returns 409 when trial already expired (restart blocked)
- *  - Firestore failure returns 500
  *  - Rate limiting returns 429
+ *  - Firestore failure returns 500
+ *  - Cache-Control: no-store is present
  *
- * @see src/app/api/trial/init/route.ts
- * @ref Issue #1634
+ * @see src/app/api/trial/convert/route.ts
+ * @ref Issue #1635
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -41,7 +41,6 @@ vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-// requireAuth: by default resolves authenticated. Override per-test for 401 cases.
 const mockRequireAuth = vi.fn();
 vi.mock("@/lib/auth/require-auth", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
@@ -49,39 +48,27 @@ vi.mock("@/lib/auth/require-auth", () => ({
 
 // ── Import route handler after mocks ──────────────────────────────────────────
 
-import { POST } from "@/app/api/trial/init/route";
+import { POST } from "@/app/api/trial/convert/route";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const USER_ID = "google-sub-test-123";
+const USER_ID = "google-sub-convert-456";
 const TRIAL_PATH = `households/${USER_ID}/trial`;
+
+function activeTrialSnap() {
+  return {
+    exists: true,
+    data: () => ({
+      startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
+    }),
+  };
+}
 
 const missingSnap = { exists: false, data: () => null };
 
-function existingSnap(trial: Record<string, unknown>) {
-  return {
-    exists: true,
-    data: () => ({
-      startDate: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      ...trial,
-    }),
-  };
-}
-
-function expiredSnap() {
-  const start = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
-  return {
-    exists: true,
-    data: () => ({
-      startDate: start.toISOString(),
-      expiresAt: new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    }),
-  };
-}
-
 function makeRequest(token = "valid-token"): NextRequest {
-  return new NextRequest("http://localhost:9653/api/trial/init", {
+  return new NextRequest("http://localhost:9653/api/trial/convert", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -105,64 +92,83 @@ function authFail() {
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
-describe("POST /api/trial/init", () => {
+describe("POST /api/trial/convert", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authOk();
-    mockDocRef.get.mockResolvedValue(missingSnap);
-    mockDocRef.set.mockResolvedValue(undefined);
+    mockDocRef.get.mockResolvedValue(activeTrialSnap());
     mockDocRef.update.mockResolvedValue(undefined);
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Successful trial creation
+  // Successful conversion
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("creates a new trial and returns isNew:true on first call", async () => {
+  it("marks trial as converted and returns converted:true", async () => {
     const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.isNew).toBe(true);
-    expect(typeof body.startDate).toBe("string");
-    expect(typeof body.expiresAt).toBe("string");
-    expect(mockDocRef.set).toHaveBeenCalledOnce();
+    expect(body.converted).toBe(true);
+    expect(mockDocRef.update).toHaveBeenCalledOnce();
   });
 
-  it("writes trial to /households/{userId}/trial", async () => {
+  it("writes convertedDate to /households/{userId}/trial", async () => {
     await POST(makeRequest());
 
     expect(mockDb.doc).toHaveBeenCalledWith(TRIAL_PATH);
-  });
-
-  it("writes a valid ISO start date to Firestore", async () => {
-    const before = Date.now();
-    const res = await POST(makeRequest());
-    const after = Date.now();
-    const body = await res.json();
-
-    const startDate = new Date(body.startDate as string).getTime();
-    expect(startDate).toBeGreaterThanOrEqual(before);
-    expect(startDate).toBeLessThanOrEqual(after);
-  });
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // Idempotent — second call preserves original trial
-  // ═══════════════════════════════════════════════════════════════════════
-
-  it("returns isNew:false and preserves original startDate on second call", async () => {
-    const originalStartDate = "2026-03-01T00:00:00.000Z";
-    mockDocRef.get.mockResolvedValueOnce(
-      existingSnap({ startDate: originalStartDate }),
+    expect(mockDocRef.update).toHaveBeenCalledWith(
+      expect.objectContaining({ convertedDate: expect.any(String) }),
     );
+  });
+
+  it("convertedDate written to Firestore is a valid ISO timestamp", async () => {
+    const before = Date.now();
+    await POST(makeRequest());
+    const after = Date.now();
+
+    const updateArg = mockDocRef.update.mock.calls[0][0] as { convertedDate: string };
+    const ts = new Date(updateArg.convertedDate).getTime();
+    expect(ts).toBeGreaterThanOrEqual(before);
+    expect(ts).toBeLessThanOrEqual(after);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // No trial found
+  // ═══════════════════════════════════════════════════════════════════════
+
+  it("returns converted:false when no trial exists for the user", async () => {
+    mockDocRef.get.mockResolvedValueOnce(missingSnap);
 
     const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.isNew).toBe(false);
-    expect(body.startDate).toBe(originalStartDate);
-    expect(mockDocRef.set).not.toHaveBeenCalled();
+    expect(body.converted).toBe(false);
+    expect(mockDocRef.update).not.toHaveBeenCalled();
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Idempotent — already converted
+  // ═══════════════════════════════════════════════════════════════════════
+
+  it("returns converted:true idempotently when trial is already converted", async () => {
+    mockDocRef.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+        convertedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    });
+
+    const res = await POST(makeRequest());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.converted).toBe(true);
+    // No double-write when already converted
+    expect(mockDocRef.update).not.toHaveBeenCalled();
   });
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -175,31 +181,29 @@ describe("POST /api/trial/init", () => {
     const res = await POST(makeRequest("invalid-token"));
 
     expect(res.status).toBe(401);
-    expect(mockDocRef.set).not.toHaveBeenCalled();
+    expect(mockDocRef.update).not.toHaveBeenCalled();
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Trial restart blocked
+  // Rate limiting
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns 409 with trial_expired error when trial has already expired (restart blocked)", async () => {
-    mockDocRef.get.mockResolvedValueOnce(expiredSnap());
+  it("returns 429 when rate limit is exceeded", async () => {
+    mockRateLimit.mockReturnValueOnce({ success: false, remaining: 0 });
 
     const res = await POST(makeRequest());
     const body = await res.json();
 
-    expect(res.status).toBe(409);
-    expect(body.error).toBe("trial_expired");
-    expect(body.message).toBe("Contact customer service");
-    expect(mockDocRef.set).not.toHaveBeenCalled();
+    expect(res.status).toBe(429);
+    expect(body.error).toBe("rate_limited");
   });
 
   // ═══════════════════════════════════════════════════════════════════════
   // Firestore failure
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns 500 when Firestore write fails", async () => {
-    mockDocRef.set.mockRejectedValueOnce(new Error("Firestore unavailable"));
+  it("returns 500 when Firestore update fails", async () => {
+    mockDocRef.update.mockRejectedValueOnce(new Error("Firestore unavailable"));
 
     const res = await POST(makeRequest());
     const body = await res.json();
@@ -216,19 +220,5 @@ describe("POST /api/trial/init", () => {
     const res = await POST(makeRequest());
 
     expect(res.headers.get("Cache-Control")).toBe("no-store");
-  });
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // Rate limiting
-  // ═══════════════════════════════════════════════════════════════════════
-
-  it("returns 429 when rate limit is exceeded", async () => {
-    mockRateLimit.mockReturnValueOnce({ success: false, remaining: 0 });
-
-    const res = await POST(makeRequest());
-    const body = await res.json();
-
-    expect(res.status).toBe(429);
-    expect(body.error).toBe("rate_limited");
   });
 });

@@ -10,8 +10,8 @@
  *   - Karl-tier users (active Stripe subscription)
  *   - Active trial users (trial stored at /households/{userId}/trial)
  *
- * If no trial exists yet, the trial is auto-initialized.
  * Expired trial users and Thrall users with no trial receive 402.
+ * Does NOT auto-initialize a trial — callers must call /api/trial/init explicitly.
  *
  * Must be called AFTER requireAuth() — requires the verified user.
  *
@@ -20,7 +20,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
-import { getTrial, initTrial, computeTrialStatus, TrialRestartError } from "@/lib/kv/trial-store";
+import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 import { log } from "@/lib/logger";
 import type { VerifiedUser } from "./verify-id-token";
 
@@ -55,26 +55,8 @@ export async function requireKarlOrTrial(
     return { ok: true };
   }
 
-  // 2. Check active trial via userId-based lookup
-  let trial = await getTrial(user.sub);
-
-  if (!trial) {
-    try {
-      const result = await initTrial(user.sub);
-      trial = result.trial;
-      log.debug("requireKarlOrTrial: auto-initialized trial", { googleSub: user.sub });
-    } catch (err) {
-      if (!(err instanceof TrialRestartError)) {
-        const message = err instanceof Error ? err.message : String(err);
-        log.error("requireKarlOrTrial: failed to auto-init trial", {
-          googleSub: user.sub,
-          error: message,
-        });
-      }
-      // Fall through — trial is null, computeTrialStatus returns "none"
-    }
-  }
-
+  // 2. Check active trial via userId-based lookup (no auto-init)
+  const trial = await getTrial(user.sub);
   const { status } = computeTrialStatus(trial);
 
   if (status === "active") {

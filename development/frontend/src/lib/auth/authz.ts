@@ -31,7 +31,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "./require-auth";
 import { getUser } from "@/lib/firebase/firestore";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
-import { getTrial, initTrial, computeTrialStatus, TrialRestartError } from "@/lib/kv/trial-store";
+import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 import { log } from "@/lib/logger";
 import type { VerifiedUser } from "./verify-id-token";
 import type { FirestoreUser } from "@/lib/firebase/firestore-types";
@@ -182,7 +182,7 @@ export async function requireAuthz(
  * Returns a denial descriptor if access should be blocked, or null if allowed.
  *
  * Trial is looked up by googleSub directly in /households/{googleSub}/trial.
- * Auto-initializes trial if none exists yet (trial starts on first eligible action).
+ * Does NOT auto-initialize a trial — callers must call /api/trial/init explicitly.
  */
 async function checkKarlOrTrial(
   _request: NextRequest,
@@ -195,25 +195,7 @@ async function checkKarlOrTrial(
   if (isKarl) return null; // allowed
 
   // 2. Active trial via userId-based lookup
-  let trial = await getTrial(googleSub);
-
-  if (!trial) {
-    try {
-      const result = await initTrial(googleSub);
-      trial = result.trial;
-      log.debug("requireAuthz: auto-initialized trial", { googleSub });
-    } catch (err) {
-      if (err instanceof TrialRestartError) {
-        // Trial expired — fall through to deny
-        log.debug("requireAuthz: trial restart blocked", { googleSub });
-      } else {
-        const message = err instanceof Error ? err.message : String(err);
-        log.error("requireAuthz: failed to auto-init trial", { googleSub, error: message });
-      }
-      // Fall through — trial is null → computeTrialStatus returns "none"
-    }
-  }
-
+  const trial = await getTrial(googleSub);
   const { status } = computeTrialStatus(trial);
   if (status === "active") return null; // allowed
 
