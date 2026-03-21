@@ -6,6 +6,8 @@
  * Issue #279 — Redesign: tabbed layout replacing grid + HowlPanel side panel.
  * Issue #352 — Expand to 5 tabs: The Howl · The Hunt · Active · Valhalla · All
  * Issue #1127 — Add Trash tab (extreme right): deleted cards, restore, expunge
+ * Issue #1684 — Refactor: reduced cyclomatic complexity via extracted hooks +
+ *                component. See useDashboardTabs, useLokiMode, DashboardTabButton.
  *
  * Six tabs (left to right):
  *   "all"      — every card regardless of status.
@@ -32,8 +34,6 @@
  *   After 5 s the Footer dispatches { active: false } and order is restored.
  */
 
-import { useEffect, useRef, useState } from "react";
-import { track } from "@/lib/analytics/track";
 import { restoreCard, expungeCard, expungeAllCards } from "@/lib/storage";
 import { CardTile } from "./CardTile";
 import { EmptyState } from "./EmptyState";
@@ -42,12 +42,9 @@ import { TabHeader } from "./TabHeader";
 import { TabSummary } from "./TabSummary";
 import type { Card } from "@/lib/types";
 import type { DashboardTab } from "@/lib/constants";
-import { LOKI_REALM_NAMES } from "@/components/layout/Footer";
 import { daysUntil } from "@/lib/card-utils";
 import { cn } from "@/lib/utils";
 import { useRagnarok } from "@/contexts/RagnarokContext";
-import { useEntitlement } from "@/hooks/useEntitlement";
-import { useIsKarlOrTrial } from "@/hooks/useIsKarlOrTrial";
 import { THRALL_CARD_LIMIT } from "@/lib/trial-utils";
 import {
   KarlUpsellDialog,
@@ -57,16 +54,18 @@ import {
   KARL_UPSELL_TRASH,
 } from "@/components/entitlement/KarlUpsellDialog";
 import { TrashView } from "@/components/dashboard/TrashView";
+import { useDashboardTabs } from "@/hooks/useDashboardTabs";
+import { useLokiMode } from "@/hooks/useLokiMode";
+import { DashboardTabButton } from "@/components/dashboard/DashboardTabButton";
 
-// ─── Tab types ────────────────────────────────────────────────────────────────
-
-const VALID_TABS = new Set<string>(["howl", "hunt", "active", "valhalla", "all", "trash"]);
-
-/** localStorage key for tab persistence */
-const TAB_STORAGE_KEY = "fenrir:dashboard-tab";
+// ─── Tab classifiers ──────────────────────────────────────────────────────────
 
 /** Statuses that belong to The Howl tab. */
-const HOWL_STATUSES = new Set<string>(["fee_approaching", "promo_expiring", "overdue"]);
+const HOWL_STATUSES = new Set<string>([
+  "fee_approaching",
+  "promo_expiring",
+  "overdue",
+]);
 
 /** Returns true if this card belongs in The Howl tab. */
 function isHowlCard(card: Card): boolean {
@@ -86,26 +85,6 @@ function isActiveCard(card: Card): boolean {
 /** Returns true if this card belongs in The Valhalla tab. */
 function isValhallaCard(card: Card): boolean {
   return card.status === "closed" || card.status === "graduated";
-}
-
-// ─── Loki Mode helpers ────────────────────────────────────────────────────────
-
-/** Shuffles a copy of an array using Fisher-Yates and returns it. */
-function shuffleArray<T>(arr: T[]): T[] {
-  const a: T[] = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const tmp = a[i] as T;
-    a[i] = a[j] as T;
-    a[j] = tmp;
-  }
-  return a;
-}
-
-/** Returns a random realm name from the Loki Mode name list. */
-function randomRealm(): string {
-  const idx = Math.floor(Math.random() * LOKI_REALM_NAMES.length);
-  return LOKI_REALM_NAMES[idx] ?? LOKI_REALM_NAMES[0];
 }
 
 // ─── Urgency bar for Howl tab cards ───────────────────────────────────────────
@@ -130,10 +109,10 @@ function UrgencyBar({ card }: UrgencyBarProps) {
   // Dot color follows realm token spec from HowlPanel.tsx
   const dotColorClass =
     days <= 0
-      ? "bg-[hsl(var(--realm-ragnarok))]"    // overdue
+      ? "bg-[hsl(var(--realm-ragnarok))]" // overdue
       : days <= 30
-      ? "bg-[hsl(var(--realm-muspel))]"      // critical
-      : "bg-[hsl(var(--realm-hati))]";       // approaching
+        ? "bg-[hsl(var(--realm-muspel))]" // critical
+        : "bg-[hsl(var(--realm-hati))]"; // approaching
 
   // Pulse animation only for overdue (days <= 0)
   // Disabled via @media prefers-reduced-motion in globals.css
@@ -165,7 +144,11 @@ function UrgencyBar({ card }: UrgencyBarProps) {
       data-testid="urgency-bar"
     >
       <span
-        className={cn("h-2 w-2 rounded-full shrink-0", dotColorClass, pulseClass)}
+        className={cn(
+          "h-2 w-2 rounded-full shrink-0",
+          dotColorClass,
+          pulseClass,
+        )}
         aria-hidden="true"
       />
       <span className="text-xs font-heading uppercase tracking-wide text-muted-foreground flex-1">
@@ -174,7 +157,9 @@ function UrgencyBar({ card }: UrgencyBarProps) {
       <span
         className={cn(
           "text-xs font-mono font-semibold",
-          days <= 30 ? "text-[hsl(var(--realm-muspel))]" : "text-[hsl(var(--realm-hati))]"
+          days <= 30
+            ? "text-[hsl(var(--realm-muspel))]"
+            : "text-[hsl(var(--realm-hati))]",
         )}
       >
         {daysLabel}
@@ -200,35 +185,6 @@ function HowlCard({ card, lokiLabel }: HowlCardProps) {
       <UrgencyBar card={card} />
       <CardTile card={card} lokiLabel={lokiLabel} />
     </div>
-  );
-}
-
-// ─── Tab badge ────────────────────────────────────────────────────────────────
-
-interface TabBadgeProps {
-  count: number;
-  /** When true, applies the heavier "howl" border treatment from wireframe. */
-  isHowl?: boolean;
-  /** When true, applies the trash-count CSS class for Karl bling cascade. */
-  isTrash?: boolean;
-}
-
-function TabBadge({ count, isHowl, isTrash }: TabBadgeProps) {
-  const zeroOpacity = count === 0 ? "opacity-40" : "";
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center justify-center",
-        "text-xs font-mono font-semibold",
-        "border px-1.5 min-w-[20px]",
-        isHowl && count > 0 ? "border-[2px] border-[hsl(var(--realm-muspel))] text-[hsl(var(--realm-muspel))]" : "border-border text-muted-foreground",
-        isTrash && "trash-count-badge",
-        zeroOpacity
-      )}
-      aria-label={`${count} deleted card${count !== 1 ? "s" : ""}`}
-    >
-      {count}
-    </span>
   );
 }
 
@@ -262,9 +218,13 @@ function TabEmptyState({ tabId, rune }: TabEmptyStateProps) {
       aria-label={label}
     >
       <p className="text-base font-heading text-muted-foreground tracking-wide">
-        <span aria-hidden="true" style={{ fontFamily: "serif" }}>{rune}</span>
-        {" "}{label}{" "}
-        <span aria-hidden="true" style={{ fontFamily: "serif" }}>{rune}</span>
+        <span aria-hidden="true" style={{ fontFamily: "serif" }}>
+          {rune}
+        </span>{" "}
+        {label}{" "}
+        <span aria-hidden="true" style={{ fontFamily: "serif" }}>
+          {rune}
+        </span>
       </p>
     </div>
   );
@@ -344,203 +304,48 @@ interface DashboardProps {
   initialTab?: string | undefined;
 }
 
-export function Dashboard({ cards, trashedCards = [], householdId, onCardsChange, initialTab }: DashboardProps) {
+export function Dashboard({
+  cards,
+  trashedCards = [],
+  householdId,
+  onCardsChange,
+  initialTab,
+}: DashboardProps) {
   const { ragnarokActive } = useRagnarok();
-  const { hasFeature } = useEntitlement();
-  const karlOrTrial = useIsKarlOrTrial();
-  // Feature gates: unlocked if Karl subscriber OR active trial
-  const isHowlUnlocked = hasFeature("howl-panel") || karlOrTrial;
-  const hasValhalla = hasFeature("card-archive") || karlOrTrial;
-  const hasVelocity = hasFeature("velocity-management") || karlOrTrial;
-  const hasTrash = karlOrTrial; // Trash requires Karl or trial tier
-  const [upsellOpen, setUpsellOpen] = useState(false);
-  const [velocityUpsellOpen, setVelocityUpsellOpen] = useState(false);
-  const [howlUpsellOpen, setHowlUpsellOpen] = useState(false);
-  const [trashUpsellOpen, setTrashUpsellOpen] = useState(false);
 
-  // ── Derive 5-bucket splits ─────────────────────────────────────────────────
+  // ── Card bucket splits (stable filters) ────────────────────────────────────
   const howlCards = cards.filter(isHowlCard);
   const huntCards = cards.filter(isHuntCard);
   const activeCards = cards.filter(isActiveCard);
   const valhallaCards = cards.filter(isValhallaCard);
-  // "All" includes every card (including closed)
 
-  // ── Initial tab: prop (URL param) > localStorage > default logic ───────────
-  function getInitialTab(): DashboardTab {
-    // 1. Prop (from URL ?tab= param) takes highest priority
-    //    But gated tabs fall through to default — upsell dialog opens on mount
-    if (initialTab && VALID_TABS.has(initialTab)) {
-      if (initialTab === "valhalla" && !hasValhalla) {
-        // Thrall user navigated to ?tab=valhalla — show dialog on mount, use default tab
-      } else if (initialTab === "hunt" && !hasVelocity) {
-        // Thrall user navigated to ?tab=hunt — show dialog on mount, use default tab
-      } else if (initialTab === "howl" && !isHowlUnlocked) {
-        // Thrall user navigated to ?tab=howl — show dialog on mount, use default tab
-      } else if (initialTab === "trash" && !hasTrash) {
-        // Thrall user navigated to ?tab=trash — show dialog on mount, use default tab
-      } else {
-        return initialTab as DashboardTab;
-      }
-    }
-
-    // 2. Restore from localStorage
-    try {
-      const stored = typeof window !== "undefined"
-        ? localStorage.getItem(TAB_STORAGE_KEY)
-        : null;
-      if (stored && VALID_TABS.has(stored)) {
-        return stored as DashboardTab;
-      }
-    } catch {
-      // localStorage unavailable (e.g. private mode lockdown) — ignore
-    }
-
-    // 3. Default: Howl if it has cards, else Active
-    return howlCards.length > 0 ? "howl" : "active";
-  }
-
-  const [activeTab, setActiveTab] = useState<DashboardTab>(getInitialTab);
-
-  // ── Auto-open upsell if Thrall user arrived via ?tab=<gated-tab> ──────────
-  useEffect(() => {
-    if (initialTab === "valhalla" && !hasValhalla) {
-      setUpsellOpen(true);
-    }
-    if (initialTab === "hunt" && !hasVelocity) {
-      setVelocityUpsellOpen(true);
-    }
-    if (initialTab === "howl" && !isHowlUnlocked) {
-      setHowlUpsellOpen(true);
-    }
-    if (initialTab === "trash" && !hasTrash) {
-      setTrashUpsellOpen(true);
-    }
-    // Only run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Listen for external tab activation (e.g. sidebar/bottom-tab link) ─────
-  useEffect(() => {
-    function handleActivateTab(e: Event) {
-      const event = e as CustomEvent<{ tab: string }>;
-      const tab = event.detail?.tab;
-      if (tab && VALID_TABS.has(tab)) {
-        // Gate Valhalla tab for Thrall users — show upsell dialog instead
-        if (tab === "valhalla" && !hasValhalla) {
-          setUpsellOpen(true);
-          return;
-        }
-        // Gate Hunt tab for Thrall users — show upsell dialog instead
-        if (tab === "hunt" && !hasVelocity) {
-          setVelocityUpsellOpen(true);
-          return;
-        }
-        // Gate Howl tab for Thrall users — show upsell dialog instead
-        if (tab === "howl" && !isHowlUnlocked) {
-          setHowlUpsellOpen(true);
-          return;
-        }
-        // Gate Trash tab for Thrall users — show upsell dialog instead
-        if (tab === "trash" && !hasTrash) {
-          setTrashUpsellOpen(true);
-          return;
-        }
-        setActiveTab(tab as DashboardTab);
-      }
-    }
-    window.addEventListener("fenrir:activate-tab", handleActivateTab);
-    return () => window.removeEventListener("fenrir:activate-tab", handleActivateTab);
-  }, [hasValhalla, hasVelocity, isHowlUnlocked]);
-
-  // ── Persist tab selection to localStorage ─────────────────────────────────
-  useEffect(() => {
-    try {
-      localStorage.setItem(TAB_STORAGE_KEY, activeTab);
-    } catch {
-      // Ignore write errors (e.g. storage full)
-    }
-  }, [activeTab]);
-
-  // ── Track Valhalla tab visit ───────────────────────────────────────────────
-  useEffect(() => {
-    if (activeTab === "valhalla") {
-      track("valhalla-visit");
-    }
-  }, [activeTab]);
-
-  // Track previous howl count for the raven-shake animation on the tab badge
-  const prevHowlCountRef = useRef(howlCards.length);
-  const [howlBadgeShake, setHowlBadgeShake] = useState(false);
-  useEffect(() => {
-    const prev = prevHowlCountRef.current;
-    if (howlCards.length > prev) {
-      setHowlBadgeShake(true);
-    }
-    prevHowlCountRef.current = howlCards.length;
-  }, [howlCards.length]);
+  // ── Tab state, entitlement gates, upsell dialogs, keyboard nav ─────────────
+  const {
+    activeTab,
+    gates,
+    karlOrTrial,
+    upsellOpen,
+    setUpsellOpen,
+    velocityUpsellOpen,
+    setVelocityUpsellOpen,
+    howlUpsellOpen,
+    setHowlUpsellOpen,
+    trashUpsellOpen,
+    setTrashUpsellOpen,
+    howlBadgeShake,
+    setHowlBadgeShake,
+    handleTabClick,
+    handleTabKeyDown,
+  } = useDashboardTabs({
+    initialTab,
+    howlCount: howlCards.length,
+    tabConfigs: TAB_CONFIG,
+  });
 
   // ── Loki Mode ──────────────────────────────────────────────────────────────
-  const [lokiActive, setLokiActive] = useState(false);
-  const [lokiOrder, setLokiOrder] = useState<Card[]>([]);
-  const [lokiLabels, setLokiLabels] = useState<Record<string, string>>({});
+  const { lokiActive, lokiOrder, lokiLabels } = useLokiMode(cards);
 
-  useEffect(() => {
-    function handleLokiMode(e: Event) {
-      const event = e as CustomEvent<{ active: boolean }>;
-      const active = event.detail?.active ?? false;
-
-      if (active) {
-        const shuffled = shuffleArray(cards);
-        const labels: Record<string, string> = {};
-        for (const card of cards) {
-          labels[card.id] = randomRealm();
-        }
-        setLokiOrder(shuffled);
-        setLokiLabels(labels);
-        setLokiActive(true);
-      } else {
-        setLokiActive(false);
-        setLokiOrder([]);
-        setLokiLabels({});
-      }
-    }
-
-    window.addEventListener("fenrir:loki-mode", handleLokiMode);
-    return () => window.removeEventListener("fenrir:loki-mode", handleLokiMode);
-  }, [cards]);
-
-  // ── Keyboard navigation for tab bar (ARIA tabs pattern) ────────────────────
-  // Arrow keys navigate between tabs (wrapping). Home/End jump to first/last.
-  function handleTabKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, tabIndex: number) {
-    const tabCount = TAB_CONFIG.length;
-    let nextIndex: number | null = null;
-
-    if (e.key === "ArrowRight") {
-      e.preventDefault();
-      nextIndex = (tabIndex + 1) % tabCount;
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      nextIndex = (tabIndex - 1 + tabCount) % tabCount;
-    } else if (e.key === "Home") {
-      e.preventDefault();
-      nextIndex = 0;
-    } else if (e.key === "End") {
-      e.preventDefault();
-      nextIndex = tabCount - 1;
-    }
-
-    if (nextIndex !== null) {
-      const nextTab = TAB_CONFIG[nextIndex];
-      if (nextTab) {
-        setActiveTab(nextTab.id);
-        // Move focus to the newly activated tab button
-        const el = document.getElementById(nextTab.buttonId);
-        el?.focus();
-      }
-    }
-  }
-
-  // Non-Valhalla cards only pass to EmptyState check (closed/graduated cards are shown in Valhalla tab)
+  // Non-Valhalla cards only pass to EmptyState check (closed/graduated are in Valhalla)
   const nonValhallaCards = cards.filter((c) => !isValhallaCard(c));
   if (nonValhallaCards.length === 0 && valhallaCards.length === 0) {
     return <EmptyState />;
@@ -572,137 +377,28 @@ export function Dashboard({ cards, trashedCards = [], householdId, onCardsChange
 
   return (
     <div>
-      {/* ── Tab bar — 5 tabs ──────────────────────────────────────────────────── */}
+      {/* ── Tab bar — 6 tabs ──────────────────────────────────────────────────── */}
       <div
         role="tablist"
         aria-label="Card dashboard tabs"
         className="flex border-b border-border mb-0 overflow-x-auto -webkit-overflow-scrolling-touch"
         style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
       >
-        {TAB_CONFIG.map((tab, index) => {
-          const isActive = activeTab === tab.id;
-          const isHowlTab = tab.id === "howl";
-          const isValhallaTab = tab.id === "valhalla";
-          const isHuntTab = tab.id === "hunt";
-          const isTrashTab = tab.id === "trash";
-          const isGatedValhalla = isValhallaTab && !hasValhalla;
-          const isGatedHunt = isHuntTab && !hasVelocity;
-          const isGatedTrash = isTrashTab && !hasTrash;
-          const count = tabCounts[tab.id];
-          // Howl tab for Thrall: show lock + KARL badge, no count badge
-          const isHowlLocked = isHowlTab && !isHowlUnlocked;
-
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              id={tab.buttonId}
-              aria-selected={isActive}
-              aria-controls={isGatedValhalla || isGatedHunt || isHowlLocked || isGatedTrash ? undefined : tab.panelId}
-              aria-label={
-                isHowlLocked ? "The Howl \u2014 Karl tier required. Click to upgrade."
-                : isGatedValhalla ? "Valhalla \u2014 Karl tier required. Click to upgrade."
-                : isGatedHunt ? "The Hunt \u2014 Karl tier required. Click to upgrade."
-                : isGatedTrash ? "Trash \u2014 upgrade to Karl to access"
-                : undefined
-              }
-              tabIndex={isActive ? 0 : -1}
-              onClick={() => {
-                // Gate Valhalla for Thrall users — show upsell dialog instead
-                if (isGatedValhalla) {
-                  setUpsellOpen(true);
-                  return;
-                }
-                // Gate Hunt for Thrall users — show upsell dialog instead
-                if (isGatedHunt) {
-                  setVelocityUpsellOpen(true);
-                  return;
-                }
-                // Gate Howl for Thrall users — show upsell dialog instead
-                if (isHowlLocked) {
-                  setHowlUpsellOpen(true);
-                  return;
-                }
-                // Gate Trash for Thrall users — show upsell, DO NOT setActiveTab
-                if (isGatedTrash) {
-                  setTrashUpsellOpen(true);
-                  return;
-                }
-                setActiveTab(tab.id);
-              }}
-              onKeyDown={(e) => handleTabKeyDown(e, index)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-3 text-sm font-heading uppercase tracking-wide",
-                "border-b-[3px] transition-colors whitespace-nowrap shrink-0 min-h-[44px]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                // Trash tab: CSS class for Karl bling cascade
-                isTrashTab && "trash-tab",
-                // Thrall trash tab: visually dimmed to hint locked state
-                isGatedTrash && "opacity-65",
-                isActive
-                  ? isHowlTab && !isHowlLocked
-                    ? ragnarokActive
-                      ? "border-[hsl(var(--realm-ragnarok-dark))] text-[hsl(var(--realm-ragnarok-dark))]"
-                      : "border-[hsl(var(--realm-muspel))] text-[hsl(var(--realm-muspel))]"
-                    : "border-gold text-gold"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {/* Rune icon */}
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "text-base leading-none select-none",
-                  isHowlTab && !isHowlLocked && howlCards.length > 0 && !ragnarokActive
-                    ? "animate-muspel-pulse text-[hsl(var(--realm-muspel))]"
-                    : isHowlTab && !isHowlLocked && ragnarokActive
-                    ? "animate-muspel-pulse text-[hsl(var(--realm-ragnarok-dark))]"
-                    : "",
-                  isHowlTab && !isHowlLocked && howlBadgeShake ? "raven-icon--warning" : ""
-                )}
-                onAnimationEnd={isHowlTab && !isHowlLocked ? () => setHowlBadgeShake(false) : undefined}
-                style={{ fontFamily: "serif" }}
-              >
-                {tab.rune}
-              </span>
-              {isHowlTab && !isHowlLocked && ragnarokActive ? "Ragnarök Approaches" : tab.label}
-              {/* Thrall: lock icon + KARL badge for Howl; lock for Valhalla */}
-              {isHowlLocked ? (
-                <>
-                  <span className="text-xs opacity-70" aria-hidden="true">
-                    {"\uD83D\uDD12"}
-                  </span>
-                  <span
-                    className="text-[9px] font-mono font-bold border border-gold/20 px-1.5 py-0.5 uppercase tracking-wide text-gold/60"
-                    aria-hidden="true"
-                  >
-                    KARL
-                  </span>
-                </>
-              ) : isGatedValhalla ? (
-                <span className="text-[10px] ml-0.5" aria-hidden="true">&#128274;</span>
-              ) : isGatedHunt ? (
-                <span className="text-[10px] ml-0.5" aria-hidden="true">&#128274;</span>
-              ) : isGatedTrash ? (
-                // Thrall: lock glyph ᛜ (ingwaz) per wireframe spec
-                <span
-                  aria-hidden="true"
-                  className="text-[11px] opacity-65 select-none"
-                  style={{ fontFamily: "serif" }}
-                >
-                  ᛜ
-                </span>
-              ) : (
-                <TabBadge
-                  count={count}
-                  isHowl={isHowlTab}
-                  isTrash={isTrashTab}
-                />
-              )}
-            </button>
-          );
-        })}
+        {TAB_CONFIG.map((tab, index) => (
+          <DashboardTabButton
+            key={tab.id}
+            tab={tab}
+            isActive={activeTab === tab.id}
+            count={tabCounts[tab.id]}
+            gates={gates}
+            ragnarokActive={ragnarokActive}
+            howlHasCards={howlCards.length > 0}
+            howlBadgeShake={howlBadgeShake}
+            onHowlAnimationEnd={() => setHowlBadgeShake(false)}
+            onClick={() => handleTabClick(tab.id)}
+            onKeyDown={(e) => handleTabKeyDown(e, index)}
+          />
+        ))}
       </div>
 
       {/* ── Tab panels ───────────────────────────────────────────────────────── */}
@@ -794,7 +490,9 @@ export function Dashboard({ cards, trashedCards = [], householdId, onCardsChange
                   aria-label={`${lockedActiveCardCount} more cards locked. Upgrade to Karl to view all cards.`}
                 >
                   <span aria-hidden="true">{"\uD83D\uDD12"} </span>
-                  {lockedActiveCardCount} more card{lockedActiveCardCount !== 1 ? "s" : ""} &mdash; Upgrade to Karl
+                  {lockedActiveCardCount} more card
+                  {lockedActiveCardCount !== 1 ? "s" : ""} &mdash; Upgrade to
+                  Karl
                 </button>
               )}
             </>
