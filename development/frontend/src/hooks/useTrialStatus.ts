@@ -33,6 +33,8 @@ export interface UseTrialStatusReturn {
   remainingDays: number;
   /** Current trial status. */
   status: TrialStatus;
+  /** ISO timestamp of when the trial expires — canonical source of truth from Firestore. */
+  expiresAt?: string;
   /** ISO date when the user converted to Karl (if applicable). */
   convertedDate?: string;
   /** Whether the context is currently fetching data. */
@@ -56,6 +58,7 @@ export function useTrialStatus(): UseTrialStatusReturn {
   return {
     remainingDays: ctx.remainingDays,
     status: ctx.status,
+    ...(ctx.expiresAt !== undefined ? { expiresAt: ctx.expiresAt } : {}),
     ...(ctx.convertedDate !== undefined ? { convertedDate: ctx.convertedDate } : {}),
     isLoading: ctx.isLoading,
     refresh: ctx.refresh,

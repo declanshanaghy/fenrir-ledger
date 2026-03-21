@@ -79,6 +79,8 @@ export interface TrialStatusContextValue {
   remainingDays: number;
   /** Current trial status. */
   status: TrialStatus;
+  /** ISO timestamp of when the trial expires — canonical source of truth from Firestore. */
+  expiresAt?: string;
   /** ISO date when the user converted to Karl (if applicable). */
   convertedDate?: string;
   /** Whether the context is currently fetching data. */
@@ -216,6 +218,7 @@ export function TrialStatusProvider({ children }: TrialStatusProviderProps) {
   const value: TrialStatusContextValue = {
     remainingDays: data.remainingDays,
     status: data.status,
+    ...(data.expiresAt !== undefined ? { expiresAt: data.expiresAt } : {}),
     ...(data.convertedDate !== undefined ? { convertedDate: data.convertedDate } : {}),
     isLoading,
     refresh: fetchStatus,

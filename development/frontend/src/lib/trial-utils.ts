@@ -55,6 +55,8 @@ export type TrialStatus = "active" | "expired" | "converted" | "none";
 export interface TrialStatusResponse {
   remainingDays: number;
   status: TrialStatus;
+  /** ISO timestamp of when the trial expires — canonical source of truth. */
+  expiresAt?: string;
   convertedDate?: string;
   /**
    * Server-side cache version. When the client sees a version different from

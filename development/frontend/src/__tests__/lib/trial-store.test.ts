@@ -284,6 +284,7 @@ describe("computeTrialStatus", () => {
     expect(result.status).toBe("converted");
     expect(result.convertedDate).toBe("2025-01-15T00:00:00.000Z");
     expect(result.remainingDays).toBe(0);
+    expect(result.expiresAt).toBe("2025-01-31T00:00:00.000Z");
   });
 
   it("returns 'converted' even if trial is past expiry when convertedDate is set", () => {
@@ -295,9 +296,11 @@ describe("computeTrialStatus", () => {
     expect(computeTrialStatus(trial).status).toBe("converted");
   });
 
-  it(`returns 'active' with 1 remaining day when exactly ${TRIAL_DURATION_DAYS - 1} days have elapsed`, () => {
+  it("uses expiresAt directly — ignores startDate for expiration", () => {
+    // expiresAt is 1 day in the future; startDate is arbitrarily old.
+    // Result must be based on expiresAt, not startDate + TRIAL_DURATION_DAYS.
     const trial: StoredTrial = {
-      startDate: daysAgo(TRIAL_DURATION_DAYS - 1),
+      startDate: daysAgo(365),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     };
     const result = computeTrialStatus(trial);
@@ -305,14 +308,27 @@ describe("computeTrialStatus", () => {
     expect(result.remainingDays).toBe(1);
   });
 
-  it(`returns 'expired' with 0 days when exactly ${TRIAL_DURATION_DAYS} days have elapsed`, () => {
+  it(`returns 'active' with 1 remaining day when expiresAt is 24h from now`, () => {
+    const trial: StoredTrial = {
+      startDate: daysAgo(TRIAL_DURATION_DAYS - 1),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
+    const result = computeTrialStatus(trial);
+    expect(result.status).toBe("active");
+    expect(result.remainingDays).toBe(1);
+    expect(result.expiresAt).toBe(trial.expiresAt);
+  });
+
+  it("returns 'expired' when expiresAt is in the past", () => {
+    const expiresAt = new Date(Date.now() - 1000).toISOString();
     const trial: StoredTrial = {
       startDate: daysAgo(TRIAL_DURATION_DAYS),
-      expiresAt: new Date(Date.now() - 1000).toISOString(),
+      expiresAt,
     };
     const result = computeTrialStatus(trial);
     expect(result.status).toBe("expired");
     expect(result.remainingDays).toBe(0);
+    expect(result.expiresAt).toBe(expiresAt);
   });
 
   it("returns 'active' with positive remainingDays for recent trial", () => {
@@ -323,9 +339,10 @@ describe("computeTrialStatus", () => {
     const result = computeTrialStatus(trial);
     expect(result.status).toBe("active");
     expect(result.remainingDays).toBeGreaterThan(0);
+    expect(result.expiresAt).toBe(trial.expiresAt);
   });
 
-  it("returns 'expired' for trial older than 60 days", () => {
+  it("returns 'expired' for trial with expiresAt 30 days in the past", () => {
     const trial: StoredTrial = {
       startDate: daysAgo(60),
       expiresAt: daysAgo(30),
@@ -333,5 +350,17 @@ describe("computeTrialStatus", () => {
     const result = computeTrialStatus(trial);
     expect(result.status).toBe("expired");
     expect(result.remainingDays).toBe(0);
+  });
+
+  it("uses expiresAt not startDate+duration — custom expiresAt is honoured", () => {
+    // Simulate an admin-adjusted trial: expiresAt extended beyond the standard 30 days
+    const trial: StoredTrial = {
+      startDate: daysAgo(40),
+      expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    const result = computeTrialStatus(trial);
+    // startDate-based calc would say expired (40 days > 30), but expiresAt says active
+    expect(result.status).toBe("active");
+    expect(result.remainingDays).toBe(5);
   });
 });
