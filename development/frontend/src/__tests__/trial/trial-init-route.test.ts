@@ -2,19 +2,19 @@
  * Integration tests for POST /api/trial/init
  *
  * Covers:
- *  - Trial auto-starts on first sign-in (new fingerprint → Firestore write)
- *  - Idempotent: second call preserves original start date, no re-write
- *  - Invalid fingerprint returns 400
- *  - Missing fingerprint returns 400
+ *  - Trial initializes for authenticated user (userId from auth token)
+ *  - Idempotent: second call preserves original trial, returns isNew:false
  *  - Unauthenticated request returns 401
+ *  - Returns 409 when trial already expired (restart blocked)
  *  - Firestore failure returns 500
+ *  - Rate limiting returns 429
  *
  * @see src/app/api/trial/init/route.ts
- * @ref Issue #922, #1516
+ * @ref Issue #1634
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -24,15 +24,8 @@ const mockDocRef = vi.hoisted(() => ({
   update: vi.fn(),
 }));
 
-const mockCollectionRef = vi.hoisted(() => ({
-  where: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  get: vi.fn(),
-}));
-
 const mockDb = vi.hoisted(() => ({
   doc: vi.fn(() => mockDocRef),
-  collection: vi.fn(() => mockCollectionRef),
 }));
 
 vi.mock("@/lib/firebase/firestore", () => ({
@@ -40,7 +33,6 @@ vi.mock("@/lib/firebase/firestore", () => ({
 }));
 
 const mockRateLimit = vi.hoisted(() => vi.fn(() => ({ success: true, remaining: 9 })));
-
 vi.mock("@/lib/rate-limit", () => ({
   rateLimit: mockRateLimit,
 }));
@@ -49,10 +41,10 @@ vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-// requireAuthz: by default resolves to an authenticated user. Override per-test for 401 cases.
-const mockRequireAuthz = vi.fn();
-vi.mock("@/lib/auth/authz", () => ({
-  requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
+// requireAuth: by default resolves authenticated. Override per-test for 401 cases.
+const mockRequireAuth = vi.fn();
+vi.mock("@/lib/auth/require-auth", () => ({
+  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
 }));
 
 // ── Import route handler after mocks ──────────────────────────────────────────
@@ -61,17 +53,34 @@ import { POST } from "@/app/api/trial/init/route";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const VALID_FINGERPRINT = "a".repeat(64);
+const USER_ID = "google-sub-test-123";
+const TRIAL_PATH = `households/${USER_ID}/trial`;
 
-/** Snapshot for a missing document. */
 const missingSnap = { exists: false, data: () => null };
 
-/** Snapshot for an existing trial. */
 function existingSnap(trial: Record<string, unknown>) {
-  return { exists: true, data: () => ({ ...trial, expiresAt: {} }) };
+  return {
+    exists: true,
+    data: () => ({
+      startDate: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      ...trial,
+    }),
+  };
 }
 
-function makeRequest(body: Record<string, unknown> = {}, token = "valid-token"): NextRequest {
+function expiredSnap() {
+  const start = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+  return {
+    exists: true,
+    data: () => ({
+      startDate: start.toISOString(),
+      expiresAt: new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    }),
+  };
+}
+
+function makeRequest(token = "valid-token"): NextRequest {
   return new NextRequest("http://localhost:9653/api/trial/init", {
     method: "POST",
     headers: {
@@ -79,14 +88,19 @@ function makeRequest(body: Record<string, unknown> = {}, token = "valid-token"):
       Authorization: `Bearer ${token}`,
       "x-forwarded-for": "127.0.0.1",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({}),
   });
 }
 
-const MOCK_FIRESTORE_USER = { userId: "google-sub-123", email: "test@test.com", displayName: "Test User", householdId: "hh-test", role: "owner" as const, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" };
-
 function authOk() {
-  mockRequireAuthz.mockResolvedValue({ ok: true, user: { sub: "google-sub-123" }, firestoreUser: MOCK_FIRESTORE_USER });
+  mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: USER_ID } });
+}
+
+function authFail() {
+  mockRequireAuth.mockResolvedValue({
+    ok: false,
+    response: NextResponse.json({ error: "unauthorized" }, { status: 401 }),
+  });
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
@@ -95,40 +109,35 @@ describe("POST /api/trial/init", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authOk();
-    // Default: doc not found
     mockDocRef.get.mockResolvedValue(missingSnap);
     mockDocRef.set.mockResolvedValue(undefined);
     mockDocRef.update.mockResolvedValue(undefined);
-    mockCollectionRef.get.mockResolvedValue({ empty: true, docs: [] });
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Trial auto-starts on first sign-in
+  // Successful trial creation
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("creates a new trial on first sign-in and returns isNew:true", async () => {
-    // Route calls getTrial → doc not found; then initTrial → getTrial again → not found → set
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap) // route's getTrial
-      .mockResolvedValueOnce(missingSnap); // initTrial's internal getTrial
-
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+  it("creates a new trial and returns isNew:true on first call", async () => {
+    const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body.isNew).toBe(true);
     expect(typeof body.startDate).toBe("string");
+    expect(typeof body.expiresAt).toBe("string");
     expect(mockDocRef.set).toHaveBeenCalledOnce();
-    expect(mockDb.doc).toHaveBeenCalledWith(`trials/${VALID_FINGERPRINT}`);
   });
 
-  it("writes a valid ISO start date to Firestore on first sign-in", async () => {
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap)
-      .mockResolvedValueOnce(missingSnap);
+  it("writes trial to /households/{userId}/trial", async () => {
+    await POST(makeRequest());
 
+    expect(mockDb.doc).toHaveBeenCalledWith(TRIAL_PATH);
+  });
+
+  it("writes a valid ISO start date to Firestore", async () => {
     const before = Date.now();
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const res = await POST(makeRequest());
     const after = Date.now();
     const body = await res.json();
 
@@ -138,90 +147,50 @@ describe("POST /api/trial/init", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Idempotent — second sign-in preserves original trial
+  // Idempotent — second call preserves original trial
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns isNew:false and preserves original startDate on second call", async () => {
     const originalStartDate = "2026-03-01T00:00:00.000Z";
-    mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate: originalStartDate }));
+    mockDocRef.get.mockResolvedValueOnce(
+      existingSnap({ startDate: originalStartDate }),
+    );
 
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body.isNew).toBe(false);
     expect(body.startDate).toBe(originalStartDate);
-    // Firestore set should NOT be called — existing trial preserved
     expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Anonymous access — no auth token required (Issue #1413)
+  // Authentication required
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("allows anonymous request (no Bearer token) with valid fingerprint", async () => {
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap)
-      .mockResolvedValueOnce(missingSnap);
+  it("returns 401 when request is unauthenticated", async () => {
+    authFail();
 
-    // Request with no Authorization header
-    const req = new NextRequest("http://localhost:9653/api/trial/init", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-forwarded-for": "127.0.0.1",
-      },
-      body: JSON.stringify({ fingerprint: VALID_FINGERPRINT }),
-    });
+    const res = await POST(makeRequest("invalid-token"));
 
-    const res = await POST(req);
-    const body = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(body.isNew).toBe(true);
+    expect(res.status).toBe(401);
+    expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Input validation
+  // Trial restart blocked
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns 400 for invalid fingerprint (too short)", async () => {
-    const res = await POST(makeRequest({ fingerprint: "abc123" }));
+  it("returns 409 when trial has already expired (restart blocked)", async () => {
+    mockDocRef.get.mockResolvedValueOnce(expiredSnap());
+
+    const res = await POST(makeRequest());
     const body = await res.json();
 
-    expect(res.status).toBe(400);
-    expect(body.error).toBe("invalid_fingerprint");
-  });
-
-  it("returns 400 for invalid fingerprint (uppercase hex)", async () => {
-    const res = await POST(makeRequest({ fingerprint: "A".repeat(64) }));
-    const body = await res.json();
-
-    expect(res.status).toBe(400);
-    expect(body.error).toBe("invalid_fingerprint");
-  });
-
-  it("returns 400 for missing fingerprint field", async () => {
-    const res = await POST(makeRequest({ notAFingerprint: "whatever" }));
-    const body = await res.json();
-
-    expect(res.status).toBe(400);
-    expect(body.error).toBe("invalid_body");
-  });
-
-  it("returns 400 for empty body", async () => {
-    const req = new NextRequest("http://localhost:9653/api/trial/init", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer valid-token",
-        "x-forwarded-for": "127.0.0.1",
-      },
-      body: "not-valid-json",
-    });
-
-    const res = await POST(req);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
+    expect(body.error).toBe("trial_restart_blocked");
+    expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -229,12 +198,9 @@ describe("POST /api/trial/init", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns 500 when Firestore write fails", async () => {
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap) // route's getTrial
-      .mockResolvedValueOnce(missingSnap); // initTrial's internal getTrial
     mockDocRef.set.mockRejectedValueOnce(new Error("Firestore unavailable"));
 
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(500);
@@ -246,23 +212,19 @@ describe("POST /api/trial/init", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("response includes Cache-Control: no-store", async () => {
-    mockDocRef.get
-      .mockResolvedValueOnce(missingSnap)
-      .mockResolvedValueOnce(missingSnap);
-
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const res = await POST(makeRequest());
 
     expect(res.headers.get("Cache-Control")).toBe("no-store");
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Rate limiting — Loki QA addition (#922)
+  // Rate limiting
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns 429 when rate limit is exceeded", async () => {
     mockRateLimit.mockReturnValueOnce({ success: false, remaining: 0 });
 
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(429);
