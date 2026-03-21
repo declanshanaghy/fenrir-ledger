@@ -124,10 +124,12 @@ describe("KarlUpsellDialog — anonymous user (issue #1699)", () => {
     expect(dialog.textContent).toContain("FREE 30-DAY TRIAL");
   });
 
-  it("does NOT show KARL · $3.99/month header for anonymous users", () => {
+  it("does NOT show KARL tier header pricing for anonymous users", () => {
     render(<KarlUpsellDialog {...baseProps} />);
     const dialog = screen.getByRole("dialog");
-    expect(dialog.textContent).not.toContain("$3.99/month");
+    // The header subtext shows "FREE 30-DAY TRIAL" for anon (not "KARL · $3.99/month")
+    // Note: tier row still shows "30 days free, then $3.99/month" as pricing context
+    expect(dialog.textContent).not.toContain("KARL \u00B7 $3.99/month");
   });
 
   it("renders sign-in CTA button for anonymous users", () => {
