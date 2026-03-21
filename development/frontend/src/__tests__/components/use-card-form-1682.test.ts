@@ -236,13 +236,13 @@ describe("cardFormSchema — validation (issue #1682)", () => {
         bonusAmount: "60000",
         bonusSpendRequirement: "4000",
         bonusDeadline: "2024-04-15",
-        bonusMet: false,
+        amountSpent: "1500",
         notes: "Great travel card",
       });
       expect(result.success).toBe(true);
     });
 
-    it("defaults bonusMet to false when omitted", () => {
+    it("defaults amountSpent to empty string when omitted", () => {
       const result = cardFormSchema.safeParse({
         issuerId: "chase",
         cardName: "Test",
@@ -250,7 +250,7 @@ describe("cardFormSchema — validation (issue #1682)", () => {
       });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.bonusMet).toBe(false);
+        expect(result.data.amountSpent).toBe("");
       }
     });
 

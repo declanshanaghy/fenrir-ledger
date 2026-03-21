@@ -66,7 +66,14 @@ export const cardFormSchema = z.object({
   bonusAmount: z.string().optional().default(""),
   bonusSpendRequirement: z.string().optional().default(""),
   bonusDeadline: z.string().optional().default(""),
-  bonusMet: z.boolean().default(false),
+  amountSpent: z
+    .string()
+    .optional()
+    .transform((v) => v ?? "")
+    .refine(
+      (v) => v === "" || (!isNaN(parseFloat(v)) && parseFloat(v) >= 0),
+      "Must be a valid dollar amount"
+    ),
   status: z
     .enum([
       "active",
@@ -105,7 +112,7 @@ function buildDefaultValues(initialValues?: Card): Partial<CardFormValues> {
       openDate: todayStr,
       annualFeeDate: feeDateDefault,
       bonusDeadline: deadlineDefault,
-      bonusMet: false,
+      amountSpent: "",
       notes: "",
     };
   }
@@ -136,7 +143,7 @@ function buildDefaultValues(initialValues?: Card): Partial<CardFormValues> {
       ? isoToLocalDateString(initialValues.signUpBonus.deadline) ||
         initialValues.signUpBonus.deadline
       : "",
-    bonusMet: initialValues.signUpBonus?.met ?? false,
+    amountSpent: centsToDollars(initialValues.amountSpent ?? 0),
     status: initialValues.status,
     notes: initialValues.notes ?? "",
   };
@@ -204,7 +211,7 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
   const creditLimit = watch("creditLimit");
   const bonusType = watch("bonusType");
   const bonusSpendRequirement = watch("bonusSpendRequirement");
-  const bonusMet = watch("bonusMet");
+  const amountSpent = watch("amountSpent");
 
   // Auto-derive annualFeeDate + bonusDeadline when openDate changes
   const prevOpenDate = useRef<string>(defaultValues.openDate ?? "");
@@ -288,6 +295,11 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
         data.bonusDeadline ||
         "";
 
+      const amountSpentCents = dollarsToCents(data.amountSpent ?? "");
+      const spendRequirementCents = dollarsToCents(data.bonusSpendRequirement ?? "");
+      const minimumSpendMet =
+        spendRequirementCents > 0 && amountSpentCents >= spendRequirementCents;
+
       const card: Card = {
         id: initialValues?.id ?? generateId(),
         householdId: initialValues?.householdId ?? householdId,
@@ -298,13 +310,14 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
         annualFee: dollarsToCents(data.annualFee ?? ""),
         annualFeeDate: annualFeeDateIso,
         promoPeriodMonths: 0,
+        amountSpent: amountSpentCents,
         signUpBonus: data.bonusType
           ? {
               type: data.bonusType,
               amount: dollarsToCents(data.bonusAmount ?? ""),
-              spendRequirement: dollarsToCents(data.bonusSpendRequirement ?? ""),
+              spendRequirement: spendRequirementCents,
               deadline: bonusDeadlineIso,
-              met: data.bonusMet ?? false,
+              met: minimumSpendMet,
             }
           : null,
         status: (data.status === "closed" ? "closed" : "active") as CardStatus,
@@ -376,7 +389,7 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
     creditLimit,
     bonusType,
     bonusSpendRequirement,
-    bonusMet,
+    amountSpent,
     // wizard
     currentStep,
     direction,

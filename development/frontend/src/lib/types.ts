@@ -63,6 +63,11 @@ export interface Card {
   promoPeriodMonths: number;
   /** Sign-up bonus details, or null if no sign-up bonus */
   signUpBonus: SignUpBonus | null;
+  /**
+   * Amount spent toward the sign-up bonus minimum spend requirement, in cents.
+   * Defaults to 0. Used to compute minimumSpendMet dynamically.
+   */
+  amountSpent?: number;
   /** Computed status for display. Recalculated on save. */
   status: CardStatus;
   /** Free-form notes */

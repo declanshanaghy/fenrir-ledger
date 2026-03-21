@@ -59,12 +59,11 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
     handleSubmit,
     setValue,
     errors,
-    defaultValues,
     issuerId,
     creditLimit,
     bonusType,
     bonusSpendRequirement,
-    bonusMet,
+    amountSpent,
     currentStep,
     direction,
     goToStep,
@@ -129,7 +128,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
                     issuerId={issuerId}
                     bonusType={bonusType}
                     bonusSpendRequirement={bonusSpendRequirement}
-                    bonusMet={bonusMet ?? false}
+                    amountSpent={amountSpent}
                   />
                 </motion.div>
               )}
@@ -162,8 +161,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
             issuerId={issuerId}
             bonusType={bonusType}
             bonusSpendRequirement={bonusSpendRequirement}
-            bonusMet={bonusMet ?? false}
-            defaultStatus={defaultValues.status}
+            amountSpent={amountSpent}
           />
         )}
 

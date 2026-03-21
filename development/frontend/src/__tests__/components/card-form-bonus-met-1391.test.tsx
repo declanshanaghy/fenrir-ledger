@@ -1,18 +1,18 @@
 /**
- * CardForm — "Minimum spend met" checkbox placement — Issue #1391
+ * CardForm — amount spent + computed minimumSpendMet indicator — Issue #1745
  *
  * Validates acceptance criteria:
- * - "Minimum spend met" checkbox is present in step 1 (Sign-up Bonus section)
- * - "Minimum spend met" checkbox is absent from step 2
- * - Checkbox defaults to unchecked for new cards
- * - Checkbox reflects initialValues.signUpBonus.met in edit mode
+ * - "Amount spent" input is present in step 1 (Sign-up Bonus section)
+ * - "Minimum spend met" checkbox is absent (replaced by computed indicator)
+ * - Computed indicator is read-only and reflects amountSpent vs spendRequirement
+ * - In edit mode, "Amount spent" is populated from initialValues.amountSpent
  *
- * @ref #1391
+ * @ref #1745
  */
 
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 
 // ── Framer Motion ─────────────────────────────────────────────────────────────
 
@@ -118,7 +118,7 @@ import { CardForm } from "@/components/cards/CardForm";
 
 import type { Card } from "@/lib/types";
 
-function makeCardWithBonus(met: boolean): Card {
+function makeCardWithBonus(amountSpentCents: number): Card {
   return {
     id: "card-1",
     householdId: "hh-1",
@@ -129,12 +129,13 @@ function makeCardWithBonus(met: boolean): Card {
     annualFee: 9500,
     annualFeeDate: "2026-01-01T00:00:00.000Z",
     promoPeriodMonths: 0,
+    amountSpent: amountSpentCents,
     signUpBonus: {
       type: "points",
       amount: 6000000,
       spendRequirement: 400000,
       deadline: "2023-04-01T00:00:00.000Z",
-      met,
+      met: amountSpentCents >= 400000,
     },
     status: "active",
     notes: "",
@@ -145,92 +146,60 @@ function makeCardWithBonus(met: boolean): Card {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('CardForm — "Minimum spend met" checkbox — Issue #1391', () => {
+describe('CardForm — amount spent / computed minimum spend indicator — Issue #1745', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("renders the 'Minimum spend met' label in step 1 (wizard mode)", () => {
+  it("renders 'Amount spent' input in step 1 (wizard mode)", () => {
     render(<CardForm householdId="hh-1" />);
-
-    // Step 1 is active by default — label must be visible
-    expect(screen.getByText("Minimum spend met")).toBeDefined();
-  }, 15000);
-
-  it("renders the bonusMet checkbox element in step 1", () => {
-    render(<CardForm householdId="hh-1" />);
-
-    const checkbox = screen.getByRole("checkbox", { name: /minimum spend met/i });
-    expect(checkbox).toBeDefined();
+    expect(screen.getByLabelText(/amount spent/i)).toBeDefined();
   });
 
-  it("bonusMet checkbox defaults to unchecked for new cards", () => {
+  it("does NOT render a 'Minimum spend met' checkbox in step 1", () => {
     render(<CardForm householdId="hh-1" />);
-
-    const checkbox = screen.getByRole("checkbox", { name: /minimum spend met/i });
-    // Radix Checkbox uses aria-checked attribute
-    const ariaChecked = checkbox.getAttribute("aria-checked");
-    expect(ariaChecked === "false" || ariaChecked === null || (checkbox as HTMLInputElement).checked === false).toBe(true);
+    const checkboxes = screen.queryAllByRole("checkbox", { name: /minimum spend met/i });
+    expect(checkboxes.length).toBe(0);
   });
 
-  it("shows step 2 without 'Minimum spend met' checkbox after clicking More Details", async () => {
+  it("'Amount spent' input defaults to empty for new cards", () => {
     render(<CardForm householdId="hh-1" />);
-
-    // Fill required fields: issuerId via Select (simulated via fireEvent change on hidden input),
-    // cardName, openDate. openDate already has a default from todayStr.
-    // The Select for issuerId uses Radix — we fill the underlying value via react-hook-form's setValue.
-    // Easiest approach: fill cardName (the only visible input required on step 1) and trigger form
-    // advancement programmatically by clicking Back from step 2 perspective.
-    // Instead: navigate to step 2 directly by clicking Back (only on step 2) is not possible from step 1.
-    // We navigate by clicking "More Details" after filling required fields.
-    const cardNameInput = screen.getByPlaceholderText(/e\.g\. Sapphire/i);
-    fireEvent.change(cardNameInput, { target: { value: "Test Card" } });
-
-    // Click "More Details" — validation will fail on issuerId (required).
-    // Step should stay at 1 because issuerId is missing.
-    const moreDetailsBtn = screen.getByRole("button", { name: /more details/i });
-    await act(async () => {
-      fireEvent.click(moreDetailsBtn);
-    });
-
-    // Still on step 1 due to validation failure — bonusMet checkbox still present
-    expect(screen.getByText("Minimum spend met")).toBeDefined();
+    const input = screen.getByLabelText(/amount spent/i) as HTMLInputElement;
+    expect(input.value).toBe("");
   });
 
-  it("step 2 Sign-up Bonus section only contains 'Bonus deadline' (not bonusMet)", () => {
+  it("computed indicator is not shown when no spend requirement is set", () => {
     render(<CardForm householdId="hh-1" />);
+    // No bonusSpendRequirement selected, so indicator should not appear
+    expect(screen.queryByText(/minimum spend met/i)).toBeNull();
+    expect(screen.queryByText(/minimum spend not yet met/i)).toBeNull();
+  });
 
-    // Navigate to step 2 via Back button simulation: use goToStep by clicking Back
-    // Back button only appears on step 2. To get there without full form validation,
-    // we verify absence of bonusMet on step 2 by checking the rendered structure.
-    // On step 1: both "Minimum spend" dropdown and "Minimum spend met" checkbox exist.
-    // On step 2: only "Bonus deadline" label exists under the Sign-up Bonus fieldset.
-
-    // Verify step 2 fields are NOT rendered (only step 1 is active):
-    // "Bonus deadline" input is only on step 2 — should not be visible on step 1
+  it("'Bonus deadline' is NOT shown in wizard step 1 (it lives in step 2)", () => {
+    render(<CardForm householdId="hh-1" />);
     const bonusDeadlineInputs = screen.queryAllByLabelText(/bonus deadline/i);
-    // In step 1 wizard mode, bonusDeadline is not labeled (it's auto-set, not shown as field)
-    // The label "Bonus deadline" only appears in step 2 fieldset
     expect(bonusDeadlineInputs.length).toBe(0);
   });
 
-  it("renders bonusMet checkbox as checked when initialValues has met=true (edit mode)", () => {
-    const card = makeCardWithBonus(true);
+  it("renders 'Amount spent' input in edit mode pre-populated from initialValues", () => {
+    const card = makeCardWithBonus(150000); // $1500
     render(<CardForm householdId="hh-1" initialValues={card} />);
-
-    // Edit mode renders all fields on single page (no wizard)
-    const checkbox = screen.getByRole("checkbox", { name: /minimum spend met/i });
-    const ariaChecked = checkbox.getAttribute("aria-checked");
-    // Should be checked (true) because met=true
-    expect(ariaChecked === "true" || (checkbox as HTMLInputElement).checked === true).toBe(true);
+    const input = screen.getByLabelText(/amount spent/i) as HTMLInputElement;
+    expect(input.value).toBe("1500");
   });
 
-  it("renders bonusMet checkbox as unchecked when initialValues has met=false (edit mode)", () => {
-    const card = makeCardWithBonus(false);
+  it("does NOT render a 'Minimum spend met' checkbox in edit mode", () => {
+    const card = makeCardWithBonus(400000); // fully met
     render(<CardForm householdId="hh-1" initialValues={card} />);
+    const checkboxes = screen.queryAllByRole("checkbox", { name: /minimum spend met/i });
+    expect(checkboxes.length).toBe(0);
+  });
 
-    const checkbox = screen.getByRole("checkbox", { name: /minimum spend met/i });
-    const ariaChecked = checkbox.getAttribute("aria-checked");
-    expect(ariaChecked === "false" || ariaChecked === null || (checkbox as HTMLInputElement).checked === false).toBe(true);
+  it("edit mode shows 'Amount spent' with zero value when amountSpent is 0", () => {
+    const card = makeCardWithBonus(0);
+    render(<CardForm householdId="hh-1" initialValues={card} />);
+    const input = screen.getByLabelText(/amount spent/i) as HTMLInputElement;
+    // centsToDollars(0) returns "" — new card default
+    expect(input.value === "" || input.value === "0").toBe(true);
   });
 });

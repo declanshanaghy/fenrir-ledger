@@ -208,9 +208,9 @@ describe("CardForm (issue #1682 — decomposed orchestrator)", () => {
     expect(screen.getByText("Sign-up Bonus")).toBeDefined();
   });
 
-  it("edit mode renders Status fieldset", () => {
+  it("edit mode renders Annual Fee fieldset", () => {
     render(<CardForm householdId="hh-1" initialValues={makeCard()} />);
-    expect(screen.getByText("Status")).toBeDefined();
+    expect(screen.getByText("Annual Fee")).toBeDefined();
   });
 });
 
@@ -219,7 +219,7 @@ describe("CardForm (issue #1682 — decomposed orchestrator)", () => {
 import { CardFormStep1 } from "@/components/cards/CardFormStep1";
 
 describe("CardFormStep1 — smoke tests", () => {
-  it("renders Card Details, Annual Fee, and Sign-up Bonus sections", () => {
+  it("renders Card Details and Sign-up Bonus sections (Annual Fee is on Step 2)", () => {
     const mockRegister = vi.fn().mockReturnValue({});
     const mockSetValue = vi.fn();
     const errors = {};
@@ -232,12 +232,12 @@ describe("CardFormStep1 — smoke tests", () => {
         issuerId={undefined}
         bonusType={undefined}
         bonusSpendRequirement={undefined}
-        bonusMet={false}
+        amountSpent={undefined}
       />,
     );
 
     expect(screen.getByText("Card Details")).toBeDefined();
-    expect(screen.getByText("Annual Fee")).toBeDefined();
+    expect(screen.queryByText("Annual Fee")).toBeNull();
     expect(screen.getByText("Sign-up Bonus")).toBeDefined();
   });
 
@@ -253,7 +253,7 @@ describe("CardFormStep1 — smoke tests", () => {
         issuerId={undefined}
         bonusType={undefined}
         bonusSpendRequirement={undefined}
-        bonusMet={false}
+        amountSpent={undefined}
       />,
     );
 
