@@ -97,6 +97,44 @@ export function daysUntil(isoDate: string, today?: Date): number {
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
+// ─── Status Predicates ────────────────────────────────────────────────────────
+
+/** Returns true if the card is explicitly closed. */
+export function isClosed(card: Card): boolean {
+  return card.status === "closed" || !!(card.closedAt && card.closedAt !== "");
+}
+
+/** Returns true if the sign-up bonus minimum spend has been met. */
+export function isGraduated(card: Card): boolean {
+  return !!card.signUpBonus?.met;
+}
+
+/** Returns true if the annual fee due date is in the past. */
+export function isOverdue(card: Card, today?: Date): boolean {
+  if (!card.annualFeeDate || card.annualFee <= 0) return false;
+  return daysUntil(card.annualFeeDate, today) < 0;
+}
+
+/** Returns true if the annual fee is due within FEE_APPROACHING_DAYS days. */
+export function isFeeApproaching(card: Card, today?: Date): boolean {
+  if (!card.annualFeeDate || card.annualFee <= 0) return false;
+  const days = daysUntil(card.annualFeeDate, today);
+  return days >= 0 && days <= FEE_APPROACHING_DAYS;
+}
+
+/** Returns true if the sign-up bonus deadline is within PROMO_EXPIRING_DAYS days. */
+export function isPromoExpiring(card: Card, today?: Date): boolean {
+  if (!card.signUpBonus || card.signUpBonus.met || !card.signUpBonus.deadline) return false;
+  const days = daysUntil(card.signUpBonus.deadline, today);
+  return days >= 0 && days <= PROMO_EXPIRING_DAYS;
+}
+
+/** Returns true if the card is in an open sign-up bonus earning window. */
+export function isBonusOpen(card: Card, today?: Date): boolean {
+  if (!card.signUpBonus || card.signUpBonus.met || !card.signUpBonus.deadline) return false;
+  return daysUntil(card.signUpBonus.deadline, today) > 0;
+}
+
 // ─── Status Computation ───────────────────────────────────────────────────────
 
 /**
@@ -116,47 +154,12 @@ export function daysUntil(isoDate: string, today?: Date): number {
  * @returns The computed CardStatus
  */
 export function computeCardStatus(card: Card, today?: Date): CardStatus {
-  if (card.status === "closed" || (card.closedAt && card.closedAt !== "")) {
-    return "closed";
-  }
-
-  // Auto-graduate: sign-up bonus minimum spend met → card ascends to Valhalla
-  if (card.signUpBonus?.met) {
-    return "graduated";
-  }
-
-  // Check overdue - annual fee was due but not addressed
-  if (card.annualFeeDate && card.annualFee > 0) {
-    const daysToFee = daysUntil(card.annualFeeDate, today);
-    if (daysToFee < 0) {
-      return "overdue";
-    }
-  }
-
-  // Check annual fee approaching
-  if (card.annualFeeDate && card.annualFee > 0) {
-    const daysToFee = daysUntil(card.annualFeeDate, today);
-    if (daysToFee >= 0 && daysToFee <= FEE_APPROACHING_DAYS) {
-      return "fee_approaching";
-    }
-  }
-
-  // Check sign-up bonus deadline approaching
-  if (card.signUpBonus && !card.signUpBonus.met && card.signUpBonus.deadline) {
-    const daysToDeadline = daysUntil(card.signUpBonus.deadline, today);
-    if (daysToDeadline >= 0 && daysToDeadline <= PROMO_EXPIRING_DAYS) {
-      return "promo_expiring";
-    }
-  }
-
-  // Check bonus_open - card in signup bonus earning window
-  if (card.signUpBonus && !card.signUpBonus.met && card.signUpBonus.deadline) {
-    const daysToDeadline = daysUntil(card.signUpBonus.deadline, today);
-    if (daysToDeadline > 0) {
-      return "bonus_open";
-    }
-  }
-
+  if (isClosed(card)) return "closed";
+  if (isGraduated(card)) return "graduated";
+  if (isOverdue(card, today)) return "overdue";
+  if (isFeeApproaching(card, today)) return "fee_approaching";
+  if (isPromoExpiring(card, today)) return "promo_expiring";
+  if (isBonusOpen(card, today)) return "bonus_open";
   return "active";
 }
 
