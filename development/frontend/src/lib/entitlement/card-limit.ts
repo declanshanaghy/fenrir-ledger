@@ -38,12 +38,14 @@ export interface CardLimitResult {
  * @param tier - The user's current entitlement tier.
  * @param activeCardCount - Number of active (non-archived) cards the user has.
  * @param isTrialActive - Whether the user's free trial is currently active.
+ * @param isAnonymous - Whether the user is not signed in.
  * @returns A {@link CardLimitResult} indicating whether the action is allowed.
  */
 export function canAddCard(
   tier: EntitlementTier,
   activeCardCount: number,
   isTrialActive: boolean = false,
+  isAnonymous: boolean = false,
 ): CardLimitResult {
   // Karl subscribers and active-trial users have no card limit
   if (tier === "karl" || isTrialActive) {
@@ -56,9 +58,12 @@ export function canAddCard(
 
   // Thrall tier: enforce THRALL_CARD_LIMIT
   if (activeCardCount >= THRALL_CARD_LIMIT) {
+    const reason = isAnonymous
+      ? `You've reached the ${THRALL_CARD_LIMIT}-card limit. Sign in to start your free 30-day trial and get unlimited cards.`
+      : `Thrall tier is limited to ${THRALL_CARD_LIMIT} active cards. Upgrade to Karl for unlimited cards.`;
     return {
       allowed: false,
-      reason: `Thrall tier is limited to ${THRALL_CARD_LIMIT} active cards. Upgrade to Karl for unlimited cards.`,
+      reason,
       currentCount: activeCardCount,
       limit: THRALL_CARD_LIMIT,
     };

@@ -29,6 +29,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ThemedFeatureImage } from "@/components/shared/ThemedFeatureImage";
 import { useEntitlement } from "@/hooks/useEntitlement";
+import { useAuth } from "@/hooks/useAuth";
+import { buildSignInUrl } from "@/lib/auth/sign-in-url";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -87,7 +90,12 @@ export function KarlUpsellDialog({
   onDismiss,
 }: KarlUpsellDialogProps) {
   const { subscribeStripe } = useEntitlement();
+  const { status } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const isAnonymous = status === "anonymous";
 
   const handleSubscribe = useCallback(async () => {
     setIsSubscribing(true);
@@ -97,6 +105,10 @@ export function KarlUpsellDialog({
       setIsSubscribing(false);
     }
   }, [subscribeStripe]);
+
+  const handleSignIn = useCallback(() => {
+    router.push(buildSignInUrl(pathname));
+  }, [router, pathname]);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onDismiss()}>
@@ -116,14 +128,14 @@ export function KarlUpsellDialog({
         )}
         style={{ zIndex: 210 }}
       >
-        {/* ── Header — static: tier name + price ─────────────────────── */}
+        {/* ── Header — tier name + price or trial prompt ──────────────── */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-border">
           <div>
             <span className="block font-mono text-[10px] tracking-[0.1em] uppercase font-bold text-muted-foreground">
               Karl Tier Feature
             </span>
             <span className="block font-mono text-[9px] tracking-[0.06em] text-muted-foreground/70 mt-0.5">
-              KARL &middot; $3.99/month
+              {isAnonymous ? "FREE 30-DAY TRIAL" : "KARL \u00B7 $3.99/month"}
             </span>
           </div>
           {/* Close button is provided by DialogContent's built-in X */}
@@ -215,27 +227,46 @@ export function KarlUpsellDialog({
                 Karl
               </span>
               <span className="text-xs sm:text-[12px] text-muted-foreground font-body flex-1">
-                Unlock all premium features
+                {isAnonymous ? "30 days free, then $3.99/month" : "Unlock all premium features"}
               </span>
-              <span className="text-[13px] font-bold text-foreground whitespace-nowrap">
-                $3.99/mo
-              </span>
+              {!isAnonymous && (
+                <span className="text-[13px] font-bold text-foreground whitespace-nowrap">
+                  $3.99/mo
+                </span>
+              )}
             </div>
 
-            {/* Subscribe CTA — direct to Stripe Checkout */}
+            {/* CTA — sign in for anon, Stripe for Thrall */}
             <div className="flex flex-col gap-2">
-              <Button
-                onClick={handleSubscribe}
-                disabled={isSubscribing}
-                isLoading={isSubscribing}
-                loadingText="Redirecting..."
-                className="w-full min-h-[44px] sm:min-h-[48px] text-[14px] sm:text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
-              >
-                Upgrade to Karl &mdash; $3.99/month
-              </Button>
-              <p className="text-[11px] text-center text-muted-foreground font-body">
-                Billed monthly. Cancel anytime.
-              </p>
+              {isAnonymous ? (
+                <>
+                  <Button
+                    onClick={handleSignIn}
+                    className="w-full min-h-[44px] sm:min-h-[48px] text-[14px] sm:text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
+                    aria-label="Sign in with Google to start your free 30-day trial"
+                  >
+                    Sign in with Google &mdash; start your free trial
+                  </Button>
+                  <p className="text-[11px] text-center text-muted-foreground font-body">
+                    30 days of full Karl access, no credit card required.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleSubscribe}
+                    disabled={isSubscribing}
+                    isLoading={isSubscribing}
+                    loadingText="Redirecting..."
+                    className="w-full min-h-[44px] sm:min-h-[48px] text-[14px] sm:text-[15px] font-heading font-bold tracking-wide bg-gold text-primary-foreground hover:bg-primary hover:brightness-110 border-2 border-gold"
+                  >
+                    Upgrade to Karl &mdash; $3.99/month
+                  </Button>
+                  <p className="text-[11px] text-center text-muted-foreground font-body">
+                    Billed monthly. Cancel anytime.
+                  </p>
+                </>
+              )}
             </div>
 
           </div>
