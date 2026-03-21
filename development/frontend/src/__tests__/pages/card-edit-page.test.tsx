@@ -26,6 +26,7 @@ vi.mock("@/hooks/useAuth", () => ({
     householdId: mockAuthHouseholdId,
     status: mockAuthStatus,
     data: null,
+    ensureHouseholdId: vi.fn(() => mockAuthHouseholdId ?? ""),
   }),
 }));
 
@@ -46,7 +47,6 @@ let mockFoundCard: Card | null = null;
 
 vi.mock("@/lib/storage", () => ({
   migrateIfNeeded: vi.fn(),
-  initializeHousehold: vi.fn(),
   getCardById: vi.fn(() => mockFoundCard),
 }));
 

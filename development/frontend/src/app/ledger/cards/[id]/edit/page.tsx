@@ -17,7 +17,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { CardForm } from "@/components/cards/CardForm";
 import {
   migrateIfNeeded,
-  initializeHousehold,
   getCardById,
 } from "@/lib/storage";
 import type { Card } from "@/lib/types";
@@ -39,7 +38,6 @@ export default function EditCardPage() {
     }
 
     migrateIfNeeded();
-    initializeHousehold(householdId);
 
     const found = getCardById(householdId, params.id);
     if (!found) {

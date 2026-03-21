@@ -4,23 +4,28 @@
  * useAuth — Fenrir Ledger
  *
  * Thin wrapper over AuthContext. Exposes session, auth status,
- * householdId, and signOut in a single convenient hook.
+ * householdId, signOut, and ensureHouseholdId in a single convenient hook.
  *
  * Status values:
  *   "loading"       — session evaluation in progress
  *   "authenticated" — signed-in via Google PKCE flow
- *   "anonymous"     — no session; householdId from localStorage("fenrir:household")
+ *   "anonymous"     — no session; householdId from localStorage("fenrir:household") if exists
  *
  * householdId:
- *   Always the correct ID to pass to storage.ts functions, regardless of
- *   auth state. Callers should wait for status !== "loading" before using it.
+ *   - Authenticated: session.user.sub (Google sub claim)
+ *   - Anonymous (returning user): existing UUID from localStorage
+ *   - Anonymous (new user): "" until ensureHouseholdId() is called
+ *   - Loading: "" — callers must wait for status !== "loading"
+ *
+ * ensureHouseholdId:
+ *   Lazily creates the anon householdId if not yet set. Call from interactive
+ *   pages only (e.g. /ledger/cards/new) — never from public marketing pages.
  *
  * Usage:
  *   const { householdId, status, session, signOut } = useAuth();
  *
  *   // Wait for auth resolution before reading storage
  *   if (status === "loading") return;
- *   initializeHousehold(householdId);
  *   const cards = getCards(householdId);
  */
 
@@ -35,14 +40,20 @@ export interface UseAuthReturn {
   status: AuthStatus;
   /**
    * The active householdId for storage operations.
-   * "" while status === "loading". Use only after status resolves.
+   * "" while loading or for brand-new anonymous users. Use only after status resolves.
    */
   householdId: string;
   /** Sign out and return to dashboard in anonymous state */
   signOut: () => void;
+  /**
+   * Lazily creates and persists the anonymous householdId if not yet set.
+   * Call from interactive pages only — not from public marketing pages.
+   * Returns the existing householdId if already set.
+   */
+  ensureHouseholdId: () => string;
 }
 
 export function useAuth(): UseAuthReturn {
-  const { session, status, householdId, signOut } = useAuthContext();
-  return { data: session, status, householdId, signOut };
+  const { session, status, householdId, signOut, ensureHouseholdId } = useAuthContext();
+  return { data: session, status, householdId, signOut, ensureHouseholdId };
 }
