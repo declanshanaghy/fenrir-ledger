@@ -122,9 +122,11 @@ describe("POST /api/trial/status", () => {
     expect(mockDocRef.set).not.toHaveBeenCalled();
   });
 
-  it("returns correct remaining days based on start date", async () => {
+  it("returns correct remaining days based on expiresAt", async () => {
     const startDate = daysAgo(5); // 5 days into 30-day trial
-    mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate }));
+    // expiresAt is the canonical source — set it to 25 days from now
+    const expiresAt = new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString();
+    mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate, expiresAt }));
 
     const res = await POST(makeRequest());
     const body = await res.json();

@@ -15,6 +15,8 @@ import { log } from "@/lib/logger";
 import { TRIAL_DURATION_DAYS } from "@/lib/trial-utils";
 import { FIRESTORE_PATHS } from "@/lib/firebase/firestore-types";
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -46,7 +48,7 @@ function trialDocRef(userId: string) {
 }
 
 function makeExpiresAt(startDate: Date): string {
-  const d = new Date(startDate.getTime() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
+  const d = new Date(startDate.getTime() + TRIAL_DURATION_DAYS * MS_PER_DAY);
   return d.toISOString();
 }
 
@@ -161,12 +163,16 @@ export async function markTrialConverted(userId: string): Promise<boolean> {
 /**
  * Computes the trial status for a given trial record.
  *
+ * Uses `expiresAt` as the single source of truth — never recalculates
+ * from `startDate + duration`.
+ *
  * @param trial - The stored trial record (or null if none exists)
- * @returns Object with remaining days and status
+ * @returns Object with remaining days, status, and expiresAt
  */
 export function computeTrialStatus(trial: StoredTrial | null): {
   remainingDays: number;
   status: "active" | "expired" | "converted" | "none";
+  expiresAt?: string;
   convertedDate?: string;
 } {
   if (!trial) {
@@ -174,18 +180,21 @@ export function computeTrialStatus(trial: StoredTrial | null): {
   }
 
   if (trial.convertedDate) {
-    return { remainingDays: 0, status: "converted", convertedDate: trial.convertedDate };
+    return {
+      remainingDays: 0,
+      status: "converted",
+      expiresAt: trial.expiresAt,
+      convertedDate: trial.convertedDate,
+    };
   }
 
-  const startDate = new Date(trial.startDate);
   const now = new Date();
-  const elapsedMs = now.getTime() - startDate.getTime();
-  const elapsedDays = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
-  const remainingDays = Math.max(0, TRIAL_DURATION_DAYS - elapsedDays);
+  const remainingMs = new Date(trial.expiresAt).getTime() - now.getTime();
+  const remainingDays = Math.max(0, Math.ceil(remainingMs / MS_PER_DAY));
 
   if (remainingDays <= 0) {
-    return { remainingDays: 0, status: "expired" };
+    return { remainingDays: 0, status: "expired", expiresAt: trial.expiresAt };
   }
 
-  return { remainingDays, status: "active" };
+  return { remainingDays, status: "active", expiresAt: trial.expiresAt };
 }
