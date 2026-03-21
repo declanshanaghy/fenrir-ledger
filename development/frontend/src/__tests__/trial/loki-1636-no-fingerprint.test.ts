@@ -125,7 +125,7 @@ describe("useSheetImport — no X-Trial-Fingerprint header (#1636)", () => {
     });
 
     const callHeaders = mockFetch.mock.calls[0][1].headers as Record<string, string>;
-    expect(callHeaders["Authorization"]).toBe("Bearer mock-token");
+    expect(callHeaders["Authorization"]).toBe("Bearer mock-fresh-token");
   });
 });
 
