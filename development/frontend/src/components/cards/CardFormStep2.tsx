@@ -2,9 +2,10 @@
 
 /**
  * CardFormStep2 — wizard step 2 fields:
- *   Credit Limit + Annual Fee Date + Bonus Deadline + Notes
+ *   Credit Limit + Annual Fee (amount + date) + Bonus Deadline + Notes
  *
  * Issue #1682: extracted from CardForm.tsx to reduce cyclomatic complexity.
+ * Issue #1745: Annual fee amount moved here from Step 1.
  */
 
 import { UseFormRegister, UseFormSetValue, FieldErrors } from "react-hook-form";
@@ -83,6 +84,23 @@ export function CardFormStep2({
           <legend className="text-sm font-bold uppercase tracking-wider px-1.5">
             Annual Fee
           </legend>
+          <div className="space-y-1.5">
+            <Label htmlFor="annualFee">Annual fee</Label>
+            <Input
+              id="annualFee"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="e.g. 95"
+              className="min-h-[44px]"
+              {...register("annualFee")}
+            />
+            {errors.annualFee && (
+              <p className="text-base text-destructive">
+                {errors.annualFee.message}
+              </p>
+            )}
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="annualFeeDate">Annual fee date</Label>
             <Input
