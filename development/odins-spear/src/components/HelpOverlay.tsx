@@ -30,7 +30,6 @@ const SECTIONS: Section[] = [
       { key: "↑ / ↓",   desc: "Navigate list" },
       { key: "Enter",    desc: "Select item" },
       { key: "Esc",      desc: "Go back / close overlay" },
-      { key: "/",        desc: "Open command palette" },
       { key: "?",        desc: "Show this help" },
       { key: "q",        desc: "Quit" },
     ],
@@ -64,9 +63,6 @@ const SECTIONS: Section[] = [
     tabs: "all",
     shortcuts: [
       { key: "Ctrl+R",  desc: "Reload current view" },
-      { key: "/firestore-ping",             desc: "Ping Firestore" },
-      { key: "/firestore-list-collections", desc: "List Firestore collections" },
-      { key: "/stripe-check-key",           desc: "Verify Stripe key" },
     ],
   },
 ];
