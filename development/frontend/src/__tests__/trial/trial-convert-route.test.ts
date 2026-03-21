@@ -53,7 +53,7 @@ import { POST } from "@/app/api/trial/convert/route";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const USER_ID = "google-sub-convert-456";
-const TRIAL_PATH = `households/${USER_ID}/trial`;
+const TRIAL_PATH = `households/${USER_ID}/trial/status`;
 
 function activeTrialSnap() {
   return {
@@ -113,7 +113,7 @@ describe("POST /api/trial/convert", () => {
     expect(mockDocRef.update).toHaveBeenCalledOnce();
   });
 
-  it("writes convertedDate to /households/{userId}/trial", async () => {
+  it("writes convertedDate to /households/{userId}/trial/status", async () => {
     await POST(makeRequest());
 
     expect(mockDb.doc).toHaveBeenCalledWith(TRIAL_PATH);
