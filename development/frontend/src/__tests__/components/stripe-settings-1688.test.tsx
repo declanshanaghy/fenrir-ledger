@@ -71,8 +71,8 @@ describe("StripeSettings", () => {
     renderStripeSettings();
     expect(
       screen.getByRole("region", { name: /loading subscription settings/i })
-    ).toBeDefined();
-    expect(screen.queryByRole("region", { name: /subscription$/i })).toBeNull();
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: /subscription$/i })).not.toBeInTheDocument();
   });
 
   it("renders content (not skeleton) when loading but already linked", () => {
@@ -86,27 +86,27 @@ describe("StripeSettings", () => {
       cancelAtPeriodEnd: false,
     };
     renderStripeSettings();
-    expect(screen.getByRole("region", { name: /^subscription$/i })).toBeDefined();
+    expect(screen.getByRole("region", { name: /^subscription$/i })).toBeInTheDocument();
   });
 
   // ── Thrall state ─────────────────────────────────────────────────────────
 
   it("renders Thrall state for unsubscribed user", () => {
     renderStripeSettings();
-    expect(screen.getByTestId("tier-badge")).toBeDefined();
-    expect(screen.getByText("THRALL")).toBeDefined();
-    expect(screen.getByText("Free tier")).toBeDefined();
+    expect(screen.getByTestId("tier-badge")).toBeInTheDocument();
+    expect(screen.getByText("THRALL")).toBeInTheDocument();
+    expect(screen.getByText("Free tier")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /subscribe/i })
-    ).toBeDefined();
+    ).toBeInTheDocument();
   });
 
   it("renders all Karl benefits in Thrall state", () => {
     renderStripeSettings();
-    expect(screen.getByText("Cloud sync across all your devices")).toBeDefined();
-    expect(screen.getByText("Priority Howl notifications")).toBeDefined();
-    expect(screen.getByText("Advanced card analytics")).toBeDefined();
-    expect(screen.getByText("Unlock all hidden runes")).toBeDefined();
+    expect(screen.getByText("Cloud sync across all your devices")).toBeInTheDocument();
+    expect(screen.getByText("Priority Howl notifications")).toBeInTheDocument();
+    expect(screen.getByText("Advanced card analytics")).toBeInTheDocument();
+    expect(screen.getByText("Unlock all hidden runes")).toBeInTheDocument();
   });
 
   // ── Karl active state ─────────────────────────────────────────────────────
@@ -121,9 +121,9 @@ describe("StripeSettings", () => {
       cancelAtPeriodEnd: false,
     };
     renderStripeSettings();
-    expect(screen.getByText("KARL")).toBeDefined();
-    expect(screen.getByRole("button", { name: /manage subscription/i })).toBeDefined();
-    expect(screen.queryByRole("button", { name: /resubscribe/i })).toBeNull();
+    expect(screen.getByText("KARL")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /manage subscription/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /resubscribe/i })).not.toBeInTheDocument();
   });
 
   it("shows next billing date when currentPeriodEnd is set in Karl active state", () => {
@@ -137,7 +137,7 @@ describe("StripeSettings", () => {
       currentPeriodEnd: "2026-04-21T00:00:00Z",
     };
     renderStripeSettings();
-    expect(screen.getByText(/next billing date/i)).toBeDefined();
+    expect(screen.getByText(/next billing date/i)).toBeInTheDocument();
   });
 
   // ── Canceling state ───────────────────────────────────────────────────────
@@ -152,11 +152,11 @@ describe("StripeSettings", () => {
       cancelAtPeriodEnd: true,
     };
     renderStripeSettings();
-    expect(screen.getByText("CANCELING")).toBeDefined();
-    expect(screen.getByRole("button", { name: /resubscribe/i })).toBeDefined();
+    expect(screen.getByText("CANCELING")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /resubscribe/i })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /manage subscription/i })
-    ).toBeNull();
+    ).not.toBeInTheDocument();
   });
 
   it("shows cancel date in Canceling state when currentPeriodEnd is set", () => {
@@ -170,7 +170,7 @@ describe("StripeSettings", () => {
       currentPeriodEnd: "2026-04-21T00:00:00Z",
     };
     renderStripeSettings();
-    expect(screen.getByText(/set to cancel on/i)).toBeDefined();
+    expect(screen.getByText(/set to cancel on/i)).toBeInTheDocument();
   });
 
   it("shows generic cancel message in Canceling state without currentPeriodEnd", () => {
@@ -186,7 +186,7 @@ describe("StripeSettings", () => {
     renderStripeSettings();
     expect(
       screen.getByText(/cancel at the end of your billing period/i)
-    ).toBeDefined();
+    ).toBeInTheDocument();
   });
 
   // ── Canceled state ────────────────────────────────────────────────────────
@@ -201,11 +201,11 @@ describe("StripeSettings", () => {
       cancelAtPeriodEnd: false,
     };
     renderStripeSettings();
-    expect(screen.getByText("CANCELED")).toBeDefined();
-    expect(screen.getByRole("button", { name: /resubscribe/i })).toBeDefined();
+    expect(screen.getByText("CANCELED")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /resubscribe/i })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /manage subscription/i })
-    ).toBeDefined();
+    ).toBeInTheDocument();
   });
 
   it("shows access-until date in Canceled state when currentPeriodEnd is set", () => {
@@ -219,7 +219,7 @@ describe("StripeSettings", () => {
       currentPeriodEnd: "2026-04-21T00:00:00Z",
     };
     renderStripeSettings();
-    expect(screen.getByText(/karl access continues until/i)).toBeDefined();
+    expect(screen.getByText(/karl access continues until/i)).toBeInTheDocument();
   });
 
   // ── Non-Stripe platform falls back to Thrall ──────────────────────────────
@@ -234,7 +234,7 @@ describe("StripeSettings", () => {
       cancelAtPeriodEnd: false,
     };
     renderStripeSettings();
-    expect(screen.getByText("THRALL")).toBeDefined();
+    expect(screen.getByText("THRALL")).toBeInTheDocument();
   });
 
   // ── Button interactions ───────────────────────────────────────────────────
