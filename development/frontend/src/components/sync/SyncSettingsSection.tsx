@@ -13,6 +13,7 @@
  * Issue #1125
  */
 
+import type { CloudSyncStatus } from "@/hooks/useCloudSync";
 import { useCloudSync } from "@/hooks/useCloudSync";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
@@ -21,7 +22,7 @@ import { useTrialStatus } from "@/hooks/useTrialStatus";
 // Timestamp formatter
 // ---------------------------------------------------------------------------
 
-function formatTimestamp(date: Date): string {
+export function formatTimestamp(date: Date): string {
   const now = new Date();
   const isToday =
     date.getFullYear() === now.getFullYear() &&
@@ -34,6 +35,239 @@ function formatTimestamp(date: Date): string {
   }).format(date);
 
   return isToday ? `Today at ${time}` : `Yesterday at ${time}`;
+}
+
+// ---------------------------------------------------------------------------
+// Status dot class helper
+// ---------------------------------------------------------------------------
+
+const STATUS_DOT_BASE = "inline-flex h-2 w-2 rounded-full flex-shrink-0";
+
+const STATUS_DOT_CLASSES: Record<CloudSyncStatus, string> = {
+  syncing: `${STATUS_DOT_BASE} bg-[hsl(var(--egg-accent))]`,
+  synced: `${STATUS_DOT_BASE} bg-emerald-500 dark:bg-emerald-400`,
+  offline: `${STATUS_DOT_BASE} bg-[hsl(var(--egg-border))] opacity-40`,
+  error: `${STATUS_DOT_BASE} bg-destructive`,
+  idle: `${STATUS_DOT_BASE} bg-[hsl(var(--egg-border))]`,
+};
+
+export function getSyncStatusDotClass(status: CloudSyncStatus): string {
+  return STATUS_DOT_CLASSES[status] ?? STATUS_DOT_BASE;
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components for SyncStatusCard
+// ---------------------------------------------------------------------------
+
+function SyncProgressBar() {
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[13px] font-body text-foreground/90">Syncing…</p>
+      <div
+        className="border border-border h-1 w-full overflow-hidden"
+        role="progressbar"
+        aria-label="Sync in progress"
+        tabIndex={-1}
+      >
+        <div
+          className="sync-progress-fill h-full w-2/5 border-r-2 border-border
+                     animate-pulse motion-reduce:animate-none motion-reduce:w-1/2"
+        />
+      </div>
+    </div>
+  );
+}
+
+function SyncOfflineMessage() {
+  return (
+    <p className="text-[13px] text-foreground/90 font-body leading-relaxed">
+      You&apos;re offline. Sync will resume automatically when you reconnect.
+    </p>
+  );
+}
+
+interface SyncErrorDetailProps {
+  errorCode: string | null;
+  errorMessage: string;
+  errorTimestamp: Date | null;
+  retryIn: number | null;
+}
+
+function SyncErrorDetail({
+  errorCode,
+  errorMessage,
+  errorTimestamp,
+  retryIn,
+}: SyncErrorDetailProps) {
+  return (
+    <p className="text-[11px] font-mono leading-relaxed text-foreground/80">
+      {errorCode ? `Error: ${errorMessage} (${errorCode})` : errorMessage}
+      {errorTimestamp && (
+        <>
+          <br />
+          Failed at: {formatTimestamp(errorTimestamp)}
+        </>
+      )}
+      {retryIn !== null && retryIn > 0 && (
+        <>
+          <br />
+          Retrying in: {retryIn} second{retryIn !== 1 ? "s" : ""}
+        </>
+      )}
+    </p>
+  );
+}
+
+interface SyncErrorBlockProps {
+  errorCode: string | null;
+  errorMessage: string | null;
+  errorTimestamp: Date | null;
+  retryIn: number | null;
+}
+
+function SyncErrorBlock({
+  errorCode,
+  errorMessage,
+  errorTimestamp,
+  retryIn,
+}: SyncErrorBlockProps) {
+  return (
+    <div
+      className="border border-destructive/40 p-3 flex flex-col gap-1.5"
+      role="alert"
+    >
+      <p className="text-xs font-heading font-bold text-destructive">
+        {errorCode ? "Last sync failed" : "Sync failed"}
+      </p>
+      {errorMessage ? (
+        <SyncErrorDetail
+          errorCode={errorCode}
+          errorMessage={errorMessage}
+          errorTimestamp={errorTimestamp}
+          retryIn={retryIn}
+        />
+      ) : (
+        <p className="text-[13px] text-foreground/80 font-body">
+          Could not reach Yggdrasil. Your cards are safe locally.
+        </p>
+      )}
+      <p className="text-xs text-muted-foreground font-body">
+        Your cards are safe locally and will sync when the issue resolves.
+      </p>
+    </div>
+  );
+}
+
+interface SyncLastSyncedProps {
+  lastSyncedAt: Date;
+  isError: boolean;
+}
+
+function SyncLastSynced({ lastSyncedAt, isError }: SyncLastSyncedProps) {
+  return (
+    <div className="flex items-baseline gap-2 text-xs font-body">
+      <span className="font-semibold text-foreground">
+        {isError ? "Last successful sync:" : "Last synced:"}
+      </span>
+      <span className="text-foreground/80">{formatTimestamp(lastSyncedAt)}</span>
+    </div>
+  );
+}
+
+interface SyncCardCountRowProps {
+  cardCount: number;
+}
+
+function SyncCardCountRow({ cardCount }: SyncCardCountRowProps) {
+  return (
+    <div className="flex items-baseline gap-2 text-xs font-body">
+      <span className="font-semibold text-foreground">Cards backed up:</span>
+      <span className="text-foreground/80">{cardCount} cards</span>
+    </div>
+  );
+}
+
+interface SyncErrorActionsProps {
+  onRetry: () => void;
+  onDismiss: () => void;
+}
+
+function SyncErrorActions({ onRetry, onDismiss }: SyncErrorActionsProps) {
+  return (
+    <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+      <button
+        type="button"
+        onClick={onRetry}
+        className="min-h-[44px] md:min-h-[36px] px-4 py-1.5 border border-border text-xs font-heading font-bold
+                   text-foreground hover:bg-muted/30 transition-colors
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                   w-full sm:w-auto inline-flex items-center justify-center gap-2"
+        aria-label="Retry cloud sync now"
+      >
+        Retry Now
+      </button>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="min-h-[44px] md:min-h-[36px] px-4 py-1.5 border border-dashed border-border text-xs font-heading
+                   text-muted-foreground hover:bg-muted/20 transition-colors
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                   w-full sm:w-auto inline-flex items-center justify-center"
+        aria-label="Dismiss sync error"
+      >
+        Dismiss Error
+      </button>
+    </div>
+  );
+}
+
+interface SyncNormalActionsProps {
+  status: CloudSyncStatus;
+  disabled: boolean;
+  onSyncNow: () => void;
+}
+
+function getSyncNowLabel(status: CloudSyncStatus): string {
+  if (status === "syncing") return "Sync in progress";
+  if (status === "offline") return "Sync unavailable \u2014 offline";
+  return "Sync cards to cloud now";
+}
+
+function SyncNormalActions({
+  status,
+  disabled,
+  onSyncNow,
+}: SyncNormalActionsProps) {
+  const label = getSyncNowLabel(status);
+  const isSyncing = status === "syncing";
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+      <button
+        type="button"
+        onClick={onSyncNow}
+        disabled={disabled}
+        className={[
+          "min-h-[44px] md:min-h-[36px] px-4 py-1.5 border text-xs font-heading font-bold",
+          "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "w-full sm:w-auto inline-flex items-center justify-center gap-2",
+          disabled
+            ? "border-border text-muted-foreground/60 cursor-not-allowed opacity-40"
+            : "border-gold/60 text-gold hover:bg-gold/10 cursor-pointer karl-bling-btn",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        aria-label={label}
+        aria-disabled={disabled}
+      >
+        <span aria-hidden="true">☁</span>
+        {isSyncing ? "Syncing…" : "Sync Now"}
+      </button>
+      <span className="text-xs text-muted-foreground/70 font-body text-center sm:text-left">
+        {isSyncing ? "In progress…" : "Syncs automatically on every save"}
+      </span>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -110,17 +344,24 @@ function ThrallUpsellCard({
 // ---------------------------------------------------------------------------
 
 function SyncStatusCard({ isTrial }: { isTrial: boolean }) {
-  const { status, lastSyncedAt, cardCount, errorMessage, errorCode, errorTimestamp, retryIn, syncNow, dismissError } =
-    useCloudSync();
+  const {
+    status,
+    lastSyncedAt,
+    cardCount,
+    errorMessage,
+    errorCode,
+    errorTimestamp,
+    retryIn,
+    syncNow,
+    dismissError,
+  } = useCloudSync();
 
-  const syncNowLabel =
-    status === "syncing"
-      ? "Sync in progress"
-      : status === "offline"
-      ? "Sync unavailable \u2014 offline"
-      : "Sync cards to cloud now";
-
-  const syncNowDisabled = status === "syncing" || status === "offline";
+  const isError = status === "error";
+  const isSyncing = status === "syncing";
+  const isOffline = status === "offline";
+  const syncNowDisabled = isSyncing || isOffline;
+  const showLastSynced = lastSyncedAt !== null && !isSyncing;
+  const showCardCount = cardCount !== null && !isSyncing && !isError;
 
   return (
     <section
@@ -150,16 +391,7 @@ function SyncStatusCard({ isTrial }: { isTrial: boolean }) {
         </div>
         {/* Mini status dot — decorative */}
         <span
-          className={[
-            "inline-flex h-2 w-2 rounded-full flex-shrink-0",
-            status === "syncing" ? "bg-[hsl(var(--egg-accent))]" : "",
-            status === "synced" ? "bg-emerald-500 dark:bg-emerald-400" : "",
-            status === "offline" ? "bg-[hsl(var(--egg-border))] opacity-40" : "",
-            status === "error" ? "bg-destructive" : "",
-            status === "idle" ? "bg-[hsl(var(--egg-border))]" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
+          className={getSyncStatusDotClass(status)}
           aria-hidden="true"
           title={status}
         />
@@ -172,141 +404,36 @@ function SyncStatusCard({ isTrial }: { isTrial: boolean }) {
         </p>
       )}
 
-      {/* Syncing state: progress bar */}
-      {status === "syncing" && (
-        <div className="flex flex-col gap-2">
-          <p className="text-[13px] font-body text-foreground/90">Syncing…</p>
-          <div
-            className="border border-border h-1 w-full overflow-hidden"
-            role="progressbar"
-            aria-label="Sync in progress"
-            tabIndex={-1}
-          >
-            <div
-              className="sync-progress-fill h-full w-2/5 border-r-2 border-border
-                         animate-pulse motion-reduce:animate-none motion-reduce:w-1/2"
-            />
-          </div>
-        </div>
+      {isSyncing && <SyncProgressBar />}
+      {isOffline && <SyncOfflineMessage />}
+      {isError && (
+        <SyncErrorBlock
+          errorCode={errorCode}
+          errorMessage={errorMessage}
+          errorTimestamp={errorTimestamp}
+          retryIn={retryIn}
+        />
       )}
 
-      {/* Offline state */}
-      {status === "offline" && (
-        <p className="text-[13px] text-foreground/90 font-body leading-relaxed">
-          You&apos;re offline. Sync will resume automatically when you reconnect.
-        </p>
+      {showLastSynced && (
+        <SyncLastSynced lastSyncedAt={lastSyncedAt} isError={isError} />
       )}
-
-      {/* Error block */}
-      {status === "error" && (
-        <div
-          className="border border-destructive/40 p-3 flex flex-col gap-1.5"
-          role="alert"
-        >
-          <p className="text-xs font-heading font-bold text-destructive">
-            {errorCode ? "Last sync failed" : "Sync failed"}
-          </p>
-          {errorMessage && (
-            <p className="text-[11px] font-mono leading-relaxed text-foreground/80">
-              {errorCode && `Error: ${errorMessage} (${errorCode})`}
-              {!errorCode && errorMessage}
-              {errorTimestamp && (
-                <>
-                  <br />
-                  Failed at: {formatTimestamp(errorTimestamp)}
-                </>
-              )}
-              {retryIn !== null && retryIn > 0 && (
-                <>
-                  <br />
-                  Retrying in: {retryIn} second{retryIn !== 1 ? "s" : ""}
-                </>
-              )}
-            </p>
-          )}
-          {!errorMessage && (
-            <p className="text-[13px] text-foreground/80 font-body">
-              Could not reach Yggdrasil. Your cards are safe locally.
-            </p>
-          )}
-          <p className="text-xs text-muted-foreground font-body">
-            Your cards are safe locally and will sync when the issue resolves.
-          </p>
-        </div>
-      )}
-
-      {/* Last synced timestamp */}
-      {lastSyncedAt && status !== "syncing" && (
-        <div className="flex items-baseline gap-2 text-xs font-body">
-          <span className="font-semibold text-foreground">
-            {status === "error" ? "Last successful sync:" : "Last synced:"}
-          </span>
-          <span className="text-foreground/80">{formatTimestamp(lastSyncedAt)}</span>
-        </div>
-      )}
-
-      {/* Card count */}
-      {cardCount !== null && status !== "syncing" && status !== "error" && (
-        <div className="flex items-baseline gap-2 text-xs font-body">
-          <span className="font-semibold text-foreground">Cards backed up:</span>
-          <span className="text-foreground/80">{cardCount} cards</span>
-        </div>
-      )}
+      {showCardCount && <SyncCardCountRow cardCount={cardCount} />}
 
       <div className="border-t border-border" />
 
       {/* Actions */}
-      {status === "error" ? (
-        <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => void syncNow()}
-            className="min-h-[44px] md:min-h-[36px] px-4 py-1.5 border border-border text-xs font-heading font-bold
-                       text-foreground hover:bg-muted/30 transition-colors
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-                       w-full sm:w-auto inline-flex items-center justify-center gap-2"
-            aria-label="Retry cloud sync now"
-          >
-            Retry Now
-          </button>
-          <button
-            type="button"
-            onClick={dismissError}
-            className="min-h-[44px] md:min-h-[36px] px-4 py-1.5 border border-dashed border-border text-xs font-heading
-                       text-muted-foreground hover:bg-muted/20 transition-colors
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-                       w-full sm:w-auto inline-flex items-center justify-center"
-            aria-label="Dismiss sync error"
-          >
-            Dismiss Error
-          </button>
-        </div>
+      {isError ? (
+        <SyncErrorActions
+          onRetry={() => void syncNow()}
+          onDismiss={dismissError}
+        />
       ) : (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={() => void syncNow()}
-            disabled={syncNowDisabled}
-            className={[
-              "min-h-[44px] md:min-h-[36px] px-4 py-1.5 border text-xs font-heading font-bold",
-              "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              "w-full sm:w-auto inline-flex items-center justify-center gap-2",
-              syncNowDisabled
-                ? "border-border text-muted-foreground/60 cursor-not-allowed opacity-40"
-                : "border-gold/60 text-gold hover:bg-gold/10 cursor-pointer karl-bling-btn",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            aria-label={syncNowLabel}
-            aria-disabled={syncNowDisabled}
-          >
-            <span aria-hidden="true">☁</span>
-            {status === "syncing" ? "Syncing…" : "Sync Now"}
-          </button>
-          <span className="text-xs text-muted-foreground/70 font-body text-center sm:text-left">
-            {status === "syncing" ? "In progress…" : "Syncs automatically on every save"}
-          </span>
-        </div>
+        <SyncNormalActions
+          status={status}
+          disabled={syncNowDisabled}
+          onSyncNow={() => void syncNow()}
+        />
       )}
 
       {/* Trial upgrade nudge */}
