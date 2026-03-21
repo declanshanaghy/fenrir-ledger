@@ -141,11 +141,11 @@ describe("TrialSettingsSection — Subscribe price button visibility (Issue #103
     expect(container.textContent).toContain("Thy trial hath not yet begun");
   });
 
-  it("shows sign-in CTA link for status 'none'", () => {
+  it("shows Google sign-in CTA link for status 'none'", () => {
     setStatus("none");
     renderSection();
 
-    const cta = screen.getByRole("link", { name: /sign in to begin thy karl trial/i });
+    const cta = screen.getByRole("link", { name: /sign in with google to begin thy karl trial/i });
     expect(cta).toBeDefined();
   });
 
