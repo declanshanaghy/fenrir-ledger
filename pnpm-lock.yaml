@@ -263,15 +263,15 @@ importers:
       '@types/react':
         specifier: ^19
         version: 19.2.14
+      google-auth-library:
+        specifier: ^10.6.2
+        version: 10.6.2
       tsx:
         specifier: ^4.19.3
         version: 4.21.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
-      vitest:
-        specifier: ^4.1.0
-        version: 4.1.0(@opentelemetry/api@1.9.0)(@types/node@20.19.37)(@vitest/ui@4.1.0)(happy-dom@20.8.4)(vite@6.4.1(@types/node@20.19.37)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))
 
 packages:
 

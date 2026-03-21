@@ -347,7 +347,6 @@ describe("CardForm — Thrall card limit enforcement (issue #643 / #1416)", () =
         "thrall",    // tier from useEntitlement mock
         3,           // only active cards counted (not closed)
         false,       // isTrialActive=false when trial status is "none"
-        false,       // isAnonymous=false when status is "authenticated"
       );
     });
   }, 15000);
