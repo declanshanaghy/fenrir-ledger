@@ -156,7 +156,11 @@ Read the output and:
    or `/fire-next-up #X #Y` accordingly.
 2. **If nothing is ready and nothing is running** — summarize the blockage chain, then use
    `AskUserQuestion` to flag the stall. Options: "Re-check", "Close epic".
-3. **If epic is complete** — congratulate and close the tracker issue.
+3. **If epic is complete** — congratulate and close the tracker issue immediately
+   (do NOT ask for confirmation):
+   ```bash
+   gh issue close <N> --comment "🎉 Epic complete — all stories done."
+   ```
 
 ## Rules
 
