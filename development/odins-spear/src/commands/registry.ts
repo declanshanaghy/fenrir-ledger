@@ -75,7 +75,8 @@ export function isAvailable(cmd: PaletteCommand, ctx: CommandContext): boolean {
   } else if (cmd.requiresContext === "household") {
     result = ctx.selectedHouseholdId !== null;
   } else {
-    result = ctx.selectedFp !== null;
+    // "trial" requiresContext — trials are now keyed by userId (issue #1658)
+    result = ctx.selectedUserId !== null;
   }
   log.debug("isAvailable returning", { name: cmd.name, result });
   return result;

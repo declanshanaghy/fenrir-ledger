@@ -10,23 +10,29 @@ import {
   describeTrialState,
 } from "./trial-helpers.js";
 
-// Collection name — must match trial-store.ts
-const TRIALS_COLLECTION = "trials";
-
-/** Read a raw trial document from Firestore by fingerprint. */
+/** Read a trial document from /households/{userId}/trial. */
 async function readTrialDoc(
-  fp: string
+  userId: string
 ): Promise<{ startDate: string; convertedDate?: string } | null> {
   if (!firestoreClient) return null;
-  const snap = await firestoreClient.collection(TRIALS_COLLECTION).doc(fp).get();
+  const snap = await firestoreClient
+    .collection("households")
+    .doc(userId)
+    .collection("trial")
+    .doc("trial")
+    .get();
   if (!snap.exists) return null;
   return snap.data() as { startDate: string; convertedDate?: string };
 }
 
-/** Write a startDate update to the trial document. Creates the doc if absent. */
-async function writeTrialStartDate(fp: string, startDate: string): Promise<void> {
+/** Write a startDate update to /households/{userId}/trial. Creates the doc if absent. */
+async function writeTrialStartDate(userId: string, startDate: string): Promise<void> {
   if (!firestoreClient) throw new Error("Firestore client not connected");
-  const ref = firestoreClient.collection(TRIALS_COLLECTION).doc(fp);
+  const ref = firestoreClient
+    .collection("households")
+    .doc(userId)
+    .collection("trial")
+    .doc("trial");
   const snap = await ref.get();
   if (snap.exists) {
     await ref.update({ startDate });
@@ -48,15 +54,15 @@ export function registerTrialCommands(): void {
     requiresContext: "trial",
     needsInput: true,
     execute: async (ctx) => {
-      log.debug("trial-adjust execute called", { hasFp: Boolean(ctx.selectedFp), hasInput: Boolean(ctx.input) });
+      log.debug("trial-adjust execute called", { hasUserId: Boolean(ctx.selectedUserId), hasInput: Boolean(ctx.input) });
 
       if (!firestoreClient) {
         log.debug("trial-adjust execute: no Firestore client");
         return ["ERROR: Firestore client not connected"];
       }
-      if (!ctx.selectedFp) {
-        log.debug("trial-adjust execute: no fp selected");
-        return ["ERROR: No trial selected — use list + use <N> first"];
+      if (!ctx.selectedUserId) {
+        log.debug("trial-adjust execute: no user selected");
+        return ["ERROR: No user selected — select a user first"];
       }
       if (!ctx.input) {
         log.debug("trial-adjust execute: no day input");
@@ -69,7 +75,7 @@ export function registerTrialCommands(): void {
         return [`ERROR: Invalid day offset "${ctx.input}" — enter a non-zero integer (e.g. +5 or -3)`];
       }
 
-      const current = await readTrialDoc(ctx.selectedFp);
+      const current = await readTrialDoc(ctx.selectedUserId);
       const oldState = computeTrialState(current);
       const oldDesc = describeTrialState(oldState);
 
@@ -80,7 +86,7 @@ export function registerTrialCommands(): void {
         new Date(baseStart).getTime() - days * 86400000
       ).toISOString();
 
-      await writeTrialStartDate(ctx.selectedFp, newStart);
+      await writeTrialStartDate(ctx.selectedUserId, newStart);
 
       const newState = computeTrialState({ startDate: newStart });
       const newDesc = describeTrialState(newState);
@@ -104,18 +110,18 @@ export function registerTrialCommands(): void {
     tab: "users",
     requiresContext: "trial",
     execute: async (ctx) => {
-      log.debug("trial-complete execute called", { hasFp: Boolean(ctx.selectedFp) });
+      log.debug("trial-complete execute called", { hasUserId: Boolean(ctx.selectedUserId) });
 
       if (!firestoreClient) {
         log.debug("trial-complete execute: no Firestore client");
         return ["ERROR: Firestore client not connected"];
       }
-      if (!ctx.selectedFp) {
-        log.debug("trial-complete execute: no fp selected");
-        return ["ERROR: No trial selected — use list + use <N> first"];
+      if (!ctx.selectedUserId) {
+        log.debug("trial-complete execute: no user selected");
+        return ["ERROR: No user selected — select a user first"];
       }
 
-      const current = await readTrialDoc(ctx.selectedFp);
+      const current = await readTrialDoc(ctx.selectedUserId);
       const oldState = computeTrialState(current);
       const oldDesc = describeTrialState(oldState);
 
@@ -124,7 +130,7 @@ export function registerTrialCommands(): void {
         Date.now() - (TRIAL_DURATION_DAYS + 1) * 86400000
       ).toISOString();
 
-      await writeTrialStartDate(ctx.selectedFp, newStart);
+      await writeTrialStartDate(ctx.selectedUserId, newStart);
 
       log.debug("trial-complete execute returning", { oldDesc });
       return [
@@ -144,18 +150,18 @@ export function registerTrialCommands(): void {
     tab: "users",
     requiresContext: "trial",
     execute: async (ctx) => {
-      log.debug("trial-progress execute called", { hasFp: Boolean(ctx.selectedFp) });
+      log.debug("trial-progress execute called", { hasUserId: Boolean(ctx.selectedUserId) });
 
       if (!firestoreClient) {
         log.debug("trial-progress execute: no Firestore client");
         return ["ERROR: Firestore client not connected"];
       }
-      if (!ctx.selectedFp) {
-        log.debug("trial-progress execute: no fp selected");
-        return ["ERROR: No trial selected — use list + use <N> first"];
+      if (!ctx.selectedUserId) {
+        log.debug("trial-progress execute: no user selected");
+        return ["ERROR: No user selected — select a user first"];
       }
 
-      const current = await readTrialDoc(ctx.selectedFp);
+      const current = await readTrialDoc(ctx.selectedUserId);
       const oldState = computeTrialState(current);
       const oldDesc = describeTrialState(oldState);
 
@@ -169,7 +175,7 @@ export function registerTrialCommands(): void {
       }
 
       const newStart = startDateForRemaining(target.targetRemaining);
-      await writeTrialStartDate(ctx.selectedFp, newStart);
+      await writeTrialStartDate(ctx.selectedUserId, newStart);
 
       const newState = computeTrialState({ startDate: newStart });
       const newDesc = describeTrialState(newState);

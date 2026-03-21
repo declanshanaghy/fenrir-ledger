@@ -33,7 +33,6 @@ export interface HouseholdListItem {
   inviteCode: string;
   inviteCodeExpiresAt: string | null;
   updatedAt: string | null;
-  stripeSubId: string | null;
 }
 
 export interface MemberRow {
@@ -50,28 +49,12 @@ export interface HouseholdDetail {
   cardTotal: number;
   activeCards: number;
   stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
   stripeStatus: string | null;
   currentPeriodEnd: string | null;
 }
 
-export interface Entitlements {
-  cloudSync: boolean;
-  priorityHowl: boolean;
-  analytics: boolean;
-  hiddenRunes: boolean;
-}
-
 // ─── Pure helpers (unit-testable) ─────────────────────────────────────────────
-
-/** Derive feature entitlements from tier */
-export function getEntitlements(tier: HouseholdTier): Entitlements {
-  return {
-    cloudSync:    tier === "karl" || tier === "trial",
-    priorityHowl: tier === "karl",
-    analytics:    tier === "karl",
-    hiddenRunes:  tier === "karl",
-  };
-}
 
 /** Format ISO date string to "YYYY-MM-DD" */
 export function fmtDateShort(iso: string | null | undefined): string {
@@ -170,8 +153,7 @@ interface HouseholdDetailViewProps {
 }
 
 export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React.JSX.Element {
-  const { household, members, cardTotal, activeCards, stripeCustomerId, stripeStatus, currentPeriodEnd } = detail;
-  const ent = getEntitlements(household.tier);
+  const { household, members, cardTotal, activeCards, stripeCustomerId, stripeSubscriptionId, stripeStatus, currentPeriodEnd } = detail;
 
   const expired = isExpired(household.inviteCodeExpiresAt);
   const inviteDisplay = household.inviteCode
@@ -220,21 +202,12 @@ export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React
         </Box>
       )}
 
-      {/* Entitlements */}
-      <HSectionTitle title="Entitlements" />
-      <Box flexDirection="row" gap={3}>
-        <EntitlementBadge label="Cloud Sync"    on={ent.cloudSync} />
-        <EntitlementBadge label="Priority Howl" on={ent.priorityHowl} />
-        <EntitlementBadge label="Analytics"     on={ent.analytics} />
-        <EntitlementBadge label="Hidden Runes"  on={ent.hiddenRunes} />
-      </Box>
-
-      {/* Stripe (karl only) */}
+      {/* Stripe — read from /households/{id}/stripe/subscription subcollection */}
       {household.tier === "karl" && (
         <>
           <HSectionTitle title="Stripe" />
           <HDetailRow label="Customer ID"   value={stripeCustomerId ?? "—"} />
-          <HDetailRow label="Sub ID"        value={household.stripeSubId ?? "—"} />
+          <HDetailRow label="Sub ID"        value={stripeSubscriptionId ?? "—"} />
           <HDetailRow label="Status"        value={stripeStatus ?? "—"} />
           <HDetailRow label="Period End"    value={fmtDateShort(currentPeriodEnd)} />
         </>
@@ -253,22 +226,6 @@ export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React
           {`[c] cards  [k] kick  [o] xfer owner  [i] regen invite  ${household.tier === "karl" ? "[s] cancel sub  " : ""}[x] delete  [Ctrl+R] reload`}
         </Text>
       </Box>
-    </Box>
-  );
-}
-
-// ─── EntitlementBadge ─────────────────────────────────────────────────────────
-
-interface EntitlementBadgeProps {
-  label: string;
-  on: boolean;
-}
-
-function EntitlementBadge({ label, on }: EntitlementBadgeProps): React.JSX.Element {
-  return (
-    <Box flexDirection="row" gap={1}>
-      <Text color={on ? GREEN : GRAY}>{on ? "\u2713" : "\u2717"}</Text>
-      <Text color={on ? LAVENDER : GRAY} dimColor={!on}>{label}</Text>
     </Box>
   );
 }
@@ -336,7 +293,6 @@ async function loadHouseholds(): Promise<HouseholdListItem[]> {
       inviteCode:           (data["inviteCode"] as string) || "",
       inviteCodeExpiresAt:  (data["inviteCodeExpiresAt"] as string | null) || null,
       updatedAt:            (data["updatedAt"] as string | null) || null,
-      stripeSubId:          (data["stripeSubId"] as string | null) || null,
     };
   });
   items.sort((a, b) => a.name.localeCompare(b.name));
@@ -347,7 +303,7 @@ async function loadHouseholds(): Promise<HouseholdListItem[]> {
 async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDetail> {
   log.debug("loadHouseholdDetail called", { id: hh.id });
   if (!firestoreClient) {
-    return { household: hh, members: [], cardTotal: 0, activeCards: 0, stripeCustomerId: null, stripeStatus: null, currentPeriodEnd: null };
+    return { household: hh, members: [], cardTotal: 0, activeCards: 0, stripeCustomerId: null, stripeSubscriptionId: null, stripeStatus: null, currentPeriodEnd: null };
   }
 
   // Members: query users by householdId
@@ -385,22 +341,29 @@ async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDeta
     return a.email.localeCompare(b.email);
   });
 
-  // Stripe info: check entitlement for owner (karl tier)
+  // Stripe info: read from /households/{id}/stripe/subscription subcollection
   let stripeCustomerId: string | null = null;
+  let stripeSubscriptionId: string | null = null;
   let stripeStatus: string | null = null;
   let currentPeriodEnd: string | null = null;
 
-  if (hh.tier === "karl" && hh.ownerId) {
+  if (hh.tier === "karl") {
     try {
-      const entSnap = await firestoreClient.collection("entitlements").doc(hh.ownerId).get();
-      if (entSnap.exists) {
-        const ed = entSnap.data() as Record<string, unknown>;
-        stripeCustomerId  = (ed["stripeCustomerId"] as string | null) || null;
-        stripeStatus      = (ed["stripeStatus"] as string | null) || null;
-        currentPeriodEnd  = (ed["currentPeriodEnd"] as string | null) || null;
+      const stripeSnap = await firestoreClient
+        .collection("households")
+        .doc(hh.id)
+        .collection("stripe")
+        .doc("subscription")
+        .get();
+      if (stripeSnap.exists) {
+        const sd = stripeSnap.data() as Record<string, unknown>;
+        stripeCustomerId     = (sd["stripeCustomerId"] as string | null) || null;
+        stripeSubscriptionId = (sd["stripeSubscriptionId"] as string | null) || null;
+        stripeStatus         = (sd["stripeStatus"] as string | null) || null;
+        currentPeriodEnd     = (sd["currentPeriodEnd"] as string | null) || null;
       }
     } catch (err) {
-      log.debug("loadHouseholdDetail: entitlement fetch failed", err as Error);
+      log.debug("loadHouseholdDetail: stripe subcollection fetch failed", err as Error);
     }
   }
 
@@ -411,6 +374,7 @@ async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDeta
     cardTotal: cardsSnap.docs.length,
     activeCards,
     stripeCustomerId,
+    stripeSubscriptionId,
     stripeStatus,
     currentPeriodEnd,
   };
@@ -421,6 +385,7 @@ async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDeta
 async function executeAction(
   action: ConfirmAction,
   hh: HouseholdListItem,
+  detail: HouseholdDetail | null,
   setStatus: (s: string) => void,
   reload: () => void,
   returnTo?: () => void
@@ -465,11 +430,12 @@ async function executeAction(
         break;
       }
       case "cancel-sub": {
-        if (!hh.stripeSubId) {
+        const subId = detail?.stripeSubscriptionId ?? null;
+        if (!subId) {
           setStatus("No Stripe subscription ID — cannot cancel");
           return;
         }
-        setStatus(`Sub ${hh.stripeSubId} — cancel via Stripe dashboard or API`);
+        setStatus(`Sub ${subId} — cancel via Stripe dashboard or API`);
         break;
       }
       case "delete": {
@@ -510,7 +476,7 @@ type LoadState = "idle" | "loading" | "loaded" | "error";
 /**
  * HouseholdsTab — master-detail panel for Firestore households.
  * Left panel: scrollable list with tier badge + member count.
- * Right panel: full household detail with members, entitlements, Stripe info.
+ * Right panel: full household detail with members, Stripe info.
  */
 export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView }: HouseholdsTabProps): React.JSX.Element {
   log.debug("HouseholdsTab render");
@@ -674,8 +640,9 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView }: Ho
     }
 
     if (input === "s") {
-      if (hh.tier !== "karl" || !hh.stripeSubId) {
-        setStatus("[s] requires a Karl household with a Stripe subscription ID");
+      // Require Karl tier with a loaded Stripe subscription ID
+      if (hh.tier !== "karl" || !detail?.stripeSubscriptionId) {
+        setStatus("[s] requires a Karl household with a Stripe subscription");
         return;
       }
       setConfirm({ kind: "cancel-sub" });
@@ -727,8 +694,8 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView }: Ho
     // For delete, supply a returnTo that clears the selection — the entity won't exist after success.
     // Non-destructive actions (kick, xfer, etc.) preserve the current selection.
     const returnTo = pendingAction.kind === "delete" ? () => { setSelectedIdx(-1); } : undefined;
-    void executeAction(pendingAction, hh, setStatus, doLoad, returnTo);
-  }, [confirm, selectedIdx, households, doLoad]);
+    void executeAction(pendingAction, hh, detail, setStatus, doLoad, returnTo);
+  }, [confirm, selectedIdx, households, detail, doLoad]);
 
   const handleCancel = useCallback(() => {
     setConfirm(null);
