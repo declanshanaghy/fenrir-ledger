@@ -45,7 +45,7 @@ interface CardTileProps {
  * Used as the totalDays denominator for the StatusRing progress calculation.
  * Returns 365 as a safe fallback if dates are missing or invalid.
  */
-function getTotalDays(openDate: string, deadlineIso: string): number {
+export function getTotalDays(openDate: string, deadlineIso: string): number {
   if (!openDate || !deadlineIso) return 365;
   const open = new Date(openDate);
   const deadline = new Date(deadlineIso);
@@ -54,6 +54,87 @@ function getTotalDays(openDate: string, deadlineIso: string): number {
   const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   return days > 0 ? days : 365;
 }
+
+/**
+ * Picks the most urgent days-remaining value for the StatusRing.
+ * Priority: closed → fee_approaching → promo_expiring → nearest available → 365.
+ */
+export function getRingDaysRemaining(
+  status: CreditCard["status"],
+  feeDays: number | null,
+  bonusDays: number | null
+): number {
+  if (status === "closed") return 0;
+  if (status === "fee_approaching" && feeDays !== null) return feeDays;
+  if (status === "promo_expiring" && bonusDays !== null) return bonusDays;
+  if (feeDays !== null) return feeDays;
+  if (bonusDays !== null) return bonusDays;
+  return 365;
+}
+
+/**
+ * Resolves the ISO deadline string to use as the ring's reference deadline.
+ * Priority: fee_approaching → promo_expiring → annualFeeDate → signUpBonus deadline → "".
+ */
+export function getRingDeadlineIso(card: CreditCard): string {
+  if (card.status === "fee_approaching" && card.annualFeeDate)
+    return card.annualFeeDate;
+  if (card.status === "promo_expiring" && card.signUpBonus?.deadline)
+    return card.signUpBonus.deadline;
+  if (card.annualFeeDate) return card.annualFeeDate;
+  if (card.signUpBonus?.deadline) return card.signUpBonus.deadline;
+  return "";
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+interface FeeDueDateRowProps {
+  feeDays: number;
+  annualFeeDate: string;
+}
+
+function FeeDueDateRow({ feeDays, annualFeeDate }: FeeDueDateRowProps) {
+  const isUrgent = feeDays <= 60;
+  const showCountdown = feeDays >= 0 && feeDays <= 60;
+  return (
+    <div className="flex justify-between text-muted-foreground">
+      <span>Fee due</span>
+      <span
+        className={`font-medium ${isUrgent ? "text-primary" : "text-foreground"}`}
+      >
+        {formatDate(annualFeeDate)}
+        {showCountdown && (
+          <span className="ml-1 text-sm">({feeDays}d)</span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+interface BonusDeadlineRowProps {
+  bonusDays: number;
+  deadline: string;
+}
+
+function BonusDeadlineRow({ bonusDays, deadline }: BonusDeadlineRowProps) {
+  const isUrgent = bonusDays <= 30;
+  const showCountdown = bonusDays >= 0 && bonusDays <= 30;
+  return (
+    <div className="flex justify-between text-muted-foreground">
+      <span>Bonus deadline</span>
+      <span
+        className={`font-medium ${isUrgent ? "text-primary" : "text-foreground"}`}
+      >
+        {formatDate(deadline)}
+        {showCountdown && (
+          <span className="ml-1 text-sm">({bonusDays}d)</span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+// ── CardTile ───────────────────────────────────────────────────────────────────
 
 export function CardTile({ card, lokiLabel }: CardTileProps) {
   const reducedMotion = useReducedMotion() ?? false;
@@ -66,29 +147,8 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
       ? daysUntil(card.signUpBonus.deadline)
       : null;
 
-  // ── StatusRing data ────────────────────────────────────────────────────────
-  // Pick the most urgent deadline for the ring.
-  // Priority: fee_approaching > promo_expiring > active > closed.
-  const ringDaysRemaining: number = (() => {
-    if (card.status === "closed") return 0;
-    if (card.status === "fee_approaching" && feeDays !== null) return feeDays;
-    if (card.status === "promo_expiring" && bonusDays !== null) return bonusDays;
-    // Active: show whichever deadline is nearest, or a generous default.
-    if (feeDays !== null) return feeDays;
-    if (bonusDays !== null) return bonusDays;
-    return 365;
-  })();
-
-  const ringDeadlineIso: string = (() => {
-    if (card.status === "fee_approaching" && card.annualFeeDate)
-      return card.annualFeeDate;
-    if (card.status === "promo_expiring" && card.signUpBonus?.deadline)
-      return card.signUpBonus.deadline;
-    if (card.annualFeeDate) return card.annualFeeDate;
-    if (card.signUpBonus?.deadline) return card.signUpBonus.deadline;
-    return "";
-  })();
-
+  const ringDeadlineIso = getRingDeadlineIso(card);
+  const ringDaysRemaining = getRingDaysRemaining(card.status, feeDays, bonusDays);
   const ringTotalDays = getTotalDays(card.openDate, ringDeadlineIso);
   const ringBadgeChar = getIssuerBadgeChar(card.issuerId);
   const issuerMeta = getIssuerMeta(card.issuerId);
@@ -166,41 +226,13 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
             </div>
 
             {/* Annual fee date */}
-            {hasAnnualFee && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>Fee due</span>
-                <span
-                  className={`font-medium ${
-                    feeDays !== null && feeDays <= 60
-                      ? "text-primary"
-                      : "text-foreground"
-                  }`}
-                >
-                  {formatDate(card.annualFeeDate)}
-                  {feeDays !== null && feeDays >= 0 && feeDays <= 60 && (
-                    <span className="ml-1 text-sm">({feeDays}d)</span>
-                  )}
-                </span>
-              </div>
+            {hasAnnualFee && feeDays !== null && (
+              <FeeDueDateRow feeDays={feeDays} annualFeeDate={card.annualFeeDate} />
             )}
 
             {/* Sign-up bonus deadline */}
-            {hasBonus && card.signUpBonus && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>Bonus deadline</span>
-                <span
-                  className={`font-medium ${
-                    bonusDays !== null && bonusDays <= 30
-                      ? "text-primary"
-                      : "text-foreground"
-                  }`}
-                >
-                  {formatDate(card.signUpBonus.deadline)}
-                  {bonusDays !== null && bonusDays >= 0 && bonusDays <= 30 && (
-                    <span className="ml-1 text-sm">({bonusDays}d)</span>
-                  )}
-                </span>
-              </div>
+            {hasBonus && card.signUpBonus?.deadline && bonusDays !== null && (
+              <BonusDeadlineRow bonusDays={bonusDays} deadline={card.signUpBonus.deadline} />
             )}
 
             {/* Opened date */}
