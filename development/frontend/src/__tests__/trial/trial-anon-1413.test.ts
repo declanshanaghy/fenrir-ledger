@@ -19,17 +19,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 
 // ── Mocks (must be hoisted before imports) ────────────────────────────────────
 
-const VALID_FINGERPRINT = "a".repeat(64);
-
-const mockComputeFingerprint = vi.hoisted(() =>
-  vi.fn(() => Promise.resolve(VALID_FINGERPRINT)),
-);
 vi.mock("@/lib/trial-utils", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/trial-utils")>();
-  return {
-    ...actual,
-    computeFingerprint: mockComputeFingerprint,
-  };
+  return { ...actual };
 });
 
 const mockEnsureFreshToken = vi.hoisted(() =>
@@ -117,8 +109,8 @@ describe("TrialStatusProvider — anonymous access (Issue #1413)", () => {
     });
   });
 
-  it("returns default status when fingerprint computation returns null", async () => {
-    mockComputeFingerprint.mockResolvedValueOnce(null as unknown as string);
+  it("reaches /api/trial/status regardless of ensureFreshToken result", async () => {
+    mockEnsureFreshToken.mockResolvedValue(null); // anonymous
 
     const { result } = renderHook(() => useTrialStatus(), { wrapper });
 
@@ -126,9 +118,7 @@ describe("TrialStatusProvider — anonymous access (Issue #1413)", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Fetch should NOT be called — provider bails when fingerprint is null
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(result.current.status).toBe("none");
-    expect(result.current.remainingDays).toBe(0);
+    // Fetch IS called — provider no longer gates on fingerprint (issue #1634)
+    expect(fetchSpy).toHaveBeenCalled();
   });
 });

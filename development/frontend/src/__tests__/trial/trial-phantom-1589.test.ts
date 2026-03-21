@@ -4,11 +4,11 @@
  * Covers:
  *  - /api/trial/status returns "none" when no trial exists (read-only, #1627)
  *  - /api/trial/status includes cacheVersion in every 200 response
- *  - cacheVersion equals TRIAL_CACHE_VERSION (2, the Firestore era)
+ *  - cacheVersion equals TRIAL_CACHE_VERSION (3, the household subcollection era, #1634)
  *  - useTrialStatus busts module-level cache when stored version mismatches
  *  - useTrialStatus persists cacheVersion to localStorage after successful fetch
  *
- * @ref Issue #1589, Issue #1627
+ * @ref Issue #1589, Issue #1627, Issue #1634
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
@@ -49,24 +49,17 @@ vi.mock("@/lib/logger", () => ({
 
 // ── Hook mocks ─────────────────────────────────────────────────────────────────
 
-const VALID_FINGERPRINT = "a".repeat(64);
-
-const mockComputeFingerprint = vi.hoisted(() =>
-  vi.fn(() => Promise.resolve(VALID_FINGERPRINT)),
-);
-vi.mock("@/lib/trial-utils", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/trial-utils")>();
-  return {
-    ...actual,
-    computeFingerprint: mockComputeFingerprint,
-  };
-});
-
 const mockEnsureFreshToken = vi.hoisted(() =>
   vi.fn<() => Promise<string | null>>(() => Promise.resolve(null)),
 );
 vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: mockEnsureFreshToken,
+}));
+
+// requireAuth: status route returns "none" for unauthenticated; override per-test for auth.
+const mockRequireAuth = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/require-auth", () => ({
+  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
 }));
 
 // ── Import after mocks ─────────────────────────────────────────────────────────
@@ -83,20 +76,29 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+const USER_ID = "google-sub-phantom-test";
+
 const missingSnap = { exists: false, data: () => null };
 
 function existingSnap(trial: Record<string, unknown>) {
-  return { exists: true, data: () => ({ ...trial, expiresAt: {} }) };
+  return {
+    exists: true,
+    data: () => ({
+      startDate: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      ...trial,
+    }),
+  };
 }
 
-function makeRequest(body: Record<string, unknown> = {}): NextRequest {
+function makeRequest(): NextRequest {
   return new NextRequest("http://localhost:9653/api/trial/status", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-forwarded-for": "127.0.0.1",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({}),
   });
 }
 
@@ -106,15 +108,25 @@ function daysAgo(n: number): string {
   return d.toISOString();
 }
 
+function authOk() {
+  mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: USER_ID } });
+}
+
+function authFail() {
+  // Route returns "none" (200) for unauthenticated — route handles this case itself
+  mockRequireAuth.mockResolvedValue({ ok: false });
+}
+
 // ── Route handler tests ────────────────────────────────────────────────────────
 
 describe("POST /api/trial/status — issue #1589 fixes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: unauthenticated (route returns "none" gracefully)
+    authFail();
     mockDocRef.get.mockResolvedValue(missingSnap);
     mockDocRef.set.mockResolvedValue(undefined);
     mockDocRef.update.mockResolvedValue(undefined);
-    mockCollectionRef.get.mockResolvedValue({ empty: true, docs: [] });
   });
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -122,10 +134,10 @@ describe("POST /api/trial/status — issue #1589 fixes", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("returns status none when no trial exists — status endpoint is read-only", async () => {
-    // getTrial: not found
+    authOk();
     mockDocRef.get.mockResolvedValueOnce(missingSnap);
 
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -135,10 +147,11 @@ describe("POST /api/trial/status — issue #1589 fixes", () => {
   });
 
   it("returns status none when Firestore is unavailable (getTrial swallows errors)", async () => {
+    authOk();
     // getTrial's internal catch returns null on Firestore error
     mockDocRef.get.mockRejectedValueOnce(new Error("Firestore quota exceeded"));
 
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -151,20 +164,22 @@ describe("POST /api/trial/status — issue #1589 fixes", () => {
   // ═══════════════════════════════════════════════════════════════════════
 
   it("includes cacheVersion in 200 response for existing trial", async () => {
+    authOk();
     mockDocRef.get.mockResolvedValueOnce(existingSnap({ startDate: daysAgo(0) }));
 
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body.cacheVersion).toBe(TRIAL_CACHE_VERSION);
-    expect(body.cacheVersion).toBe(2);
+    expect(body.cacheVersion).toBe(3);
   });
 
   it("includes cacheVersion in 200 response when status is none (no trial)", async () => {
+    authOk();
     mockDocRef.get.mockResolvedValueOnce(missingSnap);
 
-    const res = await POST(makeRequest({ fingerprint: VALID_FINGERPRINT }));
+    const res = await POST(makeRequest());
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -172,8 +187,8 @@ describe("POST /api/trial/status — issue #1589 fixes", () => {
     expect(body.cacheVersion).toBe(TRIAL_CACHE_VERSION);
   });
 
-  it("cacheVersion equals 2 (Firestore-era constant)", () => {
-    expect(TRIAL_CACHE_VERSION).toBe(2);
+  it("cacheVersion equals 3 (household subcollection era, #1634)", () => {
+    expect(TRIAL_CACHE_VERSION).toBe(3);
   });
 });
 
@@ -198,7 +213,7 @@ describe("useTrialStatus — cache version invalidation (issue #1589)", () => {
 
     fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
       new Response(
-        JSON.stringify({ status: "active", remainingDays: 30, cacheVersion: 2 }),
+        JSON.stringify({ status: "active", remainingDays: 30, cacheVersion: 3 }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       ),
     );
@@ -216,7 +231,7 @@ describe("useTrialStatus — cache version invalidation (issue #1589)", () => {
       expect(fetchSpy).toHaveBeenCalled();
     });
 
-    expect(localStorageMock[LS_TRIAL_CACHE_VERSION]).toBe("2");
+    expect(localStorageMock[LS_TRIAL_CACHE_VERSION]).toBe("3");
   });
 
   it("busts module-level cache when stored version is stale (e.g. version 1 from Redis era)", async () => {
@@ -231,7 +246,7 @@ describe("useTrialStatus — cache version invalidation (issue #1589)", () => {
     });
 
     // After fetch, localStorage should be updated to the current version
-    expect(localStorageMock[LS_TRIAL_CACHE_VERSION]).toBe("2");
+    expect(localStorageMock[LS_TRIAL_CACHE_VERSION]).toBe("3");
   });
 
   it("does not bypass cache when stored version matches current version", async () => {

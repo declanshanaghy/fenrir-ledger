@@ -50,14 +50,12 @@ vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-// Preserve real module exports; override only computeFingerprint for UI tests
-vi.mock("@/lib/trial-utils", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/trial-utils")>();
-  return {
-    ...actual,
-    computeFingerprint: vi.fn().mockResolvedValue("a".repeat(64)),
-  };
-});
+// requireAuth: status route returns "none" for unauthenticated. Sections that
+// need Firestore lookups must call authOk() to get authenticated userId.
+const mockRequireAuth = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/require-auth", () => ({
+  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
+}));
 
 // UI mocks — used by Sections 2 and 3
 vi.mock("next/navigation", () => ({
@@ -169,27 +167,37 @@ import AuthCallbackPage from "@/app/ledger/auth/callback/page";
 // Section 1: /api/trial/status read-only contract
 // ══════════════════════════════════════════════════════════════════════════════
 
-const VALID_FP = "a".repeat(64);
+const USER_ID = "google-sub-1627-test";
 const missingSnap = { exists: false, data: () => null };
 
-function makeStatusRequest(fp: string = VALID_FP): NextRequest {
+function makeStatusRequest(): NextRequest {
   return new NextRequest("http://localhost/api/trial/status", {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-forwarded-for": "1.2.3.4" },
-    body: JSON.stringify({ fingerprint: fp }),
+    body: JSON.stringify({}),
   });
+}
+
+function authOk() {
+  mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: USER_ID } });
+}
+
+function authFail() {
+  mockRequireAuth.mockResolvedValue({ ok: false });
 }
 
 describe("Issue #1627 — /api/trial/status read-only contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: authenticated (most tests need Firestore lookup)
+    authOk();
     mockDocRef.get.mockResolvedValue(missingSnap);
     mockDocRef.set.mockResolvedValue(undefined);
     mockDocRef.update.mockResolvedValue(undefined);
     mockCollectionRef.get.mockResolvedValue({ empty: true, docs: [] });
   });
 
-  it("returns status:none for a new fingerprint — does not write to Firestore", async () => {
+  it("returns status:none for a new user — does not write to Firestore", async () => {
     const res = await statusPOST(makeStatusRequest());
     const body = await res.json();
 
@@ -221,9 +229,10 @@ describe("Issue #1627 — /api/trial/status read-only contract", () => {
 
   it("returns status:active for an existing trial without writing to Firestore", async () => {
     const startDate = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     mockDocRef.get.mockResolvedValueOnce({
       exists: true,
-      data: () => ({ startDate, expiresAt: {} }),
+      data: () => ({ startDate, expiresAt }),
     });
 
     const res = await statusPOST(makeStatusRequest());

@@ -28,7 +28,6 @@ import {
 } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
-import { computeFingerprint } from "@/lib/trial-utils";
 import { track } from "@/lib/analytics/track";
 import { clearTrialStatusCache, useTrialStatus } from "@/hooks/useTrialStatus";
 import {
@@ -438,19 +437,18 @@ export function EntitlementProvider({ children }: EntitlementProviderProps) {
       console.debug("[Fenrir] Stripe checkout success callback", { sessionId });
       track("subscription-convert", { tier: "karl" });
       void refreshEntitlement(sessionId);
-      // Mark trial as converted in KV (best-effort, Issue #623)
+      // Mark trial as converted (best-effort, Issue #623)
       void (async () => {
         try {
           const token = await ensureFreshToken();
-          const fingerprint = await computeFingerprint();
-          if (token && fingerprint) {
+          if (token) {
             await fetch("/api/trial/convert", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
-              body: JSON.stringify({ fingerprint }),
+              body: JSON.stringify({}),
             });
             clearTrialStatusCache();
           }

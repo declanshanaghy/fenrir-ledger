@@ -1,23 +1,20 @@
 /**
  * POST /api/trial/status
  *
- * Returns the trial status for a given browser fingerprint.
- * Computes remaining days from KV startDate and returns the current status.
+ * Returns the trial status for the authenticated user.
+ * If unauthenticated, returns { status: "none" }.
+ * Read-only — never initializes a trial.
  *
- * Supports anonymous access — fingerprint is the sole identifier (Issue #1413).
- * No Bearer token required; rate-limited by IP to prevent abuse.
+ * Request body: {} (empty — userId comes from auth token)
  *
- * Request body: { fingerprint: string } (UUID v4 or legacy 64-char SHA-256 hex)
- *
- * Response: { remainingDays: number, status: 'active' | 'expired' | 'converted' | 'none', convertedDate?: string }
- *
- * @see plans/001-trial.md
+ * Response: { remainingDays: number, status: 'active' | 'expired' | 'converted' | 'none', convertedDate?: string, cacheVersion: number }
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth/require-auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
-import { isValidFingerprint, TRIAL_CACHE_VERSION } from "@/lib/trial-utils";
+import { TRIAL_CACHE_VERSION } from "@/lib/trial-utils";
 import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -41,51 +38,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Parse and validate body
-  let fingerprint: string;
-  try {
-    const body: unknown = await request.json();
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      !("fingerprint" in body) ||
-      typeof (body as Record<string, unknown>).fingerprint !== "string"
-    ) {
-      return NextResponse.json(
-        { error: "invalid_body", error_description: "Body must include { fingerprint: string }." },
-        { status: 400 },
-      );
-    }
-    fingerprint = (body as Record<string, unknown>).fingerprint as string;
-  } catch {
+  // Try authentication — unauthenticated users get "none" (no anonymous trial)
+  const auth = await requireAuth(request);
+  if (!auth.ok) {
+    log.debug("POST /api/trial/status: unauthenticated, returning none");
     return NextResponse.json(
-      { error: "invalid_json", error_description: "Request body must be valid JSON." },
-      { status: 400 },
+      { status: "none", remainingDays: 0, cacheVersion: TRIAL_CACHE_VERSION },
+      { headers: { "Cache-Control": "no-store" } },
     );
   }
 
-  if (!isValidFingerprint(fingerprint)) {
-    log.debug("POST /api/trial/status returning", { status: 400, error: "invalid_fingerprint" });
-    return NextResponse.json(
-      {
-        error: "invalid_fingerprint",
-        error_description: "Fingerprint must be a UUID v4 or 64-character lowercase hex string.",
-      },
-      { status: 400 },
-    );
-  }
+  const userId = auth.user.sub;
 
-  // Retrieve trial and compute status.
-  // This endpoint is read-only — it never initializes a trial.
-  // Trial initialization happens exclusively via /api/trial/init, which is
-  // called from the card creation code path (CardForm + handleConfirmImport).
-  // If no trial exists, return { status: "none" } (issue #1627).
   try {
-    const trial = await getTrial(fingerprint);
+    const trial = await getTrial(userId);
     if (!trial) {
-      log.debug("POST /api/trial/status: no trial found, returning none", { fingerprint });
+      log.debug("POST /api/trial/status: no trial found, returning none", { userId });
       return NextResponse.json(
-        { status: "none", cacheVersion: TRIAL_CACHE_VERSION },
+        { status: "none", remainingDays: 0, cacheVersion: TRIAL_CACHE_VERSION },
         { headers: { "Cache-Control": "no-store" } },
       );
     }

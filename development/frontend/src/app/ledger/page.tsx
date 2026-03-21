@@ -26,7 +26,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { LS_TRIAL_START_TOAST_SHOWN, computeFingerprint } from "@/lib/trial-utils";
+import { LS_TRIAL_START_TOAST_SHOWN } from "@/lib/trial-utils";
 import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { useAuth } from "@/hooks/useAuth";
@@ -159,19 +159,18 @@ function DashboardPageContent() {
     if (!toastShown) {
       localStorage.setItem(LS_TRIAL_START_TOAST_SHOWN, "true");
 
-      // Initialize trial via API (idempotent)
+      // Initialize trial via API (idempotent for active trials; requires auth)
       void (async () => {
         try {
           const token = await ensureFreshToken();
-          const fingerprint = await computeFingerprint();
-          if (token && fingerprint) {
+          if (token) {
             await fetch("/api/trial/init", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
-              body: JSON.stringify({ fingerprint }),
+              body: JSON.stringify({}),
             });
             clearTrialStatusCache();
           }

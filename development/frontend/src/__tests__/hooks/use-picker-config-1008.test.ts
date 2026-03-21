@@ -104,11 +104,10 @@ describe("usePickerConfig — computeFingerprint throws exception", () => {
   });
 });
 
-// ── Edge case 3: computeFingerprint is called per mount, not cached ───────────
+// ── Edge case 3: fetch is called on each authenticated mount ──────────────────
 
-describe("usePickerConfig — fingerprint computed on each authenticated mount", () => {
-  it("calls computeFingerprint each time the hook mounts in authenticated state", async () => {
-    mockComputeFingerprint.mockResolvedValue("fp-mount-1");
+describe("usePickerConfig — fetch called on each authenticated mount (#1634)", () => {
+  it("calls fetch each time the hook mounts in authenticated state (fingerprint removed)", async () => {
     mockFetch.mockResolvedValue(
       new Response(JSON.stringify({ pickerApiKey: "key" }), {
         status: 200,
@@ -118,10 +117,9 @@ describe("usePickerConfig — fingerprint computed on each authenticated mount",
 
     // First mount
     const { unmount } = renderHook(() => usePickerConfig());
-    await waitFor(() => expect(mockComputeFingerprint).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
     unmount();
 
-    mockComputeFingerprint.mockResolvedValue("fp-mount-2");
     mockFetch.mockResolvedValue(
       new Response(JSON.stringify({ pickerApiKey: "key2" }), {
         status: 200,
@@ -129,8 +127,8 @@ describe("usePickerConfig — fingerprint computed on each authenticated mount",
       }),
     );
 
-    // Second mount — fingerprint should be recomputed (fresh device fingerprint)
+    // Second mount — fetch should be called again (no caching)
     renderHook(() => usePickerConfig());
-    await waitFor(() => expect(mockComputeFingerprint).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
   });
 });
