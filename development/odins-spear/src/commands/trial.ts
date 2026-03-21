@@ -10,7 +10,7 @@ import {
   describeTrialState,
 } from "./trial-helpers.js";
 
-/** Read a trial document from /households/{userId}/trial. */
+/** Read a trial document from /households/{userId}/trial/status. */
 async function readTrialDoc(
   userId: string
 ): Promise<{ startDate: string; convertedDate?: string } | null> {
@@ -19,20 +19,20 @@ async function readTrialDoc(
     .collection("households")
     .doc(userId)
     .collection("trial")
-    .doc("trial")
+    .doc("status")
     .get();
   if (!snap.exists) return null;
   return snap.data() as { startDate: string; convertedDate?: string };
 }
 
-/** Write a startDate update to /households/{userId}/trial. Creates the doc if absent. */
+/** Write a startDate update to /households/{userId}/trial/status. Creates the doc if absent. */
 async function writeTrialStartDate(userId: string, startDate: string): Promise<void> {
   if (!firestoreClient) throw new Error("Firestore client not connected");
   const ref = firestoreClient
     .collection("households")
     .doc(userId)
     .collection("trial")
-    .doc("trial");
+    .doc("status");
   const snap = await ref.get();
   if (snap.exists) {
     await ref.update({ startDate });
