@@ -15,7 +15,6 @@ interface EnrichedUser {
   householdId: string | null;
   householdName: string | null;
   createdAt: string | null;
-  stripeCustomerId: string | null;
   lastSyncAt: string | null;
   syncCount: number | null;
   syncHealth: string | null;
@@ -25,6 +24,8 @@ interface UserDetail {
   household: { id: string; name: string; tier: string } | null;
   cloudSync: { lastSync: string | null; totalSyncs: number; health: string } | null;
   cardCount: { active: number; total: number } | null;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
 }
 
 type ActionMode = "none" | "delete_confirm" | "tier_input" | "sub_cancel_confirm";
@@ -207,15 +208,15 @@ function UserDetailPanel({
         </Box>
       ) : null}
 
-      {/* Stripe */}
-      {user.stripeCustomerId ? (
+      {/* Stripe — read from household's /stripe/subscription subcollection */}
+      {detail?.stripeCustomerId ? (
         <Box marginTop={1} flexDirection="column">
           <Text color={GRAY} bold>
             Stripe
           </Text>
           <Box>
             <Text color={GRAY}>{"  Customer: "}</Text>
-            <Text>{user.stripeCustomerId}</Text>
+            <Text>{detail.stripeCustomerId}</Text>
           </Box>
         </Box>
       ) : null}
@@ -230,7 +231,7 @@ function UserDetailPanel({
         <Box>
           <Text color={GRAY}>
             {"[x] Delete  [t] Tier  [a] adjust trial"}
-            {user.stripeCustomerId ? "  [s] Cancel sub" : ""}
+            {detail?.stripeSubscriptionId ? "  [s] Cancel sub" : ""}
             {detail?.household ? "  [h] Household  [c] Cards" : ""}
           </Text>
         </Box>
@@ -337,7 +338,6 @@ export function UsersTab({
             householdId?: string;
             createdAt?: string;
             tier?: string;
-            stripeCustomerId?: string;
             lastSyncAt?: string;
             syncCount?: number;
             syncHealth?: string;
@@ -352,7 +352,6 @@ export function UsersTab({
             householdId: u["householdId"] || null,
             householdName: hh ? hh.name : null,
             createdAt: u["createdAt"] || null,
-            stripeCustomerId: u["stripeCustomerId"] || null,
             lastSyncAt: u["lastSyncAt"] || null,
             syncCount: u["syncCount"] ?? null,
             syncHealth: u["syncHealth"] || null,
@@ -398,14 +397,22 @@ export function UsersTab({
         let household: { id: string; name: string; tier: string } | null = null;
         let cloudSync: { lastSync: string | null; totalSyncs: number; health: string } | null = null;
         let cardCount: { active: number; total: number } | null = null;
+        let stripeCustomerId: string | null = null;
+        let stripeSubscriptionId: string | null = null;
 
         if (user.householdId) {
-          const [hhSnap, cardsSnap] = await Promise.all([
+          const [hhSnap, cardsSnap, stripeSnap] = await Promise.all([
             firestoreClient.collection("households").doc(user.householdId).get(),
             firestoreClient
               .collection("households")
               .doc(user.householdId)
               .collection("cards")
+              .get(),
+            firestoreClient
+              .collection("households")
+              .doc(user.householdId)
+              .collection("stripe")
+              .doc("subscription")
               .get(),
           ]);
 
@@ -442,6 +449,13 @@ export function UsersTab({
             const active = cards.filter((c) => !c["deletedAt"]).length;
             cardCount = { active, total: cards.length };
           }
+
+          // Read Stripe from /households/{id}/stripe/subscription
+          if (stripeSnap.exists) {
+            const sd = stripeSnap.data() as Record<string, unknown>;
+            stripeCustomerId     = (sd["stripeCustomerId"] as string | null) || null;
+            stripeSubscriptionId = (sd["stripeSubscriptionId"] as string | null) || null;
+          }
         } else if (user.lastSyncAt != null) {
           cloudSync = {
             lastSync: user.lastSyncAt,
@@ -450,7 +464,7 @@ export function UsersTab({
           };
         }
 
-        setDetail({ household, cloudSync, cardCount });
+        setDetail({ household, cloudSync, cardCount, stripeCustomerId, stripeSubscriptionId });
         log.debug("UsersTab: detail loaded", { userId: user.id });
       } catch (err) {
         log.error("UsersTab: detail load error", err as Error);
@@ -458,35 +472,16 @@ export function UsersTab({
     })();
   }, [selectedIdx, users]);
 
-  // Sync selected user and trial fingerprint into SelectionContext so commands receive context
+  // Sync selected user into SelectionContext so commands receive context.
+  // Trials are now keyed by userId — no fingerprint lookup needed (issue #1658).
   useEffect(() => {
     if (selectedIdx < 0 || selectedIdx >= users.length) {
       selection.setSelectedUserId(null);
-      selection.setSelectedFp(null);
       return;
     }
     const user = users[selectedIdx];
     if (!user) return;
-
     selection.setSelectedUserId(user.id);
-    selection.setSelectedFp(null); // reset while querying
-
-    // Reverse-lookup: find the trial document keyed by browser fingerprint via userId field
-    void (async () => {
-      if (!firestoreClient) return;
-      try {
-        const snap = await firestoreClient
-          .collection("trials")
-          .where("userId", "==", user.id)
-          .limit(1)
-          .get();
-        const fp = !snap.empty && snap.docs[0] ? snap.docs[0].id : null;
-        log.debug("UsersTab: trial fp lookup", { userId: user.id, fp });
-        selection.setSelectedFp(fp);
-      } catch (err) {
-        log.error("UsersTab: trial fp lookup error", err as Error);
-      }
-    })();
   }, [selectedIdx, users]); // selection setters are stable (useState) — safe to omit
 
   // Delete user
@@ -654,7 +649,7 @@ export function UsersTab({
         setActionMode("tier_input");
         return;
       }
-      if (input === "s" && user.stripeCustomerId) {
+      if (input === "s" && detail?.stripeSubscriptionId) {
         setActionMode("sub_cancel_confirm");
         return;
       }
