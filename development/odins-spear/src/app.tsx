@@ -5,7 +5,6 @@ import { TopBar } from "./components/TopBar.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { HelpOverlay } from "./components/HelpOverlay.js";
 import { ResultsOverlay } from "./components/ResultsOverlay.js";
-import { ConfirmDialog } from "./components/ConfirmDialog.js";
 import { TrialInputDialog } from "./components/TrialInputDialog.js";
 import { UsersTab } from "./tabs/UsersTab.js";
 import { HouseholdsTab } from "./tabs/HouseholdsTab.js";
@@ -28,7 +27,6 @@ type OverlayMode =
   | { kind: "none" }
   | { kind: "help" }
   | { kind: "results"; title: string; lines: string[] }
-  | { kind: "confirm"; cmd: PaletteCommand }
   | { kind: "trial-input"; cmd: PaletteCommand };
 
 function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): React.JSX.Element {
@@ -77,18 +75,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
     setOverlay({ kind: "help" });
   }, []);
 
-  const handleReadResult = useCallback((title: string, lines: string[]) => {
-    log.debug("SpearInner: handleReadResult called", { title, lineCount: lines.length });
-    setOverlay({ kind: "results", title, lines });
-  }, []);
-
-  const handleDestructive = useCallback((cmd: PaletteCommand) => {
-    log.debug("SpearInner: handleDestructive called", { name: cmd.name });
-    setDialogExecuting(false);
-    setDialogError(null);
-    setOverlay({ kind: "confirm", cmd });
-  }, []);
-
   const handleTrialInput = useCallback((cmd: PaletteCommand) => {
     log.debug("SpearInner: handleTrialInput called", { name: cmd.name });
     setDialogExecuting(false);
@@ -108,24 +94,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
       setCmdStatusMsg(`${cmd.name}: ${lines[0] ?? "done"}`);
     } catch (err) {
       log.error("SpearInner: handleTrialInputConfirm error", err as Error);
-      // Failure: keep dialog open with inline error
-      setDialogExecuting(false);
-      setDialogError((err as Error).message ?? String(err));
-    }
-  }, [cmdCtx, closeOverlay]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleConfirmExecute = useCallback(async (cmd: PaletteCommand) => {
-    log.debug("SpearInner: handleConfirmExecute called", { name: cmd.name });
-    setDialogExecuting(true);
-    setDialogError(null);
-    try {
-      const lines = await cmd.execute(cmdCtx);
-      log.debug("SpearInner: handleConfirmExecute done", { lineCount: lines.length });
-      // Success: close dialog and show a status toast
-      closeOverlay();
-      setCmdStatusMsg(`${cmd.name}: ${lines[0] ?? "done"}`);
-    } catch (err) {
-      log.error("SpearInner: handleConfirmExecute error", err as Error);
       // Failure: keep dialog open with inline error
       setDialogExecuting(false);
       setDialogError((err as Error).message ?? String(err));
@@ -202,20 +170,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
       <TrialInputDialog
         action={overlay.cmd.name}
         onConfirm={(dayInput) => { void handleTrialInputConfirm(overlay.cmd, dayInput); }}
-        onCancel={() => {
-          closeOverlay();
-          setCmdStatusMsg("Cancelled");
-        }}
-        executing={dialogExecuting}
-        error={dialogError}
-      />
-    );
-  } else if (overlay.kind === "confirm") {
-    mainContent = (
-      <ConfirmDialog
-        action={overlay.cmd.name}
-        desc={overlay.cmd.desc}
-        onConfirm={() => { void handleConfirmExecute(overlay.cmd); }}
         onCancel={() => {
           closeOverlay();
           setCmdStatusMsg("Cancelled");
