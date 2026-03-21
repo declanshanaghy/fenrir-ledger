@@ -1,13 +1,14 @@
 /**
- * AuthContext — Issue #1670 regression tests (updated for #1671)
+ * AuthContext — Issue #1671 regression tests
  *
- * Issue #1671 updated the model: anonymous users now have householdId = null
- * (not a UUID). The original lazy-UUID pattern from #1670 is removed.
+ * Validates the refactored model introduced in #1671:
+ *   - AuthContext returns householdId = null for ALL anonymous users
+ *   - No UUID household is created for anonymous users
+ *   - ensureHouseholdId() returns ANON_HOUSEHOLD_ID ("anon") for anonymous users
+ *   - ensureHouseholdId() returns session.user.sub for authenticated users
+ *   - signOut() sets householdId = null (no UUID restoration)
  *
- * This file retains the test structure from #1670 but updates assertions
- * to reflect the #1671 model where anonymous householdId is always null.
- *
- * @ref Issue #1670, #1671
+ * @ref Issue #1671
  */
 
 import React from "react";
@@ -28,6 +29,7 @@ vi.mock("@/lib/auth/session", () => ({
   clearSession: mockClearSession,
 }));
 
+// household.ts no longer has getOrCreateAnonHouseholdId — only getAnonHouseholdId
 vi.mock("@/lib/auth/household", () => ({
   getAnonHouseholdId: vi.fn(() => null),
 }));
@@ -52,7 +54,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe("AuthContext — Issue #1670/#1671: anonymous householdId model", () => {
+describe("AuthContext — Issue #1671: null householdId for anonymous users", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default: no session (brand-new anonymous user)
@@ -60,21 +62,20 @@ describe("AuthContext — Issue #1670/#1671: anonymous householdId model", () =>
     mockIsSessionValid.mockReturnValue(false);
   });
 
-  // ── Core contract: null for anonymous (Issue #1671) ───────────────────────
+  // ── Core contract: null for anonymous ────────────────────────────────────────
 
-  it("sets householdId to null for brand-new anonymous user (Issue #1671)", async () => {
+  it("sets householdId = null for brand-new anonymous user", async () => {
     const { result } = renderHook(() => useAuthContext(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.status).toBe("anonymous");
     });
 
-    // #1671: anonymous householdId is null, not ""
     expect(result.current.householdId).toBeNull();
   });
 
-  it("sets householdId to null for anonymous user regardless of legacy UUID", async () => {
-    // Even if old fenrir:household exists, model is now null for all anon users
+  it("sets householdId = null for returning anonymous user (legacy UUID ignored)", async () => {
+    // Even if old fenrir:household UUID exists, new model always uses null
     const { result } = renderHook(() => useAuthContext(), { wrapper });
 
     await waitFor(() => {
@@ -105,9 +106,9 @@ describe("AuthContext — Issue #1670/#1671: anonymous householdId model", () =>
     expect(result.current.householdId).toBe("google-sub-abc123");
   });
 
-  // ── ensureHouseholdId: returns "anon" for anonymous (Issue #1671) ──────────
+  // ── ensureHouseholdId: returns "anon" for anonymous ──────────────────────────
 
-  it("ensureHouseholdId returns 'anon' for anonymous user (no lazy UUID creation)", async () => {
+  it("ensureHouseholdId returns 'anon' for anonymous user (no UUID creation)", async () => {
     const { result } = renderHook(() => useAuthContext(), { wrapper });
 
     await waitFor(() => {
@@ -119,13 +120,12 @@ describe("AuthContext — Issue #1670/#1671: anonymous householdId model", () =>
       returnedId = result.current.ensureHouseholdId();
     });
 
-    // #1671: returns fixed "anon" instead of creating a UUID
     expect(returnedId).toBe("anon");
-    // householdId stays null — ensureHouseholdId doesn't mutate state
+    // householdId stays null — ensureHouseholdId is a resolver, not a setter
     expect(result.current.householdId).toBeNull();
   });
 
-  it("ensureHouseholdId returns user.sub for authenticated user (no anon UUID created)", async () => {
+  it("ensureHouseholdId returns user.sub for authenticated user", async () => {
     const mockSession = {
       user: { sub: "google-sub-xyz", email: "user@example.com", name: "User", picture: "" },
       access_token: "tok",
@@ -149,7 +149,7 @@ describe("AuthContext — Issue #1670/#1671: anonymous householdId model", () =>
     expect(returnedId).toBe("google-sub-xyz");
   });
 
-  // ── signOut: sets householdId = null (Issue #1671) ────────────────────────
+  // ── signOut: sets householdId = null ─────────────────────────────────────────
 
   it("signOut sets householdId = null (no UUID restoration)", async () => {
     const mockSession = {
@@ -175,7 +175,6 @@ describe("AuthContext — Issue #1670/#1671: anonymous householdId model", () =>
     });
 
     expect(result.current.status).toBe("anonymous");
-    // #1671: null, not the old anon UUID
     expect(result.current.householdId).toBeNull();
   });
 });

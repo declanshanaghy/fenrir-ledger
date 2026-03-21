@@ -1,14 +1,17 @@
 /**
- * Vitest tests for src/app/ledger/cards/new/page.tsx — Issue #1670
+ * Vitest tests for src/app/ledger/cards/new/page.tsx — Issue #1671
  *
- * Validates the lazy householdId pattern introduced in #1670:
- *   - ensureHouseholdId() is called in useEffect when the user visits /cards/new
- *     and has no householdId yet (brand-new anonymous user)
- *   - ensureHouseholdId() is NOT called when householdId is already set
+ * Issue #1671 updated the model: anonymous users use the fixed "anon" key.
+ * No lazy UUID creation is needed. ensureHouseholdId is no longer called
+ * from NewCardPage.
+ *
+ * Validates:
  *   - CardForm is not rendered while status is still loading
- *   - CardForm is rendered once householdId is available
+ *   - CardForm is rendered for anonymous users with householdId="anon"
+ *   - CardForm is rendered for authenticated users with their householdId
+ *   - ensureHouseholdId is NOT called (no longer needed)
  *
- * @ref Issue #1670
+ * @ref Issue #1670, #1671
  */
 
 import React from "react";
@@ -17,8 +20,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockEnsureHouseholdId = vi.fn(() => "lazy-created-uuid");
-let mockHouseholdId = "";
+const mockEnsureHouseholdId = vi.fn(() => "anon");
+let mockHouseholdId: string | null = null;
 let mockStatus = "loading";
 
 vi.mock("@/hooks/useAuth", () => ({
@@ -47,10 +50,10 @@ import NewCardPage from "@/app/ledger/cards/new/page";
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe("NewCardPage — Issue #1670: lazy ensureHouseholdId", () => {
+describe("NewCardPage — Issue #1671: anonymous uses fixed 'anon' key", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockHouseholdId = "";
+    mockHouseholdId = null;
     mockStatus = "loading";
   });
 
@@ -59,49 +62,18 @@ describe("NewCardPage — Issue #1670: lazy ensureHouseholdId", () => {
     expect(screen.queryByTestId("card-form")).not.toBeInTheDocument();
   });
 
-  it("does NOT call ensureHouseholdId while status is loading", () => {
-    render(<NewCardPage />);
-    expect(mockEnsureHouseholdId).not.toHaveBeenCalled();
-  });
-
-  it("calls ensureHouseholdId when status resolves and householdId is empty (new anonymous user)", async () => {
+  it("renders CardForm for anonymous user with householdId='anon'", async () => {
     mockStatus = "anonymous";
-    mockHouseholdId = "";
+    mockHouseholdId = null; // anonymous = null
     render(<NewCardPage />);
     await waitFor(() => {
-      expect(mockEnsureHouseholdId).toHaveBeenCalledOnce();
+      const form = screen.getByTestId("card-form");
+      expect(form).toBeInTheDocument();
+      expect(form.getAttribute("data-household-id")).toBe("anon");
     });
   });
 
-  it("does NOT call ensureHouseholdId when householdId is already set (returning user)", async () => {
-    mockStatus = "authenticated";
-    mockHouseholdId = "existing-household-id";
-    render(<NewCardPage />);
-    // Give React time to flush effects
-    await waitFor(() => {
-      // ensureHouseholdId only called when !householdId — so NOT called here
-      expect(mockEnsureHouseholdId).not.toHaveBeenCalled();
-    });
-  });
-
-  it("does NOT render CardForm when status is resolved but householdId is still empty", () => {
-    mockStatus = "anonymous";
-    mockHouseholdId = "";
-    render(<NewCardPage />);
-    // CardForm gated on: status !== "loading" && householdId — empty means no render
-    expect(screen.queryByTestId("card-form")).not.toBeInTheDocument();
-  });
-
-  it("renders CardForm when status resolves and householdId is available (returning anon)", async () => {
-    mockStatus = "anonymous";
-    mockHouseholdId = "returning-anon-uuid";
-    render(<NewCardPage />);
-    await waitFor(() => {
-      expect(screen.getByTestId("card-form")).toBeInTheDocument();
-    });
-  });
-
-  it("renders CardForm with user.sub as householdId for authenticated user", async () => {
+  it("renders CardForm for authenticated user with their householdId", async () => {
     mockStatus = "authenticated";
     mockHouseholdId = "google-sub-abc123";
     render(<NewCardPage />);
@@ -112,9 +84,20 @@ describe("NewCardPage — Issue #1670: lazy ensureHouseholdId", () => {
     });
   });
 
+  it("does NOT call ensureHouseholdId (no longer needed with fixed anon key)", async () => {
+    mockStatus = "anonymous";
+    mockHouseholdId = null;
+    render(<NewCardPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("card-form")).toBeInTheDocument();
+    });
+    // ensureHouseholdId is no longer called from NewCardPage
+    expect(mockEnsureHouseholdId).not.toHaveBeenCalled();
+  });
+
   it("renders the page heading 'Forge a New Chain'", () => {
     mockStatus = "anonymous";
-    mockHouseholdId = "some-id";
+    mockHouseholdId = null;
     render(<NewCardPage />);
     expect(screen.getByRole("heading", { name: /forge a new chain/i })).toBeInTheDocument();
   });
