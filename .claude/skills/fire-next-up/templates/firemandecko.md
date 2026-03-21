@@ -44,7 +44,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
 **Step 3b — Write Vitest tests for new code:**
 - Write unit tests for new utilities, hooks, helpers in `development/frontend/src/__tests__/`
 - Write integration tests for new API routes, component renders
-- Run: `cd <REPO_ROOT>/development/frontend && npx vitest run src/__tests__/<feature>/ --reporter=verbose`
+- Run: `cd <REPO_ROOT>/development/frontend && npx vitest run src/__tests__/<feature>/`
 - Commit+push tests with implementation.
 - Loki will add E2E tests later — you own Vitest tests.
 - **NEVER write tests for monitor-ui (Odin's Throne) or odins-spear.** `development/monitor-ui/` and

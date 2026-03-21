@@ -74,7 +74,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - **Commit+push tests before running them:**
   git add -A && git commit -m 'wip: add tests for issue:<NUMBER>' && git push origin <BRANCH>
 - Run ALL Vitest tests (not just your feature tests):
-  `cd <REPO_ROOT>/development/frontend && npx vitest run --reporter=verbose`
+  `cd <REPO_ROOT>/development/frontend && npx vitest run`
 - Fix ALL failing tests — yours AND any pre-existing failures you find. Update todos.
 - Do NOT proceed until the FULL Vitest suite is green.
 - Do NOT write or run any Playwright E2E tests. Vitest only. E2E is on lockdown.

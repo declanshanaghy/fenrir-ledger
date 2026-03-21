@@ -147,8 +147,12 @@ All agents run tsc, build, AND the full Vitest suite before handoff.
 Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.
   cd /workspace/repo/development/frontend && pnpm run verify:tsc
   cd /workspace/repo/development/frontend && pnpm run verify:build
-  cd /workspace/repo/development/frontend && npx vitest run --reporter=verbose
-On failure: fix, commit+push, re-run that step. Repeat until green.
+  cd /workspace/repo/development/frontend && npx vitest run
+**Trust the exit code.** Exit 0 = all tests pass. Non-zero = failures.
+Do NOT grep vitest output for FAIL, do NOT parse ANSI escape codes.
+Just run the command and check whether it succeeded or failed.
+On failure: read the output to see which tests failed, fix them, commit+push, re-run.
+Repeat until the command exits 0.
 Do NOT proceed to handoff with ANY failing Vitest tests.
 **All verify steps MUST run in the foreground (blocking).** NEVER use `run_in_background`
 for tsc, build, or Vitest commands. You MUST confirm each step passes before proceeding
