@@ -62,14 +62,14 @@ function normaliseVerdict(raw: string): string {
 }
 
 /** Normalise a raw PR value — returns null for placeholder values */
-function normalisePr(raw: string | null): string | null {
+export function normalisePr(raw: string | null): string | null {
   if (!raw) return null;
   if (raw === "N/A" || raw === "none" || raw === "-") return null;
   return raw;
 }
 
 /** Extract summary bullets from the SUMMARY section of a canonical decree body */
-function extractSummary(body: string): string[] {
+export function extractSummary(body: string): string[] {
   const summaryMatch = body.match(/^SUMMARY:\s*\n((?:\s*[-*]\s*.+\n?)+)/m);
   if (!summaryMatch?.[1]) return [];
   return summaryMatch[1]
@@ -79,7 +79,7 @@ function extractSummary(body: string): string[] {
 }
 
 /** Convert a single CHECKS line into a DecreeCheck entry */
-function parseCheckLine(line: string): DecreeCheck {
+export function parseCheckLine(line: string): DecreeCheck {
   const cp = line.match(/^(.+?):\s*(.+)$/);
   if (cp) {
     return { name: cp[1]?.trim() ?? line, result: cp[2]?.trim() ?? "" };
@@ -88,7 +88,7 @@ function parseCheckLine(line: string): DecreeCheck {
 }
 
 /** Extract CHECKS entries from the CHECKS section of a canonical decree body */
-function extractCanonicalChecks(body: string): DecreeCheck[] {
+export function extractCanonicalChecks(body: string): DecreeCheck[] {
   const checksMatch = body.match(/^CHECKS:\s*\n([\s\S]*?)(?=^(?:SEAL|SIGNOFF):\s|᛭᛭᛭\s*END DECREE)/m);
   if (!checksMatch?.[1]) return [];
   return checksMatch[1]
@@ -99,7 +99,7 @@ function extractCanonicalChecks(body: string): DecreeCheck[] {
 }
 
 /** Parse the SEAL line into its three parts */
-function parseSealLine(sealLine: string | null): { sealAgent: string | null; sealRunes: string | null; sealTitle: string | null } {
+export function parseSealLine(sealLine: string | null): { sealAgent: string | null; sealRunes: string | null; sealTitle: string | null } {
   if (!sealLine) return { sealAgent: null, sealRunes: null, sealTitle: null };
   const parts = sealLine.split("·").map(p => p.trim());
   return {
