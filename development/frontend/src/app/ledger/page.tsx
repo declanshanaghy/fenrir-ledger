@@ -37,7 +37,7 @@ import { AuthGate } from "@/components/shared/AuthGate";
 import { KarlUpsellDialog, KARL_UPSELL_IMPORT } from "@/components/entitlement/KarlUpsellDialog";
 import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
 import { SignInNudge } from "@/components/layout/SignInNudge";
-import { initializeHousehold, getCards, getDeletedCards, saveCard, migrateIfNeeded } from "@/lib/storage";
+import { getCards, getDeletedCards, saveCard, migrateIfNeeded } from "@/lib/storage";
 import { track } from "@/lib/analytics/track";
 import type { Card } from "@/lib/types";
 
@@ -72,7 +72,6 @@ function DashboardPageContent() {
     }, 500);
 
     migrateIfNeeded();
-    initializeHousehold(householdId);
     // getCards() now returns ALL non-deleted cards including closed (Issue #352)
     const loaded = getCards(householdId);
     setCards(loaded);
