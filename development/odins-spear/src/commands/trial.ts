@@ -25,7 +25,7 @@ async function readTrialDoc(
   return snap.data() as { startDate: string; convertedDate?: string };
 }
 
-/** Write a startDate update to /households/{userId}/trial/status. Creates the doc if absent. */
+/** Write a startDate (and recalculated expiresAt) update to /households/{userId}/trial/status. Creates the doc if absent. */
 async function writeTrialStartDate(userId: string, startDate: string): Promise<void> {
   if (!firestoreClient) throw new Error("Firestore client not connected");
   const ref = firestoreClient
@@ -33,11 +33,14 @@ async function writeTrialStartDate(userId: string, startDate: string): Promise<v
     .doc(userId)
     .collection("trial")
     .doc("status");
+  const expiresAt = new Date(
+    new Date(startDate).getTime() + TRIAL_DURATION_DAYS * 86400000
+  ).toISOString();
   const snap = await ref.get();
   if (snap.exists) {
-    await ref.update({ startDate });
+    await ref.update({ startDate, expiresAt });
   } else {
-    await ref.set({ startDate });
+    await ref.set({ startDate, expiresAt });
   }
 }
 
@@ -50,19 +53,19 @@ export function registerTrialCommands(): void {
     name: "trial-adjust",
     desc: "Shift trial start date by +N / -N days (+N ages, -N restores)",
     subsystem: "trial",
-    tab: "users",
-    requiresContext: "trial",
+    tab: "households",
+    requiresContext: "household",
     needsInput: true,
     execute: async (ctx) => {
-      log.debug("trial-adjust execute called", { hasUserId: Boolean(ctx.selectedUserId), hasInput: Boolean(ctx.input) });
+      log.debug("trial-adjust execute called", { hasHouseholdId: Boolean(ctx.selectedHouseholdId), hasInput: Boolean(ctx.input) });
 
       if (!firestoreClient) {
         log.debug("trial-adjust execute: no Firestore client");
         return ["ERROR: Firestore client not connected"];
       }
-      if (!ctx.selectedUserId) {
-        log.debug("trial-adjust execute: no user selected");
-        return ["ERROR: No user selected — select a user first"];
+      if (!ctx.selectedHouseholdId) {
+        log.debug("trial-adjust execute: no household selected");
+        return ["ERROR: No household selected — select a household first"];
       }
       if (!ctx.input) {
         log.debug("trial-adjust execute: no day input");
@@ -75,7 +78,7 @@ export function registerTrialCommands(): void {
         return [`ERROR: Invalid day offset "${ctx.input}" — enter a non-zero integer (e.g. +5 or -3)`];
       }
 
-      const current = await readTrialDoc(ctx.selectedUserId);
+      const current = await readTrialDoc(ctx.selectedHouseholdId);
       const oldState = computeTrialState(current);
       const oldDesc = describeTrialState(oldState);
 
@@ -86,7 +89,7 @@ export function registerTrialCommands(): void {
         new Date(baseStart).getTime() - days * 86400000
       ).toISOString();
 
-      await writeTrialStartDate(ctx.selectedUserId, newStart);
+      await writeTrialStartDate(ctx.selectedHouseholdId, newStart);
 
       const newState = computeTrialState({ startDate: newStart });
       const newDesc = describeTrialState(newState);
