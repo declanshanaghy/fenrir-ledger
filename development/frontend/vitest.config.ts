@@ -10,6 +10,10 @@ export default defineConfig({
     maxWorkers: 4,
     testTimeout: 10000,
     hookTimeout: 5000,
+    reporters: ['default', 'html'],
+    outputFile: {
+      html: '../../quality/reports/test-report-vitest/index.html',
+    },
     coverage: {
       provider: 'v8',
       reportsDirectory: '../../quality/reports/coverage/vitest',
