@@ -27,6 +27,7 @@ import {
   TRIAL_CACHE_VERSION,
 } from "@/lib/trial-utils";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import { useAuthContext } from "@/contexts/AuthContext";
 import type { TrialStatus, TrialStatusResponse } from "@/lib/trial-utils";
 
 // ---------------------------------------------------------------------------
@@ -108,6 +109,9 @@ interface TrialStatusProviderProps {
 }
 
 export function TrialStatusProvider({ children }: TrialStatusProviderProps) {
+  const { status: authStatus } = useAuthContext();
+  const isAuthenticated = authStatus === "authenticated";
+
   const [data, setData] = useState<TrialStatusResponse>({
     remainingDays: 0,
     status: "none",
@@ -116,6 +120,14 @@ export function TrialStatusProvider({ children }: TrialStatusProviderProps) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchStatus = useCallback(async () => {
+    // Trial status is user-bound — anonymous users always have status "none".
+    // Skip the API call entirely; no fingerprint, no token needed.
+    if (!isAuthenticated) {
+      setData({ remainingDays: 0, status: "none" });
+      setIsLoading(false);
+      return;
+    }
+
     // Bust the module-level cache if the stored cache version differs from the
     // current expected version.
     const storedVersion =
@@ -133,7 +145,6 @@ export function TrialStatusProvider({ children }: TrialStatusProviderProps) {
 
     try {
       // Trial status is user-bound — requires auth token.
-      // Unauthenticated users receive { status: "none" } from the server.
       const token = await ensureFreshToken();
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -174,7 +185,7 @@ export function TrialStatusProvider({ children }: TrialStatusProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Register the provider's refresh fn so clearTrialStatusCache() can trigger
   // an immediate refetch from outside React.
@@ -188,17 +199,19 @@ export function TrialStatusProvider({ children }: TrialStatusProviderProps) {
   useEffect(() => {
     void fetchStatus();
 
-    // Set up periodic refresh every 4 minutes
-    intervalRef.current = setInterval(() => {
-      void fetchStatus();
-    }, REFRESH_INTERVAL_MS);
+    // Set up periodic refresh every 4 minutes (authenticated only)
+    if (isAuthenticated) {
+      intervalRef.current = setInterval(() => {
+        void fetchStatus();
+      }, REFRESH_INTERVAL_MS);
+    }
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [fetchStatus]);
+  }, [fetchStatus, isAuthenticated]);
 
   const value: TrialStatusContextValue = {
     remainingDays: data.remainingDays,
