@@ -56,6 +56,16 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: mockEnsureFreshToken,
 }));
 
+// TrialStatusProvider now requires AuthContext — mock as authenticated so fetch runs
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuthContext: () => ({
+    status: "authenticated",
+    session: null,
+    householdId: "test-household",
+    signOut: vi.fn(),
+  }),
+}));
+
 // requireAuth: status route returns "none" for unauthenticated; override per-test for auth.
 const mockRequireAuth = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/require-auth", () => ({

@@ -69,9 +69,6 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock("@/lib/trial-utils", () => ({
-  computeFingerprint: vi.fn().mockResolvedValue(null),
-}));
 
 vi.mock("@/lib/analytics/track", () => ({
   track: vi.fn(),

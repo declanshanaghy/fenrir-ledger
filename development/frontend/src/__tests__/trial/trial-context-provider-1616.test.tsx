@@ -25,6 +25,16 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn(() => Promise.resolve(null)),
 }));
 
+// Provider now requires AuthContext — mock as authenticated so fetch runs
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuthContext: () => ({
+    status: "authenticated",
+    session: null,
+    householdId: "test-household",
+    signOut: vi.fn(),
+  }),
+}));
+
 // ── Imports after mocks ───────────────────────────────────────────────────────
 
 import { useTrialStatus, clearTrialStatusCache } from "@/hooks/useTrialStatus";
