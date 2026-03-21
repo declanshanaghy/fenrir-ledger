@@ -4,9 +4,11 @@
  * Edit Card Page — /ledger/cards/[id]/edit
  *
  * Anonymous-first: accessible without a signed-in session.
- * Loads the card by ID from localStorage using the householdId from AuthContext
- * (works for both anonymous and authenticated users).
- * Redirects to /ledger if the card is not found.
+ * Loads the card by ID from localStorage using the resolved storage ID:
+ *   - Authenticated: householdId (session.user.sub)
+ *   - Anonymous: ANON_HOUSEHOLD_ID ("anon") — Issue #1671
+ *
+ * Redirects to /ledger only if the card is not found.
  *
  * See ADR-006 for the anonymous-first auth model.
  */
@@ -19,6 +21,7 @@ import {
   migrateIfNeeded,
   getCardById,
 } from "@/lib/storage";
+import { ANON_HOUSEHOLD_ID } from "@/lib/constants";
 import type { Card } from "@/lib/types";
 
 export default function EditCardPage() {
@@ -31,15 +34,11 @@ export default function EditCardPage() {
   useEffect(() => {
     if (status === "loading") return;
 
-    if (!householdId) {
-      // No householdId available — redirect to root as a safety fallback
-      router.replace("/ledger");
-      return;
-    }
-
     migrateIfNeeded();
 
-    const found = getCardById(householdId, params.id);
+    // Resolve effective storage ID: authenticated = sub, anonymous = "anon"
+    const effectiveId = householdId ?? ANON_HOUSEHOLD_ID;
+    const found = getCardById(effectiveId, params.id);
     if (!found) {
       router.replace("/ledger");
       return;

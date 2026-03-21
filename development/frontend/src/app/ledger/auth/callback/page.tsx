@@ -203,16 +203,14 @@ function AuthCallbackContent() {
         // Clean up PKCE transient data only after successful exchange.
         sessionStorage.removeItem(PKCE_SESSION_KEY);
 
-        // Silent merge: carry anonymous cards into the Google household
-        const { getAnonHouseholdId } = await import("@/lib/auth/household");
-        const { mergeAnonymousCards, isMergeComplete } = await import("@/lib/merge-anonymous");
+        // Silent merge: carry anonymous cards into the Google household.
+        // Issue #1671: reads from fixed "anon" key + legacy UUID key (backward compat).
+        // No tombstone check needed — anon storage is cleaned up during merge.
+        const { mergeAnonymousCards } = await import("@/lib/merge-anonymous");
 
-        const anonId = getAnonHouseholdId();
-        if (anonId && !isMergeComplete(anonId)) {
-          const result = mergeAnonymousCards(session.user.sub, anonId);
-          if (result.merged > 0) {
-            sessionStorage.setItem("fenrir:merge-result", JSON.stringify(result));
-          }
+        const result = mergeAnonymousCards(session.user.sub);
+        if (result.merged > 0) {
+          sessionStorage.setItem("fenrir:merge-result", JSON.stringify(result));
         }
 
         // Initialize trial for this Google account (issue #1637).

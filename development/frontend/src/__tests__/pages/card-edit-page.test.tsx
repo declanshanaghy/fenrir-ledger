@@ -1,8 +1,11 @@
 /**
  * Vitest tests for src/app/ledger/cards/[id]/edit/page.tsx
  *
- * Covers: loading state, redirect when card not found, redirect when no householdId,
- * renders CardForm when card found. Issue #1470
+ * Updated for Issue #1671: anonymous users (householdId=null) use the fixed
+ * "anon" key — they should NOT be redirected to /ledger.
+ *
+ * Covers: loading state, redirect when card not found, anonymous card lookup,
+ * renders CardForm when card found.
  */
 
 import { render, screen, waitFor } from "@testing-library/react";
@@ -26,7 +29,7 @@ vi.mock("@/hooks/useAuth", () => ({
     householdId: mockAuthHouseholdId,
     status: mockAuthStatus,
     data: null,
-    ensureHouseholdId: vi.fn(() => mockAuthHouseholdId ?? ""),
+    ensureHouseholdId: vi.fn(() => mockAuthHouseholdId ?? "anon"),
   }),
 }));
 
@@ -66,16 +69,35 @@ describe("EditCardPage", () => {
     expect(screen.getByText(/consulting the runes/i)).toBeInTheDocument();
   });
 
-  it("redirects to /ledger when householdId is null", async () => {
+  it("does NOT redirect for anonymous users (householdId=null) — looks up anon key", async () => {
+    // Issue #1671: null householdId = anonymous, NOT an error state.
+    // Anonymous users use ANON_HOUSEHOLD_ID ("anon") for lookup.
     mockAuthHouseholdId = null;
-    mockAuthStatus = "authenticated";
+    mockAuthStatus = "anonymous";
+    mockFoundCard = {
+      id: "card-123",
+      cardName: "Anon Card",
+      householdId: "anon",
+      status: "active",
+    } as Card;
+    render(<EditCardPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("card-form")).toBeInTheDocument();
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("redirects to /ledger when card is not found (authenticated user)", async () => {
+    mockFoundCard = null;
     render(<EditCardPage />);
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith("/ledger");
     });
   });
 
-  it("redirects to /ledger when card is not found", async () => {
+  it("redirects to /ledger when card is not found (anonymous user)", async () => {
+    mockAuthHouseholdId = null;
+    mockAuthStatus = "anonymous";
     mockFoundCard = null;
     render(<EditCardPage />);
     await waitFor(() => {

@@ -15,6 +15,17 @@ import { getRealmDescription } from "@/lib/realm-utils";
 export const STORAGE_KEY_PREFIX = "fenrir_ledger";
 
 /**
+ * Fixed household ID used for anonymous card storage.
+ * Anonymous users have no Google sub, so cards are stored under this sentinel.
+ * On sign-in, cards are re-scoped to the authenticated user's householdId.
+ *
+ * Storage key: fenrir_ledger:anon:cards
+ *
+ * See Issue #1671 for the anonymous card storage model.
+ */
+export const ANON_HOUSEHOLD_ID = "anon";
+
+/**
  * Global localStorage key names (not per-household).
  * Per-household keys are constructed dynamically in storage.ts using
  * `${STORAGE_KEY_PREFIX}:{householdId}:cards` and
