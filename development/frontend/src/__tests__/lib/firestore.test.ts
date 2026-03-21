@@ -135,7 +135,7 @@ describe("FirestoreUser shape", () => {
 // ─── FirestoreHousehold type shape ────────────────────────────────────────────
 
 describe("FirestoreHousehold shape", () => {
-  it("accepts a valid household with free tier", () => {
+  it("accepts a valid household (no Stripe fields — they live in subcollection)", () => {
     const hh: FirestoreHousehold = {
       id: "hh-uuid",
       name: "The Shanaghys",
@@ -143,15 +143,15 @@ describe("FirestoreHousehold shape", () => {
       memberIds: ["user_abc"],
       inviteCode: "X7K2MQ",
       inviteCodeExpiresAt: "2026-04-16T00:00:00.000Z",
-      tier: "free",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
-    expect(hh.tier).toBe("free");
     expect(hh.memberIds).toHaveLength(1);
+    // tier lives in /households/{id}/stripe/subscription now (issue #1648)
+    expect((hh as Record<string, unknown>).tier).toBeUndefined();
   });
 
-  it("accepts karl tier", () => {
+  it("accepts a multi-member household", () => {
     const hh: FirestoreHousehold = {
       id: "hh-uuid",
       name: "The Karls",
@@ -159,11 +159,9 @@ describe("FirestoreHousehold shape", () => {
       memberIds: ["user_abc", "user_xyz", "user_def"],
       inviteCode: "A3B4C5",
       inviteCodeExpiresAt: "2026-04-16T00:00:00.000Z",
-      tier: "karl",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
-    expect(hh.tier).toBe("karl");
     expect(hh.memberIds).toHaveLength(3);
   });
 });
@@ -337,7 +335,6 @@ describe("getHousehold", () => {
       memberIds: ["user_abc"],
       inviteCode: "X7K2MQ",
       inviteCodeExpiresAt: "2026-04-16T00:00:00.000Z",
-      tier: "free",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
@@ -571,7 +568,8 @@ describe("ensureSoloHousehold", () => {
     expect(result.household.ownerId).toBe("user_new");
     expect(result.household.memberIds).toEqual(["user_new"]);
     expect(result.household.memberIds).toHaveLength(1);
-    expect(result.household.tier).toBe("free");
+    // tier lives in /households/{id}/stripe/subscription now (issue #1648)
+    expect((result.household as Record<string, unknown>).tier).toBeUndefined();
     expect(result.household.name).toBe("New User's Household");
     expect(result.household.inviteCode).toHaveLength(6);
 
@@ -598,7 +596,6 @@ describe("ensureSoloHousehold", () => {
       memberIds: ["user_existing"],
       inviteCode: "ABCDEF",
       inviteCodeExpiresAt: "2026-04-01T00:00:00.000Z",
-      tier: "free",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
@@ -762,7 +759,7 @@ describe("ensureSoloHousehold", () => {
     expect(result.user.householdId).toBe(result.household.id);
   });
 
-  it("household starts on free tier with no Stripe fields", async () => {
+  it("household has no Stripe fields — they live in stripe subcollection (issue #1648)", async () => {
     const mockBatch = {
       set: vi.fn(),
       commit: vi.fn().mockResolvedValue(undefined),
@@ -788,11 +785,11 @@ describe("ensureSoloHousehold", () => {
       displayName: "New User",
     });
 
-    // New households start free — Stripe fields not present
-    expect(result.household.tier).toBe("free");
-    expect(result.household.stripeCustomerId).toBeUndefined();
-    expect(result.household.stripeSubscriptionId).toBeUndefined();
-    expect(result.household.stripeStatus).toBeUndefined();
+    // Household has no Stripe fields — they live in /households/{id}/stripe/subscription (issue #1648)
+    expect((result.household as Record<string, unknown>).tier).toBeUndefined();
+    expect((result.household as Record<string, unknown>).stripeCustomerId).toBeUndefined();
+    expect((result.household as Record<string, unknown>).stripeSubscriptionId).toBeUndefined();
+    expect((result.household as Record<string, unknown>).stripeStatus).toBeUndefined();
   });
 });
 
@@ -805,8 +802,18 @@ describe("FIRESTORE_PATHS — no entitlement path (issue #1633)", () => {
     expect((FIRESTORE_PATHS as Record<string, unknown>).entitlement).toBeUndefined();
   });
 
-  it("has exactly the expected path builders: user, household, cards, card", () => {
+  it("has the expected path builders including stripeSubscription (issue #1648) and trial (issue #1634)", () => {
     const keys = Object.keys(FIRESTORE_PATHS).sort();
-    expect(keys).toEqual(["card", "cards", "household", "user"]);
+    expect(keys).toEqual(["card", "cards", "household", "stripeSubscription", "trial", "user"]);
+  });
+
+  it("builds stripe subcollection path correctly", () => {
+    expect(FIRESTORE_PATHS.stripeSubscription("hh-abc")).toBe(
+      "households/hh-abc/stripe/subscription"
+    );
+  });
+
+  it("builds trial subcollection path correctly (issue #1634)", () => {
+    expect(FIRESTORE_PATHS.trial("user-abc")).toBe("households/user-abc/trial");
   });
 });

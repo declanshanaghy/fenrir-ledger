@@ -1,53 +1,25 @@
 /**
  * POST /api/trial/init
  *
- * Initializes a trial for a browser fingerprint. Called on first card creation
- * (import or manual add). Idempotent — if a trial already exists for this
- * fingerprint, returns the existing trial data without modification.
+ * Initializes a trial for the authenticated user at /households/{userId}/trial.
+ * Idempotent for active or converted trials — returns existing data without modification.
+ * Returns 409 if the trial has already expired (restart blocked).
  *
- * Supports anonymous access — fingerprint is the sole identifier (Issue #1413).
- * No Bearer token required; rate-limited by IP to prevent abuse.
+ * Requires authentication (Bearer id_token).
  *
- * When a Bearer id_token is present (signed-in user), the Google `sub` is
- * extracted and stored on the trial record + a reverse-lookup key is written
- * so the trial can be found by user ID in admin tools.
+ * Request body: {} (empty — userId comes from auth token)
  *
- * Request body: { fingerprint: string } (UUID v4 or legacy 64-char SHA-256 hex)
- *
- * Response: { startDate: string, isNew: boolean }
- *
- * @see plans/001-trial.md
+ * Response: { startDate: string, expiresAt: string, isNew: boolean }
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth/require-auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
-import { isValidFingerprint } from "@/lib/trial-utils";
-import { getTrial, initTrial } from "@/lib/kv/trial-store";
-
-/**
- * Extracts the Google `sub` claim from a Bearer id_token without full
- * signature verification. Safe for internal linkage — the value is only
- * used to associate a trial with a user in admin tooling, not for auth.
- */
-function extractSubFromBearer(authHeader: string | null): string | null {
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  const token = authHeader.slice(7);
-  const parts = token.split(".");
-  if (parts.length !== 3) return null;
-  try {
-    const payload = JSON.parse(Buffer.from(parts[1]!, "base64url").toString("utf-8")) as Record<string, unknown>;
-    return typeof payload.sub === "string" ? payload.sub : null;
-  } catch {
-    return null;
-  }
-}
+import { initTrial, TrialRestartError } from "@/lib/kv/trial-store";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/trial/init called");
-
-  // Extract userId from Bearer token when present (signed-in user).
-  const userId = extractSubFromBearer(request.headers.get("authorization")) ?? undefined;
 
   // Rate limit by IP
   const ip =
@@ -67,64 +39,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Parse and validate body
-  let fingerprint: string;
+  // Require authentication — userId comes from auth token
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
+  const userId = auth.user.sub;
+
+  // Initialize trial (idempotent for active/converted; throws on expired restart)
   try {
-    const body: unknown = await request.json();
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      !("fingerprint" in body) ||
-      typeof (body as Record<string, unknown>).fingerprint !== "string"
-    ) {
-      return NextResponse.json(
-        { error: "invalid_body", error_description: "Body must include { fingerprint: string }." },
-        { status: 400 },
-      );
-    }
-    fingerprint = (body as Record<string, unknown>).fingerprint as string;
-  } catch {
+    const { trial, isNew } = await initTrial(userId);
+    log.debug("POST /api/trial/init returning", {
+      status: 200,
+      isNew,
+      startDate: trial.startDate,
+    });
     return NextResponse.json(
-      { error: "invalid_json", error_description: "Request body must be valid JSON." },
-      { status: 400 },
-    );
-  }
-
-  if (!isValidFingerprint(fingerprint)) {
-    log.debug("POST /api/trial/init returning", { status: 400, error: "invalid_fingerprint" });
-    return NextResponse.json(
-      {
-        error: "invalid_fingerprint",
-        error_description: "Fingerprint must be a UUID v4 or 64-character lowercase hex string.",
-      },
-      { status: 400 },
-    );
-  }
-
-  // Check if trial already exists
-  const existing = await getTrial(fingerprint);
-  if (existing) {
-    log.debug("POST /api/trial/init returning", { status: 200, isNew: false, startDate: existing.startDate });
-    // Link userId even on existing trials (anonymous → authenticated upgrade).
-    if (userId && !existing.userId) {
-      const { linkTrialToUser } = await import("@/lib/kv/trial-store");
-      void linkTrialToUser(fingerprint, userId);
-    }
-    return NextResponse.json(
-      { startDate: existing.startDate, isNew: false },
-      { headers: { "Cache-Control": "no-store" } },
-    );
-  }
-
-  // Initialize new trial
-  try {
-    const trial = await initTrial(fingerprint, userId);
-    log.debug("POST /api/trial/init returning", { status: 200, isNew: true, startDate: trial.startDate });
-    return NextResponse.json(
-      { startDate: trial.startDate, isNew: true },
+      { startDate: trial.startDate, expiresAt: trial.expiresAt, isNew },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (err) {
+    if (err instanceof TrialRestartError) {
+      log.debug("POST /api/trial/init returning", { status: 409, error: "trial_expired" });
+      return NextResponse.json(
+        {
+          error: "trial_expired",
+          message: "Contact customer service",
+        },
+        { status: 409 },
+      );
+    }
     const message = err instanceof Error ? err.message : String(err);
     log.error("POST /api/trial/init failed", { error: message });
     return NextResponse.json(

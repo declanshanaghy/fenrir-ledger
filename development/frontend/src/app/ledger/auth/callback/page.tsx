@@ -62,7 +62,7 @@ function decodeIdToken(idToken: string): IdTokenClaims {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-type CallbackStatus = "exchanging" | "success" | "error";
+type CallbackStatus = "exchanging" | "success" | "error" | "trial-expired";
 
 function AuthCallbackContent() {
   const searchParams = useSearchParams();
@@ -200,9 +200,6 @@ function AuthCallbackContent() {
           track("auth-login");
         }
 
-        // Trial initialization is NOT done on sign-in (issue #1627).
-        // Trial starts exclusively when the first card is added (CardForm / handleConfirmImport).
-
         // Clean up PKCE transient data only after successful exchange.
         sessionStorage.removeItem(PKCE_SESSION_KEY);
 
@@ -216,6 +213,31 @@ function AuthCallbackContent() {
           if (result.merged > 0) {
             sessionStorage.setItem("fenrir:merge-result", JSON.stringify(result));
           }
+        }
+
+        // Initialize trial for this Google account (issue #1637).
+        // Idempotent for active/converted trials.
+        // On 409 (expired restart blocked): show message — user continues in Thrall tier.
+        try {
+          const trialResponse = await fetch("/api/trial/init", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.id_token}`,
+            },
+            body: JSON.stringify({}),
+          });
+          if (trialResponse.status === 409) {
+            if (isMountedRef.current) {
+              setErrorMessage(
+                "Your free trial has ended. Contact customer service to discuss options."
+              );
+              setCallbackStatus("trial-expired");
+            }
+            return;
+          }
+        } catch {
+          // Trial init is best-effort — don't block login flow
         }
 
         // Don't show the success state - keep the exchanging state visible
@@ -273,6 +295,23 @@ function AuthCallbackContent() {
               className="mt-2 text-base text-gold hover:text-primary hover:brightness-110 font-heading tracking-wide underline underline-offset-4"
             >
               Return to the gate
+            </a>
+          </>
+        )}
+
+        {callbackStatus === "trial-expired" && (
+          <>
+            <p className="font-heading text-base text-destructive uppercase tracking-wide">
+              Trial Ended
+            </p>
+            <p className="text-muted-foreground font-body text-sm max-w-xs">
+              {errorMessage}
+            </p>
+            <a
+              href="/ledger"
+              className="mt-2 text-base text-gold hover:text-primary hover:brightness-110 font-heading tracking-wide underline underline-offset-4"
+            >
+              Continue to the ledger
             </a>
           </>
         )}

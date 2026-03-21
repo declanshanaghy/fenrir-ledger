@@ -226,6 +226,122 @@ function findLowCoverage(perFile, maxPct = 20, minLines = 10) {
     .slice(0, 12);
 }
 
+// ── Complexity analysis section ──────────────────────────────────────────────
+
+function renderComplexitySection(data) {
+  const complexityIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`;
+
+  if (!data || !data.summary) {
+    return `
+  <!-- Complexity Analysis -->
+  <div class="section">
+    <div class="section-header">${complexityIcon}<h2>Complexity Analysis</h2></div>
+    <p style="color:var(--stone);font-size:0.85rem">No complexity data available. Run <code>node quality/scripts/complexity-analysis.mjs</code> to generate.</p>
+  </div>`;
+  }
+
+  const { summary, functions } = data;
+  const top15 = functions.slice(0, 15);
+  const distTotal = summary.totalFunctions || 1;
+  const barPct = (count) => ((count / distTotal) * 100).toFixed(1);
+  const riskCls = (cat) => cat === "LOW" ? "hi" : cat === "MODERATE" ? "med" : "lo";
+  const riskLabel = (cat) => cat.replace("_", " ");
+
+  let healthVerdict, healthColor;
+  if (summary.lowPct >= 80) {
+    healthVerdict = "Excellent — well-factored, testable codebase";
+    healthColor = "var(--green)";
+  } else if (summary.lowPct >= 60) {
+    healthVerdict = "Good — room to simplify HIGH/VERY HIGH functions";
+    healthColor = "var(--gold)";
+  } else {
+    healthVerdict = "Needs attention — too many complex, hard-to-test functions";
+    healthColor = "var(--red)";
+  }
+
+  let html = `
+  <!-- Complexity Analysis -->
+  <div class="section">
+    <div class="section-header">${complexityIcon}<h2>Complexity Analysis</h2></div>
+    <p style="color:var(--stone);font-size:0.85rem;margin-bottom:1rem">
+      Cyclomatic complexity per function — measures independent code paths. Lower is better.
+      <a href="complexity/index.html" style="color:var(--gold)">Full report</a>
+    </p>
+
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat-card gold"><div class="value">${summary.totalFunctions}</div><div class="label">Functions</div></div>
+      <div class="stat-card ${summary.avgComplexity <= 5 ? 'green' : summary.avgComplexity <= 10 ? 'gold' : 'red'}"><div class="value">${summary.avgComplexity}</div><div class="label">Avg Complexity</div></div>
+      <div class="stat-card gold"><div class="value">${summary.medianComplexity}</div><div class="label">Median</div></div>
+      <div class="stat-card ${summary.maxComplexity <= 10 ? 'gold' : 'red'}"><div class="value">${summary.maxComplexity}</div><div class="label">Max</div></div>
+    </div>
+
+    <div style="margin:1.5rem 0">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin:0.4rem 0">
+        <span style="width:90px;text-align:right;font-size:0.8rem;font-weight:600;color:var(--green)">LOW (1-5)</span>
+        <div style="flex:1;background:var(--surface2);height:20px;border-radius:4px;overflow:hidden">
+          <div style="width:${barPct(summary.distribution.LOW)}%;height:100%;background:var(--green);border-radius:4px"></div>
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;min-width:70px">${summary.distribution.LOW} (${(summary.distribution.LOW / distTotal * 100).toFixed(0)}%)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin:0.4rem 0">
+        <span style="width:90px;text-align:right;font-size:0.8rem;font-weight:600;color:var(--gold)">MOD (6-10)</span>
+        <div style="flex:1;background:var(--surface2);height:20px;border-radius:4px;overflow:hidden">
+          <div style="width:${barPct(summary.distribution.MODERATE)}%;height:100%;background:var(--gold);border-radius:4px"></div>
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;min-width:70px">${summary.distribution.MODERATE} (${(summary.distribution.MODERATE / distTotal * 100).toFixed(0)}%)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin:0.4rem 0">
+        <span style="width:90px;text-align:right;font-size:0.8rem;font-weight:600;color:var(--red)">HIGH (11-20)</span>
+        <div style="flex:1;background:var(--surface2);height:20px;border-radius:4px;overflow:hidden">
+          <div style="width:${barPct(summary.distribution.HIGH)}%;height:100%;background:var(--red);border-radius:4px"></div>
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;min-width:70px">${summary.distribution.HIGH} (${(summary.distribution.HIGH / distTotal * 100).toFixed(0)}%)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin:0.4rem 0">
+        <span style="width:90px;text-align:right;font-size:0.8rem;font-weight:600;color:var(--red);font-weight:700">CRIT (21+)</span>
+        <div style="flex:1;background:var(--surface2);height:20px;border-radius:4px;overflow:hidden">
+          <div style="width:${barPct(summary.distribution.VERY_HIGH)}%;height:100%;background:#dc2626;border-radius:4px"></div>
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;min-width:70px">${summary.distribution.VERY_HIGH} (${(summary.distribution.VERY_HIGH / distTotal * 100).toFixed(0)}%)</span>
+      </div>
+    </div>
+
+    <h3 style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.08em;margin:1.5rem 0 0.75rem">Most Complex Functions (Top 15)</h3>
+    <table>
+      <thead><tr><th>#</th><th>Function</th><th>File</th><th>Line</th><th>Complexity</th><th>Risk</th></tr></thead>
+      <tbody>
+${top15.map((f, i) => {
+  const shortFile = f.file.replace("development/frontend/src/", "");
+  return `        <tr>
+          <td>${i + 1}</td>
+          <td><code>${f.function}</code></td>
+          <td><code>${shortFile}</code></td>
+          <td>${f.line}</td>
+          <td class="${riskCls(f.category)}"><strong>${f.complexity}</strong></td>
+          <td class="${riskCls(f.category)}">${riskLabel(f.category)}</td>
+        </tr>`;
+}).join("\n")}
+      </tbody>
+    </table>
+
+    <h3 style="color:var(--gold);font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.08em;margin:1.5rem 0 0.75rem">Recommendations</h3>
+${summary.distribution.VERY_HIGH > 0 ? `    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem 1.25rem;margin:0.5rem 0">
+      <div style="font-weight:700;font-size:0.85rem;color:var(--red);margin-bottom:0.3rem">Critical: ${summary.distribution.VERY_HIGH} function(s) with complexity &gt; 20</div>
+      <div style="font-size:0.8rem;color:var(--stone)">These functions have too many decision paths to test effectively. Break them into smaller, focused functions with a single responsibility.</div>
+    </div>` : ""}
+${summary.distribution.HIGH > 0 ? `    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem 1.25rem;margin:0.5rem 0">
+      <div style="font-weight:700;font-size:0.85rem;color:var(--red);margin-bottom:0.3rem">${summary.distribution.HIGH} function(s) with complexity 11&ndash;20</div>
+      <div style="font-size:0.8rem;color:var(--stone)">Review for testability. Consider extracting conditional logic into helper functions or using early returns to reduce nesting.</div>
+    </div>` : ""}
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem 1.25rem;margin:0.5rem 0">
+      <div style="font-weight:700;font-size:0.85rem;color:${healthColor};margin-bottom:0.3rem">Overall: ${summary.lowPct.toFixed(0)}% of functions are LOW complexity</div>
+      <div style="font-size:0.8rem;color:var(--stone)">${healthVerdict}</div>
+    </div>
+  </div>`;
+
+  return html;
+}
+
 function renderOverlapSection(twins, clusters, overTested, lowCoverage) {
   const circleIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><circle cx="9" cy="9" r="6"/><circle cx="15" cy="15" r="6"/></svg>`;
   const warnIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
@@ -402,6 +518,16 @@ async function main() {
   const overTested = findOverTested(perFile);
   const lowCoverage = findLowCoverage(perFile);
   const overlapSectionHtml = renderOverlapSection(lokiTwins, issueClusters, overTested, lowCoverage);
+
+  // Complexity analysis — read from pre-generated JSON if available
+  const complexityJsonPath = path.join(REPO_ROOT, "quality/reports/complexity/complexity-report.json");
+  let complexityData = null;
+  if (existsSync(complexityJsonPath)) {
+    try {
+      complexityData = JSON.parse(readFileSync(complexityJsonPath, "utf-8"));
+    } catch { /* ignore parse errors */ }
+  }
+  const complexitySectionHtml = renderComplexitySection(complexityData);
 
   const lcovVitest = parseLcov(path.join(COVERAGE_DIR, "vitest/lcov.info"));
   const lcovPlaywright = parseLcov(path.join(COVERAGE_DIR, "playwright/lcov.info"));
@@ -703,6 +829,8 @@ async function main() {
   </div>
 
   ${overlapSectionHtml}
+
+  ${complexitySectionHtml}
 
   <!-- Test Reports -->
   <div class="section">

@@ -97,6 +97,7 @@ Every run automatically generates `quality/reports/quality-report.html` via `qua
 
 - **Test inventory** — all test files broken down by category (unit, hook, component, API/route, E2E) with file and test counts
 - **Test quality analysis** — bullshit test detection: vacuous assertions, infra-YAML tests, CSS string tests, source file content assertions, static page copy tests
+- **Complexity analysis** — cyclomatic complexity per function with risk categorization (LOW/MODERATE/HIGH/VERY HIGH), distribution chart, top 15 most complex functions, and auto-generated recommendations
 - **Coverage summary** — lines/functions/branches for Vitest, Playwright, and Combined, parsed directly from LCOV files with correct numbers
 - **Overlapping coverage** — automatically detected loki twin pairs, issue-numbered cluster files, and over-tested sources (BUILT-IN, no manual step needed)
 - **Coverage gaps** — files below 20% coverage with >10 lines, sorted by coverage ascending, with risk labels (BUILT-IN)
@@ -107,6 +108,21 @@ Can also be regenerated standalone (does NOT re-run tests, uses existing LCOV):
 ```bash
 node quality/scripts/quality-report-html.mjs
 ```
+
+### Complexity analysis (standalone)
+
+Run cyclomatic complexity analysis independently (no tests needed):
+
+```bash
+node quality/scripts/complexity-analysis.mjs
+```
+
+Outputs:
+- `quality/reports/complexity/complexity-report.json` — machine-readable per-function data
+- `quality/reports/complexity/index.html` — standalone Fenrir-styled complexity report
+
+The complexity data is automatically included in `quality-report.html` when available.
+Risk categories: LOW (1-5), MODERATE (6-10), HIGH (11-20), VERY HIGH (21+).
 
 ---
 

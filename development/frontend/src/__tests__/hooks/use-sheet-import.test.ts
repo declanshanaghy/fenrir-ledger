@@ -17,12 +17,8 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn().mockResolvedValue("mock-token"),
 }));
 
-// Mock trial-utils — avoids WebCrypto in happy-dom (added by #892)
+// Mock trial-utils — keeps constants available to any transitive import
 vi.mock("@/lib/trial-utils", () => ({
-  computeFingerprint: vi.fn().mockResolvedValue("a".repeat(64)),
-  isValidFingerprint: vi.fn((fp: string) => /^[0-9a-f]{64}$/.test(fp)),
-  getOrCreateDeviceId: vi.fn().mockReturnValue("mock-device-id"),
-  LS_DEVICE_ID: "fenrir:device-id",
   LS_TRIAL_START_TOAST_SHOWN: "fenrir:trial-start-toast-shown",
   LS_TRIAL_DAY15_NUDGE_SHOWN: "fenrir:trial-day15-nudge-shown",
   LS_TRIAL_EXPIRY_MODAL_SHOWN: "fenrir:trial-expiry-modal-shown",

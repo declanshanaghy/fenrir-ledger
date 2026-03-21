@@ -48,9 +48,6 @@ import { toast } from "sonner";
 import type { Card, CardStatus } from "@/lib/types";
 import { saveCard, deleteCard, closeCard, getCards } from "@/lib/storage";
 import { checkMilestone } from "@/lib/milestone-utils";
-import { LS_TRIAL_START_TOAST_SHOWN, computeFingerprint } from "@/lib/trial-utils";
-import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
-import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { canAddCard } from "@/lib/entitlement/card-limit";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
@@ -351,41 +348,6 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
           });
         }
 
-        // Trial start toast — fires once on first card creation (Issue #621)
-        const toastShown = localStorage.getItem(LS_TRIAL_START_TOAST_SHOWN);
-        if (!toastShown) {
-          localStorage.setItem(LS_TRIAL_START_TOAST_SHOWN, "true");
-
-          // Initialize trial via API (idempotent — safe to call multiple times)
-          // Supports anonymous users — no auth token required (Issue #1413)
-          void (async () => {
-            try {
-              const fingerprint = await computeFingerprint();
-              if (fingerprint) {
-                const token = await ensureFreshToken();
-                const headers: Record<string, string> = {
-                  "Content-Type": "application/json",
-                };
-                if (token) {
-                  headers["Authorization"] = `Bearer ${token}`;
-                }
-                await fetch("/api/trial/init", {
-                  method: "POST",
-                  headers,
-                  body: JSON.stringify({ fingerprint }),
-                });
-                // Clear trial status cache so badge picks up new state
-                clearTrialStatusCache();
-              }
-            } catch {
-              // Trial init is best-effort — don't block card creation
-            }
-          })();
-
-          toast("Your 30-day trial has begun — explore all features", {
-            duration: 8000,
-          });
-        }
       }
 
 

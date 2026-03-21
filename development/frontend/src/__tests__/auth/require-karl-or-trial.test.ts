@@ -4,7 +4,7 @@
  * Tests the import entitlement guard that allows Karl subscribers OR
  * active trial users to access Google Sheets import (#892).
  *
- * All external dependencies (getStripeEntitlement, getTrial, initTrial,
+ * All external dependencies (getStripeEntitlement, getTrial,
  * computeTrialStatus) are mocked via vi.mock.
  *
  * @see src/lib/auth/require-karl-or-trial.ts
@@ -25,28 +25,29 @@ vi.mock("@/lib/kv/entitlement-store", () => ({
   getStripeEntitlement: vi.fn(),
 }));
 
-vi.mock("@/lib/kv/trial-store", () => ({
-  getTrial: vi.fn(),
-  initTrial: vi.fn(),
-  computeTrialStatus: vi.fn(),
-}));
+vi.mock("@/lib/kv/trial-store", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/kv/trial-store")>();
+  return {
+    ...actual,
+    getTrial: vi.fn(),
+    computeTrialStatus: vi.fn(),
+  };
+});
 
-vi.mock("@/lib/trial-utils", () => ({
-  isValidFingerprint: vi.fn((fp: string) => /^[0-9a-f]{64}$/.test(fp)),
-}));
+// trial-utils: isValidFingerprint removed in #1634 — requireKarlOrTrial no longer
+// checks fingerprints; it uses user.sub directly.
+vi.mock("@/lib/trial-utils", () => ({}));
 
 vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), error: vi.fn() },
 }));
 
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
-import { getTrial, initTrial, computeTrialStatus } from "@/lib/kv/trial-store";
+import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const VALID_FINGERPRINT = "a".repeat(64); // 64 lowercase hex chars
 
 const KARL_USER: VerifiedUser = {
   sub: "google-sub-karl",
@@ -74,16 +75,16 @@ const KARL_ENTITLEMENT = {
 
 const ACTIVE_TRIAL: StoredTrial = {
   startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+  expiresAt: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days from now
 };
 
 /**
- * Creates a minimal NextRequest mock with specified headers.
+ * Creates a minimal NextRequest mock.
  */
-function makeRequest(headers: Record<string, string> = {}): NextRequest {
-  const headerMap = new Map(Object.entries(headers));
+function makeRequest(): NextRequest {
   return {
     headers: {
-      get: (name: string) => headerMap.get(name.toLowerCase()) ?? null,
+      get: (_name: string) => null,
     },
   } as unknown as NextRequest;
 }
@@ -110,7 +111,7 @@ describe("requireKarlOrTrial", () => {
     expect(getTrial).not.toHaveBeenCalled();
   });
 
-  it("returns ok:true for Karl subscriber even without fingerprint header", async () => {
+  it("returns ok:true for Karl subscriber without any trial", async () => {
     vi.mocked(getStripeEntitlement).mockResolvedValue(KARL_ENTITLEMENT);
 
     const result = await requireKarlOrTrial(KARL_USER, makeRequest());
@@ -127,49 +128,30 @@ describe("requireKarlOrTrial", () => {
     vi.mocked(getTrial).mockResolvedValue(ACTIVE_TRIAL);
     vi.mocked(computeTrialStatus).mockReturnValue({ remainingDays: 25, status: "active" });
 
-    const result = await requireKarlOrTrial(
-      THRALL_USER,
-      makeRequest({ "x-trial-fingerprint": VALID_FINGERPRINT }),
-    );
+    const result = await requireKarlOrTrial(THRALL_USER, makeRequest());
 
     expect(result.ok).toBe(true);
-    expect(getTrial).toHaveBeenCalledWith(VALID_FINGERPRINT);
+    // Function uses user.sub as trial key (no fingerprint)
+    expect(getTrial).toHaveBeenCalledWith(THRALL_USER.sub);
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Trial auto-init (trial starts on sign-up, #892)
+  // No trial — blocked (no auto-init since #1635)
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("auto-initializes trial when fingerprint is valid but no trial exists, then allows access", async () => {
+  it("returns 402 when no trial exists and user is not Karl", async () => {
     vi.mocked(getStripeEntitlement).mockResolvedValue(null);
     vi.mocked(getTrial).mockResolvedValue(null);
-    vi.mocked(initTrial).mockResolvedValue(ACTIVE_TRIAL);
-    vi.mocked(computeTrialStatus).mockReturnValue({ remainingDays: 30, status: "active" });
-
-    const result = await requireKarlOrTrial(
-      THRALL_USER,
-      makeRequest({ "x-trial-fingerprint": VALID_FINGERPRINT }),
-    );
-
-    expect(result.ok).toBe(true);
-    expect(initTrial).toHaveBeenCalledWith(VALID_FINGERPRINT);
-  });
-
-  it("returns 402 if auto-init fails and trial cannot be created", async () => {
-    vi.mocked(getStripeEntitlement).mockResolvedValue(null);
-    vi.mocked(getTrial).mockResolvedValue(null);
-    vi.mocked(initTrial).mockRejectedValue(new Error("Redis timeout"));
     vi.mocked(computeTrialStatus).mockReturnValue({ remainingDays: 0, status: "none" });
 
-    const result = await requireKarlOrTrial(
-      THRALL_USER,
-      makeRequest({ "x-trial-fingerprint": VALID_FINGERPRINT }),
-    );
+    const result = await requireKarlOrTrial(THRALL_USER, makeRequest());
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.response.status).toBe(402);
     }
+    // No auto-init — initTrial must NOT be called
+    expect(getTrial).toHaveBeenCalledWith(THRALL_USER.sub);
   });
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -180,13 +162,11 @@ describe("requireKarlOrTrial", () => {
     vi.mocked(getStripeEntitlement).mockResolvedValue(null);
     vi.mocked(getTrial).mockResolvedValue({
       startDate: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     });
     vi.mocked(computeTrialStatus).mockReturnValue({ remainingDays: 0, status: "expired" });
 
-    const result = await requireKarlOrTrial(
-      THRALL_USER,
-      makeRequest({ "x-trial-fingerprint": VALID_FINGERPRINT }),
-    );
+    const result = await requireKarlOrTrial(THRALL_USER, makeRequest());
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -205,14 +185,12 @@ describe("requireKarlOrTrial", () => {
     });
     vi.mocked(getTrial).mockResolvedValue({
       startDate: "2024-01-01T00:00:00Z",
+      expiresAt: "2024-01-31T00:00:00Z",
       convertedDate: "2024-01-10T00:00:00Z",
     });
     vi.mocked(computeTrialStatus).mockReturnValue({ remainingDays: 0, status: "converted" });
 
-    const result = await requireKarlOrTrial(
-      THRALL_USER,
-      makeRequest({ "x-trial-fingerprint": VALID_FINGERPRINT }),
-    );
+    const result = await requireKarlOrTrial(THRALL_USER, makeRequest());
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -221,11 +199,16 @@ describe("requireKarlOrTrial", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // No fingerprint header — not Karl — blocked
+  // Expired trial — full response check
   // ═══════════════════════════════════════════════════════════════════════
 
-  it("returns 402 when no fingerprint header is present and user is not Karl", async () => {
+  it("returns 402 when trial is expired and user has no active Karl subscription", async () => {
     vi.mocked(getStripeEntitlement).mockResolvedValue(null);
+    vi.mocked(getTrial).mockResolvedValue({
+      startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+    vi.mocked(computeTrialStatus).mockReturnValue({ remainingDays: 0, status: "expired" });
 
     const result = await requireKarlOrTrial(THRALL_USER, makeRequest());
 
@@ -237,26 +220,7 @@ describe("requireKarlOrTrial", () => {
       expect(body.required_tier).toBe("karl");
       expect(body.current_tier).toBe("thrall");
     }
-    expect(getTrial).not.toHaveBeenCalled();
-  });
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // Invalid fingerprint — not Karl — blocked (no trial lookup)
-  // ═══════════════════════════════════════════════════════════════════════
-
-  it("returns 402 and skips trial check for invalid fingerprint format", async () => {
-    vi.mocked(getStripeEntitlement).mockResolvedValue(null);
-
-    const result = await requireKarlOrTrial(
-      THRALL_USER,
-      makeRequest({ "x-trial-fingerprint": "not-a-valid-fingerprint" }),
-    );
-
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.response.status).toBe(402);
-    }
-    expect(getTrial).not.toHaveBeenCalled();
+    expect(getTrial).toHaveBeenCalledWith(THRALL_USER.sub);
   });
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -265,6 +229,8 @@ describe("requireKarlOrTrial", () => {
 
   it("402 response includes correct error shape", async () => {
     vi.mocked(getStripeEntitlement).mockResolvedValue(null);
+    vi.mocked(getTrial).mockResolvedValue(null);
+    vi.mocked(computeTrialStatus).mockReturnValue({ remainingDays: 0, status: "none" });
 
     const result = await requireKarlOrTrial(THRALL_USER, makeRequest());
 
@@ -293,10 +259,7 @@ describe("requireKarlOrTrial", () => {
     vi.mocked(getTrial).mockResolvedValue(ACTIVE_TRIAL);
     vi.mocked(computeTrialStatus).mockReturnValue({ remainingDays: 10, status: "active" });
 
-    const result = await requireKarlOrTrial(
-      THRALL_USER,
-      makeRequest({ "x-trial-fingerprint": VALID_FINGERPRINT }),
-    );
+    const result = await requireKarlOrTrial(THRALL_USER, makeRequest());
 
     expect(result.ok).toBe(true);
   });

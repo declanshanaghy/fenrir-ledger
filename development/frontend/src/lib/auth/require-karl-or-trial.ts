@@ -8,13 +8,10 @@
  *
  * Allows access to Google Sheets import for:
  *   - Karl-tier users (active Stripe subscription)
- *   - Active trial users (browser fingerprint in X-Trial-Fingerprint header)
- *
- * If the fingerprint is valid but no trial exists yet, the trial is
- * auto-initialized — satisfying the "trial starts on sign-up" requirement
- * (first import IS the sign-up flow for most new users, #892).
+ *   - Active trial users (trial stored at /households/{userId}/trial)
  *
  * Expired trial users and Thrall users with no trial receive 402.
+ * Does NOT auto-initialize a trial — callers must call /api/trial/init explicitly.
  *
  * Must be called AFTER requireAuth() — requires the verified user.
  *
@@ -23,8 +20,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
-import { getTrial, initTrial, computeTrialStatus } from "@/lib/kv/trial-store";
-import { isValidFingerprint } from "@/lib/trial-utils";
+import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 import { log } from "@/lib/logger";
 import type { VerifiedUser } from "./verify-id-token";
 
@@ -40,17 +36,13 @@ export type KarlOrTrialResult = KarlOrTrialSuccess | KarlOrTrialFailure;
 /**
  * Verifies the authenticated user has Karl-tier access OR an active trial.
  *
- * Checks in order:
- *   1. Karl-tier Stripe subscription
- *   2. Active trial via X-Trial-Fingerprint request header
- *
  * @param user    - The verified Google user from requireAuth()
- * @param request - The incoming NextRequest (reads X-Trial-Fingerprint header)
+ * @param _request - Unused (kept for API compatibility)
  * @returns KarlOrTrialResult — either { ok: true } or { ok: false, response }
  */
 export async function requireKarlOrTrial(
   user: VerifiedUser,
-  request: NextRequest,
+  _request: NextRequest,
 ): Promise<KarlOrTrialResult> {
   log.debug("requireKarlOrTrial called", { googleSub: user.sub });
 
@@ -63,34 +55,16 @@ export async function requireKarlOrTrial(
     return { ok: true };
   }
 
-  // 2. Check active trial via X-Trial-Fingerprint header
-  const fingerprint = request.headers.get("x-trial-fingerprint");
+  // 2. Check active trial via userId-based lookup (no auto-init)
+  const trial = await getTrial(user.sub);
+  const { status } = computeTrialStatus(trial);
 
-  if (fingerprint && isValidFingerprint(fingerprint)) {
-    let trial = await getTrial(fingerprint);
-
-    // Auto-initialize trial if none exists yet (trial starts on sign-up, #892).
-    // First import is the sign-up action for most new users.
-    if (!trial) {
-      try {
-        trial = await initTrial(fingerprint);
-        log.debug("requireKarlOrTrial: auto-initialized trial", { fingerprint });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        log.error("requireKarlOrTrial: failed to auto-init trial", { fingerprint, error: message });
-        // Fall through — trial is null, computeTrialStatus returns "none"
-      }
-    }
-
-    const { status } = computeTrialStatus(trial);
-
-    if (status === "active") {
-      log.debug("requireKarlOrTrial returning", { ok: true, reason: "trial" });
-      return { ok: true };
-    }
-
-    log.debug("requireKarlOrTrial: trial not active", { fingerprint, trialStatus: status });
+  if (status === "active") {
+    log.debug("requireKarlOrTrial returning", { ok: true, reason: "trial" });
+    return { ok: true };
   }
+
+  log.debug("requireKarlOrTrial: trial not active", { googleSub: user.sub, trialStatus: status });
 
   // 3. Neither Karl nor active trial — return 402
   const currentTier = entitlement?.tier ?? "thrall";

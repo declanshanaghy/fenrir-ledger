@@ -10,6 +10,7 @@
  *   /users/{userId}
  *   /households/{householdId}   (householdId == userId for solo households)
  *   /households/{householdId}/cards/{cardId}
+ *   /households/{householdId}/stripe/subscription  (Stripe billing — issue #1648)
  */
 
 import type { Card } from "@/lib/types";
@@ -50,8 +51,8 @@ export interface FirestoreUser {
 /**
  * Stored at /households/{householdId}.
  *
- * The root entity for card portfolios. Karl tier lives here (not on user doc)
- * so that all members of a household share the same tier.
+ * The root entity for card portfolios. Stripe billing data lives in the
+ * stripe subcollection (/households/{id}/stripe/subscription) — not here.
  *
  * memberIds max length: 3 (enforced by Firestore security rules).
  */
@@ -77,30 +78,40 @@ export interface FirestoreHousehold {
   inviteCode: string;
   /** UTC ISO 8601 timestamp — invite code expiry (1 month from generation) */
   inviteCodeExpiresAt: string;
-  /**
-   * Karl subscription tier. Lives on household, not user, so all members
-   * share the same tier automatically.
-   */
-  tier: "free" | "karl";
-  // ── Stripe subscription fields (written by webhook handlers) ──────────────
-  /** Stripe customer ID (cus_xxx) — set when user first subscribes */
-  stripeCustomerId?: string;
-  /** Stripe subscription ID (sub_xxx) */
-  stripeSubscriptionId?: string;
-  /** Raw Stripe subscription status (e.g. "active", "canceled") */
-  stripeStatus?: string;
-  /** Whether the subscription is set to cancel at period end */
-  cancelAtPeriodEnd?: boolean;
-  /** ISO 8601 timestamp of current billing period end */
-  currentPeriodEnd?: string;
-  /** ISO 8601 timestamp when Stripe was first linked to this household */
-  stripeLinkedAt?: string;
-  /** ISO 8601 timestamp of last Stripe status write */
-  stripeCheckedAt?: string;
   /** UTC ISO 8601 timestamp when this household was created */
   createdAt: string;
   /** UTC ISO 8601 timestamp when this household was last modified */
   updatedAt: string;
+}
+
+// ─── Stripe subcollection document ────────────────────────────────────────────
+
+/**
+ * Stored at /households/{householdId}/stripe/subscription.
+ *
+ * Separates Stripe billing concerns from household metadata (issue #1648).
+ * Written by Stripe webhook handlers; read by entitlement/tier checks.
+ * Absent when the household has never subscribed via Stripe.
+ */
+export interface FirestoreStripeSubscription {
+  /** Stripe customer ID (cus_xxx) */
+  stripeCustomerId: string;
+  /** Stripe subscription ID (sub_xxx) */
+  stripeSubscriptionId: string;
+  /** Raw Stripe subscription status (e.g. "active", "canceled") */
+  stripeStatus: string;
+  /** Karl subscription tier for this household */
+  tier: "free" | "karl";
+  /** Whether the subscription is currently active */
+  active: boolean;
+  /** Whether the subscription is set to cancel at period end */
+  cancelAtPeriodEnd: boolean;
+  /** ISO 8601 timestamp of current billing period end */
+  currentPeriodEnd?: string;
+  /** ISO 8601 timestamp when Stripe was first linked to this household */
+  linkedAt: string;
+  /** ISO 8601 timestamp of last Stripe status write */
+  checkedAt: string;
 }
 
 // ─── Card document ────────────────────────────────────────────────────────────
@@ -127,6 +138,11 @@ export const FIRESTORE_PATHS = {
   /** /households/{householdId}/cards/{cardId} */
   card: (householdId: string, cardId: string) =>
     `households/${householdId}/cards/${cardId}` as const,
+  /** /households/{householdId}/stripe/subscription — Stripe billing subcollection (issue #1648) */
+  stripeSubscription: (householdId: string) =>
+    `households/${householdId}/stripe/subscription` as const,
+  /** /households/{userId}/trial — permanent trial record (never auto-deleted) */
+  trial: (userId: string) => `households/${userId}/trial` as const,
 } as const;
 
 // ─── Invite code helpers ──────────────────────────────────────────────────────

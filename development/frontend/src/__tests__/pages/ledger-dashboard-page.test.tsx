@@ -38,7 +38,6 @@ vi.mock("sonner", () => ({
 
 vi.mock("@/lib/trial-utils", () => ({
   LS_TRIAL_START_TOAST_SHOWN: "fenrir:trial-start-toast-shown",
-  computeFingerprint: vi.fn().mockResolvedValue("fp"),
 }));
 
 vi.mock("@/hooks/useTrialStatus", () => ({
@@ -58,6 +57,7 @@ vi.mock("@/hooks/useAuth", () => ({
     status: mockStatus,
     data: null,
     signOut: vi.fn(),
+    ensureHouseholdId: vi.fn(() => mockHouseholdId ?? ""),
   }),
 }));
 
@@ -72,7 +72,6 @@ vi.mock("@/hooks/useIsKarlOrTrial", () => ({
 }));
 
 vi.mock("@/lib/storage", () => ({
-  initializeHousehold: vi.fn(),
   getCards: vi.fn(() => []),
   getDeletedCards: vi.fn(() => []),
   saveCard: vi.fn(),

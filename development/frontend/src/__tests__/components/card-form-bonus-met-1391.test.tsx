@@ -57,7 +57,6 @@ vi.mock("@/lib/milestone-utils", () => ({
 
 vi.mock("@/lib/trial-utils", () => ({
   LS_TRIAL_START_TOAST_SHOWN: "trial_start_toast_shown",
-  computeFingerprint: vi.fn().mockResolvedValue("test-fingerprint"),
 }));
 
 vi.mock("@/hooks/useTrialStatus", () => ({

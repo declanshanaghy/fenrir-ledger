@@ -1,16 +1,13 @@
 /**
- * Loki QA augmentation tests — issue #1008
+ * usePickerConfig — edge-case tests (Loki QA, issue #1008, updated #1636)
  *
- * Validates edge cases for the X-Trial-Fingerprint header fix in usePickerConfig.
- * FiremanDecko covered: happy path (fingerprint present), no fingerprint (null),
- * auth errors, network errors.
+ * X-Trial-Fingerprint and computeFingerprint were removed in #1634/#1636.
+ * These tests verify the hook's robustness without fingerprint logic:
+ *  1. No X-Trial-Fingerprint header is ever sent
+ *  2. Fetch failures return null pickerApiKey gracefully
+ *  3. Fetch is called on every authenticated mount (no stale caching)
  *
- * Gaps covered here (devil's advocate):
- *  1. computeFingerprint returns empty string (non-browser env) → no header sent
- *  2. computeFingerprint throws an exception → hook swallows error, returns null key
- *  3. computeFingerprint is called on every authenticated mount (not skipped)
- *
- * @ref #1008
+ * @ref #1008, #1634, #1636
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -34,14 +31,6 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn().mockResolvedValue("mock-token-1008"),
 }));
 
-const { mockComputeFingerprint } = vi.hoisted(() => ({
-  mockComputeFingerprint: vi.fn(),
-}));
-
-vi.mock("@/lib/trial-utils", () => ({
-  computeFingerprint: mockComputeFingerprint,
-}));
-
 const mockFetch = vi.fn();
 
 // ── Setup ────────────────────────────────────────────────────────────────────
@@ -49,7 +38,6 @@ const mockFetch = vi.fn();
 beforeEach(() => {
   vi.stubGlobal("fetch", mockFetch);
   mockFetch.mockReset();
-  mockComputeFingerprint.mockReset();
   mockAuthStatus = "authenticated";
 });
 
@@ -58,13 +46,10 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-// ── Edge case 1: empty-string fingerprint ─────────────────────────────────────
+// ── Edge case 1: X-Trial-Fingerprint header is always absent ──────────────────
 
-describe("usePickerConfig — empty-string fingerprint (non-browser env boundary)", () => {
-  it("does NOT send X-Trial-Fingerprint when computeFingerprint returns empty string", async () => {
-    // computeFingerprint returns "" in server-side / non-browser environments
-    // The hook guard `if (fingerprint)` must treat "" as falsy
-    mockComputeFingerprint.mockResolvedValue("");
+describe("usePickerConfig — no X-Trial-Fingerprint header (#1636)", () => {
+  it("does NOT send X-Trial-Fingerprint header on any authenticated request", async () => {
     mockFetch.mockResolvedValueOnce(
       new Response(JSON.stringify({ pickerApiKey: "env-key-abc" }), {
         status: 200,
@@ -83,14 +68,11 @@ describe("usePickerConfig — empty-string fingerprint (non-browser env boundary
   });
 });
 
-// ── Edge case 2: computeFingerprint throws ────────────────────────────────────
+// ── Edge case 2: fetch failure returns null key gracefully ─────────────────────
 
-describe("usePickerConfig — computeFingerprint throws exception", () => {
-  it("returns null pickerApiKey gracefully when computeFingerprint throws", async () => {
-    // Simulates crypto.subtle unavailable or other fingerprint computation failure
-    mockComputeFingerprint.mockRejectedValue(new Error("crypto.subtle unavailable"));
-    // fetch should not be called since the error is thrown before it
-    // The hook's outer try/catch must absorb this
+describe("usePickerConfig — fetch failure returns null gracefully", () => {
+  it("returns null pickerApiKey when fetch throws a network error", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Network unavailable"));
 
     const { result } = renderHook(() => usePickerConfig());
 
@@ -99,16 +81,13 @@ describe("usePickerConfig — computeFingerprint throws exception", () => {
     });
 
     expect(result.current.pickerApiKey).toBeNull();
-    // fetch was never called because the error was thrown before the fetch
-    // OR it was called without fingerprint — either is acceptable; the key must be null
   });
 });
 
-// ── Edge case 3: computeFingerprint is called per mount, not cached ───────────
+// ── Edge case 3: fetch is called on each authenticated mount ──────────────────
 
-describe("usePickerConfig — fingerprint computed on each authenticated mount", () => {
-  it("calls computeFingerprint each time the hook mounts in authenticated state", async () => {
-    mockComputeFingerprint.mockResolvedValue("fp-mount-1");
+describe("usePickerConfig — fetch called on each authenticated mount (#1634)", () => {
+  it("calls fetch each time the hook mounts in authenticated state", async () => {
     mockFetch.mockResolvedValue(
       new Response(JSON.stringify({ pickerApiKey: "key" }), {
         status: 200,
@@ -118,10 +97,9 @@ describe("usePickerConfig — fingerprint computed on each authenticated mount",
 
     // First mount
     const { unmount } = renderHook(() => usePickerConfig());
-    await waitFor(() => expect(mockComputeFingerprint).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
     unmount();
 
-    mockComputeFingerprint.mockResolvedValue("fp-mount-2");
     mockFetch.mockResolvedValue(
       new Response(JSON.stringify({ pickerApiKey: "key2" }), {
         status: 200,
@@ -129,8 +107,8 @@ describe("usePickerConfig — fingerprint computed on each authenticated mount",
       }),
     );
 
-    // Second mount — fingerprint should be recomputed (fresh device fingerprint)
+    // Second mount — fetch should be called again (no caching)
     renderHook(() => usePickerConfig());
-    await waitFor(() => expect(mockComputeFingerprint).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
   });
 });

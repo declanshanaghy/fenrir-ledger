@@ -1,5 +1,6 @@
 /**
  * HeilungModal — Component tests (Issue #1068 Norse restyle)
+ * Consolidated: heilung-modal-loki.test.tsx edge cases (issue #1656)
  *
  * Validates: trigger key, dismiss interactions, Norse content, Wikipedia links,
  * click-to-play video portal, Algiz close button, HEIÐR dismiss, accessibility.
@@ -329,5 +330,90 @@ describe("HeilungModal", () => {
     act(() => triggerHeilungKey());
     const btn = screen.getByLabelText("Close — return from the wolf's hall");
     expect(btn).toBeInTheDocument();
+  });
+});
+
+// ── Edge cases (consolidated from heilung-modal-loki.test.tsx) ───────────────
+
+function activateVideoPortal() {
+  const btn = screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube");
+  act(() => { fireEvent.click(btn); });
+}
+
+describe("HeilungModal — video state reset", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  it("backdrop click while playing resets video to thumbnail on reopen", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    activateVideoPortal();
+    expect(screen.getByTitle("Heilung — Norupo LIFA")).toBeDefined();
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(dialog.parentElement!);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    act(() => triggerHeilungKey());
+    expect(screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube")).toBeDefined();
+    expect(screen.queryByTitle("Heilung — Norupo LIFA")).toBeNull();
+  });
+
+  it("Escape key while playing resets video to thumbnail on reopen", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    activateVideoPortal();
+    act(() => { fireEvent.keyDown(window, { key: "Escape" }); });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    act(() => triggerHeilungKey());
+    expect(screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube")).toBeDefined();
+    expect(screen.queryByTitle("Heilung — Norupo LIFA")).toBeNull();
+  });
+
+  it("HEIÐR button while playing resets video to thumbnail on reopen", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    activateVideoPortal();
+    fireEvent.click(screen.getByLabelText("Dismiss — honour given"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    act(() => triggerHeilungKey());
+    expect(screen.getByLabelText("Watch Heilung — Norupo LIFA on YouTube")).toBeDefined();
+    expect(screen.queryByTitle("Heilung — Norupo LIFA")).toBeNull();
+  });
+});
+
+describe("HeilungModal — iframe attributes", () => {
+  it("playing iframe has allowFullScreen attribute", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    activateVideoPortal();
+    const iframe = screen.getByTitle("Heilung — Norupo LIFA") as HTMLIFrameElement;
+    expect(iframe.hasAttribute("allowfullscreen")).toBe(true);
+  });
+
+  it("playing iframe src contains rel=0 (no related videos)", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    activateVideoPortal();
+    const iframe = screen.getByTitle("Heilung — Norupo LIFA") as HTMLIFrameElement;
+    expect(iframe.getAttribute("src")).toContain("rel=0");
+  });
+});
+
+describe("HeilungModal — rune band content", () => {
+  it("top rune band renders Elder Futhark characters (ᚠ first, ᛟ last)", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const bands = document.querySelectorAll(".heilung-rune-band");
+    expect(bands.length).toBeGreaterThanOrEqual(2);
+    expect(bands[0].textContent).toContain("ᚠ");
+    expect(bands[0].textContent).toContain("ᛟ");
+  });
+
+  it("bottom rune band starts with ᛟ (reversed Futhark)", () => {
+    render(<HeilungModal />);
+    act(() => triggerHeilungKey());
+    const bands = document.querySelectorAll(".heilung-rune-band");
+    const text = (bands[bands.length - 1].textContent ?? "").trimStart();
+    expect(text[0]).toBe("ᛟ");
   });
 });

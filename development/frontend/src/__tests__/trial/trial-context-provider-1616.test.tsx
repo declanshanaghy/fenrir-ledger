@@ -16,20 +16,23 @@ import { render, renderHook, act, waitFor } from "@testing-library/react";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const VALID_FINGERPRINT = "a".repeat(64);
-
 vi.mock("@/lib/trial-utils", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/trial-utils")>();
-  return {
-    ...actual,
-    computeFingerprint: vi.fn(() => Promise.resolve(VALID_FINGERPRINT)),
-    TRIAL_CACHE_VERSION: actual.TRIAL_CACHE_VERSION,
-    LS_TRIAL_CACHE_VERSION: actual.LS_TRIAL_CACHE_VERSION,
-  };
+  return { ...actual };
 });
 
 vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn(() => Promise.resolve(null)),
+}));
+
+// Provider now requires AuthContext — mock as authenticated so fetch runs
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuthContext: () => ({
+    status: "authenticated",
+    session: null,
+    householdId: "test-household",
+    signOut: vi.fn(),
+  }),
 }));
 
 // ── Imports after mocks ───────────────────────────────────────────────────────
@@ -45,7 +48,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 function makeSuccessResponse(overrides: Record<string, unknown> = {}) {
   return new Response(
-    JSON.stringify({ status: "active", remainingDays: 14, cacheVersion: 2, ...overrides }),
+    JSON.stringify({ status: "active", remainingDays: 14, cacheVersion: 3, ...overrides }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
 }
@@ -248,7 +251,7 @@ describe("TrialStatusProvider — error handling (Issue #1616)", () => {
           status: "converted",
           remainingDays: 0,
           convertedDate,
-          cacheVersion: 2,
+          cacheVersion: 3,
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       ),

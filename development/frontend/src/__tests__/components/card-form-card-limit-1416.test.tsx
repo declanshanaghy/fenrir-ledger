@@ -144,7 +144,6 @@ vi.mock("@/hooks/useTrialStatus", () => ({
 
 vi.mock("@/lib/trial-utils", () => ({
   LS_TRIAL_START_TOAST_SHOWN: "fenrir:trial-start-toast-shown",
-  computeFingerprint: vi.fn().mockResolvedValue("a".repeat(64)),
 }));
 
 // ── Milestone ─────────────────────────────────────────────────────────────────

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fenrir Ledger — Cyclomatic Complexity Report</title>
+<style>
+  :root {
+    --void: #07070d; --surface: #0f0f16; --surface2: #161620; --hover: #1a1a22;
+    --gold: #c9920a; --stone: #8b8680; --dirt: #3a2e22;
+    --green: #4ade80; --red: #ef4444; --red-dark: #dc2626; --yellow: #f9cd0b;
+    --text: #e8e8e0; --text-dim: #888; --border: #2a2a34;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--void); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; }
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .header { text-align: center; padding: 2rem 0 1.5rem; border-bottom: 2px solid var(--gold); margin-bottom: 2rem; }
+  .header h1 { font-family: 'Cinzel', serif; font-size: 1.6rem; color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; }
+  .header .subtitle { color: var(--stone); font-size: 0.85rem; margin-top: 0.5rem; }
+  .header .runes { font-size: 1.2rem; letter-spacing: 0.3em; color: var(--gold); opacity: 0.5; margin-bottom: 0.5rem; }
+  .section { margin-bottom: 2.5rem; }
+  .section-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  .section-header h2 { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--gold); letter-spacing: 0.08em; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; text-align: center; }
+  .stat-card .value { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700; }
+  .stat-card .label { font-size: 0.75rem; color: var(--stone); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.3rem; }
+  .stat-card.green .value { color: var(--green); }
+  .stat-card.gold .value { color: var(--gold); }
+  .stat-card.red .value { color: var(--red); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin: 1rem 0; }
+  th { background: var(--dirt); color: var(--gold); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.75rem; text-align: left; }
+  td { padding: 0.6rem 0.75rem; border-top: 1px solid var(--border); font-size: 0.85rem; }
+  tr:hover td { background: var(--hover); }
+  .dist-bar { display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0; }
+  .dist-label { width: 100px; font-size: 0.8rem; font-weight: 600; text-align: right; }
+  .dist-track { flex: 1; background: var(--surface2); height: 24px; border-radius: 4px; overflow: hidden; position: relative; }
+  .dist-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+  .dist-count { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text); min-width: 50px; text-align: left; margin-left: 0.5rem; }
+  .risk-low { color: var(--green); }
+  .risk-mod { color: var(--gold); }
+  .risk-high { color: var(--red); }
+  .risk-vhigh { color: var(--red-dark); font-weight: 700; }
+  .rec { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.25rem; margin: 0.5rem 0; }
+  .rec-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem; }
+  .rec-body { font-size: 0.8rem; color: var(--stone); }
+  .footer { text-align: center; padding: 2rem 0; border-top: 1px solid var(--border); margin-top: 2rem; font-size: 0.75rem; color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="runes">ᚠ ᛖ ᚾ ᚱ ᛁ ᚱ</div>
+    <h1>Cyclomatic Complexity Report</h1>
+    <div class="subtitle">Generated 3/21/2026, 02:28:49 UTC &middot; 214 files analyzed</div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h2>Summary</h2></div>
+    <div class="stats-grid">
+      <div class="stat-card gold"><div class="value">1347</div><div class="label">Functions</div></div>
+      <div class="stat-card green"><div class="value">2.8</div><div class="label">Avg Complexity</div></div>
+      <div class="stat-card gold"><div class="value">2</div><div class="label">Median</div></div>
+      <div class="stat-card red"><div class="value">49</div><div class="label">Max</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h2>Distribution</h2></div>
+    <div class="dist-bar">
+      <div class="dist-label risk-low">LOW (1-5)</div>
+      <div class="dist-track"><div class="dist-fill" style="width:88.9%;background:var(--green)"></div></div>
+      <div class="dist-count">1198 (89%)</div>
+    </div>
+    <div class="dist-bar">
+      <div class="dist-label risk-mod">MOD (6-10)</div>
+      <div class="dist-track"><div class="dist-fill" style="width:7.4%;background:var(--gold)"></div></div>
+      <div class="dist-count">100 (7%)</div>
+    </div>
+    <div class="dist-bar">
+      <div class="dist-label risk-high">HIGH (11-20)</div>
+      <div class="dist-track"><div class="dist-fill" style="width:2.6%;background:var(--red)"></div></div>
+      <div class="dist-count">35 (3%)</div>
+    </div>
+    <div class="dist-bar">
+      <div class="dist-label risk-vhigh">CRIT (21+)</div>
+      <div class="dist-track"><div class="dist-fill" style="width:1.0%;background:var(--red-dark)"></div></div>
+      <div class="dist-count">14 (1%)</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h2>Most Complex Functions (Top 30)</h2></div>
+    <table>
+      <thead><tr><th>#</th><th>Function</th><th>File</th><th>Line</th><th>Complexity</th><th>Risk</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><code>CardForm</code></td>
+          <td><code>components/cards/CardForm.tsx</code></td>
+          <td>115</td>
+          <td class="risk-vhigh"><strong>49</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><code>POST</code></td>
+          <td><code>app/api/stripe/checkout/route.ts</code></td>
+          <td>30</td>
+          <td class="risk-vhigh"><strong>40</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><code>(anonymous)</code></td>
+          <td><code>components/dashboard/Dashboard.tsx</code></td>
+          <td>582</td>
+          <td class="risk-vhigh"><strong>39</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><code>JoinHouseholdPage</code></td>
+          <td><code>app/ledger/join/page.tsx</code></td>
+          <td>135</td>
+          <td class="risk-vhigh"><strong>37</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><code>onSubmit</code></td>
+          <td><code>components/cards/CardForm.tsx</code></td>
+          <td>249</td>
+          <td class="risk-vhigh"><strong>35</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><code>SyncStatusCard</code></td>
+          <td><code>components/sync/SyncSettingsSection.tsx</code></td>
+          <td>112</td>
+          <td class="risk-vhigh"><strong>34</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><code>ImportWizard</code></td>
+          <td><code>components/sheets/ImportWizard.tsx</code></td>
+          <td>106</td>
+          <td class="risk-vhigh"><strong>30</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td><code>StripeSettings</code></td>
+          <td><code>components/entitlement/StripeSettings.tsx</code></td>
+          <td>74</td>
+          <td class="risk-vhigh"><strong>27</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><code>POST</code></td>
+          <td><code>app/api/sheets/import/route.ts</code></td>
+          <td>20</td>
+          <td class="risk-vhigh"><strong>24</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><code>CardTile</code></td>
+          <td><code>components/dashboard/CardTile.tsx</code></td>
+          <td>58</td>
+          <td class="risk-vhigh"><strong>24</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td><code>LedgerBottomTabs</code></td>
+          <td><code>components/layout/LedgerBottomTabs.tsx</code></td>
+          <td>49</td>
+          <td class="risk-vhigh"><strong>23</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td><code>parseCanonicalDecreeBlock</code></td>
+          <td><code>lib/decree-parser.ts</code></td>
+          <td>112</td>
+          <td class="risk-vhigh"><strong>22</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td><code>(anonymous)</code></td>
+          <td><code>hooks/useCloudSync.ts</code></td>
+          <td>200</td>
+          <td class="risk-vhigh"><strong>21</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td><code>computeCardStatus</code></td>
+          <td><code>lib/card-utils.ts</code></td>
+          <td>118</td>
+          <td class="risk-vhigh"><strong>21</strong></td>
+          <td class="risk-vhigh">VERY HIGH</td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td><code>DashboardTabs</code></td>
+          <td><code>components/dashboard/DashboardTabs.tsx</code></td>
+          <td>64</td>
+          <td class="risk-high"><strong>18</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>16</td>
+          <td><code>LedgerTopBar</code></td>
+          <td><code>components/layout/LedgerTopBar.tsx</code></td>
+          <td>446</td>
+          <td class="risk-high"><strong>17</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>17</td>
+          <td><code>POST</code></td>
+          <td><code>app/api/stripe/webhook/route.ts</code></td>
+          <td>269</td>
+          <td class="risk-high"><strong>16</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>18</td>
+          <td><code>Dashboard</code></td>
+          <td><code>components/dashboard/Dashboard.tsx</code></td>
+          <td>347</td>
+          <td class="risk-high"><strong>16</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>19</td>
+          <td><code>getInitialTab</code></td>
+          <td><code>components/dashboard/Dashboard.tsx</code></td>
+          <td>369</td>
+          <td class="risk-high"><strong>16</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>20</td>
+          <td><code>HouseholdSettingsSection</code></td>
+          <td><code>components/household/HouseholdSettingsSection.tsx</code></td>
+          <td>48</td>
+          <td class="risk-high"><strong>16</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>21</td>
+          <td><code>analyzeChain</code></td>
+          <td><code>lib/admin/pack-status.ts</code></td>
+          <td>353</td>
+          <td class="risk-high"><strong>16</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>22</td>
+          <td><code>POST</code></td>
+          <td><code>app/api/auth/token/route.ts</code></td>
+          <td>83</td>
+          <td class="risk-high"><strong>15</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>23</td>
+          <td><code>GET</code></td>
+          <td><code>app/api/stripe/membership/route.ts</code></td>
+          <td>29</td>
+          <td class="risk-high"><strong>15</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>24</td>
+          <td><code>ProfileDropdown</code></td>
+          <td><code>components/layout/LedgerTopBar.tsx</code></td>
+          <td>226</td>
+          <td class="risk-high"><strong>15</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>25</td>
+          <td><code>(anonymous)</code></td>
+          <td><code>components/sheets/MethodSelection.tsx</code></td>
+          <td>153</td>
+          <td class="risk-high"><strong>15</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>26</td>
+          <td><code>(anonymous)</code></td>
+          <td><code>hooks/useSheetImport.ts</code></td>
+          <td>85</td>
+          <td class="risk-high"><strong>15</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>27</td>
+          <td><code>CardUrgencyBar</code></td>
+          <td><code>components/dashboard/CardUrgencyBar.tsx</code></td>
+          <td>20</td>
+          <td class="risk-high"><strong>14</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>28</td>
+          <td><code>TopBar</code></td>
+          <td><code>components/layout/TopBar.tsx</code></td>
+          <td>328</td>
+          <td class="risk-high"><strong>14</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>29</td>
+          <td><code>(anonymous)</code></td>
+          <td><code>contexts/EntitlementContext.tsx</code></td>
+          <td>251</td>
+          <td class="risk-high"><strong>14</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>30</td>
+          <td><code>(anonymous)</code></td>
+          <td><code>hooks/useCloudSync.ts</code></td>
+          <td>355</td>
+          <td class="risk-high"><strong>14</strong></td>
+          <td class="risk-high">HIGH</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h2>Recommendations</h2></div>
+    <div class="rec">
+      <div class="rec-title risk-vhigh">Critical: 14 function(s) with complexity &gt; 20</div>
+      <div class="rec-body">These functions have too many decision paths to test effectively. Break them into smaller, focused functions. Each should have a single responsibility with complexity &le; 10.</div>
+    </div>
+    <div class="rec">
+      <div class="rec-title risk-high">35 function(s) with complexity 11&ndash;20</div>
+      <div class="rec-body">Review for testability. Consider extracting conditional logic into helper functions or using early returns to reduce nesting depth.</div>
+    </div>
+    <div class="rec">
+      <div class="rec-title" style="color:var(--gold)">Overall Health: 89% of functions are LOW complexity</div>
+      <div class="rec-body">Excellent. The codebase is well-factored with simple, testable functions.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Generated by <code>quality/scripts/complexity-analysis.mjs</code> &middot;
+    <a href="../quality-report.html" style="color:var(--gold)">Quality Report</a> &middot;
+    Fenrir Ledger 2026-03-21
+  </div>
+</div>
+</body>
+</html>

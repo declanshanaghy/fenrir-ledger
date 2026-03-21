@@ -571,9 +571,9 @@ body {
    Matches card-pin-btn — inline, border, color-only hover. */
 .card-status-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  padding: 2px 3px; margin-left: auto;
+  width: 1.6rem; height: 1.6rem; padding: 0; margin-left: auto;
   background: transparent; border: 1px solid var(--rune-border);
-  border-radius: 2px; cursor: default;
+  border-radius: 3px; cursor: default;
   line-height: 1; transition: color 0.15s, border-color 0.15s;
   flex-shrink: 0;
 }
@@ -620,9 +620,9 @@ body {
 /* ── Pin toggle button in card sidebar ── */
 .card-pin-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  padding: 1px 3px;
-  background: transparent; border: 1px solid transparent;
-  border-radius: 2px; color: var(--text-void); cursor: pointer;
+  width: 1.6rem; height: 1.6rem; padding: 0;
+  background: transparent; border: 1px solid var(--rune-border);
+  border-radius: 3px; color: var(--text-void); cursor: pointer;
   line-height: 1; transition: color 0.15s, border-color 0.15s;
   flex-shrink: 0;
 }
@@ -750,6 +750,8 @@ body {
 .ws-badge.closed          { color: var(--text-void); border-color: var(--rune-border); }
 .ws-badge.error           { color: var(--error-strong); border-color: var(--error-strong); }
 .ws-badge.replayed-cache  { color: var(--gold); border-color: var(--gold); opacity: 0.85; }
+/* icon variant: higher specificity wins over state-based border-color overrides above */
+.ws-badge.ws-badge-icon   { border: none; padding: 0; border-radius: 0; }
 
 /* ── Log terminal ──────────────────────────────── */
 .log-terminal {
