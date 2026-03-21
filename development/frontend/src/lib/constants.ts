@@ -123,7 +123,7 @@ export const TAB_HEADER_CONTENT: Record<
     statuses: "Status labels in this tab: Closed | Graduated",
   },
   active: {
-    title: "ᛉ Active Cards — Asgard\u2019s Warriors",
+    title: "ᛉ Idle — Asgard\u2019s Warriors",
     description:
       "Cards in good standing with no urgent deadlines. These are your reliable earners — rewards are flowing and no fees are imminent.",
     statuses:
