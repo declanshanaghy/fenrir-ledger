@@ -48,7 +48,7 @@ import { toast } from "sonner";
 import type { Card, CardStatus } from "@/lib/types";
 import { saveCard, deleteCard, closeCard, getCards } from "@/lib/storage";
 import { checkMilestone } from "@/lib/milestone-utils";
-import { LS_TRIAL_START_TOAST_SHOWN, computeFingerprint } from "@/lib/trial-utils";
+import { LS_TRIAL_START_TOAST_SHOWN } from "@/lib/trial-utils";
 import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { canAddCard } from "@/lib/entitlement/card-limit";
@@ -356,23 +356,18 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
         if (!toastShown) {
           localStorage.setItem(LS_TRIAL_START_TOAST_SHOWN, "true");
 
-          // Initialize trial via API (idempotent — safe to call multiple times)
-          // Supports anonymous users — no auth token required (Issue #1413)
+          // Initialize trial via API (idempotent for active trials; requires auth)
           void (async () => {
             try {
-              const fingerprint = await computeFingerprint();
-              if (fingerprint) {
-                const token = await ensureFreshToken();
-                const headers: Record<string, string> = {
-                  "Content-Type": "application/json",
-                };
-                if (token) {
-                  headers["Authorization"] = `Bearer ${token}`;
-                }
+              const token = await ensureFreshToken();
+              if (token) {
                 await fetch("/api/trial/init", {
                   method: "POST",
-                  headers,
-                  body: JSON.stringify({ fingerprint }),
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({}),
                 });
                 // Clear trial status cache so badge picks up new state
                 clearTrialStatusCache();

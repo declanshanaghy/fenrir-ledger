@@ -802,14 +802,18 @@ describe("FIRESTORE_PATHS — no entitlement path (issue #1633)", () => {
     expect((FIRESTORE_PATHS as Record<string, unknown>).entitlement).toBeUndefined();
   });
 
-  it("has the expected path builders including stripeSubscription (issue #1648)", () => {
+  it("has the expected path builders including stripeSubscription (issue #1648) and trial (issue #1634)", () => {
     const keys = Object.keys(FIRESTORE_PATHS).sort();
-    expect(keys).toEqual(["card", "cards", "household", "stripeSubscription", "user"]);
+    expect(keys).toEqual(["card", "cards", "household", "stripeSubscription", "trial", "user"]);
   });
 
   it("builds stripe subcollection path correctly", () => {
     expect(FIRESTORE_PATHS.stripeSubscription("hh-abc")).toBe(
       "households/hh-abc/stripe/subscription"
     );
+  });
+
+  it("builds trial subcollection path correctly (issue #1634)", () => {
+    expect(FIRESTORE_PATHS.trial("user-abc")).toBe("households/user-abc/trial");
   });
 });

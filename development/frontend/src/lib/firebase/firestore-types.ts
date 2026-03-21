@@ -141,6 +141,8 @@ export const FIRESTORE_PATHS = {
   /** /households/{householdId}/stripe/subscription — Stripe billing subcollection (issue #1648) */
   stripeSubscription: (householdId: string) =>
     `households/${householdId}/stripe/subscription` as const,
+  /** /households/{userId}/trial — permanent trial record (never auto-deleted) */
+  trial: (userId: string) => `households/${userId}/trial` as const,
 } as const;
 
 // ─── Invite code helpers ──────────────────────────────────────────────────────

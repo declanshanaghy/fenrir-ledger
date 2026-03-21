@@ -31,8 +31,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "./require-auth";
 import { getUser } from "@/lib/firebase/firestore";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
-import { getTrial, initTrial, computeTrialStatus } from "@/lib/kv/trial-store";
-import { isValidFingerprint } from "@/lib/trial-utils";
+import { getTrial, initTrial, computeTrialStatus, TrialRestartError } from "@/lib/kv/trial-store";
 import { log } from "@/lib/logger";
 import type { VerifiedUser } from "./verify-id-token";
 import type { FirestoreUser } from "@/lib/firebase/firestore-types";
@@ -182,11 +181,11 @@ export async function requireAuthz(
  * Checks Karl-tier OR active trial access.
  * Returns a denial descriptor if access should be blocked, or null if allowed.
  *
- * Mirrors the logic from requireKarlOrTrial (deprecated) so that module can
- * eventually be removed once all routes migrate to requireAuthz.
+ * Trial is looked up by googleSub directly in /households/{googleSub}/trial.
+ * Auto-initializes trial if none exists yet (trial starts on first eligible action).
  */
 async function checkKarlOrTrial(
-  request: NextRequest,
+  _request: NextRequest,
   googleSub: string,
 ): Promise<{ reason: string; response: NextResponse } | null> {
   // 1. Karl-tier subscription
@@ -195,33 +194,28 @@ async function checkKarlOrTrial(
 
   if (isKarl) return null; // allowed
 
-  // 2. Active trial via X-Trial-Fingerprint header
-  const fingerprint = request.headers.get("x-trial-fingerprint");
+  // 2. Active trial via userId-based lookup
+  let trial = await getTrial(googleSub);
 
-  if (fingerprint && isValidFingerprint(fingerprint)) {
-    let trial = await getTrial(fingerprint);
-
-    if (!trial) {
-      try {
-        trial = await initTrial(fingerprint);
-        log.debug("requireAuthz: auto-initialized trial", {
-          googleSub,
-          fingerprint,
-        });
-      } catch (err) {
+  if (!trial) {
+    try {
+      const result = await initTrial(googleSub);
+      trial = result.trial;
+      log.debug("requireAuthz: auto-initialized trial", { googleSub });
+    } catch (err) {
+      if (err instanceof TrialRestartError) {
+        // Trial expired — fall through to deny
+        log.debug("requireAuthz: trial restart blocked", { googleSub });
+      } else {
         const message = err instanceof Error ? err.message : String(err);
-        log.error("requireAuthz: failed to auto-init trial", {
-          googleSub,
-          fingerprint,
-          error: message,
-        });
-        // Fall through — trial is null → computeTrialStatus returns "none"
+        log.error("requireAuthz: failed to auto-init trial", { googleSub, error: message });
       }
+      // Fall through — trial is null → computeTrialStatus returns "none"
     }
-
-    const { status } = computeTrialStatus(trial);
-    if (status === "active") return null; // allowed
   }
+
+  const { status } = computeTrialStatus(trial);
+  if (status === "active") return null; // allowed
 
   // 3. Neither Karl nor active trial
   const currentTier = entitlement?.tier ?? "thrall";

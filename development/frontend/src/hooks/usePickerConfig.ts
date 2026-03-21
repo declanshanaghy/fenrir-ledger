@@ -10,7 +10,6 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
-import { computeFingerprint } from "@/lib/trial-utils";
 
 export interface UsePickerConfigReturn {
   pickerApiKey: string | null;
@@ -39,10 +38,6 @@ export function usePickerConfig(): UsePickerConfigReturn {
         const headers: Record<string, string> = {
           Authorization: `Bearer ${token}`,
         };
-        const fingerprint = await computeFingerprint();
-        if (fingerprint) {
-          headers["X-Trial-Fingerprint"] = fingerprint;
-        }
 
         const res = await fetch("/api/config/picker", { headers });
 

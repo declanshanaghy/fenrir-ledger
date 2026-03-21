@@ -7,9 +7,7 @@
  * Fetches /api/trial/status ONCE on mount (at the app layout level)
  * and distributes the result to all consumers via context.
  *
- * Replaces the per-component fetch pattern that caused 8x API calls
- * per page load (Issue #1616).
- *
+ * Trial status is user-bound — unauthenticated users always have status "none".
  * Refreshes every 4 minutes — never on every component render.
  *
  * @module contexts/TrialStatusContext
@@ -25,7 +23,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  computeFingerprint,
   LS_TRIAL_CACHE_VERSION,
   TRIAL_CACHE_VERSION,
 } from "@/lib/trial-utils";
@@ -120,9 +117,7 @@ export function TrialStatusProvider({ children }: TrialStatusProviderProps) {
 
   const fetchStatus = useCallback(async () => {
     // Bust the module-level cache if the stored cache version differs from the
-    // current expected version. This handles post-migration scenarios where the
-    // server's backend changed (e.g. Redis → Firestore in #1516/#1589) and the
-    // in-memory cache may contain phantom trial data from the old store.
+    // current expected version.
     const storedVersion =
       typeof window !== "undefined" ? localStorage.getItem(LS_TRIAL_CACHE_VERSION) : null;
     if (storedVersion !== String(TRIAL_CACHE_VERSION)) {
@@ -137,13 +132,8 @@ export function TrialStatusProvider({ children }: TrialStatusProviderProps) {
     }
 
     try {
-      const fingerprint = await computeFingerprint();
-      if (!fingerprint) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Supports anonymous users — no auth token required (Issue #1413)
+      // Trial status is user-bound — requires auth token.
+      // Unauthenticated users receive { status: "none" } from the server.
       const token = await ensureFreshToken();
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -156,7 +146,7 @@ export function TrialStatusProvider({ children }: TrialStatusProviderProps) {
       const response = await fetch("/api/trial/status", {
         method: "POST",
         headers,
-        body: JSON.stringify({ fingerprint }),
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) {
