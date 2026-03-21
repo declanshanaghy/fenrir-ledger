@@ -1,15 +1,15 @@
 /**
- * Loki QA tests for Issue #1707 — Auth callback skips /api/trial/init
+ * Loki QA tests for Issue #1707 / #1722 — Auth callback trial init
  *
- * Devil's advocate tests that probe behaviours FiremanDecko's regression tests
- * couldn't cover because they focus on the happy path.  These tests validate:
+ * Issue #1722 moved trial init from client-side to server-side (/api/auth/token).
+ * These tests validate:
  *
- *  1. trial/init Authorization header carries the id_token (not access_token)
- *  2. window.location.replace fires to the destination AFTER a successful trial init
+ *  1. /api/trial/init is NOT called client-side (moved server-side in #1722)
+ *  2. window.location.replace fires to the destination after successful token exchange
  *  3. console.error is called (non-fatal logging) when mergeAnonymousCards throws
  *  4. trial/init is NOT called when token exchange itself fails (no false positives)
  *
- * @ref Issue #1707
+ * @ref Issue #1707, #1722
  */
 
 import { render, waitFor } from "@testing-library/react";
@@ -79,9 +79,10 @@ function setupPkce() {
 }
 
 /**
- * Captures fetch calls while also providing successful token exchange + trial init responses.
+ * Captures fetch calls while providing a successful token exchange response.
+ * No /api/trial/init handler needed — the callback no longer calls it (Issue #1722).
  */
-function spyFetch(trialStatus = 200) {
+function spyFetch() {
   return vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
     const url = String(input);
     if (url.includes("/api/auth/token")) {
@@ -93,16 +94,6 @@ function spyFetch(trialStatus = 200) {
           refresh_token: "rt-first-consent",
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    }
-    if (url.includes("/api/trial/init")) {
-      return new Response(
-        JSON.stringify(
-          trialStatus === 200
-            ? { startDate: "2026-03-21T00:00:00.000Z", expiresAt: "2026-04-20T00:00:00.000Z", isNew: true }
-            : { error: "trial_expired", message: "Contact customer service" }
-        ),
-        { status: trialStatus, headers: { "Content-Type": "application/json" } }
       );
     }
     return new Response("", { status: 200 });
@@ -125,7 +116,7 @@ function spyFetchTokenFailure() {
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
-describe("Issue #1707 Loki QA — auth callback trial init regression", () => {
+describe("Issue #1707/#1722 Loki QA — auth callback trial init moved server-side", () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
   let locationReplaceMock: ReturnType<typeof vi.fn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
@@ -154,11 +145,11 @@ describe("Issue #1707 Loki QA — auth callback trial init regression", () => {
   });
 
   // ──────────────────────────────────────────────────────────────────────
-  // AC: Authorization header carries id_token, not access_token
+  // AC: /api/trial/init is NOT called client-side (moved server-side #1722)
   // ──────────────────────────────────────────────────────────────────────
 
-  it("sends Authorization: Bearer <id_token> (not access_token) to /api/trial/init", async () => {
-    fetchSpy = spyFetch(200);
+  it("does NOT call /api/trial/init client-side — trial init moved server-side (#1722)", async () => {
+    fetchSpy = spyFetch();
     setupSearchParams();
     setupPkce();
 
@@ -166,28 +157,23 @@ describe("Issue #1707 Loki QA — auth callback trial init regression", () => {
 
     await waitFor(
       () => {
-        const trialCalls = fetchSpy.mock.calls.filter(([url]) =>
-          String(url).includes("/api/trial/init")
-        );
-        expect(trialCalls.length).toBeGreaterThan(0);
-
-        const [, initOptions] = trialCalls[0] as [string, RequestInit];
-        const authHeader = (initOptions.headers as Record<string, string>)?.["Authorization"];
-
-        // Must carry id_token, not access_token
-        expect(authHeader).toBe(`Bearer ${FAKE_ID_TOKEN}`);
-        expect(authHeader).not.toContain(FAKE_ACCESS_TOKEN);
+        expect(locationReplaceMock).toHaveBeenCalled();
       },
       { timeout: 3000 }
     );
+
+    const trialCalls = fetchSpy.mock.calls.filter(([url]) =>
+      String(url).includes("/api/trial/init")
+    );
+    expect(trialCalls).toHaveLength(0);
   });
 
   // ──────────────────────────────────────────────────────────────────────
-  // AC: Redirect fires after successful trial init (flow completes)
+  // AC: Redirect fires after successful token exchange (flow completes)
   // ──────────────────────────────────────────────────────────────────────
 
-  it("redirects to /ledger after /api/trial/init returns 200", async () => {
-    fetchSpy = spyFetch(200);
+  it("redirects to /ledger after successful token exchange", async () => {
+    fetchSpy = spyFetch();
     setupSearchParams();
     setupPkce();
 
@@ -211,7 +197,7 @@ describe("Issue #1707 Loki QA — auth callback trial init regression", () => {
       throw new Error("Private browsing: localStorage blocked");
     });
 
-    fetchSpy = spyFetch(200);
+    fetchSpy = spyFetch();
     setupSearchParams();
     setupPkce();
 
@@ -219,7 +205,7 @@ describe("Issue #1707 Loki QA — auth callback trial init regression", () => {
 
     await waitFor(
       () => {
-        // Redirect means the full flow completed (trial init also ran)
+        // Redirect means the full flow completed
         expect(locationReplaceMock).toHaveBeenCalled();
       },
       { timeout: 3000 }

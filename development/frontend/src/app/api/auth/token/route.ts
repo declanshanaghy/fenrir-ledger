@@ -28,6 +28,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
+import { initTrialForUser } from "@/lib/trial/init-trial";
 
 /**
  * Whitelisted origins that may call this endpoint.
@@ -210,6 +211,39 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!googleResponse.ok) {
     log.error("POST /api/auth/token: Google error", { status: googleResponse.status, grantType, body: responseBody });
   }
+
+  // Issue #1722: Initialize trial server-side after successful auth code exchange.
+  // This replaces the client-side /api/trial/init call that was unreliable because
+  // window.location.replace() aborted in-flight fetches in the callback page.
+  // Fire-and-forget: trial init failures are logged but don't block the token response.
+  if (googleResponse.ok && grantType === "authorization_code") {
+    try {
+      const tokenData = JSON.parse(responseBody) as { id_token?: string };
+      if (tokenData.id_token) {
+        // Decode id_token payload (base64url middle segment) to get user claims.
+        const parts = tokenData.id_token.split(".");
+        if (parts.length === 3) {
+          const payload = parts[1]!.replace(/-/g, "+").replace(/_/g, "/");
+          const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
+          const decoded = Buffer.from(padded, "base64").toString("utf-8");
+          const claims = JSON.parse(decoded) as { sub?: string; email?: string; name?: string };
+          if (claims.sub) {
+            await initTrialForUser({
+              userId: claims.sub,
+              email: claims.email ?? "",
+              displayName: claims.name ?? "",
+            });
+            log.debug("POST /api/auth/token: trial init completed", { userId: claims.sub });
+          }
+        }
+      }
+    } catch (err) {
+      // Trial init is best-effort — don't block the token response
+      const message = err instanceof Error ? err.message : String(err);
+      log.warn("POST /api/auth/token: trial init failed (non-blocking)", { error: message });
+    }
+  }
+
   log.debug("POST /api/auth/token returning", { status: googleResponse.status, grantType });
   return new NextResponse(responseBody, {
     status: googleResponse.status,
