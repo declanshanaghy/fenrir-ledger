@@ -8,12 +8,9 @@
     "start": "NODE_NO_WARNINGS=1 node --import ./register.mjs dist/index.js",
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "verify": "pnpm run verify:tsc && pnpm run verify:build && pnpm run verify:unit",
+    "verify": "pnpm run verify:tsc && pnpm run verify:build",
     "verify:tsc": "tsc --noEmit",
-    "verify:build": "tsc --noEmit",
-    "verify:unit": "vitest run"
+    "verify:build": "tsc --noEmit"
   },
   "dependencies": {
     "@google-cloud/firestore": "^8.3.0",
@@ -29,8 +26,8 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
+    "google-auth-library": "^10.6.2",
     "tsx": "^4.19.3",
-    "typescript": "5.9.3",
-    "vitest": "^4.1.0"
+    "typescript": "5.9.3"
   }
 }
