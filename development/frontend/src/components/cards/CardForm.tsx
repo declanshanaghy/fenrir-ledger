@@ -51,6 +51,7 @@ import { checkMilestone } from "@/lib/milestone-utils";
 import { canAddCard } from "@/lib/entitlement/card-limit";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
+import { useAuth } from "@/hooks/useAuth";
 import {
   computeCardStatus,
   dollarsToCents,
@@ -125,7 +126,9 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
   const { open: bearOpen, trigger: triggerBear, dismiss: dismissBear } = useGleipnirFragment4();
   const { tier } = useEntitlement();
   const { status: trialStatus } = useTrialStatus();
+  const { status: authStatus } = useAuth();
   const isTrialActive = trialStatus === "active";
+  const isAnonymous = authStatus === "anonymous";
 
   // Step transition animation variants (directional slide)
   const STEP_TRANSITION_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -254,7 +257,7 @@ export function CardForm({ initialValues, householdId }: CardFormProps) {
       if (!isEditMode) {
         const existingCards = getCards(householdId);
         const activeCardCount = existingCards.filter(c => c.status !== "closed" && c.status !== "graduated").length;
-        const limitCheck = canAddCard(tier, activeCardCount, isTrialActive);
+        const limitCheck = canAddCard(tier, activeCardCount, isTrialActive, isAnonymous);
 
         if (!limitCheck.allowed) {
           toast.error(limitCheck.reason || "Unable to add card at this time");

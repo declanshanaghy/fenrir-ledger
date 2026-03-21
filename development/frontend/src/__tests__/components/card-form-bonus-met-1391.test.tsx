@@ -36,6 +36,11 @@ vi.mock("framer-motion", () => {
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+  usePathname: () => "/ledger",
+}));
+
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ status: "authenticated", householdId: "hh-test", signOut: vi.fn(), ensureHouseholdId: () => "hh-test" }),
 }));
 
 // ── Storage ───────────────────────────────────────────────────────────────────
