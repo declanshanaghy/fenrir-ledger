@@ -263,7 +263,7 @@ describe("POST /api/trial/init", () => {
 
     expect(res.status).toBe(500);
     expect(body.error).toBe("internal_error");
-    expect(body.error_description).toMatch(/household/i);
+    expect(body.error_description).toMatch(/trial/i);
     // Trial should NOT be initialized if household creation failed
     expect(mockDocRef.set).not.toHaveBeenCalled();
   });

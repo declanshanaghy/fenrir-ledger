@@ -62,7 +62,7 @@ function decodeIdToken(idToken: string): IdTokenClaims {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-type CallbackStatus = "exchanging" | "success" | "error" | "trial-expired";
+type CallbackStatus = "exchanging" | "success" | "error";
 
 function AuthCallbackContent() {
   const searchParams = useSearchParams();
@@ -220,30 +220,8 @@ function AuthCallbackContent() {
           );
         }
 
-        // Initialize trial for this Google account (issue #1637).
-        // Idempotent for active/converted trials.
-        // On 409 (expired restart blocked): show message — user continues in Thrall tier.
-        try {
-          const trialResponse = await fetch("/api/trial/init", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.id_token}`,
-            },
-            body: JSON.stringify({}),
-          });
-          if (trialResponse.status === 409) {
-            if (isMountedRef.current) {
-              setErrorMessage(
-                "Your free trial has ended. Contact customer service to discuss options."
-              );
-              setCallbackStatus("trial-expired");
-            }
-            return;
-          }
-        } catch {
-          // Trial init is best-effort — don't block login flow
-        }
+        // Issue #1722: Trial init is now handled server-side in /api/auth/token
+        // after the Google token exchange completes. No client-side call needed.
 
         // Don't show the success state - keep the exchanging state visible
         // until redirect completes to avoid rapid visual transitions.
@@ -304,22 +282,6 @@ function AuthCallbackContent() {
           </>
         )}
 
-        {callbackStatus === "trial-expired" && (
-          <>
-            <p className="font-heading text-base text-destructive uppercase tracking-wide">
-              Trial Ended
-            </p>
-            <p className="text-muted-foreground font-body text-sm max-w-xs">
-              {errorMessage}
-            </p>
-            <a
-              href="/ledger"
-              className="mt-2 text-base text-gold hover:text-primary hover:brightness-110 font-heading tracking-wide underline underline-offset-4"
-            >
-              Continue to the ledger
-            </a>
-          </>
-        )}
       </div>
     </div>
   );
