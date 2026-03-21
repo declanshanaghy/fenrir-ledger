@@ -139,7 +139,9 @@ describe("CardFormStep1 — computed minimumSpendMet indicator (issue #1745)", (
         amountSpent={undefined}
       />,
     );
-    expect(screen.queryByText(/minimum spend/i)).toBeNull();
+    // The label "Minimum spend" is always rendered; only check that the indicator text is absent
+    expect(screen.queryByText(/minimum spend not yet met/i)).toBeNull();
+    expect(screen.queryByText(/✓ minimum spend met/i)).toBeNull();
   });
 
   it("shows 'not yet met' when spend requirement is set but amountSpent is below it", () => {
