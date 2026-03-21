@@ -11,6 +11,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { getCards, getClosedCards } from "@/lib/storage";
+import { ANON_HOUSEHOLD_ID } from "@/lib/constants";
 import type { Card, BonusType } from "@/lib/types";
 
 interface BonusTotals {
@@ -50,10 +51,12 @@ export function WolfHungerMeter() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (status === "loading" || !householdId) return;
+    if (status === "loading") return;
+    // Resolve effective storage ID: authenticated = sub, anonymous = "anon" (Issue #1671)
+    const effectiveId = householdId ?? ANON_HOUSEHOLD_ID;
 
-    const active = getCards(householdId);
-    const closed = getClosedCards(householdId);
+    const active = getCards(effectiveId);
+    const closed = getClosedCards(effectiveId);
     const all = [...active, ...closed];
     setTotals(aggregateBonuses(all));
     setLoaded(true);

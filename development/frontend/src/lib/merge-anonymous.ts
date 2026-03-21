@@ -1,44 +1,66 @@
 /**
- * Silent Auto-Merge — Fenrir Ledger (Story 5.1)
+ * Silent Auto-Merge — Fenrir Ledger (Issue #1671)
  *
  * When a user signs in via Google OAuth, any cards created during their
  * anonymous session are silently merged into the Google-scoped household.
  *
- * Dedup: if a card ID exists in both anonymous and Google households,
- * the Google version wins. Soft-deleted anonymous cards are skipped.
+ * Issue #1671: Anonymous cards are now stored under the fixed "anon" key
+ * (ANON_HOUSEHOLD_ID) instead of a random UUID household.
  *
- * A tombstone in localStorage prevents re-merging on subsequent sign-ins.
+ * Backward compat: also migrates cards from the old random UUID key
+ * (fenrir:household) for users who stored cards before the #1671 refactor.
+ *
+ * Dedup: if a card ID exists in both anonymous and Google households,
+ * the Google version wins.
+ *
+ * After merge: both the fixed "anon" key and any legacy UUID key are cleared.
+ * No tombstone needed — the storage is cleaned up, so re-merge on subsequent
+ * sign-ins naturally finds nothing to merge.
  */
 
 import { getAllCardsGlobal, setAllCards } from "@/lib/storage";
+import { getAnonHouseholdId } from "@/lib/auth/household";
+import { ANON_HOUSEHOLD_ID, STORAGE_KEY_PREFIX } from "@/lib/constants";
 
 /**
- * Merges non-duplicate anonymous cards into the Google-scoped household.
+ * Merges anonymous cards into the Google-scoped household.
+ *
+ * Reads from:
+ *   1. Fixed "anon" key: fenrir_ledger:anon:cards (Issue #1671 model)
+ *   2. Legacy UUID key: fenrir_ledger:<uuid>:cards (pre-#1671 backward compat)
  *
  * @param googleHouseholdId - The authenticated user's household ID (Google sub)
- * @param anonHouseholdId - The anonymous household UUID from localStorage
  * @returns Count of merged and skipped cards
  */
 export function mergeAnonymousCards(
-  googleHouseholdId: string,
-  anonHouseholdId: string
+  googleHouseholdId: string
 ): { merged: number; skipped: number } {
   if (typeof window === "undefined") {
     return { merged: 0, skipped: 0 };
   }
 
-  // Read active (non-deleted) cards from both households
+  // Read active (non-deleted) cards from the Google household
   const googleCards = getAllCardsGlobal(googleHouseholdId);
-  const anonCards = getAllCardsGlobal(anonHouseholdId);
-
-  // Build a set of Google card IDs for fast dedup lookup
   const googleCardIds = new Set(googleCards.map((c) => c.id));
 
-  // Filter anonymous cards: skip duplicates (Google version wins)
+  // Collect all anonymous cards from both storage locations
+  const anonCards = getAllCardsGlobal(ANON_HOUSEHOLD_ID); // fixed "anon" key
+  const legacyAnonId = getAnonHouseholdId(); // old random UUID (may be null)
+  const legacyAnonCards = legacyAnonId ? getAllCardsGlobal(legacyAnonId) : [];
+
+  // Dedup across both anon sources
+  const seenAnonIds = new Set<string>();
+  const allAnonCards = [...anonCards, ...legacyAnonCards].filter((card) => {
+    if (seenAnonIds.has(card.id)) return false;
+    seenAnonIds.add(card.id);
+    return true;
+  });
+
+  // Filter: skip cards already in Google household (Google version wins)
   const newCards = [];
   let skipped = 0;
 
-  for (const card of anonCards) {
+  for (const card of allAnonCards) {
     if (googleCardIds.has(card.id)) {
       skipped++;
     } else {
@@ -50,31 +72,35 @@ export function mergeAnonymousCards(
   if (newCards.length > 0) {
     // Read the full raw card array (including soft-deleted) for the Google
     // household so we don't lose any soft-deleted records when we write back.
-    // getAllCardsGlobal filters out deletedAt, so we read the raw key directly.
     const rawGoogleJson = localStorage.getItem(
-      `fenrir_ledger:${googleHouseholdId}:cards`
+      `${STORAGE_KEY_PREFIX}:${googleHouseholdId}:cards`
     );
     const rawGoogleCards = rawGoogleJson ? JSON.parse(rawGoogleJson) : [];
     setAllCards(googleHouseholdId, [...rawGoogleCards, ...newCards]);
   }
 
-  // Set tombstone to prevent re-merge on subsequent sign-ins
-  localStorage.setItem(`fenrir:merged:${anonHouseholdId}`, "1");
+  // Clean up fixed anonymous storage
+  localStorage.removeItem(`${STORAGE_KEY_PREFIX}:${ANON_HOUSEHOLD_ID}:cards`);
+  localStorage.removeItem(`${STORAGE_KEY_PREFIX}:${ANON_HOUSEHOLD_ID}:household`);
 
-  // Clear anonymous data
-  localStorage.removeItem(`fenrir_ledger:${anonHouseholdId}:cards`);
-  localStorage.removeItem(`fenrir_ledger:${anonHouseholdId}:household`);
+  // Clean up legacy anonymous storage if present
+  if (legacyAnonId) {
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}:${legacyAnonId}:cards`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}:${legacyAnonId}:household`);
+    localStorage.removeItem("fenrir:household"); // old UUID key
+    localStorage.removeItem(`fenrir:merged:${legacyAnonId}`); // old tombstone
+  }
 
   return { merged: newCards.length, skipped };
 }
 
 /**
- * Checks whether anonymous cards from a given household have already been merged.
+ * @deprecated No longer needed in the #1671 model — anonymous storage is
+ * cleaned up during merge, so there is nothing to re-merge on subsequent sign-ins.
+ * Retained for backward compat with existing tests and mocks.
  *
- * @param anonHouseholdId - The anonymous household UUID to check
- * @returns true if a merge tombstone exists for this anonymous household
+ * @returns always false
  */
-export function isMergeComplete(anonHouseholdId: string): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(`fenrir:merged:${anonHouseholdId}`) === "1";
+export function isMergeComplete(_anonHouseholdId: string): boolean {
+  return false;
 }
