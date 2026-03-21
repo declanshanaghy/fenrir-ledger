@@ -203,9 +203,16 @@ describe("Issue #1671 — anonymous card storage model", () => {
       const { mergeAnonymousCards } = await import("@/lib/merge-anonymous");
       const result = mergeAnonymousCards(googleId);
 
-      // One merged (from fixed key), one skipped (from legacy — same ID)
+      // The cross-anon dedup removes the legacy duplicate before Google comparison.
+      // merged=1: unique card merged into Google household
+      // skipped=0: skipped only counts Google household conflicts, not anon-source duplicates
       expect(result.merged).toBe(1);
-      expect(result.skipped).toBe(1);
+      expect(result.skipped).toBe(0);
+
+      // The merged card should be in the Google household
+      const googleCards = readCards(googleId) as Array<{ id: string }>;
+      expect(googleCards).toHaveLength(1);
+      expect(googleCards[0]!.id).toBe("card-dup");
     });
   });
 
