@@ -61,6 +61,54 @@ function normaliseVerdict(raw: string): string {
   return cleaned;
 }
 
+/** Normalise a raw PR value — returns null for placeholder values */
+function normalisePr(raw: string | null): string | null {
+  if (!raw) return null;
+  if (raw === "N/A" || raw === "none" || raw === "-") return null;
+  return raw;
+}
+
+/** Extract summary bullets from the SUMMARY section of a canonical decree body */
+function extractSummary(body: string): string[] {
+  const summaryMatch = body.match(/^SUMMARY:\s*\n((?:\s*[-*]\s*.+\n?)+)/m);
+  if (!summaryMatch?.[1]) return [];
+  return summaryMatch[1]
+    .split("\n")
+    .map(l => l.replace(/^\s*[-*]\s*/, "").trim())
+    .filter(Boolean);
+}
+
+/** Convert a single CHECKS line into a DecreeCheck entry */
+function parseCheckLine(line: string): DecreeCheck {
+  const cp = line.match(/^(.+?):\s*(.+)$/);
+  if (cp) {
+    return { name: cp[1]?.trim() ?? line, result: cp[2]?.trim() ?? "" };
+  }
+  return { name: line, result: "" };
+}
+
+/** Extract CHECKS entries from the CHECKS section of a canonical decree body */
+function extractCanonicalChecks(body: string): DecreeCheck[] {
+  const checksMatch = body.match(/^CHECKS:\s*\n([\s\S]*?)(?=^(?:SEAL|SIGNOFF):\s|᛭᛭᛭\s*END DECREE)/m);
+  if (!checksMatch?.[1]) return [];
+  return checksMatch[1]
+    .split("\n")
+    .map(l => l.replace(/^\s*[-*]?\s*/, "").trim())
+    .filter(Boolean)
+    .map(parseCheckLine);
+}
+
+/** Parse the SEAL line into its three parts */
+function parseSealLine(sealLine: string | null): { sealAgent: string | null; sealRunes: string | null; sealTitle: string | null } {
+  if (!sealLine) return { sealAgent: null, sealRunes: null, sealTitle: null };
+  const parts = sealLine.split("·").map(p => p.trim());
+  return {
+    sealAgent: parts[0] ?? null,
+    sealRunes: parts[1] ?? null,
+    sealTitle: parts[2] ?? null,
+  };
+}
+
 /** Extract checks from box-drawing or freeform content */
 function extractFallbackChecks(text: string): DecreeCheck[] {
   const checks: DecreeCheck[] = [];
@@ -128,48 +176,15 @@ function parseCanonicalDecreeBlock(text: string): DecreeBlock | null {
   // PR: <url or N/A or none>
   const prMatch = body.match(/^PR:\s*(.+)$/m);
   const prRaw: string | null = prMatch ? (prMatch[1]?.trim() ?? null) : null;
-  const pr: string | null =
-    prRaw && prRaw !== "N/A" && prRaw !== "none" && prRaw !== "-"
-      ? prRaw
-      : null;
+  const pr = normalisePr(prRaw);
 
-  // SUMMARY: bullet list (lines starting with - or *)
-  const summaryMatch = body.match(/^SUMMARY:\s*\n((?:\s*[-*]\s*.+\n?)+)/m);
-  const summary: string[] = summaryMatch?.[1]
-    ? summaryMatch[1]
-        .split("\n")
-        .map(l => l.replace(/^\s*[-*]\s*/, "").trim())
-        .filter(Boolean)
-    : [];
+  // SUMMARY, CHECKS, SEAL, SIGNOFF — extracted via helpers
+  const summary = extractSummary(body);
+  const checks = extractCanonicalChecks(body);
 
-  // CHECKS: list of "name: result" entries — stop at SEAL:, SIGNOFF:, or end delimiter
-  const checksMatch = body.match(/^CHECKS:\s*\n([\s\S]*?)(?=^(?:SEAL|SIGNOFF):\s|᛭᛭᛭\s*END DECREE)/m);
-  const checks: DecreeCheck[] = checksMatch?.[1]
-    ? checksMatch[1]
-        .split("\n")
-        .map(l => l.replace(/^\s*[-*]?\s*/, "").trim())
-        .filter(Boolean)
-        .map(l => {
-          const cp = l.match(/^(.+?):\s*(.+)$/);
-          return cp
-            ? { name: cp[1]?.trim() ?? l, result: cp[2]?.trim() ?? "" }
-            : { name: l, result: "" };
-        })
-    : [];
-
-  // SEAL: Agent · RuneSignature · Title
   const sealMatch = body.match(/^SEAL:\s*(.+)$/m);
-  let sealAgent: string | null = null;
-  let sealRunes: string | null = null;
-  let sealTitle: string | null = null;
-  if (sealMatch?.[1]) {
-    const parts = sealMatch[1].split("·").map(p => p.trim());
-    sealAgent = parts[0] ?? null;
-    sealRunes = parts[1] ?? null;
-    sealTitle = parts[2] ?? null;
-  }
+  const { sealAgent, sealRunes, sealTitle } = parseSealLine(sealMatch?.[1] ?? null);
 
-  // SIGNOFF: text
   const signoffMatch = body.match(/^SIGNOFF:\s*(.+)$/m);
   const signoff: string | null = signoffMatch ? (signoffMatch[1]?.trim() ?? null) : null;
 
