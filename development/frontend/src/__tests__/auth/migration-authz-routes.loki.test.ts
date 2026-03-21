@@ -89,9 +89,6 @@ vi.mock("@/lib/stripe/api", () => ({
 // ---------------------------------------------------------------------------
 
 const mockMarkTrialConverted = vi.hoisted(() => vi.fn());
-const mockIsValidFingerprint = vi.hoisted(() =>
-  vi.fn((fp: string) => /^[0-9a-f]{64}$/.test(fp)),
-);
 
 vi.mock("@/lib/kv/trial-store", () => ({
   markTrialConverted: mockMarkTrialConverted,
@@ -100,8 +97,10 @@ vi.mock("@/lib/kv/trial-store", () => ({
   computeTrialStatus: vi.fn(),
 }));
 
-vi.mock("@/lib/trial-utils", () => ({
-  isValidFingerprint: mockIsValidFingerprint,
+// requireAuth mock for routes that use requireAuth (not requireAuthz)
+const mockRequireAuth = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/require-auth", () => ({
+  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
 }));
 
 // ---------------------------------------------------------------------------
@@ -127,8 +126,6 @@ const KARL_FIRESTORE_USER: FirestoreUser = {
   createdAt: "2024-01-01T00:00:00Z",
   updatedAt: "2024-01-01T00:00:00Z",
 };
-
-const VALID_FINGERPRINT = "a".repeat(64);
 
 function authzOk(firestoreUser = KARL_FIRESTORE_USER) {
   mockRequireAuthz.mockResolvedValue({
@@ -523,76 +520,61 @@ describe("POST /api/stripe/unlink — requireAuthz migration (issue #1200)", () 
 // Tests: POST /api/trial/convert
 // ---------------------------------------------------------------------------
 
-describe("POST /api/trial/convert — requireAuthz migration (issue #1200)", () => {
+describe("POST /api/trial/convert — requireAuth (#1634: auth-based, no fingerprint)", () => {
+  const USER_ID = "google-sub-convert-test";
+
+  function convertAuthOk() {
+    mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: USER_ID } });
+  }
+
+  function convertAuthFail() {
+    mockRequireAuth.mockResolvedValue({
+      ok: false,
+      response: NextResponse.json({ error: "missing_token" }, { status: 401 }),
+    });
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockMarkTrialConverted.mockResolvedValue(true);
   });
 
   it("returns 401 for unauthenticated request", async () => {
-    authz401();
+    convertAuthFail();
     const res = await convertPost(
-      makeRequest("POST", "http://localhost/api/trial/convert", {
-        fingerprint: VALID_FINGERPRINT,
-      }),
+      makeRequest("POST", "http://localhost/api/trial/convert", {}),
     );
     expect(res.status).toBe(401);
     expect(mockMarkTrialConverted).not.toHaveBeenCalled();
   });
 
-  it("returns 403 when user has no Firestore record (requireAuthz blocks)", async () => {
-    authz403();
-    const res = await convertPost(
-      makeRequest("POST", "http://localhost/api/trial/convert", {
-        fingerprint: VALID_FINGERPRINT,
-      }),
-    );
-    expect(res.status).toBe(403);
-    expect(mockMarkTrialConverted).not.toHaveBeenCalled();
-  });
-
-  it("returns 400 for missing fingerprint", async () => {
-    authzOk();
+  it("returns 200 with { converted: true } on successful conversion", async () => {
+    convertAuthOk();
     const res = await convertPost(
       makeRequest("POST", "http://localhost/api/trial/convert", {}),
-    );
-    expect(res.status).toBe(400);
-  });
-
-  it("returns 400 for invalid fingerprint format", async () => {
-    authzOk();
-    mockIsValidFingerprint.mockReturnValueOnce(false);
-    const res = await convertPost(
-      makeRequest("POST", "http://localhost/api/trial/convert", {
-        fingerprint: "short-invalid",
-      }),
-    );
-    expect(res.status).toBe(400);
-  });
-
-  it("returns 200 with { converted: true } on successful conversion", async () => {
-    authzOk();
-    const res = await convertPost(
-      makeRequest("POST", "http://localhost/api/trial/convert", {
-        fingerprint: VALID_FINGERPRINT,
-      }),
     );
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.converted).toBe(true);
   });
 
-  it("calls requireAuthz with empty tier object (auth-only, no tier gate)", async () => {
-    authzOk();
+  it("calls markTrialConverted with userId from auth token", async () => {
+    convertAuthOk();
     await convertPost(
-      makeRequest("POST", "http://localhost/api/trial/convert", {
-        fingerprint: VALID_FINGERPRINT,
-      }),
+      makeRequest("POST", "http://localhost/api/trial/convert", {}),
     );
-    expect(mockRequireAuthz).toHaveBeenCalledWith(
-      expect.anything(),
-      {},
+    expect(mockMarkTrialConverted).toHaveBeenCalledWith(USER_ID);
+  });
+
+  it("returns 200 with { converted: false } when no trial exists for user", async () => {
+    convertAuthOk();
+    mockMarkTrialConverted.mockResolvedValue(false);
+    const res = await convertPost(
+      makeRequest("POST", "http://localhost/api/trial/convert", {}),
     );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.converted).toBe(false);
   });
 });
 

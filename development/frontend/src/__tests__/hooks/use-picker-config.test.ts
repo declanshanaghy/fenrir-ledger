@@ -91,9 +91,8 @@ describe("usePickerConfig — Authenticated state", () => {
     });
   });
 
-  it("sends X-Trial-Fingerprint header when fingerprint is available", async () => {
+  it("fetches picker API key without X-Trial-Fingerprint header (#1634: fingerprint removed)", async () => {
     mockAuthStatus = "authenticated";
-    mockComputeFingerprint.mockResolvedValue("abc123fingerprint");
     mockFetch.mockResolvedValueOnce(
       new Response(JSON.stringify({ pickerApiKey: "trial-picker-key" }), {
         status: 200,
@@ -107,12 +106,8 @@ describe("usePickerConfig — Authenticated state", () => {
       expect(result.current.pickerApiKey).toBe("trial-picker-key");
     });
 
-    expect(mockFetch).toHaveBeenCalledWith("/api/config/picker", {
-      headers: {
-        Authorization: "Bearer mock-token",
-        "X-Trial-Fingerprint": "abc123fingerprint",
-      },
-    });
+    const callHeaders = (mockFetch.mock.calls[0][1] as { headers: Record<string, string> }).headers;
+    expect(callHeaders["X-Trial-Fingerprint"]).toBeUndefined();
   });
 
   it("does not include X-Trial-Fingerprint when fingerprint is null", async () => {
