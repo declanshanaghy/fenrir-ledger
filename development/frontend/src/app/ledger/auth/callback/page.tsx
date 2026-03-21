@@ -205,12 +205,19 @@ function AuthCallbackContent() {
 
         // Silent merge: carry anonymous cards into the Google household.
         // Issue #1671: reads from fixed "anon" key + legacy UUID key (backward compat).
-        // No tombstone check needed — anon storage is cleaned up during merge.
-        const { mergeAnonymousCards } = await import("@/lib/merge-anonymous");
-
-        const result = mergeAnonymousCards(session.user.sub);
-        if (result.merged > 0) {
-          sessionStorage.setItem("fenrir:merge-result", JSON.stringify(result));
+        // Wrapped in its own try/catch — merge failures must NOT prevent trial init.
+        // Issue #1707: merge throwing was the root cause of trial init never running.
+        try {
+          const { mergeAnonymousCards } = await import("@/lib/merge-anonymous");
+          const result = mergeAnonymousCards(session.user.sub);
+          if (result.merged > 0) {
+            sessionStorage.setItem("fenrir:merge-result", JSON.stringify(result));
+          }
+        } catch (mergeErr) {
+          console.error(
+            "[Fenrir] Anonymous card merge failed (non-fatal):",
+            mergeErr instanceof Error ? mergeErr.message : String(mergeErr)
+          );
         }
 
         // Initialize trial for this Google account (issue #1637).

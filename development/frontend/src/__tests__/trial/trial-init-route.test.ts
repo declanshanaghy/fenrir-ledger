@@ -28,8 +28,11 @@ const mockDb = vi.hoisted(() => ({
   doc: vi.fn(() => mockDocRef),
 }));
 
+const mockEnsureSoloHousehold = vi.hoisted(() => vi.fn().mockResolvedValue({ created: false }));
+
 vi.mock("@/lib/firebase/firestore", () => ({
   getFirestore: () => mockDb,
+  ensureSoloHousehold: (...args: unknown[]) => mockEnsureSoloHousehold(...args),
 }));
 
 const mockRateLimit = vi.hoisted(() => vi.fn(() => ({ success: true, remaining: 9 })));
@@ -93,7 +96,10 @@ function makeRequest(token = "valid-token"): NextRequest {
 }
 
 function authOk() {
-  mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: USER_ID } });
+  mockRequireAuth.mockResolvedValue({
+    ok: true,
+    user: { sub: USER_ID, email: "user@example.com", name: "Test User" },
+  });
 }
 
 function authFail() {
@@ -109,6 +115,7 @@ describe("POST /api/trial/init", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authOk();
+    mockEnsureSoloHousehold.mockResolvedValue({ created: false });
     mockDocRef.get.mockResolvedValue(missingSnap);
     mockDocRef.set.mockResolvedValue(undefined);
     mockDocRef.update.mockResolvedValue(undefined);
@@ -230,5 +237,42 @@ describe("POST /api/trial/init", () => {
 
     expect(res.status).toBe(429);
     expect(body.error).toBe("rate_limited");
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Issue #1707 — ensureSoloHousehold called on trial init
+  // ═══════════════════════════════════════════════════════════════════════
+
+  it("calls ensureSoloHousehold with userId, email, and name from auth token", async () => {
+    const res = await POST(makeRequest());
+
+    expect(res.status).toBe(200);
+    expect(mockEnsureSoloHousehold).toHaveBeenCalledOnce();
+    expect(mockEnsureSoloHousehold).toHaveBeenCalledWith({
+      userId: USER_ID,
+      email: "user@example.com",
+      displayName: "Test User",
+    });
+  });
+
+  it("returns 500 when ensureSoloHousehold throws (household init failure)", async () => {
+    mockEnsureSoloHousehold.mockRejectedValueOnce(new Error("Firestore write failed"));
+
+    const res = await POST(makeRequest());
+    const body = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(body.error).toBe("internal_error");
+    expect(body.error_description).toMatch(/household/i);
+    // Trial should NOT be initialized if household creation failed
+    expect(mockDocRef.set).not.toHaveBeenCalled();
+  });
+
+  it("does not call ensureSoloHousehold when request is unauthenticated", async () => {
+    authFail();
+
+    await POST(makeRequest("bad-token"));
+
+    expect(mockEnsureSoloHousehold).not.toHaveBeenCalled();
   });
 });

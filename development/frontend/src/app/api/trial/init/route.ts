@@ -17,6 +17,7 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import { initTrial, TrialRestartError } from "@/lib/kv/trial-store";
+import { ensureSoloHousehold } from "@/lib/firebase/firestore";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/trial/init called");
@@ -44,6 +45,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!auth.ok) return auth.response;
 
   const userId = auth.user.sub;
+
+  // Ensure household + user Firestore documents exist (idempotent on subsequent sign-ins).
+  // Issue #1707: must happen before trial init so the household doc is present.
+  try {
+    await ensureSoloHousehold({
+      userId,
+      email: auth.user.email,
+      displayName: auth.user.name,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("POST /api/trial/init ensureSoloHousehold failed", { userId, error: message });
+    return NextResponse.json(
+      { error: "internal_error", error_description: "Failed to initialize household." },
+      { status: 500 }
+    );
+  }
 
   // Initialize trial (idempotent for active/converted; throws on expired restart)
   try {
