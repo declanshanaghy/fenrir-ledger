@@ -8,6 +8,12 @@ import {
   isoToLocalDateString,
   localDateStringToIso,
   daysUntil,
+  isClosed,
+  isGraduated,
+  isOverdue,
+  isFeeApproaching,
+  isPromoExpiring,
+  isBonusOpen,
   computeCardStatus,
   formatCurrency,
   formatDate,
@@ -114,6 +120,210 @@ describe("daysUntil", () => {
   it("handles legacy YYYY-MM-DD format", () => {
     const today = new Date("2025-03-01T00:00:00");
     expect(daysUntil("2025-03-11", today)).toBe(10);
+  });
+});
+
+// ── isClosed ──────────────────────────────────────────────────────────────
+
+describe("isClosed", () => {
+  it("returns true when status is closed", () => {
+    expect(isClosed(makeCard({ status: "closed" }))).toBe(true);
+  });
+
+  it("returns true when closedAt is set", () => {
+    expect(isClosed(makeCard({ closedAt: "2025-05-01T00:00:00.000Z" }))).toBe(true);
+  });
+
+  it("returns false for an active card", () => {
+    expect(isClosed(makeCard())).toBe(false);
+  });
+
+  it("returns false when closedAt is empty string", () => {
+    expect(isClosed(makeCard({ closedAt: "" }))).toBe(false);
+  });
+});
+
+// ── isGraduated ───────────────────────────────────────────────────────────
+
+describe("isGraduated", () => {
+  it("returns true when signUpBonus.met is true", () => {
+    expect(
+      isGraduated(
+        makeCard({
+          signUpBonus: { type: "points", amount: 50000, spendRequirement: 400000, deadline: "", met: true },
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("returns false when signUpBonus.met is false", () => {
+    expect(
+      isGraduated(
+        makeCard({
+          signUpBonus: { type: "points", amount: 50000, spendRequirement: 400000, deadline: "", met: false },
+        })
+      )
+    ).toBe(false);
+  });
+
+  it("returns false when signUpBonus is null", () => {
+    expect(isGraduated(makeCard({ signUpBonus: null }))).toBe(false);
+  });
+});
+
+// ── isOverdue ─────────────────────────────────────────────────────────────
+
+describe("isOverdue", () => {
+  const today = new Date("2025-06-15T12:00:00");
+
+  it("returns true when annual fee date is in the past", () => {
+    expect(
+      isOverdue(makeCard({ annualFee: 9500, annualFeeDate: "2025-06-01T00:00:00.000Z" }), today)
+    ).toBe(true);
+  });
+
+  it("returns false when annualFee is 0", () => {
+    expect(
+      isOverdue(makeCard({ annualFee: 0, annualFeeDate: "2025-06-01T00:00:00.000Z" }), today)
+    ).toBe(false);
+  });
+
+  it("returns false when annualFeeDate is empty", () => {
+    expect(isOverdue(makeCard({ annualFee: 9500, annualFeeDate: "" }), today)).toBe(false);
+  });
+
+  it("returns false when fee is today (0 days)", () => {
+    expect(
+      isOverdue(makeCard({ annualFee: 9500, annualFeeDate: today.toISOString() }), today)
+    ).toBe(false);
+  });
+});
+
+// ── isFeeApproaching ──────────────────────────────────────────────────────
+
+describe("isFeeApproaching", () => {
+  const today = new Date("2025-06-15T12:00:00");
+
+  it("returns true when fee is within FEE_APPROACHING_DAYS", () => {
+    const feeDate = new Date(today);
+    feeDate.setDate(feeDate.getDate() + FEE_APPROACHING_DAYS);
+    expect(
+      isFeeApproaching(makeCard({ annualFee: 9500, annualFeeDate: feeDate.toISOString() }), today)
+    ).toBe(true);
+  });
+
+  it("returns true when fee is today", () => {
+    expect(
+      isFeeApproaching(makeCard({ annualFee: 9500, annualFeeDate: today.toISOString() }), today)
+    ).toBe(true);
+  });
+
+  it("returns false when fee is beyond threshold", () => {
+    const feeDate = new Date(today);
+    feeDate.setDate(feeDate.getDate() + FEE_APPROACHING_DAYS + 1);
+    expect(
+      isFeeApproaching(makeCard({ annualFee: 9500, annualFeeDate: feeDate.toISOString() }), today)
+    ).toBe(false);
+  });
+
+  it("returns false when annualFee is 0", () => {
+    expect(
+      isFeeApproaching(makeCard({ annualFee: 0, annualFeeDate: today.toISOString() }), today)
+    ).toBe(false);
+  });
+});
+
+// ── isPromoExpiring ───────────────────────────────────────────────────────
+
+describe("isPromoExpiring", () => {
+  const today = new Date("2025-06-15T12:00:00");
+
+  it("returns true when deadline is within PROMO_EXPIRING_DAYS", () => {
+    const deadline = new Date(today);
+    deadline.setDate(deadline.getDate() + PROMO_EXPIRING_DAYS);
+    expect(
+      isPromoExpiring(
+        makeCard({
+          signUpBonus: { type: "points", amount: 50000, spendRequirement: 400000, deadline: deadline.toISOString(), met: false },
+        }),
+        today
+      )
+    ).toBe(true);
+  });
+
+  it("returns false when bonus is already met", () => {
+    expect(
+      isPromoExpiring(
+        makeCard({
+          signUpBonus: { type: "points", amount: 50000, spendRequirement: 400000, deadline: today.toISOString(), met: true },
+        }),
+        today
+      )
+    ).toBe(false);
+  });
+
+  it("returns false when signUpBonus is null", () => {
+    expect(isPromoExpiring(makeCard({ signUpBonus: null }), today)).toBe(false);
+  });
+
+  it("returns false when deadline is beyond threshold", () => {
+    const deadline = new Date(today);
+    deadline.setDate(deadline.getDate() + PROMO_EXPIRING_DAYS + 10);
+    expect(
+      isPromoExpiring(
+        makeCard({
+          signUpBonus: { type: "points", amount: 50000, spendRequirement: 400000, deadline: deadline.toISOString(), met: false },
+        }),
+        today
+      )
+    ).toBe(false);
+  });
+});
+
+// ── isBonusOpen ───────────────────────────────────────────────────────────
+
+describe("isBonusOpen", () => {
+  const today = new Date("2025-06-15T12:00:00");
+
+  it("returns true when deadline is far in the future", () => {
+    const deadline = new Date(today);
+    deadline.setDate(deadline.getDate() + PROMO_EXPIRING_DAYS + 10);
+    expect(
+      isBonusOpen(
+        makeCard({
+          signUpBonus: { type: "cashback", amount: 30000, spendRequirement: 200000, deadline: deadline.toISOString(), met: false },
+        }),
+        today
+      )
+    ).toBe(true);
+  });
+
+  it("returns false when bonus is met", () => {
+    const deadline = new Date(today);
+    deadline.setDate(deadline.getDate() + 90);
+    expect(
+      isBonusOpen(
+        makeCard({
+          signUpBonus: { type: "points", amount: 50000, spendRequirement: 400000, deadline: deadline.toISOString(), met: true },
+        }),
+        today
+      )
+    ).toBe(false);
+  });
+
+  it("returns false when signUpBonus is null", () => {
+    expect(isBonusOpen(makeCard({ signUpBonus: null }), today)).toBe(false);
+  });
+
+  it("returns false when deadline is empty", () => {
+    expect(
+      isBonusOpen(
+        makeCard({
+          signUpBonus: { type: "points", amount: 50000, spendRequirement: 400000, deadline: "", met: false },
+        }),
+        today
+      )
+    ).toBe(false);
   });
 });
 
