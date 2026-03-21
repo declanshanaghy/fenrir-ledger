@@ -177,7 +177,7 @@ function getTabButtonClassName(opts: {
     "flex items-center gap-2 px-4 py-3 text-sm font-heading uppercase tracking-wide",
     "border-b-[3px] transition-colors whitespace-nowrap shrink-0 min-h-[44px]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-    isTrashTab && "trash-tab",
+    isTrashTab && "trash-tab ml-auto",
     isGatedTrash && "opacity-65",
     isActive
       ? isHowlTab && !isHowlLocked

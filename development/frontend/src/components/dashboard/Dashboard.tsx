@@ -10,14 +10,14 @@
  *                component. See useDashboardTabs, useLokiMode, DashboardTabButton.
  *
  * Six tabs (left to right):
- *   "all"      — every card regardless of status.
- *   "valhalla" — closed/retired/graduated cards (status === "closed" or "graduated").
- *   "active"   — cards in good standing (status === "active" only).
- *                Default tab when The Howl is empty.
  *   "hunt"     — cards actively earning sign-up bonuses (bonus_open).
  *   "howl"     — cards needing attention (fee_approaching, promo_expiring, overdue).
  *                Default tab when it has cards. Cards display an urgency bar at top.
- *   "trash"    — soft-deleted cards (deletedAt set). Restore or expunge permanently.
+ *   "active"   — (displayed as "Idle") cards in good standing (status === "active" only).
+ *                Default tab when The Howl is empty.
+ *   "valhalla" — closed/retired/graduated cards (status === "closed" or "graduated").
+ *   "all"      — every card regardless of status.
+ *   "trash"    — soft-deleted cards (deletedAt set). Right-aligned. Restore or expunge permanently.
  *                Thrall: tab visible, click triggers KarlUpsellDialog, tab stays unselected.
  *                Karl/trial: full access with Karl bling.
  *
@@ -194,7 +194,7 @@ function HowlCard({ card, lokiLabel }: HowlCardProps) {
 const TAB_EMPTY_LABELS: Record<DashboardTab, string> = {
   all: "No cards",
   valhalla: "No retired cards",
-  active: "No active cards",
+  active: "No idle cards",
   hunt: "No bounties",
   howl: "No alerts",
   trash: "The Void is Empty",
@@ -235,27 +235,6 @@ function TabEmptyState({ tabId, rune }: TabEmptyStateProps) {
 /** Ordered tab definitions matching wireframe left-to-right order */
 const TAB_CONFIG = [
   {
-    id: "all" as DashboardTab,
-    label: "All",
-    rune: "ᛟ",
-    panelId: "panel-all",
-    buttonId: "tab-all",
-  },
-  {
-    id: "valhalla" as DashboardTab,
-    label: "Valhalla",
-    rune: "↑",
-    panelId: "panel-valhalla",
-    buttonId: "tab-valhalla",
-  },
-  {
-    id: "active" as DashboardTab,
-    label: "Active",
-    rune: "ᛉ",
-    panelId: "panel-active",
-    buttonId: "tab-active",
-  },
-  {
     id: "hunt" as DashboardTab,
     label: "The Hunt",
     rune: "ᛜ",
@@ -268,6 +247,27 @@ const TAB_CONFIG = [
     rune: "ᚲ",
     panelId: "panel-howl",
     buttonId: "tab-howl",
+  },
+  {
+    id: "active" as DashboardTab,
+    label: "Idle",
+    rune: "ᛉ",
+    panelId: "panel-active",
+    buttonId: "tab-active",
+  },
+  {
+    id: "valhalla" as DashboardTab,
+    label: "Valhalla",
+    rune: "↑",
+    panelId: "panel-valhalla",
+    buttonId: "tab-valhalla",
+  },
+  {
+    id: "all" as DashboardTab,
+    label: "All",
+    rune: "ᛟ",
+    panelId: "panel-all",
+    buttonId: "tab-all",
   },
   {
     id: "trash" as DashboardTab,

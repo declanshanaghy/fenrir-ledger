@@ -7,10 +7,11 @@
  * 56px tall + safe-area-inset-bottom.
  * z-index: 100 (same chrome layer as the slim top bar).
  *
- * Tabs (3):
+ * Tabs (4):
  *   1. Dashboard  -> /ledger         icon: LayoutGrid
  *   2. Add        -> /ledger/cards/new  icon: Plus
- *   3. Valhalla   -> /ledger (dispatches tab event or navigates with ?tab=valhalla)
+ *   3. Hunt       -> /ledger (dispatches tab event or navigates with ?tab=hunt)
+ *   4. Valhalla   -> /ledger (dispatches tab event or navigates with ?tab=valhalla)
  *
  * Issue #403: Settings tab removed — Settings is now accessed via profile dropdown.
  * Touch targets: 56px tall x ~33% viewport width (well above 44x44px minimum).
@@ -214,21 +215,6 @@ export function LedgerBottomTabs() {
           </Link>
         </li>
 
-        {/* Valhalla — gated for Thrall users */}
-        <li className="flex flex-1 sidebar-karl-feature">
-          <GatedTabButton
-            hasFeature={hasValhalla}
-            isActive={isOnDashboard && activeTab === "valhalla"}
-            rune="↑"
-            label="Open Valhalla tab"
-            lockedLabel="Valhalla \u2014 Karl tier required. Tap to upgrade."
-            tabName="Valhalla"
-            tabBase={tabBase}
-            tabActive={tabActive}
-            onClick={handleValhallaClick}
-          />
-        </li>
-
         {/* Hunt — gated for Thrall users */}
         <li className="flex flex-1 sidebar-karl-feature">
           <GatedTabButton
@@ -241,6 +227,21 @@ export function LedgerBottomTabs() {
             tabBase={tabBase}
             tabActive={tabActive}
             onClick={handleHuntClick}
+          />
+        </li>
+
+        {/* Valhalla — gated for Thrall users */}
+        <li className="flex flex-1 sidebar-karl-feature">
+          <GatedTabButton
+            hasFeature={hasValhalla}
+            isActive={isOnDashboard && activeTab === "valhalla"}
+            rune="↑"
+            label="Open Valhalla tab"
+            lockedLabel="Valhalla \u2014 Karl tier required. Tap to upgrade."
+            tabName="Valhalla"
+            tabBase={tabBase}
+            tabActive={tabActive}
+            onClick={handleValhallaClick}
           />
         </li>
       </ul>
