@@ -16,8 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
-import { initTrial, TrialRestartError } from "@/lib/kv/trial-store";
-import { ensureSoloHousehold } from "@/lib/firebase/firestore";
+import { initTrialForUser } from "@/lib/trial/init-trial";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/trial/init called");
@@ -44,53 +43,39 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth(request);
   if (!auth.ok) return auth.response;
 
-  const userId = auth.user.sub;
+  const result = await initTrialForUser({
+    userId: auth.user.sub,
+    email: auth.user.email,
+    displayName: auth.user.name,
+  });
 
-  // Ensure household + user Firestore documents exist (idempotent on subsequent sign-ins).
-  // Issue #1707: must happen before trial init so the household doc is present.
-  try {
-    await ensureSoloHousehold({
-      userId,
-      email: auth.user.email,
-      displayName: auth.user.name,
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    log.error("POST /api/trial/init ensureSoloHousehold failed", { userId, error: message });
-    return NextResponse.json(
-      { error: "internal_error", error_description: "Failed to initialize household." },
-      { status: 500 }
-    );
-  }
-
-  // Initialize trial (idempotent for active/converted; throws on expired restart)
-  try {
-    const { trial, isNew } = await initTrial(userId);
+  if (result.ok) {
     log.debug("POST /api/trial/init returning", {
       status: 200,
-      isNew,
-      startDate: trial.startDate,
+      isNew: result.isNew,
+      startDate: result.startDate,
     });
     return NextResponse.json(
-      { startDate: trial.startDate, expiresAt: trial.expiresAt, isNew },
+      { startDate: result.startDate, expiresAt: result.expiresAt, isNew: result.isNew },
       { headers: { "Cache-Control": "no-store" } },
     );
-  } catch (err) {
-    if (err instanceof TrialRestartError) {
-      log.debug("POST /api/trial/init returning", { status: 409, error: "trial_expired" });
-      return NextResponse.json(
-        {
-          error: "trial_expired",
-          message: "Contact customer service",
-        },
-        { status: 409 },
-      );
-    }
-    const message = err instanceof Error ? err.message : String(err);
-    log.error("POST /api/trial/init failed", { error: message });
+  }
+
+  if (result.error === "trial_expired") {
+    log.debug("POST /api/trial/init returning", { status: 409, error: "trial_expired" });
     return NextResponse.json(
-      { error: "internal_error", error_description: "Failed to initialize trial." },
-      { status: 500 },
+      {
+        error: "trial_expired",
+        message: "Contact customer service",
+      },
+      { status: 409 },
     );
   }
+
+  // internal_error
+  log.error("POST /api/trial/init failed", { error: result.message });
+  return NextResponse.json(
+    { error: "internal_error", error_description: "Failed to initialize trial." },
+    { status: 500 },
+  );
 }
