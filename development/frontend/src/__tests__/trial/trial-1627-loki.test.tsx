@@ -272,7 +272,9 @@ const FAKE_CARD = {
   bonusMet: false,
 };
 
-describe("Issue #1627 — handleConfirmImport trial init guard", () => {
+// Issue #1637: Trial init moved from import handler to auth callback.
+// DashboardPage handleConfirmImport must NOT call /api/trial/init.
+describe("Issue #1637 — handleConfirmImport does NOT call /api/trial/init", () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
@@ -294,7 +296,7 @@ describe("Issue #1627 — handleConfirmImport trial init guard", () => {
     localStorage.clear();
   });
 
-  it("calls /api/trial/init when first card is imported (guard flag not set)", async () => {
+  it("never calls /api/trial/init when cards are imported (trial init belongs to auth callback)", async () => {
     render(<DashboardPage />);
 
     await waitFor(() => expect(capturedOnConfirmImport).not.toBeNull());
@@ -303,28 +305,6 @@ describe("Issue #1627 — handleConfirmImport trial init guard", () => {
       capturedOnConfirmImport!([FAKE_CARD]);
     });
 
-    // Allow async init to flush
-    await waitFor(() => {
-      const trialInitCalls = fetchSpy.mock.calls.filter(([url]) =>
-        String(url).includes("/api/trial/init"),
-      );
-      expect(trialInitCalls.length).toBeGreaterThan(0);
-    });
-  });
-
-  it("does NOT call /api/trial/init when guard flag is already set", async () => {
-    // Pre-set the toast guard — trial already started previously
-    localStorage.setItem("fenrir:trial-start-toast-shown", "true");
-
-    render(<DashboardPage />);
-
-    await waitFor(() => expect(capturedOnConfirmImport).not.toBeNull());
-
-    await act(async () => {
-      capturedOnConfirmImport!([FAKE_CARD]);
-    });
-
-    // Give time for any async calls to fire
     await new Promise((r) => setTimeout(r, 100));
 
     const trialInitCalls = fetchSpy.mock.calls.filter(([url]) =>
@@ -333,28 +313,12 @@ describe("Issue #1627 — handleConfirmImport trial init guard", () => {
     expect(trialInitCalls).toHaveLength(0);
   });
 
-  it("sets the guard flag in localStorage on first import", async () => {
+  it("never calls /api/trial/init even on repeat imports", async () => {
     render(<DashboardPage />);
 
     await waitFor(() => expect(capturedOnConfirmImport).not.toBeNull());
 
-    await act(async () => {
-      capturedOnConfirmImport!([FAKE_CARD]);
-    });
-
-    expect(localStorage.getItem("fenrir:trial-start-toast-shown")).toBe("true");
-  });
-
-  it("does NOT set guard flag when import is called a second time (already set)", async () => {
-    localStorage.setItem("fenrir:trial-start-toast-shown", "true");
-
-    render(<DashboardPage />);
-
-    await waitFor(() => expect(capturedOnConfirmImport).not.toBeNull());
-
-    // Call once; guard already set so no trial init should fire
     await act(async () => { capturedOnConfirmImport!([FAKE_CARD]); });
-    // Call again; still no trial init
     await act(async () => { capturedOnConfirmImport!([FAKE_CARD]); });
 
     await new Promise((r) => setTimeout(r, 100));
@@ -363,6 +327,18 @@ describe("Issue #1627 — handleConfirmImport trial init guard", () => {
       String(url).includes("/api/trial/init"),
     );
     expect(trialInitCalls).toHaveLength(0);
+  });
+
+  it("does NOT write LS_TRIAL_START_TOAST_SHOWN guard flag on import (removed in #1637)", async () => {
+    render(<DashboardPage />);
+
+    await waitFor(() => expect(capturedOnConfirmImport).not.toBeNull());
+
+    await act(async () => {
+      capturedOnConfirmImport!([FAKE_CARD]);
+    });
+
+    expect(localStorage.getItem("fenrir:trial-start-toast-shown")).toBeNull();
   });
 });
 
@@ -370,7 +346,8 @@ describe("Issue #1627 — handleConfirmImport trial init guard", () => {
 // Section 3: Auth callback page does NOT call /api/trial/init
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("Issue #1627 — AuthCallbackPage does not call /api/trial/init", () => {
+// These error-path cases are still correct: trial init is only called on successful exchange.
+describe("Issue #1627/#1637 — AuthCallbackPage does NOT call /api/trial/init on auth errors", () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {

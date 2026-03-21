@@ -108,7 +108,7 @@ export function TrialSettingsSection() {
             Thy trial hath not yet begun, wanderer
           </p>
           <p className="text-[12px] text-muted-foreground font-body leading-relaxed">
-            Sign in or add a credit card to begin thy 30&#8209;day Karl Trial — free
+            Sign in with your Google account to begin thy 30&#8209;day Karl Trial — free
             to start, no charge until thou subscribest.
           </p>
         </div>
@@ -123,9 +123,9 @@ export function TrialSettingsSection() {
             "border border-gold rounded-sm",
             "self-start",
           ].join(" ")}
-          aria-label="Sign in to begin thy Karl Trial"
+          aria-label="Sign in with Google to begin thy Karl Trial"
         >
-          Sign in to begin
+          Sign in with Google
         </a>
       </section>
     );
