@@ -40,7 +40,6 @@ const SECTIONS: Section[] = [
     tabs: "users",
     shortcuts: [
       { key: "d",  desc: "Delete selected user" },
-      { key: "t",  desc: "Update subscription tier" },
       { key: "h",  desc: "Jump to user's household" },
     ],
   },
