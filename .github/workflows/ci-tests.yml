@@ -68,12 +68,10 @@ jobs:
 
       - name: TypeScript check
         id: tsc
-        working-directory: development/frontend
         run: pnpm run verify:tsc
 
       - name: Run unit tests
         id: unit
-        working-directory: development/frontend
         run: pnpm run verify:unit
 
       - name: Install Playwright browsers
@@ -82,7 +80,6 @@ jobs:
 
       - name: Run Playwright E2E tests
         id: e2e
-        working-directory: development/frontend
         env:
           SERVER_URL: https://www.fenrirledger.com
         run: pnpm run verify:e2e
@@ -196,5 +193,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Verify odins-spear
-        working-directory: development/odins-spear
-        run: pnpm run verify
+        run: pnpm run verify:spear

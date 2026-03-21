@@ -3,6 +3,22 @@
   "packageManager": "pnpm@10.32.1",
   "scripts": {
     "build": "pnpm -r run build",
-    "test": "pnpm --filter fenrir-ledger run test"
+    "test": "pnpm -r run test",
+    "verify": "pnpm -r run verify",
+    "verify:tsc": "pnpm -r run verify:tsc",
+    "verify:build": "pnpm -r run verify:build",
+    "verify:unit": "pnpm -r run verify:unit",
+    "verify:e2e": "pnpm --filter fenrir-ledger run verify:e2e",
+    "build:frontend": "pnpm --filter fenrir-ledger run build",
+    "build:monitor": "pnpm --filter odin-throne-monitor run build",
+    "build:monitor-ui": "pnpm --filter odin-throne-ui run build",
+    "build:spear": "pnpm --filter odins-spear run build",
+    "verify:frontend": "pnpm --filter fenrir-ledger run verify",
+    "verify:monitor": "pnpm --filter odin-throne-monitor run verify",
+    "verify:monitor-ui": "pnpm --filter odin-throne-ui run verify",
+    "verify:spear": "pnpm --filter odins-spear run verify",
+    "test:frontend": "pnpm --filter fenrir-ledger run test",
+    "test:monitor": "pnpm --filter odin-throne-monitor run test",
+    "test:spear": "pnpm --filter odins-spear run test"
   }
 }
