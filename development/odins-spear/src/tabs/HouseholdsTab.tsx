@@ -223,7 +223,7 @@ export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React
       {/* Action hints */}
       <Box marginTop={1}>
         <Text color={DIM}>
-          {`[a] adjust trial  [c] cards  [k] kick  [o] xfer owner  [i] regen invite  ${household.tier === "karl" ? "[s] cancel sub  " : ""}[x] delete  [Ctrl+R] reload`}
+          {`[a] adjust trial  [c] cards  [k] kick  [o] xfer owner  [i] regen invite  ${household.tier === "karl" ? "[s] cancel sub  " : ""}[x] delete`}
         </Text>
       </Box>
     </Box>
