@@ -253,10 +253,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
         onCardsView={(householdId, filterUserId, ownerEmail) => {
           setCardDrilldown({ householdId, filterUserId, breadcrumbFrom: ownerEmail, ownerEmail });
         }}
-        onTrialAdjust={() => {
-          const cmd = getCommands().find((c) => c.name === "trial-adjust");
-          if (cmd) handleTrialInput(cmd);
-        }}
       />
     );
   } else {
@@ -266,6 +262,10 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
         initialHouseholdId={jumpHouseholdId}
         onCardsView={(householdId, householdName) => {
           setCardDrilldown({ householdId, filterUserId: null, breadcrumbFrom: householdName, ownerEmail: householdName });
+        }}
+        onTrialAdjust={() => {
+          const cmd = getCommands().find((c) => c.name === "trial-adjust");
+          if (cmd) handleTrialInput(cmd);
         }}
       />
     );

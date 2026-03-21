@@ -223,7 +223,7 @@ export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React
       {/* Action hints */}
       <Box marginTop={1}>
         <Text color={DIM}>
-          {`[c] cards  [k] kick  [o] xfer owner  [i] regen invite  ${household.tier === "karl" ? "[s] cancel sub  " : ""}[x] delete  [Ctrl+R] reload`}
+          {`[a] adjust trial  [c] cards  [k] kick  [o] xfer owner  [i] regen invite  ${household.tier === "karl" ? "[s] cancel sub  " : ""}[x] delete  [Ctrl+R] reload`}
         </Text>
       </Box>
     </Box>
@@ -469,6 +469,7 @@ interface HouseholdsTabProps {
   cmdStatus: string | null;
   initialHouseholdId?: string | null;
   onCardsView?: (householdId: string, householdName: string) => void;
+  onTrialAdjust?: () => void;
 }
 
 type LoadState = "idle" | "loading" | "loaded" | "error";
@@ -478,7 +479,7 @@ type LoadState = "idle" | "loading" | "loaded" | "error";
  * Left panel: scrollable list with tier badge + member count.
  * Right panel: full household detail with members, Stripe info.
  */
-export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView }: HouseholdsTabProps): React.JSX.Element {
+export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView, onTrialAdjust }: HouseholdsTabProps): React.JSX.Element {
   log.debug("HouseholdsTab render");
 
   const selection = useSelection();
@@ -675,6 +676,11 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView }: Ho
         return;
       }
       setConfirm({ kind: "xfer", memberId: target.userId, email: target.email });
+      return;
+    }
+
+    if (input === "a") {
+      onTrialAdjust?.();
       return;
     }
 
