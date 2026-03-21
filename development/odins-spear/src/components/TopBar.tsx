@@ -52,8 +52,6 @@ export function TopBar({ activeTab, onTabSwitch: _onTabSwitch }: TopBarProps): R
       {/* Right: shortcut hints */}
       <Box flexDirection="row" gap={3}>
         <Text color={GRAY}>{"["}</Text>
-        <Text color={GOLD}>{"/"}</Text>
-        <Text color={GRAY}>{"] Command  ["}</Text>
         <Text color={GOLD}>{"^R"}</Text>
         <Text color={GRAY}>{"] Reload  ["}</Text>
         <Text color={GOLD}>{"?"}</Text>
