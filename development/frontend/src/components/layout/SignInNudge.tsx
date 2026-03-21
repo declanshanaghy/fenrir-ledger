@@ -71,7 +71,7 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
           onClick={() => router.push(buildSignInUrl(pathname))}
           className="underline underline-offset-2 decoration-muted-foreground/40 hover:text-muted-foreground transition-colors"
         >
-          Sign in to sync your data
+          Sign in to sync your data &mdash; start your free 30-day trial
         </button>
       </p>
     );
@@ -122,7 +122,7 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
             Your chains are stored here alone.
           </p>
           <p className="text-sm text-foreground font-body">
-            Sign in to back up your cards and access them from any device.
+            Sign in to back up your cards, sync across devices, and start your free 30-day trial.
           </p>
         </div>
 
@@ -157,7 +157,7 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
       {/* Mobile layout */}
       <div className="sm:hidden relative px-4 py-2.5 pr-12 flex flex-col gap-2">
         <p className="text-sm text-foreground font-body">
-          Sign in to back up your cards and access them from any device.
+          Sign in to back up your cards, sync across devices, and start your free 30-day trial.
         </p>
 
         <button

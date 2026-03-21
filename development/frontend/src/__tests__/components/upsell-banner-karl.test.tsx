@@ -13,6 +13,12 @@ import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 const mockSubscribeStripe = vi.fn();
+const mockRouterPush = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockRouterPush }),
+  usePathname: () => "/ledger",
+}));
 
 vi.mock("@/hooks/useEntitlement", () => ({
   useEntitlement: () => ({
@@ -21,6 +27,10 @@ vi.mock("@/hooks/useEntitlement", () => ({
     hasFeature: () => false,
     subscribeStripe: mockSubscribeStripe,
   }),
+}));
+
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ status: "authenticated" }),
 }));
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

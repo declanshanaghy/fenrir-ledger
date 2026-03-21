@@ -38,6 +38,7 @@ import { KarlUpsellDialog, KARL_UPSELL_IMPORT } from "@/components/entitlement/K
 import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
 import { SignInNudge } from "@/components/layout/SignInNudge";
 import { getCards, getDeletedCards, saveCard, migrateIfNeeded } from "@/lib/storage";
+import { ANON_HOUSEHOLD_ID } from "@/lib/constants";
 import { track } from "@/lib/analytics/track";
 import type { Card } from "@/lib/types";
 
@@ -61,8 +62,8 @@ function DashboardPageContent() {
   useEffect(() => {
     // Wait for auth state to resolve before reading localStorage
     if (status === "loading") return;
-    // householdId is always set once status resolves (anonymous or authenticated)
-    if (!householdId) return;
+    // Resolve effective storage ID: authenticated = sub, anonymous = "anon" (Issue #1671)
+    const effectiveId = householdId ?? ANON_HOUSEHOLD_ID;
 
     // Start loading timer - only show skeleton if loading takes > 500ms
     const skeletonTimer = setTimeout(() => {
@@ -73,10 +74,10 @@ function DashboardPageContent() {
 
     migrateIfNeeded();
     // getCards() now returns ALL non-deleted cards including closed (Issue #352)
-    const loaded = getCards(householdId);
+    const loaded = getCards(effectiveId);
     setCards(loaded);
     // getDeletedCards() returns soft-deleted cards for Trash tab (Issue #1127)
-    setTrashedCards(getDeletedCards(householdId));
+    setTrashedCards(getDeletedCards(effectiveId));
     setIsLoading(false);
     clearTimeout(skeletonTimer);
     setShowSkeleton(false);
@@ -96,10 +97,11 @@ function DashboardPageContent() {
 
   /** Reload both active and trashed cards from localStorage. Called after trash operations. */
   const refreshCards = useCallback(() => {
-    if (!householdId) return;
-    setCards(getCards(householdId));
-    setTrashedCards(getDeletedCards(householdId));
-  }, [householdId]);
+    if (status === "loading") return;
+    const effectiveId = householdId ?? ANON_HOUSEHOLD_ID;
+    setCards(getCards(effectiveId));
+    setTrashedCards(getDeletedCards(effectiveId));
+  }, [householdId, status]);
 
   /** Open import wizard if Karl, otherwise show upsell (#559). */
   const handleImportClick = useCallback(() => {
@@ -129,21 +131,21 @@ function DashboardPageContent() {
   const loaded = !isLoading && status !== "loading";
 
   function handleConfirmImport(importedCards: Omit<Card, "householdId">[]) {
-    if (!householdId) return;
+    const effectiveId = householdId ?? ANON_HOUSEHOLD_ID;
 
     for (const c of importedCards) {
       const card: Card = {
         ...c,
-        householdId,
+        householdId: effectiveId,
         status: "active",
       };
       saveCard(card);
       track("card-save", { method: "import" });
     }
 
-    const refreshed = getCards(householdId); // includes closed cards for Valhalla tab
+    const refreshed = getCards(effectiveId); // includes closed cards for Valhalla tab
     setCards(refreshed);
-    setTrashedCards(getDeletedCards(householdId));
+    setTrashedCards(getDeletedCards(effectiveId));
     // Do NOT close the wizard here -- ImportWizard shows the success step
     // and auto-closes itself after 1.5s via its own useEffect.
 

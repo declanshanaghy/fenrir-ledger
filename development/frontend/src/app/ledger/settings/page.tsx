@@ -312,7 +312,7 @@ export default function SettingsPage() {
               onKeyDown={(e) => handleKeyDown(e, index)}
               className={`karl-bling-tab relative px-5 py-3 text-sm font-heading font-semibold tracking-wide border border-transparent border-b-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                 isSelected
-                  ? "border-border border-b-2 border-b-background -mb-px text-foreground bg-background"
+                  ? "border-border border-b-2 border-b-foreground -mb-px text-foreground bg-background"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >

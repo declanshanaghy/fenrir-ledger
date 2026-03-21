@@ -17,7 +17,10 @@
  */
 
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { buildSignInUrl } from "@/lib/auth/sign-in-url";
 
 // ── Fake sample alert data (hardcoded, never from user store) ────────────────
 
@@ -106,6 +109,11 @@ function SampleAlertCard({ alert }: { alert: SampleAlert }) {
 // ── Upsell overlay ───────────────────────────────────────────────────────────
 
 function HowlUpsellOverlay() {
+  const { status } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const isAnonymous = status === "anonymous";
+
   return (
     <div
       className="absolute inset-0 z-20 flex items-center justify-center bg-background/80 backdrop-blur-[2px]"
@@ -155,25 +163,41 @@ function HowlUpsellOverlay() {
           ))}
         </ul>
 
-        {/* CTA */}
-        <Link
-          href="/pricing"
-          className={cn(
-            "w-full border-2 border-gold bg-gold text-primary-foreground",
-            "py-2.5 px-7 text-sm font-heading font-bold uppercase tracking-wide",
-            "hover:bg-primary hover:brightness-110 transition-colors",
-            "text-center min-h-[44px] flex items-center justify-center"
-          )}
-        >
-          Upgrade to Karl &mdash; $3.99/month
-        </Link>
+        {/* CTA — sign in for anon, pricing for Thrall */}
+        {isAnonymous ? (
+          <button
+            type="button"
+            onClick={() => router.push(buildSignInUrl(pathname))}
+            className={cn(
+              "w-full border-2 border-gold bg-gold text-primary-foreground",
+              "py-2.5 px-7 text-sm font-heading font-bold uppercase tracking-wide",
+              "hover:bg-primary hover:brightness-110 transition-colors",
+              "text-center min-h-[44px] flex items-center justify-center"
+            )}
+            aria-label="Sign in with Google to start your free 30-day trial"
+          >
+            Sign in with Google &mdash; start your free trial
+          </button>
+        ) : (
+          <Link
+            href="/pricing"
+            className={cn(
+              "w-full border-2 border-gold bg-gold text-primary-foreground",
+              "py-2.5 px-7 text-sm font-heading font-bold uppercase tracking-wide",
+              "hover:bg-primary hover:brightness-110 transition-colors",
+              "text-center min-h-[44px] flex items-center justify-center"
+            )}
+          >
+            Upgrade to Karl &mdash; $3.99/month
+          </Link>
+        )}
 
         {/* Secondary link */}
         <Link
           href="/pricing"
           className="text-xs text-muted-foreground underline hover:text-foreground transition-colors font-body"
         >
-          See all Karl features &rarr;
+          {isAnonymous ? "30 days free, no credit card required" : "See all Karl features \u2192"}
         </Link>
       </div>
     </div>

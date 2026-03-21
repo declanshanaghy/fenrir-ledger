@@ -31,6 +31,7 @@
  * Issue #1125 — initial state machine design
  * Issue #1172 — auth gating, restore vs backup message, push loop fix
  * Issue #1239 — lock push to card create/edit only (remove online/retry/login push)
+ * Issue #1693 — refactor: extract helpers, reduce cyclomatic complexity ≤ 15
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -41,6 +42,12 @@ import { getRawAllCards, setAllCards } from "@/lib/storage";
 import { hasMigrated, runMigration } from "@/lib/sync/migration";
 import type { FenrirSession } from "@/lib/types";
 import type { Card } from "@/lib/types";
+import {
+  LS_FIRST_SYNC_SHOWN,
+  maybeShowFirstSyncToast,
+  parseApiError,
+  showMigrationToast,
+} from "@/hooks/useCloudSync.helpers";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -57,9 +64,6 @@ export const SYNCED_DISPLAY_MS = 3000;
  * NOT "fenrir:sync" (which fires on every write including internal sync merges).
  */
 export const AUTO_SYNC_DEBOUNCE_MS = 10_000;
-
-/** localStorage key to prevent repeat first-sync confirmation toast */
-const LS_FIRST_SYNC_SHOWN = "fenrir:first-sync-shown";
 
 // ---------------------------------------------------------------------------
 // Event types
@@ -234,19 +238,8 @@ export function useCloudSync(): CloudSyncState {
       });
 
       if (!response.ok) {
-        let errCode = "sync_error";
-        let errMsg = "Cloud sync failed.";
-        try {
-          const errBody = (await response.json()) as {
-            error?: string;
-            error_description?: string;
-          };
-          errCode = errBody.error ?? errCode;
-          errMsg = errBody.error_description ?? errMsg;
-        } catch {
-          // ignore JSON parse failure
-        }
-        throw Object.assign(new Error(errMsg), { code: errCode });
+        const { code, message } = await parseApiError(response);
+        throw Object.assign(new Error(message), { code });
       }
 
       const { cards: mergedCards, syncedCount } = (await response.json()) as {
@@ -259,47 +252,12 @@ export function useCloudSync(): CloudSyncState {
       // auto-sync debounce listener is not triggered — no push loop. (#1172)
       setAllCards(householdId, mergedCards);
 
-      const wasFirstSync =
-        typeof localStorage !== "undefined" &&
-        localStorage.getItem(LS_FIRST_SYNC_SHOWN) !== "true";
-
       setLastSyncedAt(new Date());
       setCardCount(syncedCount);
       setStatus("synced");
 
-      if (wasFirstSync) {
-        try {
-          localStorage.setItem(LS_FIRST_SYNC_SHOWN, "true");
-        } catch {
-          // localStorage full — skip
-        }
-
-        // Determine sync direction for the correct user-facing message (#1172):
-        //   "restored from cloud" — local was empty, cards came from Firestore
-        //   "backed up"          — local had cards that were pushed to Firestore
-        const isRestoring = localActiveCount === 0 && syncedCount > 0;
-        const plural = syncedCount !== 1;
-        const verb = plural ? "have" : "has";
-        const cardWord = plural ? "cards" : "card";
-
-        if (isRestoring) {
-          toast.success(
-            `Your ${syncedCount} ${cardWord} ${verb} been restored from cloud`,
-            {
-              description: "Yggdrasil guards your ledger.",
-              duration: 5000,
-            }
-          );
-        } else {
-          toast.success(
-            `Your ${syncedCount} ${cardWord} ${verb} been backed up`,
-            {
-              description: "Yggdrasil guards your ledger.",
-              duration: 5000,
-            }
-          );
-        }
-      }
+      // Show one-time first-sync toast (restore vs backup). No-op if already shown.
+      maybeShowFirstSyncToast(syncedCount, localActiveCount);
 
       window.dispatchEvent(
         new CustomEvent(EVT_CLOUD_SYNC_COMPLETE, {
@@ -400,38 +358,12 @@ export function useCloudSync(): CloudSyncState {
       // is not dispatched and no push loop is created.
       setAllCards(householdId, mergedCards);
 
-      const wasFirstSync =
-        typeof localStorage !== "undefined" &&
-        localStorage.getItem(LS_FIRST_SYNC_SHOWN) !== "true";
-
       setLastSyncedAt(new Date());
       setCardCount(activeCount);
       setStatus("synced");
 
-      if (wasFirstSync) {
-        try {
-          localStorage.setItem(LS_FIRST_SYNC_SHOWN, "true");
-        } catch {
-          // localStorage full — skip
-        }
-
-        const isRestoring = localActiveCount === 0 && activeCount > 0;
-        const plural = activeCount !== 1;
-        const verb = plural ? "have" : "has";
-        const cardWord = plural ? "cards" : "card";
-
-        if (isRestoring) {
-          toast.success(
-            `Your ${activeCount} ${cardWord} ${verb} been restored from cloud`,
-            { description: "Yggdrasil guards your ledger.", duration: 5000 }
-          );
-        } else {
-          toast.success(
-            `Your ${activeCount} ${cardWord} ${verb} been backed up`,
-            { description: "Yggdrasil guards your ledger.", duration: 5000 }
-          );
-        }
-      }
+      // Show one-time first-sync toast (restore vs backup). No-op if already shown.
+      maybeShowFirstSyncToast(activeCount, localActiveCount);
 
       window.dispatchEvent(
         new CustomEvent(EVT_CLOUD_SYNC_COMPLETE, {
@@ -505,22 +437,7 @@ export function useCloudSync(): CloudSyncState {
 
       // Show migration toast when cards were actually involved
       if (result.ran && result.cardCount > 0) {
-        const plural = result.cardCount !== 1;
-        const verb = plural ? "have" : "has";
-        const cardWord = plural ? "cards" : "card";
-
-        if (result.direction === "download") {
-          toast.success(
-            `Your ${result.cardCount} ${cardWord} ${verb} been restored from cloud`,
-            { description: "Yggdrasil guards your ledger.", duration: 5000 }
-          );
-        } else {
-          // "upload" or "merge" — user's local cards were backed up
-          toast.success(
-            `Your ${result.cardCount} ${cardWord} ${verb} been backed up to the cloud`,
-            { description: "Yggdrasil guards your ledger.", duration: 5000 }
-          );
-        }
+        showMigrationToast(result.cardCount, result.direction);
       }
 
       // Suppress the first-sync toast in subsequent performSync calls

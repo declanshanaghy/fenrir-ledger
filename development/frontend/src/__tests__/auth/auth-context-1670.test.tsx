@@ -1,11 +1,13 @@
 /**
- * AuthContext — Issue #1670 regression tests
+ * AuthContext — Issue #1670 regression tests (updated for #1671)
  *
- * Validates that AuthContext does NOT eagerly create a householdId for
- * anonymous users. The household UUID must only be created via ensureHouseholdId()
- * when the user explicitly navigates to an interactive page.
+ * Issue #1671 updated the model: anonymous users now have householdId = null
+ * (not a UUID). The original lazy-UUID pattern from #1670 is removed.
  *
- * @ref Issue #1670
+ * This file retains the test structure from #1670 but updates assertions
+ * to reflect the #1671 model where anonymous householdId is always null.
+ *
+ * @ref Issue #1670, #1671
  */
 
 import React from "react";
@@ -17,8 +19,6 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 const mockGetSession = vi.hoisted(() => vi.fn());
 const mockIsSessionValid = vi.hoisted(() => vi.fn());
 const mockClearSession = vi.hoisted(() => vi.fn());
-const mockGetAnonHouseholdId = vi.hoisted(() => vi.fn<() => string | null>());
-const mockGetOrCreateAnonHouseholdId = vi.hoisted(() => vi.fn<() => string>());
 const mockClearEntitlementCache = vi.hoisted(() => vi.fn());
 const mockRefreshSession = vi.hoisted(() => vi.fn());
 
@@ -29,8 +29,7 @@ vi.mock("@/lib/auth/session", () => ({
 }));
 
 vi.mock("@/lib/auth/household", () => ({
-  getAnonHouseholdId: mockGetAnonHouseholdId,
-  getOrCreateAnonHouseholdId: mockGetOrCreateAnonHouseholdId,
+  getAnonHouseholdId: vi.fn(() => null),
 }));
 
 vi.mock("@/lib/entitlement/cache", () => ({
@@ -53,53 +52,36 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe("AuthContext — Issue #1670: no eager household creation", () => {
+describe("AuthContext — Issue #1670/#1671: anonymous householdId model", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: no session, no existing anon UUID (brand-new user)
+    // Default: no session (brand-new anonymous user)
     mockGetSession.mockReturnValue(null);
     mockIsSessionValid.mockReturnValue(false);
-    mockGetAnonHouseholdId.mockReturnValue(null);
-    mockGetOrCreateAnonHouseholdId.mockReturnValue("lazy-anon-uuid");
   });
 
-  // ── Core contract: no eager UUID creation ──────────────────────────────────
+  // ── Core contract: null for anonymous (Issue #1671) ───────────────────────
 
-  it("does NOT call getOrCreateAnonHouseholdId on mount (brand-new anonymous user)", async () => {
-    renderHook(() => useAuthContext(), { wrapper });
-
-    await waitFor(() => {
-      expect(mockGetAnonHouseholdId).toHaveBeenCalled();
-    });
-
-    // The critical assertion: eager creation never happens
-    expect(mockGetOrCreateAnonHouseholdId).not.toHaveBeenCalled();
-  });
-
-  it("sets householdId to empty string for brand-new anonymous user (no existing UUID)", async () => {
-    mockGetAnonHouseholdId.mockReturnValue(null);
-
+  it("sets householdId to null for brand-new anonymous user (Issue #1671)", async () => {
     const { result } = renderHook(() => useAuthContext(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.status).toBe("anonymous");
     });
 
-    expect(result.current.householdId).toBe("");
+    // #1671: anonymous householdId is null, not ""
+    expect(result.current.householdId).toBeNull();
   });
 
-  it("sets householdId to existing UUID for returning anonymous user", async () => {
-    mockGetAnonHouseholdId.mockReturnValue("returning-user-uuid");
-
+  it("sets householdId to null for anonymous user regardless of legacy UUID", async () => {
+    // Even if old fenrir:household exists, model is now null for all anon users
     const { result } = renderHook(() => useAuthContext(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.status).toBe("anonymous");
     });
 
-    expect(result.current.householdId).toBe("returning-user-uuid");
-    // Still no eager creation for returning user
-    expect(mockGetOrCreateAnonHouseholdId).not.toHaveBeenCalled();
+    expect(result.current.householdId).toBeNull();
   });
 
   // ── Authenticated user: uses user.sub ──────────────────────────────────────
@@ -121,41 +103,11 @@ describe("AuthContext — Issue #1670: no eager household creation", () => {
     });
 
     expect(result.current.householdId).toBe("google-sub-abc123");
-    // Anon UUID creation never happens for authenticated users
-    expect(mockGetOrCreateAnonHouseholdId).not.toHaveBeenCalled();
   });
 
-  // ── ensureHouseholdId: lazy creation ───────────────────────────────────────
+  // ── ensureHouseholdId: returns "anon" for anonymous (Issue #1671) ──────────
 
-  it("ensureHouseholdId creates UUID lazily when called (not on mount)", async () => {
-    mockGetAnonHouseholdId.mockReturnValue(null);
-    mockGetOrCreateAnonHouseholdId.mockReturnValue("lazy-created-uuid");
-
-    const { result } = renderHook(() => useAuthContext(), { wrapper });
-
-    await waitFor(() => {
-      expect(result.current.status).toBe("anonymous");
-    });
-
-    // Not yet created
-    expect(result.current.householdId).toBe("");
-    expect(mockGetOrCreateAnonHouseholdId).not.toHaveBeenCalled();
-
-    // Explicitly call ensureHouseholdId (simulates user navigating to /cards/new)
-    let returnedId: string | undefined;
-    act(() => {
-      returnedId = result.current.ensureHouseholdId();
-    });
-
-    // Now the UUID is created and state is updated
-    expect(mockGetOrCreateAnonHouseholdId).toHaveBeenCalledOnce();
-    expect(returnedId).toBe("lazy-created-uuid");
-    expect(result.current.householdId).toBe("lazy-created-uuid");
-  });
-
-  it("ensureHouseholdId returns existing householdId without calling create (returning user)", async () => {
-    mockGetAnonHouseholdId.mockReturnValue("already-exists-uuid");
-
+  it("ensureHouseholdId returns 'anon' for anonymous user (no lazy UUID creation)", async () => {
     const { result } = renderHook(() => useAuthContext(), { wrapper });
 
     await waitFor(() => {
@@ -167,9 +119,10 @@ describe("AuthContext — Issue #1670: no eager household creation", () => {
       returnedId = result.current.ensureHouseholdId();
     });
 
-    // No new UUID created — returned existing one
-    expect(mockGetOrCreateAnonHouseholdId).not.toHaveBeenCalled();
-    expect(returnedId).toBe("already-exists-uuid");
+    // #1671: returns fixed "anon" instead of creating a UUID
+    expect(returnedId).toBe("anon");
+    // householdId stays null — ensureHouseholdId doesn't mutate state
+    expect(result.current.householdId).toBeNull();
   });
 
   it("ensureHouseholdId returns user.sub for authenticated user (no anon UUID created)", async () => {
@@ -194,12 +147,11 @@ describe("AuthContext — Issue #1670: no eager household creation", () => {
     });
 
     expect(returnedId).toBe("google-sub-xyz");
-    expect(mockGetOrCreateAnonHouseholdId).not.toHaveBeenCalled();
   });
 
-  // ── signOut: read-only anon UUID restoration ───────────────────────────────
+  // ── signOut: sets householdId = null (Issue #1671) ────────────────────────
 
-  it("signOut restores anon householdId from read-only getAnonHouseholdId (no creation)", async () => {
+  it("signOut sets householdId = null (no UUID restoration)", async () => {
     const mockSession = {
       user: { sub: "google-sub-def", email: "user@example.com", name: "User", picture: "" },
       access_token: "tok",
@@ -208,9 +160,6 @@ describe("AuthContext — Issue #1670: no eager household creation", () => {
     };
     mockGetSession.mockReturnValue(mockSession);
     mockIsSessionValid.mockReturnValue(true);
-
-    // Simulate user had an anon UUID before signing in
-    mockGetAnonHouseholdId.mockReturnValue("pre-signin-anon-uuid");
 
     const mockLocation = { href: "" };
     Object.defineProperty(window, "location", { value: mockLocation, writable: true });
@@ -225,9 +174,8 @@ describe("AuthContext — Issue #1670: no eager household creation", () => {
       result.current.signOut();
     });
 
-    // Uses read-only anon UUID (does not call getOrCreateAnonHouseholdId)
-    expect(mockGetOrCreateAnonHouseholdId).not.toHaveBeenCalled();
     expect(result.current.status).toBe("anonymous");
-    expect(result.current.householdId).toBe("pre-signin-anon-uuid");
+    // #1671: null, not the old anon UUID
+    expect(result.current.householdId).toBeNull();
   });
 });

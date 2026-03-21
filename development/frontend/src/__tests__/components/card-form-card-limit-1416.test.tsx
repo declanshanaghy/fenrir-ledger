@@ -55,6 +55,7 @@ vi.mock("framer-motion", () => {
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+  usePathname: () => "/ledger",
 }));
 
 // ── Zod resolver — pass all form values through without validation ─────────────
@@ -133,6 +134,12 @@ vi.mock("@/lib/entitlement/card-limit", () => ({
 
 vi.mock("@/hooks/useEntitlement", () => ({
   useEntitlement: () => ({ tier: "thrall" }),
+}));
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ status: "authenticated", householdId: "hh-test", signOut: vi.fn(), ensureHouseholdId: () => "hh-test" }),
 }));
 
 // ── Trial ─────────────────────────────────────────────────────────────────────
@@ -340,6 +347,7 @@ describe("CardForm — Thrall card limit enforcement (issue #643 / #1416)", () =
         "thrall",    // tier from useEntitlement mock
         3,           // only active cards counted (not closed)
         false,       // isTrialActive=false when trial status is "none"
+        false,       // isAnonymous=false when status is "authenticated"
       );
     });
   }, 15000);

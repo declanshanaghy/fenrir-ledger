@@ -34,11 +34,13 @@ import { StepIndicator } from "@/components/sheets/StepIndicator";
 import { MethodSelection } from "@/components/sheets/MethodSelection";
 import { ShareUrlEntry } from "@/components/sheets/ShareUrlEntry";
 import { CsvUpload } from "@/components/sheets/CsvUpload";
+import type { FileFormat } from "@/components/sheets/CsvUpload";
 import { PickerStep } from "@/components/sheets/PickerStep";
 import { SafetyBanner } from "@/components/sheets/SafetyBanner";
 import type { ImportMethod } from "@/components/sheets/MethodSelection";
 import type { Card } from "@/lib/types";
 import type { SheetImportErrorCode } from "@/lib/sheets/types";
+import type { ImportStep } from "@/hooks/useSheetImport";
 import { track } from "@/lib/analytics/track";
 
 interface ImportWizardProps {
@@ -80,28 +82,424 @@ function formatDate(iso: string): string {
   }
 }
 
-/** Map ImportStep to StepIndicator's 0-3 index. */
-function getStepIndex(step: string): number {
+/** Map ImportStep to StepIndicator's 0-3 index via lookup. */
+const STEP_INDEX_MAP: Partial<Record<ImportStep, number>> = {
+  method: 0,
+  "url-entry": 1,
+  "csv-upload": 1,
+  picker: 1,
+  loading: 1,
+  preview: 2,
+  dedup: 2,
+  error: 2,
+  success: 3,
+};
+
+function getStepIndex(step: ImportStep): number {
+  return STEP_INDEX_MAP[step] ?? 0;
+}
+
+/** Map import method to its destination step. */
+const METHOD_TO_STEP: Record<ImportMethod, ImportStep> = {
+  url: "url-entry",
+  picker: "picker",
+  csv: "csv-upload",
+};
+
+/** Loading messages keyed by import method. */
+const LOADING_MESSAGES: Partial<Record<ImportMethod, string>> = {
+  picker: "Reading the rune-stones from your archives...",
+  csv: "Reading the inscriptions from your rune-stone...",
+};
+
+// ── Private step sub-components ───────────────────────────────────────────────
+
+interface AriaLiveRegionProps {
+  step: ImportStep;
+  cardCount: number;
+  dedupResult: DedupResult | null;
+}
+
+function AriaLiveRegion({ step, cardCount, dedupResult }: AriaLiveRegionProps) {
+  return (
+    <div aria-live="polite" className="sr-only">
+      {step === "method" && "Step 1: Choose import method"}
+      {step === "url-entry" && "Step 2: Enter Google Sheets URL"}
+      {step === "csv-upload" && "Step 2: Upload CSV file"}
+      {step === "picker" && "Step 2: Browsing Google Drive"}
+      {step === "loading" && "Loading: extracting cards from your data"}
+      {step === "preview" && `Preview: ${cardCount} cards ready to import`}
+      {step === "dedup" &&
+        `Duplicates found: ${dedupResult?.duplicates.length ?? 0} duplicate cards detected`}
+      {step === "error" && "Error: import failed"}
+      {step === "success" && "Success: cards imported"}
+    </div>
+  );
+}
+
+interface LoadingStepContentProps {
+  importMethod: ImportMethod | null;
+  onCancel: () => void;
+}
+
+function LoadingStepContent({ importMethod, onCancel }: LoadingStepContentProps) {
+  const message =
+    (importMethod && LOADING_MESSAGES[importMethod]) ??
+    "Reading the runes from your spreadsheet...";
+  return (
+    <div className="flex flex-col items-center gap-6 py-8">
+      <div
+        className="h-12 w-12 rounded-full border-2 border-border border-t-gold animate-spin"
+        role="status"
+        aria-label="Loading"
+      />
+      <p className="font-body text-muted-foreground text-base italic text-center">{message}</p>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
+      >
+        Cancel
+      </button>
+    </div>
+  );
+}
+
+interface PreviewCardListProps {
+  cards: Omit<Card, "householdId">[];
+}
+
+function PreviewCardList({ cards }: PreviewCardListProps) {
+  return (
+    <div className="overflow-y-auto flex-1 min-h-0 max-h-[45vh] flex flex-col gap-1.5 pr-1">
+      {cards.map((card) => {
+        const issuer = KNOWN_ISSUERS.find((i) => i.id === card.issuerId);
+        return (
+          <div
+            key={card.id}
+            className="flex items-center justify-between rounded-sm border border-border bg-card px-4 py-3 gap-4"
+          >
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="font-heading text-base text-foreground tracking-wide truncate">
+                {card.cardName}
+              </span>
+              <span className="font-body text-sm text-muted-foreground">
+                {issuer?.name ?? card.issuerId}
+              </span>
+            </div>
+            <div className="flex items-center gap-4 shrink-0">
+              <span className="font-mono text-sm text-muted-foreground">
+                {formatDate(card.openDate)}
+              </span>
+              <span className="font-mono text-sm text-gold">{formatFee(card.annualFee)}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+interface PreviewStepContentProps {
+  cards: Omit<Card, "householdId">[];
+  sensitiveDataWarning: boolean;
+  warning: string | undefined;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function PreviewStepContent({
+  cards,
+  sensitiveDataWarning,
+  warning,
+  onCancel,
+  onConfirm,
+}: PreviewStepContentProps) {
+  const cardLabel = `${cards.length} card${cards.length !== 1 ? "s" : ""}`;
+  return (
+    <div className="flex flex-col gap-3 overflow-hidden flex-1">
+      {sensitiveDataWarning && <SafetyBanner variant="sensitive-data" />}
+      {warning && (
+        <div className="rounded-sm border border-primary/40 bg-primary/10 px-3 py-2">
+          <p className="text-sm font-body text-primary">{warning}</p>
+        </div>
+      )}
+      <PreviewCardList cards={cards} />
+      <div className="flex justify-end gap-2 pt-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px]"
+        >
+          Import {cardLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface ErrorStepContentProps {
+  errorCode: SheetImportErrorCode | null;
+  errorMessage: string;
+  onClose: () => void;
+  onReset: () => void;
+}
+
+function ErrorStepContent({ errorCode, errorMessage, onClose, onReset }: ErrorStepContentProps) {
+  const message = errorCode ? ERROR_MESSAGES[errorCode] : errorMessage;
+  return (
+    <div className="flex flex-col gap-4 py-2">
+      <p className="font-body text-muted-foreground text-base">{message}</p>
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
+        >
+          Close
+        </button>
+        <button
+          type="button"
+          onClick={onReset}
+          className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px]"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface SuccessStepContentProps {
+  importMethod: ImportMethod | null;
+}
+
+function SuccessStepContent({ importMethod }: SuccessStepContentProps) {
+  return (
+    <div className="flex flex-col items-center gap-4 py-6">
+      <div className="text-4xl" aria-hidden="true">
+        ᚠ
+      </div>
+      <p className="font-body text-muted-foreground text-base text-center">
+        The runes have been inscribed in the ledger. Your cards have been added to the household.
+      </p>
+      {importMethod === "url" && (
+        <div className="w-full">
+          <SafetyBanner variant="post-share" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Step content router ───────────────────────────────────────────────────────
+
+interface ImportWizardStepContentProps {
+  step: ImportStep;
+  importMethod: ImportMethod | null;
+  url: string;
+  setUrl: (url: string) => void;
+  cards: Omit<Card, "householdId">[];
+  warning: string | undefined;
+  sensitiveDataWarning: boolean;
+  errorCode: SheetImportErrorCode | null;
+  errorMessage: string;
+  dedupResult: DedupResult | null;
+  isValidUrl: boolean;
+  showUrlError: boolean;
+  pickerApiKey: string | null;
+  onSubmit: () => void;
+  onSubmitCsv: (csv: string) => void;
+  onSubmitFile: (base64: string, filename: string, format: FileFormat) => void;
+  onCancel: () => void;
+  onReset: () => void;
+  onClose: () => void;
+  onConfirm: () => void;
+  onSelectMethod: (method: ImportMethod) => void;
+  onBack: () => void;
+  onSkipDuplicates: () => void;
+  onImportAll: () => void;
+}
+
+function ImportWizardStepContent(props: ImportWizardStepContentProps) {
+  const { step } = props;
+
   switch (step) {
     case "method":
-      return 0;
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-display text-gold tracking-wide text-xl">
+              Import Cards
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Choose a method to import your credit cards into Fenrir Ledger
+            </DialogDescription>
+          </DialogHeader>
+          <MethodSelection onSelectMethod={props.onSelectMethod} pickerApiKey={props.pickerApiKey} />
+        </>
+      );
+
     case "url-entry":
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-display text-gold tracking-wide text-xl">
+              Share a Rune Tablet
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Enter a Google Sheets URL to import your card data
+            </DialogDescription>
+          </DialogHeader>
+          <ShareUrlEntry
+            url={props.url}
+            setUrl={props.setUrl}
+            onSubmit={props.onSubmit}
+            onBack={props.onBack}
+            isValid={props.isValidUrl}
+            showError={props.showUrlError}
+          />
+        </>
+      );
+
     case "csv-upload":
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-display text-gold tracking-wide text-xl">
+              Deliver a Rune-Stone
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Upload a CSV or Excel file containing your credit card data
+            </DialogDescription>
+          </DialogHeader>
+          <CsvUpload
+            onSubmit={props.onSubmitCsv}
+            onSubmitFile={props.onSubmitFile}
+            onBack={props.onBack}
+          />
+        </>
+      );
+
     case "picker":
-      return 1;
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-display text-gold tracking-wide text-xl">
+              Browse the Archives
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Browse and select a spreadsheet from your Google Drive
+            </DialogDescription>
+          </DialogHeader>
+          <PickerStep
+            onSubmitCsv={props.onSubmitCsv}
+            onBack={props.onBack}
+            pickerApiKey={props.pickerApiKey}
+          />
+        </>
+      );
+
     case "loading":
-      return 1;
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-display text-gold tracking-wide text-xl">
+              Deciphering the runes...
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Processing your data and extracting card information
+            </DialogDescription>
+          </DialogHeader>
+          <LoadingStepContent importMethod={props.importMethod} onCancel={props.onCancel} />
+        </>
+      );
+
     case "preview":
+      return (
+        <>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <DialogTitle className="font-display text-gold tracking-wide text-xl">
+                Preview Import
+              </DialogTitle>
+              <span className="inline-flex items-center justify-center rounded-full bg-gold/20 text-gold font-mono text-sm font-bold px-2 py-0.5 border border-gold/30">
+                {props.cards.length} card{props.cards.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <DialogDescription className="sr-only">
+              Review the cards found before importing them to your ledger
+            </DialogDescription>
+          </DialogHeader>
+          <PreviewStepContent
+            cards={props.cards}
+            sensitiveDataWarning={props.sensitiveDataWarning}
+            warning={props.warning}
+            onCancel={props.onClose}
+            onConfirm={props.onConfirm}
+          />
+        </>
+      );
+
     case "dedup":
-      return 2;
+      return props.dedupResult ? (
+        <ImportDedupStep
+          duplicates={props.dedupResult.duplicates}
+          uniqueCount={props.dedupResult.unique.length}
+          onSkipDuplicates={props.onSkipDuplicates}
+          onImportAll={props.onImportAll}
+          onCancel={props.onClose}
+        />
+      ) : null;
+
     case "error":
-      return 2;
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-display text-destructive tracking-wide text-xl">
+              Import Failed
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              An error occurred while importing your cards
+            </DialogDescription>
+          </DialogHeader>
+          <ErrorStepContent
+            errorCode={props.errorCode}
+            errorMessage={props.errorMessage}
+            onClose={props.onClose}
+            onReset={props.onReset}
+          />
+        </>
+      );
+
     case "success":
-      return 3;
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-display text-gold tracking-wide text-xl">
+              Cards imported!
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Your cards have been successfully imported to Fenrir Ledger
+            </DialogDescription>
+          </DialogHeader>
+          <SuccessStepContent importMethod={props.importMethod} />
+        </>
+      );
+
     default:
-      return 0;
+      return null;
   }
 }
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: ImportWizardProps) {
   const {
@@ -153,13 +551,7 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
 
   function handleSelectMethod(method: ImportMethod) {
     setImportMethod(method);
-    if (method === "url") {
-      setStep("url-entry");
-    } else if (method === "picker") {
-      setStep("picker");
-    } else if (method === "csv") {
-      setStep("csv-upload");
-    }
+    setStep(METHOD_TO_STEP[method]);
   }
 
   function handleConfirm() {
@@ -200,291 +592,35 @@ export function ImportWizard({ open, onClose, onConfirmImport, existingCards }: 
         <StepIndicator activeStep={getStepIndex(step)} />
 
         {/* aria-live region announces step changes to screen readers */}
-        <div aria-live="polite" className="sr-only">
-          {step === "method" && "Step 1: Choose import method"}
-          {step === "url-entry" && "Step 2: Enter Google Sheets URL"}
-          {step === "csv-upload" && "Step 2: Upload CSV file"}
-          {step === "picker" && "Step 2: Browsing Google Drive"}
-          {step === "loading" && "Loading: extracting cards from your data"}
-          {step === "preview" && `Preview: ${cards.length} cards ready to import`}
-          {step === "dedup" && `Duplicates found: ${dedupResult?.duplicates.length ?? 0} duplicate cards detected`}
-          {step === "error" && "Error: import failed"}
-          {step === "success" && "Success: cards imported"}
-        </div>
+        <AriaLiveRegion step={step} cardCount={cards.length} dedupResult={dedupResult} />
 
-        {/* ── Method selection step ──────────────────────────────── */}
-        {step === "method" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-xl">
-                Import Cards
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Choose a method to import your credit cards into Fenrir Ledger
-              </DialogDescription>
-            </DialogHeader>
-            <MethodSelection onSelectMethod={handleSelectMethod} pickerApiKey={pickerApiKey} />
-          </>
-        )}
-
-        {/* ── URL entry step ────────────────────────────────────── */}
-        {step === "url-entry" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-xl">
-                Share a Rune Tablet
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Enter a Google Sheets URL to import your card data
-              </DialogDescription>
-            </DialogHeader>
-            <ShareUrlEntry
-              url={url}
-              setUrl={setUrl}
-              onSubmit={submit}
-              onBack={handleBackToMethod}
-              isValid={isValidUrl}
-              showError={showUrlError}
-            />
-          </>
-        )}
-
-        {/* ── CSV upload step ───────────────────────────────────── */}
-        {step === "csv-upload" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-xl">
-                Deliver a Rune-Stone
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Upload a CSV or Excel file containing your credit card data
-              </DialogDescription>
-            </DialogHeader>
-            <CsvUpload
-              onSubmit={submitCsv}
-              onSubmitFile={submitFile}
-              onBack={handleBackToMethod}
-            />
-          </>
-        )}
-
-        {/* ── Picker step (Path B) ────────────────────────────── */}
-        {step === "picker" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-xl">
-                Browse the Archives
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Browse and select a spreadsheet from your Google Drive
-              </DialogDescription>
-            </DialogHeader>
-            <PickerStep
-              onSubmitCsv={submitCsv}
-              onBack={handleBackToMethod}
-              pickerApiKey={pickerApiKey}
-            />
-          </>
-        )}
-
-        {/* ── Loading step ──────────────────────────────────────── */}
-        {step === "loading" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-xl">
-                Deciphering the runes...
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Processing your data and extracting card information
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex flex-col items-center gap-6 py-8">
-              {/* Loading spinner */}
-              <div
-                className="h-12 w-12 rounded-full border-2 border-border border-t-gold animate-spin"
-                role="status"
-                aria-label="Loading"
-              />
-
-              <p className="font-body text-muted-foreground text-base italic text-center">
-                {importMethod === "picker"
-                  ? "Reading the rune-stones from your archives..."
-                  : importMethod === "csv"
-                    ? "Reading the inscriptions from your rune-stone..."
-                    : "Reading the runes from your spreadsheet..."}
-              </p>
-
-              <button
-                type="button"
-                onClick={cancel}
-                className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
-              >
-                Cancel
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* ── Preview step ──────────────────────────────────────── */}
-        {step === "preview" && (
-          <>
-            <DialogHeader>
-              <div className="flex items-center gap-3">
-                <DialogTitle className="font-display text-gold tracking-wide text-xl">
-                  Preview Import
-                </DialogTitle>
-                <span className="inline-flex items-center justify-center rounded-full bg-gold/20 text-gold font-mono text-sm font-bold px-2 py-0.5 border border-gold/30">
-                  {cards.length} card{cards.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-              <DialogDescription className="sr-only">
-                Review the cards found before importing them to your ledger
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex flex-col gap-3 overflow-hidden flex-1">
-              {/* Sensitive data warning */}
-              {sensitiveDataWarning && (
-                <SafetyBanner variant="sensitive-data" />
-              )}
-
-              {/* CSV/fetch warning banner */}
-              {warning && (
-                <div className="rounded-sm border border-primary/40 bg-primary/10 px-3 py-2">
-                  <p className="text-sm font-body text-primary">{warning}</p>
-                </div>
-              )}
-
-              {/* Scrollable card list */}
-              <div className="overflow-y-auto flex-1 min-h-0 max-h-[45vh] flex flex-col gap-1.5 pr-1">
-                {cards.map((card) => {
-                  const issuer = KNOWN_ISSUERS.find((i) => i.id === card.issuerId);
-                  return (
-                    <div
-                      key={card.id}
-                      className="flex items-center justify-between rounded-sm border border-border bg-card px-4 py-3 gap-4"
-                    >
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="font-heading text-base text-foreground tracking-wide truncate">
-                          {card.cardName}
-                        </span>
-                        <span className="font-body text-sm text-muted-foreground">
-                          {issuer?.name ?? card.issuerId}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 shrink-0">
-                        <span className="font-mono text-sm text-muted-foreground">
-                          {formatDate(card.openDate)}
-                        </span>
-                        <span className="font-mono text-sm text-gold">
-                          {formatFee(card.annualFee)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px]"
-                >
-                  Import {cards.length} card{cards.length !== 1 ? "s" : ""}
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ── Dedup step ────────────────────────────────────────── */}
-        {step === "dedup" && dedupResult && (
-          <ImportDedupStep
-            duplicates={dedupResult.duplicates}
-            uniqueCount={dedupResult.unique.length}
-            onSkipDuplicates={handleSkipDuplicates}
-            onImportAll={handleImportAll}
-            onCancel={onClose}
-          />
-        )}
-
-        {/* ── Error step ────────────────────────────────────────── */}
-        {step === "error" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display text-destructive tracking-wide text-xl">
-                Import Failed
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                An error occurred while importing your cards
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex flex-col gap-4 py-2">
-              <p className="font-body text-muted-foreground text-base">
-                {errorCode ? ERROR_MESSAGES[errorCode] : errorMessage}
-              </p>
-
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 min-w-[44px]"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  onClick={reset}
-                  className="inline-flex items-center justify-center rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px]"
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ── Success step ──────────────────────────────────────── */}
-        {step === "success" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display text-gold tracking-wide text-xl">
-                Cards imported!
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Your cards have been successfully imported to Fenrir Ledger
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex flex-col items-center gap-4 py-6">
-              <div className="text-4xl" aria-hidden="true">
-                ᚠ
-              </div>
-              <p className="font-body text-muted-foreground text-base text-center">
-                The runes have been inscribed in the ledger. Your cards have been
-                added to the household.
-              </p>
-
-              {/* Post-share reminder for URL imports */}
-              {importMethod === "url" && (
-                <div className="w-full">
-                  <SafetyBanner variant="post-share" />
-                </div>
-              )}
-            </div>
-          </>
-        )}
+        {/* Step content router */}
+        <ImportWizardStepContent
+          step={step}
+          importMethod={importMethod}
+          url={url}
+          setUrl={setUrl}
+          cards={cards}
+          warning={warning}
+          sensitiveDataWarning={sensitiveDataWarning}
+          errorCode={errorCode}
+          errorMessage={errorMessage}
+          dedupResult={dedupResult}
+          isValidUrl={isValidUrl}
+          showUrlError={showUrlError}
+          pickerApiKey={pickerApiKey}
+          onSubmit={submit}
+          onSubmitCsv={submitCsv}
+          onSubmitFile={submitFile}
+          onCancel={cancel}
+          onReset={reset}
+          onClose={onClose}
+          onConfirm={handleConfirm}
+          onSelectMethod={handleSelectMethod}
+          onBack={handleBackToMethod}
+          onSkipDuplicates={handleSkipDuplicates}
+          onImportAll={handleImportAll}
+        />
       </DialogContent>
     </Dialog>
   );

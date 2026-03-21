@@ -11,22 +11,19 @@
  *               householdId = session.user.sub
  *  - If expired but has refresh_token → attempts to refresh the session
  *  - Else → status = "anonymous", session = null,
- *            householdId = getAnonHouseholdId() (read-only, no eager creation)
- *            If no anon UUID exists yet, householdId = "" until ensureHouseholdId() is called.
+ *            householdId = null (cards stored under ANON_HOUSEHOLD_ID = "anon")
  *
  * NEVER redirects to /sign-in automatically. All app routes are accessible
  * without authentication. Sign-in is an opt-in upgrade path.
  *
  * signOut():
  *  - Clears the auth session from localStorage.
- *  - Restores the anonymous householdId from "fenrir:household" (read-only).
+ *  - Sets householdId = null (anonymous state, uses ANON_HOUSEHOLD_ID = "anon").
  *  - Navigates to / (dashboard in anonymous state), NOT to /sign-in.
  *
- * Household creation contract (Issue #1670):
- *  - Anonymous users: householdId is read from localStorage only (no eager write).
- *    Visiting public/marketing pages never creates a household.
- *  - Household UUID is created LAZILY via ensureHouseholdId() only when the user
- *    explicitly navigates to an interactive page (e.g. /ledger/cards/new).
+ * Household creation contract (Issue #1671):
+ *  - Anonymous users: householdId = null. Cards stored under fixed "anon" key.
+ *    No UUID household is created for anonymous users.
  *  - Authenticated users: householdId = session.user.sub (Google sub claim).
  *
  * See ADR-006 for the anonymous-first auth model.
@@ -42,9 +39,9 @@ import {
   type ReactNode,
 } from "react";
 import { getSession, clearSession, isSessionValid } from "@/lib/auth/session";
-import { getAnonHouseholdId, getOrCreateAnonHouseholdId } from "@/lib/auth/household";
 import { clearEntitlementCache } from "@/lib/entitlement/cache";
 import { refreshSession } from "@/lib/auth/refresh-session";
+import { ANON_HOUSEHOLD_ID } from "@/lib/constants";
 import type { FenrirSession } from "@/lib/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -63,22 +60,23 @@ export interface AuthContextValue {
   /** Current auth status */
   status: AuthStatus;
   /**
-   * The household ID to use for all storage operations.
+   * The household ID to use for authenticated storage operations.
    * - Authenticated: session.user.sub (Google account ID)
-   * - Anonymous (returning): UUID from localStorage("fenrir:household") if it exists
-   * - Anonymous (new user): "" until ensureHouseholdId() is called
-   * - Loading: "" (empty — callers must wait for status !== "loading")
+   * - Anonymous: null — use ANON_HOUSEHOLD_ID ("anon") for storage
+   * - Loading: null — callers must wait for status !== "loading"
+   *
+   * Pages should resolve with: householdId ?? ANON_HOUSEHOLD_ID
    */
-  householdId: string;
-  /** Sign out: clears session, restores anonymous state, navigates to / */
+  householdId: string | null;
+  /** Sign out: clears session, sets anonymous state (householdId=null), navigates to / */
   signOut: () => void;
   /**
-   * Lazily creates and persists the anonymous householdId if not yet set.
-   * Safe to call repeatedly — idempotent.
-   * Returns the existing householdId if one is already set (authenticated or returning anon).
-   * Only creates a new UUID for brand-new anonymous users who have never interacted.
+   * Returns the effective storage ID for the current user.
+   * - Authenticated: returns householdId (session.user.sub)
+   * - Anonymous: returns ANON_HOUSEHOLD_ID ("anon")
    *
-   * Call this from interactive pages (e.g. /ledger/cards/new) — NOT on public/marketing pages.
+   * Safe to call at any time after status !== "loading".
+   * Replaces the old lazy UUID creation pattern from #1670.
    */
   ensureHouseholdId: () => string;
 }
@@ -96,7 +94,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<FenrirSession | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
-  const [householdId, setHouseholdId] = useState<string>("");
+  const [householdId, setHouseholdId] = useState<string | null>(null);
 
   // Evaluate the stored session once on mount (client-only).
   useEffect(() => {
@@ -126,17 +124,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.error("[Fenrir] Session refresh failed:", err);
         }
         // Refresh failed or returned null — treat as anonymous.
-        // Read-only anon UUID (Issue #1670): do not create eagerly.
+        // Anonymous users use the fixed "anon" storage key (Issue #1671).
         setSession(null);
         setStatus("anonymous");
-        setHouseholdId(getAnonHouseholdId() ?? "");
+        setHouseholdId(null);
       } else {
         // No session or no refresh token — anonymous user.
-        // Read existing anon UUID (read-only) — do NOT create eagerly (Issue #1670).
-        // Visiting public pages like /chronicles must not write to localStorage.
+        // Anonymous users use the fixed "anon" storage key (Issue #1671).
+        // No UUID household is created — no localStorage write on mount.
         setSession(null);
         setStatus("anonymous");
-        setHouseholdId(getAnonHouseholdId() ?? "");
+        setHouseholdId(null);
       }
     }
 
@@ -144,15 +142,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   /**
-   * Lazily creates and persists the anonymous householdId when first needed.
-   * Only called from interactive pages (e.g. /ledger/cards/new), not on mount.
-   * Stable reference — only changes when householdId changes.
+   * Returns the effective storage ID for the current user.
+   * For authenticated users: returns householdId (session.user.sub).
+   * For anonymous users: returns ANON_HOUSEHOLD_ID ("anon").
+   *
+   * Replaces the old lazy UUID creation pattern — no UUID is created.
    */
   const ensureHouseholdId = useCallback((): string => {
-    if (householdId) return householdId;
-    const id = getOrCreateAnonHouseholdId();
-    setHouseholdId(id);
-    return id;
+    return householdId ?? ANON_HOUSEHOLD_ID;
   }, [householdId]);
 
   const signOut = useCallback(() => {
@@ -160,13 +157,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Clear entitlement cache on sign-out — the user's subscription link
     // is associated with their Google identity, not the anonymous identity.
     clearEntitlementCache();
-    // Restore anonymous state — read the existing anon UUID (read-only).
-    // Do NOT create a new UUID eagerly on signout (Issue #1670).
-    // If there's no anon UUID, householdId becomes "" and the dashboard shows empty.
-    const anonId = getAnonHouseholdId() ?? "";
+    // Return to anonymous state — householdId = null (Issue #1671).
+    // Anonymous cards remain under the "anon" key.
     setSession(null);
     setStatus("anonymous");
-    setHouseholdId(anonId);
+    setHouseholdId(null);
     // Navigate to dashboard in anonymous state — NOT to /ledger/sign-in.
     // The app is not gated. Returning to /ledger shows the dashboard.
     window.location.href = "/ledger";
