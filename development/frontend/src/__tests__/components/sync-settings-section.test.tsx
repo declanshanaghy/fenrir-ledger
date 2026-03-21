@@ -17,7 +17,11 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
-import { SyncSettingsSection } from "@/components/sync/SyncSettingsSection";
+import {
+  SyncSettingsSection,
+  formatTimestamp,
+  getSyncStatusDotClass,
+} from "@/components/sync/SyncSettingsSection";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -238,6 +242,33 @@ describe("SyncSettingsSection — Karl: offline state", () => {
       name: "Sync unavailable \u2014 offline",
     });
     expect((btn as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
+describe("formatTimestamp", () => {
+  it("returns 'Today at HH:MM' for a date matching today", () => {
+    const now = new Date();
+    const result = formatTimestamp(now);
+    expect(result).toMatch(/^Today at /);
+  });
+
+  it("returns 'Yesterday at HH:MM' for a date not matching today", () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const result = formatTimestamp(yesterday);
+    expect(result).toMatch(/^Yesterday at /);
+  });
+});
+
+describe("getSyncStatusDotClass", () => {
+  it.each([
+    ["idle", "bg-[hsl(var(--egg-border))]"],
+    ["syncing", "bg-[hsl(var(--egg-accent))]"],
+    ["synced", "bg-emerald-500"],
+    ["offline", "opacity-40"],
+    ["error", "bg-destructive"],
+  ] as const)("returns correct class for status=%s", (status, expected) => {
+    expect(getSyncStatusDotClass(status)).toContain(expected);
   });
 });
 
