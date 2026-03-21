@@ -57,7 +57,7 @@ import { POST } from "@/app/api/trial/init/route";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const USER_ID = "google-sub-test-123";
-const TRIAL_PATH = `households/${USER_ID}/trial`;
+const TRIAL_PATH = `households/${USER_ID}/trial/status`;
 
 const missingSnap = { exists: false, data: () => null };
 
@@ -136,7 +136,7 @@ describe("POST /api/trial/init", () => {
     expect(mockDocRef.set).toHaveBeenCalledOnce();
   });
 
-  it("writes trial to /households/{userId}/trial", async () => {
+  it("writes trial to /households/{userId}/trial/status", async () => {
     await POST(makeRequest());
 
     expect(mockDb.doc).toHaveBeenCalledWith(TRIAL_PATH);

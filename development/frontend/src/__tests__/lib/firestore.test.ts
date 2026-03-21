@@ -814,6 +814,6 @@ describe("FIRESTORE_PATHS — no entitlement path (issue #1633)", () => {
   });
 
   it("builds trial subcollection path correctly (issue #1634)", () => {
-    expect(FIRESTORE_PATHS.trial("user-abc")).toBe("households/user-abc/trial");
+    expect(FIRESTORE_PATHS.trial("user-abc")).toBe("households/user-abc/trial/status");
   });
 });
