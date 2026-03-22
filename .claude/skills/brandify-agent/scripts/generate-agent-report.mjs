@@ -1674,10 +1674,12 @@ ${mdxCallbackMarkup}
   // Attempt to compile the generated MDX using @mdx-js/mdx. If it fails,
   // keep the file for debugging and exit non-zero to prevent silent bad publishes.
   try {
-    const mdxJsIndexPath = join(
-      __scriptDir,
-      "../../../../development/ledger/node_modules/@mdx-js/mdx/index.js"
-    );
+    // Resolve @mdx-js/mdx dynamically — works regardless of directory renames
+    const repoRoot = resolve(__scriptDir, "..", "..", "..", "..");
+    const ledgerModules = join(repoRoot, "development", "ledger", "node_modules", "@mdx-js", "mdx", "index.js");
+    const rootModules = join(repoRoot, "node_modules", "@mdx-js", "mdx", "index.js");
+    const { existsSync: mdxExists } = await import("fs");
+    const mdxJsIndexPath = mdxExists(ledgerModules) ? ledgerModules : rootModules;
     const { compile: mdxCompile } = await import(mdxJsIndexPath);
     await mdxCompile(mdx, { format: "mdx" });
     console.log(`[ok] MDX compile validation passed`);
