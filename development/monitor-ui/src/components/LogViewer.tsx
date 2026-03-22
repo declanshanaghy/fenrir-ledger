@@ -139,13 +139,13 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
       <span className="header-badges">
         {job.status === "running" && onCancelJob ? (
           <button
-            className={`job-status-icon-btn job-status-icon-btn--cancel${job.status === "running" ? " pulse" : ""}`}
-            style={{ color: STATUS_COLORS[job.status] }}
+            className={`header-action-btn header-action-btn--cancel${job.status === "running" ? " pulse" : ""}`}
             title="Click to cancel this job"
             aria-label="Cancel running job"
             onClick={() => onCancelJob(job.sessionId)}
           >
             <StatusIconSvg status={job.status} />
+            <span>Cancel</span>
           </button>
         ) : (
           <span
@@ -170,17 +170,18 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
         {showPin && onTogglePin && (
           confirmingUnpin ? (
             <button
-              className="pin-btn pin-btn-confirming"
+              className="header-action-btn header-action-btn--confirm"
               onClick={() => { onTogglePin(); setConfirmingUnpin(false); }}
               onBlur={() => setConfirmingUnpin(false)}
               title="Confirm: remove from Odin\u2019s memory"
               aria-label="Confirm unpin"
             >
-              <span className="pin-confirm-label">✕ unpin?</span>
+              <span>✕</span>
+              <span>Unpin</span>
             </button>
           ) : (
             <button
-              className={`pin-btn${isPinned ? " pinned" : ""}`}
+              className={`header-action-btn${isPinned ? " header-action-btn--pinned" : ""}`}
               onClick={() => {
                 if (isPinned) {
                   setConfirmingUnpin(true);
@@ -193,6 +194,7 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
               aria-pressed={isPinned}
             >
               <PinIcon filled={isPinned} />
+              <span>{isPinned ? "Pinned" : "Pin"}</span>
             </button>
           )
         )}
@@ -1027,12 +1029,13 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
 
   return (
     <button
-      className={`copy-session-btn${copied ? " copied" : ""}`}
+      className={`header-action-btn${copied ? " header-action-btn--copied" : ""}`}
       onClick={handleCopy}
       title={copied ? "Copied!" : "Copy session ID"}
       aria-label={copied ? "Session ID copied" : "Copy session ID"}
     >
       {copied ? <CheckIcon /> : <ClipboardIcon />}
+      <span>{copied ? "Copied" : "Copy"}</span>
     </button>
   );
 }
