@@ -136,23 +136,33 @@ resource "google_dns_record_set" "marketing" {
 }
 
 # --------------------------------------------------------------------------
-# Static Global IP — Odin's Throne (monitor.fenrirledger.com)
+# Static Global IP — Odin's Throne (odins-throne.fenrirledger.com)
 # --------------------------------------------------------------------------
 
-resource "google_compute_global_address" "monitor_ip" {
-  name    = "monitor-ip"
+moved {
+  from = google_compute_global_address.monitor_ip
+  to   = google_compute_global_address.odins_throne_ip
+}
+
+resource "google_compute_global_address" "odins_throne_ip" {
+  name    = "odins-throne-ip"
   project = var.project_id
 
   depends_on = [google_project_service.apis]
 }
 
-resource "google_dns_record_set" "monitor" {
-  name         = "monitor.${var.domain}."
+moved {
+  from = google_dns_record_set.monitor
+  to   = google_dns_record_set.odins_throne
+}
+
+resource "google_dns_record_set" "odins_throne" {
+  name         = "odins-throne.${var.domain}."
   managed_zone = google_dns_managed_zone.app.name
   project      = var.project_id
   type         = "A"
   # TTL raised to 3600s — CDN stable post-cutover (issue #1209).
   ttl = 3600
 
-  rrdatas = [google_compute_global_address.monitor_ip.address]
+  rrdatas = [google_compute_global_address.odins_throne_ip.address]
 }

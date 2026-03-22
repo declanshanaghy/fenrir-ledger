@@ -28,11 +28,11 @@ ui:
 ingress:
   enabled: true
   hosts:
-    - monitor.fenrirledger.com
+    - odins-throne.fenrirledger.com
 
 oauth2Proxy:
   enabled: true
-  redirectUrl: "https://monitor.fenrirledger.com/oauth2/callback"
+  redirectUrl: "https://odins-throne.fenrirledger.com/oauth2/callback"
 
 rbac:
   enabled: true
