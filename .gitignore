@@ -67,3 +67,4 @@ development/network-requests-*.log
 # Auto-generated session artifacts
 TOOLS.md
 .condense-report.md
+quality/reports/
