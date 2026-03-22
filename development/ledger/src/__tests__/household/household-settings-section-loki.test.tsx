@@ -224,8 +224,8 @@ describe("HouseholdSettingsSection — solo Karl owner (issue #1780)", () => {
     render(<HouseholdSettingsSection />);
 
     await waitFor(() => {
-      // InviteCodeDisplay renders the code via aria-label
-      expect(screen.getByLabelText(/invite code/i)).toBeDefined();
+      // InviteCodeDisplay renders the raw invite code value as text
+      expect(screen.getByText("ABC123")).toBeDefined();
     });
   });
 
