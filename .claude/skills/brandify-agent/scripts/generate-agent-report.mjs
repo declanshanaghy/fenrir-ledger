@@ -1129,7 +1129,12 @@ if (publishMode) {
   // Use this for ALL dynamic content between JSX tags: <span>{jsxStr(val)}</span>
   function jsxStr(s) {
     if (typeof s !== "string") s = String(s ?? "");
-    return `{${JSON.stringify(s)}}`;
+    return `{${mdxSafeStringify(s)}}`;
+  }
+  // mdxSafeStringify — JSON.stringify that escapes < > to unicode escapes so MDX
+  // never sees angle brackets inside string literals (prevents tag parsing)
+  function mdxSafeStringify(v) {
+    return JSON.stringify(v).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
   }
 
   function mdxToolInputPreview(tool) {
@@ -1179,7 +1184,7 @@ if (publishMode) {
     const setupMarkup = `
 <details className="entrypoint">
 <summary>ᛊ Sandbox Forging</summary>
-<pre>{${JSON.stringify(setupText)}}</pre>
+<pre>{${mdxSafeStringify(setupText)}}</pre>
 </details>`;
 
     if (promptLines.length === 0) return setupMarkup;
@@ -1209,8 +1214,8 @@ if (publishMode) {
           const body = trimmed.replace(/^[A-Z][A-Z\s—–-]+[\s:(]*\(?UNBREAKABLE\)?:?\s*/i, "").trim();
           markup += `
 <div className="decree-section">
-<div className="decree-section-title"><span className="glyph">⚔</span> {${JSON.stringify(title)}} <span className="decree-oath">— UNBREAKABLE OATH</span></div>
-<div className="decree-law">{${JSON.stringify(body)}}</div>
+<div className="decree-section-title"><span className="glyph">⚔</span> {${mdxSafeStringify(title)}} <span className="decree-oath">— UNBREAKABLE OATH</span></div>
+<div className="decree-law">{${mdxSafeStringify(body)}}</div>
 </div>`;
           continue;
         }
@@ -1224,8 +1229,8 @@ if (publishMode) {
           const stepBody = trimmed.replace(/^\*\*Step \d+\w?[\s—–-]+.+?\*\*\s*/s, "").trim();
           markup += `
 <div className="decree-section">
-<div className="decree-section-title"><span className="glyph">${glyph}</span> Step ${stepMatch[1]} — {${JSON.stringify(stepTitle)}}</div>
-<div className="decree-body">{${JSON.stringify(stepBody)}}</div>
+<div className="decree-section-title"><span className="glyph">${glyph}</span> Step ${stepMatch[1]} — {${mdxSafeStringify(stepTitle)}}</div>
+<div className="decree-body">{${mdxSafeStringify(stepBody)}}</div>
 </div>`;
           continue;
         }
@@ -1235,7 +1240,7 @@ if (publishMode) {
           markup += `
 <div className="decree-section">
 <div className="decree-section-title"><span className="glyph">ᛟ</span> The Matter at Hand</div>
-<div className="decree-body">{${JSON.stringify(body)}}</div>
+<div className="decree-body">{${mdxSafeStringify(body)}}</div>
 </div>`;
           continue;
         }
@@ -1245,7 +1250,7 @@ if (publishMode) {
           markup += `
 <div className="decree-section">
 <div className="decree-section-title"><span className="glyph">ᛉ</span> Laws of the Sandbox Realm</div>
-<div className="decree-law">{${JSON.stringify(body)}}</div>
+<div className="decree-law">{${mdxSafeStringify(body)}}</div>
 </div>`;
           continue;
         }
@@ -1253,7 +1258,7 @@ if (publishMode) {
         if (trimmed.length > 20) {
           markup += `
 <div className="decree-section">
-<div className="decree-body">{${JSON.stringify(trimmed)}}</div>
+<div className="decree-body">{${mdxSafeStringify(trimmed)}}</div>
 </div>`;
         }
       }
@@ -1267,12 +1272,12 @@ if (publishMode) {
 <div className="decree-header">
 <div className="decree-runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ</div>
 <div className="decree-title">The All-Father's Decree</div>
-<div className="decree-subtitle">Spoken from Hlidskjalf unto {${JSON.stringify(decreeName)}}</div>
+<div className="decree-subtitle">Spoken from Hlidskjalf unto {${mdxSafeStringify(decreeName)}}</div>
 </div>
 ${decreeBody}
 <div className="decree-seal">
 <div className="decree-seal-glyph">ᚲ</div>
-<div className="decree-seal-text">So it is written · So it shall be forged · Issue #{${JSON.stringify(issueNum)}}</div>
+<div className="decree-seal-text">So it is written · So it shall be forged · Issue #{${mdxSafeStringify(issueNum)}}</div>
 </div>
 </div>`;
   }
@@ -1304,10 +1309,10 @@ ${decreeBody}
         const avatarSrc = mdxHecklerAvatar(event.name);
         out += `<div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{${JSON.stringify(event.name)}}</span>
+<span className="heckle-name">{${mdxSafeStringify(event.name)}}</span>
 <img className="heckle-avatar" src="${avatarSrc}" alt="${mdxEsc(event.name)}" loading="lazy" />
 </div>
-<div className="heckle-text">{${JSON.stringify(event.text)}}</div>
+<div className="heckle-text">{${mdxSafeStringify(event.text)}}</div>
 </div>\n`;
       } else if (event.type === "mayo-comeback") {
         // Left-aligned Norse agent comeback bubble
@@ -1316,9 +1321,9 @@ ${decreeBody}
         out += `<div className="heckle heckle-comeback">
 <div className="heckle-identity">
 <img className="heckle-avatar" src="${avatarSrc}" alt="${mdxEsc(event.name)}" loading="lazy" />
-<span className="heckle-name">{${JSON.stringify(aTitle)}}</span>
+<span className="heckle-name">{${mdxSafeStringify(aTitle)}}</span>
 </div>
-<div className="heckle-text">{${JSON.stringify(event.text)}}</div>
+<div className="heckle-text">{${mdxSafeStringify(event.text)}}</div>
 </div>\n`;
       } else if (event.type === "mayo-entrance") {
         // Heckler entrance announcement with name + avatar
@@ -1326,14 +1331,14 @@ ${decreeBody}
         const avatarSrc = mdxHecklerAvatar(eName);
         out += `<div className="heckle heckle-entrance">
 <div className="heckle-identity">
-<span className="heckle-name">{${JSON.stringify(eName)}}</span>
+<span className="heckle-name">{${mdxSafeStringify(eName)}}</span>
 <img className="heckle-avatar" src="${avatarSrc}" alt="${mdxEsc(eName)}" loading="lazy" />
 </div>
-<div className="heckle-text">{${JSON.stringify(event.text)}}</div>
+<div className="heckle-text">{${mdxSafeStringify(event.text)}}</div>
 </div>\n`;
       } else if (event.type === "mayo-explosion") {
         // Full-width explosion with Norse tremble animation (::before/::after rune rows via CSS)
-        out += `<div className="heckle heckle-explosion">⚡ {${JSON.stringify(event.text)}} ⚡</div>\n`;
+        out += `<div className="heckle heckle-explosion">⚡ {${mdxSafeStringify(event.text)}} ⚡</div>\n`;
       }
     }
     return out;
@@ -1344,12 +1349,12 @@ ${decreeBody}
   function mdxRenderToolBlock(tool) {
     return `<details className="tool-block${tool.is_error ? " has-error" : ""}">
 <summary className="tool-block-header">
-<span className="tool-name">{${JSON.stringify(tool.name)}}</span>
-<span className="tool-input-preview">{${JSON.stringify(mdxToolInputPreview(tool))}}</span>
+<span className="tool-name">{${mdxSafeStringify(tool.name)}}</span>
+<span className="tool-input-preview">{${mdxSafeStringify(mdxToolInputPreview(tool))}}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{${JSON.stringify(mdxRenderToolInput(tool))}}</pre>
-<pre className="tool-output${tool.is_error ? " error" : ""}">{${JSON.stringify(mdxRenderToolOutput(tool))}}</pre>
+<pre className="tool-input">{${mdxSafeStringify(mdxRenderToolInput(tool))}}</pre>
+<pre className="tool-output${tool.is_error ? " error" : ""}">{${mdxSafeStringify(mdxRenderToolOutput(tool))}}</pre>
 </div>
 </details>\n`;
   }
@@ -1386,14 +1391,14 @@ ${decreeBody}
         ? `#${turnNums[0]}`
         : `#${turnNums[0]}–${turnNums[turnNums.length - 1]}`;
       const toolBadges = mergedTools
-        .map(t => `<span className="tool-badge ${toolBadgeClass(t.name)}">{${JSON.stringify(t.name)}}</span>`)
+        .map(t => `<span className="tool-badge ${toolBadgeClass(t.name)}">{${mdxSafeStringify(t.name)}}</span>`)
         .join(" ");
 
       turnsMarkup += `
 <div className="turn${hasError ? " has-error" : ""}">
 <div className="turn-agent-profile">
 <img className="turn-agent-avatar" src="${mdxAgentAvatarSrc}" alt="${mdxEsc(agentName)}" loading="lazy" />
-<span className="turn-agent-title">{${JSON.stringify(agentTitle)}}</span>
+<span className="turn-agent-title">{${mdxSafeStringify(agentTitle)}}</span>
 </div>
 <details className="turn-box">
 <summary className="turn-header">
@@ -1417,17 +1422,17 @@ ${mergedTools.map(t => mdxRenderToolBlock(t)).join("")}</div>
     // Normal turn with text content — render as left-aligned chat bubble + toolbox
     const hasError = turn.tools.some(t => t.is_error);
     const summary = turn.texts.length
-      ? `{${JSON.stringify(turn.texts[0].slice(0, 120))}}`
+      ? `{${mdxSafeStringify(turn.texts[0].slice(0, 120))}}`
       : turn.tools.map(t => t.name).join(", ");
     const toolBadges = turn.tools
-      .map(t => `<span className="tool-badge ${toolBadgeClass(t.name)}">{${JSON.stringify(t.name)}}</span>`)
+      .map(t => `<span className="tool-badge ${toolBadgeClass(t.name)}">{${mdxSafeStringify(t.name)}}</span>`)
       .join(" ");
 
     turnsMarkup += `
 <div className="turn${hasError ? " has-error" : ""}">
 <div className="turn-agent-profile">
 <img className="turn-agent-avatar" src="${mdxAgentAvatarSrc}" alt="${mdxEsc(agentName)}" loading="lazy" />
-<span className="turn-agent-title">{${JSON.stringify(agentTitle)}}</span>
+<span className="turn-agent-title">{${mdxSafeStringify(agentTitle)}}</span>
 </div>
 <details className="turn-box">
 <summary className="turn-header">
@@ -1440,11 +1445,11 @@ ${mergedTools.map(t => mdxRenderToolBlock(t)).join("")}</div>
 `;
 
     for (const thinking of turn.thinking) {
-      turnsMarkup += `<div className="thinking">{${JSON.stringify(thinking.slice(0, 1000))}}</div>\n`;
+      turnsMarkup += `<div className="thinking">{${mdxSafeStringify(thinking.slice(0, 1000))}}</div>\n`;
     }
     for (const text of turn.texts) {
       // Agent text blocks render as left-aligned 60% chat bubbles
-      turnsMarkup += `<div className="text-block">{${JSON.stringify(text)}}</div>\n`;
+      turnsMarkup += `<div className="text-block">{${mdxSafeStringify(text)}}</div>\n`;
     }
     if (turn.tools.length > 0) {
       turnsMarkup += `<div className="toolbox">\n${turn.tools.map(t => mdxRenderToolBlock(t)).join("")}</div>\n`;
@@ -1470,13 +1475,13 @@ ${mdxRenderHeckleEvents(mdxHeckleEvents)}\n`;
 ${filesCreated.size > 0 ? `<div className="changes-col">
 <h3>Created</h3>
 <ul>
-${[...filesCreated].map(f => `<li className="file-new"><span className="icon">+</span>{${JSON.stringify(shortPath(f))}}</li>`).join("\n")}
+${[...filesCreated].map(f => `<li className="file-new"><span className="icon">+</span>{${mdxSafeStringify(shortPath(f))}}</li>`).join("\n")}
 </ul>
 </div>` : ""}
 ${filesModified.size > 0 ? `<div className="changes-col">
 <h3>Modified</h3>
 <ul>
-${[...filesModified].map(f => `<li className="file-mod"><span className="icon">~</span>{${JSON.stringify(shortPath(f))}}</li>`).join("\n")}
+${[...filesModified].map(f => `<li className="file-mod"><span className="icon">~</span>{${mdxSafeStringify(shortPath(f))}}</li>`).join("\n")}
 </ul>
 </div>` : ""}
 </div>
@@ -1489,13 +1494,13 @@ ${[...filesModified].map(f => `<li className="file-mod"><span className="icon">~
     commitsMarkup = `
 <div className="changes-summary">
 <h2>Commits</h2>
-${commits.map(c => `<div className="commit-item"><span className="msg">{${JSON.stringify(c)}}</span></div>`).join("\n")}
+${commits.map(c => `<div className="commit-item"><span className="msg">{${mdxSafeStringify(c)}}</span></div>`).join("\n")}
 </div>`;
   }
 
   // Victory heckle — full-width explosion
   const mdxVictoryHeckle = hecklerEngine.victoryHeckle();
-  const victoryHeckleMarkup = `<div className="heckle heckle-explosion">⚡ {${JSON.stringify(mdxVictoryHeckle.text)}} ⚡</div>`;
+  const victoryHeckleMarkup = `<div className="heckle heckle-explosion">⚡ {${mdxSafeStringify(mdxVictoryHeckle.text)}} ⚡</div>`;
 
   // Verdict markup — uses chronicle.css .verdict classes
   let verdictMarkup = "";
@@ -1503,7 +1508,7 @@ ${commits.map(c => `<div className="commit-item"><span className="msg">{${JSON.s
     verdictMarkup = `
 <div className="verdict ${verdict.pass ? "pass" : "fail"}">
 <h2>ᛏ ${verdict.pass ? "PASS" : "FAIL"} — QA Verdict</h2>
-<pre>{${JSON.stringify(verdict.text)}}</pre>
+<pre>{${mdxSafeStringify(verdict.text)}}</pre>
 </div>`;
   }
 
@@ -1520,30 +1525,30 @@ ${commits.map(c => `<div className="commit-item"><span className="msg">{${JSON.s
           const ok = /pass|ok|complete|delivered|approved|secured|done/i.test(c.result);
           const fail = /fail|error|missing/i.test(c.result);
           const cc = ok ? "var(--teal-asgard)" : fail ? "var(--fire-muspel)" : "var(--text-rune)";
-          return `<div className="decree-check"><span className="decree-check-name">{${JSON.stringify(c.name)}}</span><span className="decree-check-result" style={{color:"${cc}"}}>{${JSON.stringify(c.result)}}</span></div>`;
+          return `<div className="decree-check"><span className="decree-check-name">{${mdxSafeStringify(c.name)}}</span><span className="decree-check-result" style={{color:"${cc}"}}>{${mdxSafeStringify(c.result)}}</span></div>`;
         }).join("\n")
       : "";
     const dSummary = decree.summary.length > 0
-      ? `<ul className="decree-summary">${decree.summary.map(s => `<li>{${JSON.stringify(s)}}</li>`).join("")}</ul>`
+      ? `<ul className="decree-summary">${decree.summary.map(s => `<li>{${mdxSafeStringify(s)}}</li>`).join("")}</ul>`
       : "";
-    const dPr = decree.pr ? `<div className="decree-field"><span className="decree-label">PR:</span> <a href="${mdxEsc(decree.pr)}" target="_blank" rel="noopener">{${JSON.stringify(decree.pr)}}</a></div>` : "";
+    const dPr = decree.pr ? `<div className="decree-field"><span className="decree-label">PR:</span> <a href="${mdxEsc(decree.pr)}" target="_blank" rel="noopener">{${mdxSafeStringify(decree.pr)}}</a></div>` : "";
     mdxDecreeCompleteMarkup = `
 <div className="decree-complete">
 <div className="decree-complete-header">
 <div className="decree-complete-runes">᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭</div>
-<div className="decree-complete-verdict" style={{color:"${dVerdictColor}"}}>{${JSON.stringify(decree.verdict ?? "COMPLETE")}}</div>
+<div className="decree-complete-verdict" style={{color:"${dVerdictColor}"}}>{${mdxSafeStringify(decree.verdict ?? "COMPLETE")}}</div>
 </div>
 <div className="decree-complete-body">
-<div className="decree-field"><span className="decree-label">Issue:</span> #{${JSON.stringify(decree.issue ?? issueNum)}}</div>
+<div className="decree-field"><span className="decree-label">Issue:</span> #{${mdxSafeStringify(decree.issue ?? issueNum)}}</div>
 ${dPr}
 ${dSummary}
 ${dChecks}
 <div className="decree-seal-line">
-<span className="decree-seal-runes">{${JSON.stringify(decree.sealRunes ?? agentCallback.runes)}}</span>
-<span className="decree-seal-agent">{${JSON.stringify(decree.sealAgent ?? agentName)}}</span>
-<span className="decree-seal-title">{${JSON.stringify(decree.sealTitle ?? agentTitle)}}</span>
+<span className="decree-seal-runes">{${mdxSafeStringify(decree.sealRunes ?? agentCallback.runes)}}</span>
+<span className="decree-seal-agent">{${mdxSafeStringify(decree.sealAgent ?? agentName)}}</span>
+<span className="decree-seal-title">{${mdxSafeStringify(decree.sealTitle ?? agentTitle)}}</span>
 </div>
-<div className="decree-signoff">{${JSON.stringify(decree.signoff ?? agentCallback.signoff)}}</div>
+<div className="decree-signoff">{${mdxSafeStringify(decree.signoff ?? agentCallback.signoff)}}</div>
 </div>
 <div className="decree-complete-footer">᛭᛭᛭ END DECREE ᛭᛭᛭</div>
 </div>`;
@@ -1551,10 +1556,10 @@ ${dChecks}
 
   const mdxCallbackMarkup = `
 <div className="agent-callback">
-<div className="callback-runes">{${JSON.stringify(agentCallback.runes)}}</div>
+<div className="callback-runes">{${mdxSafeStringify(agentCallback.runes)}}</div>
 <div className="callback-declaration">Odin All-Father — Your Will Is Done</div>
-<div className="callback-quote">{${JSON.stringify(`"${agentCallback.quote}"`)}}</div>
-<div className="callback-blood-seal">{${JSON.stringify(`ᛊ ${agentCallback.signoff} · ${agentTitle} · Issue #${issueNum} ᛊ`)}}</div>
+<div className="callback-quote">{${mdxSafeStringify(`"${agentCallback.quote}"`)}}</div>
+<div className="callback-blood-seal">{${mdxSafeStringify(`ᛊ ${agentCallback.signoff} · ${agentTitle} · Issue #${issueNum} ᛊ`)}}</div>
 <div className="callback-wolf">🐺</div>
 </div>
 ${mdxDecreeCompleteMarkup}`;
@@ -1576,13 +1581,13 @@ category: "agent"
 <div className="odin-header">
 <img className="odin-avatar" src="${mdxAgentAvatarPath(agentName)}" alt="${mdxEsc(agentName)}" loading="lazy" />
 <div className="odin-title">
-<h1>{${JSON.stringify(`ᚲ ${agentName} — Issue #${issueNum} (Step ${stepNum})`)}}</h1>
+<h1>{${mdxSafeStringify(`ᚲ ${agentName} — Issue #${issueNum} (Step ${stepNum})`)}}</h1>
 </div>
 </div>
 <div className="meta">
-<span><span className="label">Session:</span> {${JSON.stringify(meta.session || "unknown")}}</span>
-<span><span className="label">Branch:</span> {${JSON.stringify(meta.branch || "unknown")}}</span>
-<span><span className="label">Model:</span> {${JSON.stringify(meta.model || "unknown")}}</span>
+<span><span className="label">Session:</span> {${mdxSafeStringify(meta.session || "unknown")}}</span>
+<span><span className="label">Branch:</span> {${mdxSafeStringify(meta.branch || "unknown")}}</span>
+<span><span className="label">Model:</span> {${mdxSafeStringify(meta.model || "unknown")}}</span>
 </div>
 </div>
 
