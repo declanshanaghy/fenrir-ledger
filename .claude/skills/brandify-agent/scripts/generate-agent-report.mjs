@@ -470,7 +470,9 @@ const entrypointLines = [];
 const jsonEvents = [];
 let inEntrypoint = true;
 
-for (const line of lines) {
+for (const rawLine of lines) {
+  // Strip kubectl timestamp prefixes (e.g. "2026-03-22T08:08:05.193036383Z ")
+  const line = rawLine.replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s/, "");
   if (line.startsWith("{")) {
     inEntrypoint = false;
     try {
