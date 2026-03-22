@@ -42,6 +42,11 @@ config:
       value: "https://marketing.fenrirledger.com/"
     - name: WEBHOOK_URL
       value: "https://marketing.fenrirledger.com/"
+    - name: ANTHROPIC_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: n8n-secrets
+          key: ANTHROPIC_API_KEY
 
 # Secrets from K8s secret. Only N8N_ENCRYPTION_KEY comes from the secret.
 # Host/port/protocol are set via config (not secrets — they're not sensitive).
@@ -58,7 +63,7 @@ persistence:
   enabled: true
   accessModes: ["ReadWriteOnce"]
   size: 1Gi
-  storageClassName: standard-rwo-retain
+  storageClassName: standard-rwo
 
 # Resources
 resources:
@@ -80,6 +85,12 @@ service:
 # Ingress managed by n8n-infra Helm chart (infrastructure/helm/n8n/)
 ingress:
   enabled: false
+
+# Task runners — external sidecar that executes Code nodes.
+# Without this, Code nodes fail: "Task request timed out after 60 seconds".
+taskRunners:
+  enabled: true
+  mode: external
 
 # Image
 image:
