@@ -30,6 +30,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Cards — Anon Empty State: Sign-in CTA (Issue #1748)
+
+| File | Description |
+|------|-------------|
+| [wireframes/cards/anon-empty-state.html](wireframes/cards/anon-empty-state.html) | Anon cards empty state redesign: 9 sections — (A) current-state problem reference showing inverted hierarchy, (B) new desktop anon empty state with sign-in as primary CTA ("Start your free 30-day trial") and "Add a card locally" as secondary CTA, including visual hierarchy annotation, (C) mobile 375px layout with full-width stacked CTAs, (D) authenticated empty state unchanged reference, (E) has-cards SignInNudge full banner unchanged reference, (F) component structure — Path 1 (new AnonEmptyState.tsx, preferred) and Path 2 (isAnonymous prop on EmptyState), (G) state × render matrix (auth state × card count → component rendered), (H) WCAG 2.1 AA accessibility requirements (focus ring, touch targets, aria-describedby, heading hierarchy, tab order), (I) removed elements (SignInNudge hasCards=false branch deprecation). Interaction spec: [anon-empty-state-interaction-spec.md](wireframes/cards/anon-empty-state-interaction-spec.md). |
+| [wireframes/cards/anon-empty-state-interaction-spec.md](wireframes/cards/anon-empty-state-interaction-spec.md) | Interaction spec: Mermaid flow diagram (auth state × card count routing), state machine table (AnonEmptyState triggers and actions), primary CTA navigation via buildSignInUrl(pathname), secondary CTA direct link to /ledger/cards/new, SignInNudge hasCards=false branch removal (exact lines), responsive behaviour table (375px/600px/1024px), animation/reduced-motion notes, full copy table with rationale, component change summary (AnonEmptyState.tsx new, Dashboard.tsx modified, SignInNudge.tsx modified, EmptyState.tsx unchanged), AC-to-wireframe mapping. |
+
+---
+
 ## Cards — Trash Tab: Deleted Card View (Issue #1127)
 
 | File | Description |
