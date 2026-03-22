@@ -13,6 +13,7 @@
  *   isSolo: boolean,
  *   isFull: boolean,
  *   isOwner: boolean,
+ *   isKarl: boolean,              — true when household has an active Karl subscription
  *   inviteCode?: string,          — omitted for non-owners and when household is full
  *   inviteCodeExpiresAt?: string, — omitted for non-owners and when household is full
  *   members: Array<{
@@ -25,12 +26,13 @@
  * }
  *
  * Issue #1123 — Household invite code flow
+ * Issue #1780 — Solo Karl owner must see invite code
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { log } from "@/lib/logger";
-import { getUser, getHousehold, getUsersByHouseholdId, ensureSoloHousehold } from "@/lib/firebase/firestore";
+import { getUser, getHousehold, getUsersByHouseholdId, ensureSoloHousehold, getStripeSubscription } from "@/lib/firebase/firestore";
 
 const MAX_HOUSEHOLD_MEMBERS = 3;
 
@@ -71,6 +73,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const isSolo = household.memberIds.length === 1;
   const isFull = household.memberIds.length >= MAX_HOUSEHOLD_MEMBERS;
 
+  // Determine Karl tier — needed so the component can show invite code for solo Karl owners
+  const stripeSub = await getStripeSubscription(household.id);
+  const isKarl = stripeSub?.active === true && stripeSub?.tier === "karl";
+
   // Fetch all member docs
   const memberDocs = await getUsersByHouseholdId(household.id);
 
@@ -99,6 +105,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     isSolo,
     isFull,
     isOwner,
+    isKarl,
     members,
   };
 

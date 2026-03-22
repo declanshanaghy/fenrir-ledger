@@ -38,6 +38,8 @@ interface HouseholdData {
   isSolo: boolean;
   isFull: boolean;
   isOwner: boolean;
+  /** true when the household has an active Karl subscription — issue #1780 */
+  isKarl: boolean;
   inviteCode?: string;
   inviteCodeExpiresAt?: string;
   members: HouseholdMember[];
@@ -230,8 +232,10 @@ export function HouseholdSettingsSection() {
         </span>
       </div>
 
-      {/* Solo user: Join CTA */}
-      {data.isSolo && (
+      {/* Solo view: primary CTA for Thrall solo users.
+          Skipped for Karl owners — they get the invite code view + secondary join button.
+          — issue #1780 */}
+      {data.isSolo && !(isOwner && data.isKarl) && (
         <div
           className="border border-dashed border-border p-4 text-center flex flex-col gap-3 items-center"
           role="region"
@@ -247,14 +251,17 @@ export function HouseholdSettingsSection() {
             type="button"
             onClick={() => router.push("/ledger/join")}
             className="min-h-[44px] px-5 py-2 border-2 border-border text-sm font-heading font-bold text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 karl-bling-btn"
+            aria-label="Join a Household"
           >
             Join a Household
           </button>
         </div>
       )}
 
-      {/* Multi-member household: show members list */}
-      {!data.isSolo && (
+      {/* Karl owner (solo or multi-member): show members list + invite code.
+          isSolo && isOwner && isKarl — chicken-and-egg fix: owner can see invite code
+          before anyone has joined. — issue #1780 */}
+      {(!data.isSolo || (isOwner && data.isKarl)) && (
         <>
           <div>
             <p className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
@@ -285,6 +292,23 @@ export function HouseholdSettingsSection() {
                 {data.members.find((m) => m.role === "owner")?.displayName ?? "the owner"}
               </strong>{" "}
               for an invite code to share with others.
+            </div>
+          )}
+
+          {/* Solo Karl owner: secondary Join CTA — can still join another household */}
+          {data.isSolo && isOwner && data.isKarl && (
+            <div className="border border-dashed border-border p-3 flex flex-col gap-2 items-start">
+              <p className="text-xs text-muted-foreground font-body">
+                You can also join an existing household instead.
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push("/ledger/join")}
+                className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label="Join a Household"
+              >
+                Join a Household
+              </button>
             </div>
           )}
         </>
