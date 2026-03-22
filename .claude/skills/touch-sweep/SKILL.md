@@ -81,19 +81,54 @@ Organize results into a structured report grouped by area. Calculate:
 - Any external dependencies that need manual action (GCP console, DNS registrar, OAuth configs, etc.)
 - Suggested order of operations if relevant (e.g. "rename directory first, then update all references")
 
-### Step 5 — Update the issue (or print if --dry-run)
+**Area summary table:** Build a concise summary table showing each affected area, file count, and risk level at a glance. This goes at the top of the report before the detailed file listings.
 
-Preserve existing labels on the issue. Do NOT modify labels or assignees.
+**Risk assessment:** For each affected area, assign a risk level based on:
 
-Construct the following markdown body. Use `gh issue edit <N> --body "<body>"` to update the issue. If `--dry-run` was passed, print the body to console instead.
+| Risk | Criteria |
+|------|----------|
+| `HIGH` | Changes to auth, API routes, database schema, secrets, CI/CD pipelines, infrastructure (Terraform/K8s). Breaking these can cause outages, data loss, or security issues. |
+| `MEDIUM` | Changes to shared types/interfaces, package configs, build configs, test infrastructure, agent templates. Breaking these can cause build failures or cascading test failures. |
+| `LOW` | Changes to documentation, skills, wireframes, cosmetic UI, comments. Breaking these has no runtime impact. |
+
+Also assess **overall risk** based on:
+- Number of high-risk areas affected
+- Whether changes span multiple apps (cross-app impact)
+- Whether external/manual steps are required
+- Total blast radius (file count)
+
+### Step 5 — Post sweep as a comment (or print if --dry-run)
+
+Do NOT modify the issue body, labels, or assignees. The original issue description stays untouched.
+
+Post the sweep results as a **comment** on the issue using `gh issue comment <N> --body-file <tempfile>`.
+If `--dry-run` was passed, print the comment body to console instead.
+
+Construct the following markdown comment body:
 
 ```
-## Description
-<Original description from the issue, minus all the file listings and other fluff>
+## Touch Sweep — Blast Radius Analysis
+
+## Summary
+
+| Area | Files | Risk |
+|------|------:|------|
+| <Area 1> | N | HIGH/MEDIUM/LOW |
+| <Area 2> | N | HIGH/MEDIUM/LOW |
+| ... | ... | ... |
+| **Total** | **N** | **<overall risk>** |
+
+## Risk Assessment
+
+**Overall risk: HIGH/MEDIUM/LOW**
+
+- <1-2 sentence explanation of the biggest risk factor>
+- <Any cross-app or external dependency concerns>
+- <Mitigation notes if applicable, e.g. "all changes are find-replace safe">
 
 ## Affected Areas
 
-### <Area Name> (N files)
+### <Area Name> (N files) — <RISK>
 - `<absolute/path/to/file>` (N matches) — <what references the search term and why it matters>
 
 ... (one section per area that has matches, skip empty areas)
@@ -166,11 +201,16 @@ Output a summary to the caller:
 
 ```
 Swept #<N> — "<title>"
-Found <X> files across <Y> areas
-Issue updated: https://github.com/declanshanaghy/fenrir-ledger/issues/<N>
+Risk: HIGH/MEDIUM/LOW | <X> files across <Y> areas
+
+| Area | Files | Risk |
+|------|------:|------|
+| ... summary table ... |
+
+Comment posted: https://github.com/declanshanaghy/fenrir-ledger/issues/<N>
 ```
 
-If `--dry-run`, replace "Issue updated" with "Dry run — issue NOT updated".
+If `--dry-run`, replace "Comment posted" with "Dry run — comment NOT posted".
 
 ## Rules
 
@@ -181,8 +221,8 @@ If `--dry-run`, replace "Issue updated" with "Dry run — issue NOT updated".
 - Include external/manual steps that cannot be automated (DNS changes, OAuth console updates, etc.).
 - The execution plan must be ordered logically (e.g. rename directory before updating references).
 - Always include a grep verification step in acceptance criteria.
+- **NEVER modify the issue body.** Sweep results go in a comment, not the issue description.
 - Preserve any existing labels on the issue. Do not modify them.
-- If the issue has sub-issues, note them in the description but do not modify them.
-- The `--dry-run` output format must be identical to the issue body format so the user can preview.
+- The `--dry-run` output format must be identical to the comment body format so the user can preview.
 - Use absolute file paths in all output.
-- When escaping the body for `gh issue edit --body`, be careful with quotes and special characters. Write to a temp file and use `gh issue edit <N> --body-file <tempfile>` if the body is complex.
+- Write the comment body to a temp file and use `gh issue comment <N> --body-file <tempfile>` to avoid quoting issues.
