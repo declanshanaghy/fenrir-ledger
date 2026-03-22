@@ -22,12 +22,14 @@ const mockGetUser = vi.fn();
 const mockGetHousehold = vi.fn();
 const mockGetUsersByHouseholdId = vi.fn();
 const mockEnsureSoloHousehold = vi.fn();
+const mockGetStripeSubscription = vi.fn();
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getUser: (...args: unknown[]) => mockGetUser(...args),
   getHousehold: (...args: unknown[]) => mockGetHousehold(...args),
   getUsersByHouseholdId: (...args: unknown[]) => mockGetUsersByHouseholdId(...args),
   ensureSoloHousehold: (...args: unknown[]) => mockEnsureSoloHousehold(...args),
+  getStripeSubscription: (...args: unknown[]) => mockGetStripeSubscription(...args),
 }));
 
 import { GET } from "@/app/api/household/members/route";
@@ -87,6 +89,8 @@ describe("GET /api/household/members", () => {
     mockGetUser.mockResolvedValue(ownerUserDoc);
     mockGetHousehold.mockResolvedValue(baseHousehold);
     mockGetUsersByHouseholdId.mockResolvedValue([ownerUserDoc, memberUserDoc]);
+    // Default: no Stripe subscription (free/Thrall tier)
+    mockGetStripeSubscription.mockResolvedValue(null);
   });
 
   it("returns 401 when not authenticated", async () => {
@@ -248,5 +252,122 @@ describe("GET /api/household/members", () => {
     expect(body.isSolo).toBe(true);
     // ensureSoloHousehold must have been called (getUser returned null)
     expect(mockEnsureSoloHousehold).toHaveBeenCalledOnce();
+  });
+
+  // ── isKarl field tests (issue #1780) ─────────────────────────────────────────
+
+  it("returns isKarl: false when no Stripe subscription exists", async () => {
+    mockGetStripeSubscription.mockResolvedValue(null);
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { isKarl: boolean };
+    expect(body.isKarl).toBe(false);
+  });
+
+  it("returns isKarl: true when Stripe subscription is active karl tier", async () => {
+    mockGetStripeSubscription.mockResolvedValue({
+      stripeCustomerId: "cus_test",
+      stripeSubscriptionId: "sub_test",
+      stripeStatus: "active",
+      tier: "karl",
+      active: true,
+      cancelAtPeriodEnd: false,
+      linkedAt: "2026-01-01T00:00:00.000Z",
+      checkedAt: "2026-01-01T00:00:00.000Z",
+    });
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { isKarl: boolean };
+    expect(body.isKarl).toBe(true);
+  });
+
+  it("returns isKarl: false when Stripe subscription is inactive (canceled)", async () => {
+    mockGetStripeSubscription.mockResolvedValue({
+      stripeCustomerId: "cus_test",
+      stripeSubscriptionId: "sub_test",
+      stripeStatus: "canceled",
+      tier: "karl",
+      active: false,
+      cancelAtPeriodEnd: false,
+      linkedAt: "2026-01-01T00:00:00.000Z",
+      checkedAt: "2026-01-01T00:00:00.000Z",
+    });
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { isKarl: boolean };
+    expect(body.isKarl).toBe(false);
+  });
+
+  it("returns isKarl: false when Stripe subscription tier is free", async () => {
+    mockGetStripeSubscription.mockResolvedValue({
+      stripeCustomerId: "cus_test",
+      stripeSubscriptionId: "sub_test",
+      stripeStatus: "active",
+      tier: "free",
+      active: true,
+      cancelAtPeriodEnd: false,
+      linkedAt: "2026-01-01T00:00:00.000Z",
+      checkedAt: "2026-01-01T00:00:00.000Z",
+    });
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { isKarl: boolean };
+    expect(body.isKarl).toBe(false);
+  });
+
+  it("solo Karl owner receives invite code in response", async () => {
+    // Solo household: only owner
+    const soloHousehold = { ...baseHousehold, memberIds: [OWNER_ID] };
+    mockGetHousehold.mockResolvedValue(soloHousehold);
+    mockGetUsersByHouseholdId.mockResolvedValue([ownerUserDoc]);
+    mockGetStripeSubscription.mockResolvedValue({
+      stripeCustomerId: "cus_test",
+      stripeSubscriptionId: "sub_test",
+      stripeStatus: "active",
+      tier: "karl",
+      active: true,
+      cancelAtPeriodEnd: false,
+      linkedAt: "2026-01-01T00:00:00.000Z",
+      checkedAt: "2026-01-01T00:00:00.000Z",
+    });
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as {
+      isSolo: boolean;
+      isOwner: boolean;
+      isKarl: boolean;
+      inviteCode?: string;
+      inviteCodeExpiresAt?: string;
+    };
+    expect(body.isSolo).toBe(true);
+    expect(body.isOwner).toBe(true);
+    expect(body.isKarl).toBe(true);
+    // Karl solo owner must receive the invite code — issue #1780
+    expect(body.inviteCode).toBe("X7K2NP");
+    expect(body.inviteCodeExpiresAt).toBeDefined();
+  });
+
+  it("solo Thrall owner receives isKarl: false — component hides invite code client-side", async () => {
+    // The API returns the invite code for all owners (solo or not) — the component
+    // uses isKarl to decide whether to render it for solo users (issue #1780).
+    const soloHousehold = { ...baseHousehold, memberIds: [OWNER_ID] };
+    mockGetHousehold.mockResolvedValue(soloHousehold);
+    mockGetUsersByHouseholdId.mockResolvedValue([ownerUserDoc]);
+    mockGetStripeSubscription.mockResolvedValue(null);
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as {
+      isSolo: boolean;
+      isOwner: boolean;
+      isKarl: boolean;
+      inviteCode?: string;
+    };
+    expect(body.isSolo).toBe(true);
+    expect(body.isOwner).toBe(true);
+    expect(body.isKarl).toBe(false);
+    // API still returns inviteCode (owner gate); component decides display based on isKarl
+    expect(body.inviteCode).toBe("X7K2NP");
   });
 });
