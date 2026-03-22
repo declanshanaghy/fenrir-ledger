@@ -274,6 +274,6 @@ The following elements must NOT be affected by this change:
 
 | File | Change |
 |---|---|
-| `development/monitor-ui/src/styles/index.css` | Update `.card-status--clickable` hover/active; add `.job-status-badge--cancel`; add CSS custom properties |
-| `development/monitor-ui/src/components/LogViewer.tsx` | Replace inline style override with `.job-status-badge--cancel` class; add text label to button content |
-| `development/monitor-ui/src/components/JobCard.tsx` | Add text label (`{sLabel}`) alongside `{sIcon}` in the cancel button |
+| `development/odins-throne-ui/src/styles/index.css` | Update `.card-status--clickable` hover/active; add `.job-status-badge--cancel`; add CSS custom properties |
+| `development/odins-throne-ui/src/components/LogViewer.tsx` | Replace inline style override with `.job-status-badge--cancel` class; add text label to button content |
+| `development/odins-throne-ui/src/components/JobCard.tsx` | Add text label (`{sLabel}`) alongside `{sIcon}` in the cancel button |

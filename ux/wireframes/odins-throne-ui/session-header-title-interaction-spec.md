@@ -120,10 +120,10 @@ the current behavior. No error state, no spinner.
 
 | File | Change |
 |---|---|
-| `development/monitor/src/k8s.ts` | Read `fenrir/issue-title`, `fenrir/pr-title`, `fenrir/branch` annotations from K8s Job object |
-| `development/monitor/src/ws.ts` | Add `issueTitle`, `branchName` to `Job` wire type |
-| `development/monitor-ui/src/lib/types.ts` | Add `issueTitle: string \| null`, `branchName: string \| null` to `DisplayJob` |
-| `development/monitor-ui/src/lib/` | New `resolveSessionTitle.ts` utility |
-| `development/monitor-ui/src/components/LogViewer.tsx` | Extract `SessionHeader`, replace `.session-title` span |
-| `development/monitor-ui/src/components/JobCard.tsx` | Replace agent-primary layout with issue-title-primary layout |
+| `development/odins-throne/src/k8s.ts` | Read `fenrir/issue-title`, `fenrir/pr-title`, `fenrir/branch` annotations from K8s Job object |
+| `development/odins-throne/src/ws.ts` | Add `issueTitle`, `branchName` to `Job` wire type |
+| `development/odins-throne-ui/src/lib/types.ts` | Add `issueTitle: string \| null`, `branchName: string \| null` to `DisplayJob` |
+| `development/odins-throne-ui/src/lib/` | New `resolveSessionTitle.ts` utility |
+| `development/odins-throne-ui/src/components/LogViewer.tsx` | Extract `SessionHeader`, replace `.session-title` span |
+| `development/odins-throne-ui/src/components/JobCard.tsx` | Replace agent-primary layout with issue-title-primary layout |
 | `dispatch/dispatch-job.sh` (or equivalent) | Fetch issue/PR title at job-creation time, set K8s annotations |

@@ -155,7 +155,7 @@ export const WIKI_LINKS: Record<string, string> = {
 
 ```tsx
 // Internal component — can live in LogViewer.tsx or be extracted to
-// development/monitor-ui/src/components/RuneSignatureBlock.tsx
+// development/odins-throne-ui/src/components/RuneSignatureBlock.tsx
 
 interface RuneSignatureBlockProps {
   agentKey?: string;
