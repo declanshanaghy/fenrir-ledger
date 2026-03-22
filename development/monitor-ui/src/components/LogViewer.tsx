@@ -84,6 +84,7 @@ import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscrip
 import { DecreeBlock, isDecreeBlock } from "./DecreeBlock";
 import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
 import { StatusIconSvg } from "./StatusIcon";
+import { downloadLog } from "../lib/localStorageLogs";
 
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 
@@ -194,6 +195,9 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
               <PinIcon filled={isPinned} />
             </button>
           )
+        )}
+        {isPinned && job.status === "succeeded" && (
+          <DownloadSessionButton sessionId={job.sessionId} />
         )}
       </span>
     </div>
@@ -1029,6 +1033,28 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
       aria-label={copied ? "Session ID copied" : "Copy session ID"}
     >
       {copied ? <CheckIcon /> : <ClipboardIcon />}
+    </button>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DownloadSessionButton({ sessionId }: { sessionId: string }) {
+  return (
+    <button
+      className="copy-session-btn"
+      onClick={() => downloadLog(sessionId)}
+      title="Download session log"
+      aria-label="Download session log"
+    >
+      <DownloadIcon />
     </button>
   );
 }

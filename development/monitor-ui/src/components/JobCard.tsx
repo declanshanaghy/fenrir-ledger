@@ -4,6 +4,7 @@ import { AGENT_COLORS, AGENT_AVATARS, STATUS_COLORS, STATUS_LABELS } from "../li
 import { StatusIconSvg } from "./StatusIcon";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 import type { DisplayMode } from "./Sidebar";
+import { downloadLog } from "../lib/localStorageLogs";
 
 interface Props {
   job: DisplayJob;
@@ -149,6 +150,9 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
             {onTogglePin && (
               <CardPinButtonLabeled isPinned={isPinned} onTogglePin={onTogglePin} />
             )}
+            {isPinned && job.status === "succeeded" && (
+              <CardDownloadButtonLabeled sessionId={job.sessionId} />
+            )}
           </>
         ) : (
           <>
@@ -177,6 +181,9 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
             )}
             {onTogglePin && (
               <CardPinButton isPinned={isPinned} onTogglePin={onTogglePin} />
+            )}
+            {isPinned && job.status === "succeeded" && (
+              <CardDownloadButton sessionId={job.sessionId} />
             )}
             <CardCopySessionIdButton sessionId={job.sessionId} />
           </>
@@ -365,5 +372,47 @@ function CardPinIcon({ filled }: { filled: boolean }) {
         </>
       )}
     </svg>
+  );
+}
+
+function CardDownloadIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CardDownloadButton({ sessionId }: { sessionId: string }) {
+  return (
+    <button
+      className="card-pin-btn"
+      onClick={(e) => {
+        e.stopPropagation();
+        downloadLog(sessionId);
+      }}
+      title="Download session log"
+      aria-label="Download session log"
+    >
+      <CardDownloadIcon />
+    </button>
+  );
+}
+
+function CardDownloadButtonLabeled({ sessionId }: { sessionId: string }) {
+  return (
+    <button
+      className="card-extended-action-btn"
+      onClick={(e) => {
+        e.stopPropagation();
+        downloadLog(sessionId);
+      }}
+      title="Download session log"
+      aria-label="Download session log"
+    >
+      <CardDownloadIcon />
+      <span>Download Log</span>
+    </button>
   );
 }
