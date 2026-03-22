@@ -32,7 +32,7 @@ Teammates: **Freya** (PO), **Luna** (UX Designer), **Loki** (QA Tester).
 | System Design | `architecture/system-design.md` |
 | API Contracts | `architecture/api-contracts.md` |
 | ADRs | `architecture/adrs/ADR-NNN-title.md` |
-| Source Code | `development/frontend/` (Next.js root) |
+| Source Code | `development/ledger/` (Next.js root) |
 | Monitor API | `development/monitor/` |
 | Monitor UI | `development/monitor-ui/` |
 | Implementation Plan | `development/docs/implementation-plan.md` |
@@ -150,7 +150,7 @@ See `## GitHub Actions Authoring` for step naming, ordering, and patterns.
 FiremanDecko writes tests alongside implementation. Loki augments gaps only.
 
 - **Write Vitest unit/integration tests** for new utilities, hooks, API routes, and components
-- Place tests in `development/frontend/src/__tests__/` alongside the feature
+- Place tests in `development/ledger/src/__tests__/` alongside the feature
 - Loki will review and add only what's missing — no duplication
 - **Never write Playwright E2E tests** — that's Loki's domain (and he writes few)
 - **Never write tests for monitor-ui or odins-spear** — `development/monitor-ui/` and `development/odins-spear/` have no test infrastructure agents should use

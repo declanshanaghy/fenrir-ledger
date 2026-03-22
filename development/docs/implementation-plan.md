@@ -13,26 +13,26 @@
 
 ### Task 1: Scaffold Next.js Project
 
-- **File(s)**: All files under `development/frontend/`
+- **File(s)**: All files under `development/ledger/`
 - **Depends on**: Nothing
 - **Implementation Notes**:
-  - Run from `development/frontend/`:
+  - Run from `development/ledger/`:
     ```bash
     npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --yes
     ```
   - This creates: `package.json`, `tsconfig.json`, `tailwind.config.ts`, `next.config.ts`, `src/app/`, `src/app/page.tsx`, `src/app/layout.tsx`, `src/app/globals.css`
   - Verify with `npm run dev` — app should start at `http://localhost:3000`
-- **Edge Cases**: If `development/frontend/` has a `.gitkeep` file, remove it first
+- **Edge Cases**: If `development/ledger/` has a `.gitkeep` file, remove it first
 - **Definition of Done**: `npm run dev` starts without errors; visiting `http://localhost:3000` shows the Next.js default page
 
 ---
 
 ### Task 2: Initialize shadcn/ui
 
-- **File(s)**: `development/frontend/components.json`, `development/frontend/src/lib/utils.ts`, updates to `development/frontend/src/app/globals.css`, `development/frontend/tailwind.config.ts`
+- **File(s)**: `development/ledger/components.json`, `development/ledger/src/lib/utils.ts`, updates to `development/ledger/src/app/globals.css`, `development/ledger/tailwind.config.ts`
 - **Depends on**: Task 1
 - **Implementation Notes**:
-  - Run from `development/frontend/`:
+  - Run from `development/ledger/`:
     ```bash
     npx shadcn@latest init
     ```
@@ -49,10 +49,10 @@
 
 ### Task 3: Install Form Dependencies
 
-- **File(s)**: `development/frontend/package.json`, `development/frontend/package-lock.json`
+- **File(s)**: `development/ledger/package.json`, `development/ledger/package-lock.json`
 - **Depends on**: Task 1
 - **Implementation Notes**:
-  - Run from `development/frontend/`:
+  - Run from `development/ledger/`:
     ```bash
     npm install react-hook-form zod @hookform/resolvers
     ```
@@ -63,7 +63,7 @@
 
 ### Task 4: Write Types and Constants
 
-- **File(s)**: `development/frontend/src/lib/types.ts`, `development/frontend/src/lib/constants.ts`
+- **File(s)**: `development/ledger/src/lib/types.ts`, `development/ledger/src/lib/constants.ts`
 - **Depends on**: Task 1
 - **Implementation Notes**:
   - `types.ts`: Define `Household`, `Card`, `SignUpBonus`, `CardStatus`, `BonusType` interfaces/types
@@ -76,7 +76,7 @@
 
 ### Task 5: Write Storage Layer
 
-- **File(s)**: `development/frontend/src/lib/storage.ts`
+- **File(s)**: `development/ledger/src/lib/storage.ts`
 - **Depends on**: Task 4
 - **Implementation Notes**:
   - All reads: parse JSON, validate schema version, return typed arrays
@@ -94,7 +94,7 @@
 
 ### Task 6: Write Card Utilities
 
-- **File(s)**: `development/frontend/src/lib/card-utils.ts`
+- **File(s)**: `development/ledger/src/lib/card-utils.ts`
 - **Depends on**: Task 4
 - **Implementation Notes**:
   - `computeCardStatus(card: Card, today?: Date): CardStatus` — pure function, deterministic
@@ -111,7 +111,7 @@
 
 ### Task 7: Build CardForm Component
 
-- **File(s)**: `development/frontend/src/components/cards/CardForm.tsx`
+- **File(s)**: `development/ledger/src/components/cards/CardForm.tsx`
 - **Depends on**: Tasks 2, 3, 4, 5, 6
 - **Implementation Notes**:
   - `"use client"` directive at top
@@ -131,7 +131,7 @@
 
 ### Task 8: Build Dashboard Components
 
-- **File(s)**: `development/frontend/src/components/dashboard/Dashboard.tsx`, `CardTile.tsx`, `StatusBadge.tsx`, `EmptyState.tsx`
+- **File(s)**: `development/ledger/src/components/dashboard/Dashboard.tsx`, `CardTile.tsx`, `StatusBadge.tsx`, `EmptyState.tsx`
 - **Depends on**: Tasks 2, 4, 6
 - **Implementation Notes**:
   - `Dashboard.tsx`: `"use client"`, receives `cards: Card[]` as props, renders grid + summary header
@@ -148,7 +148,7 @@
 
 ### Task 9: Wire Up Pages
 
-- **File(s)**: `development/frontend/src/app/page.tsx`, `development/frontend/src/app/cards/new/page.tsx`, `development/frontend/src/app/cards/[id]/edit/page.tsx`
+- **File(s)**: `development/ledger/src/app/page.tsx`, `development/ledger/src/app/cards/new/page.tsx`, `development/ledger/src/app/cards/[id]/edit/page.tsx`
 - **Depends on**: Tasks 7, 8
 - **Implementation Notes**:
   - `page.tsx` (dashboard): `"use client"`, `useEffect` to load cards on mount, render `<Dashboard cards={cards} />`
@@ -171,7 +171,7 @@
   - Checks Node.js >= 18 and npm availability
   - Runs `npm ci` (or `npm install` if no lockfile)
   - Copies `.env.example` to `.env.local` if `.env.local` doesn't exist
-  - Prints next steps: `cd development/frontend && npm run dev`
+  - Prints next steps: `cd development/ledger && npm run dev`
   - Idempotent: running twice produces same result
 - **Edge Cases**:
   - Node version check: parse major version from `node --version` output
@@ -182,7 +182,7 @@
 
 ### Task 11: Create .env.example
 
-- **File(s)**: `development/frontend/.env.example`
+- **File(s)**: `development/ledger/.env.example`
 - **Depends on**: Task 1
 - **Implementation Notes**:
   - Sprint 1 has no secrets. The file serves as documentation and a template.
@@ -238,7 +238,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.1: Saga Ledger Theme — Globals and Tailwind
 
-- **File(s)**: `development/frontend/src/app/globals.css`, `development/frontend/tailwind.config.ts`
+- **File(s)**: `development/ledger/src/app/globals.css`, `development/ledger/tailwind.config.ts`
 - **Depends on**: Sprint 1 complete
 - **Implementation Notes**:
   - Replace shadcn/ui default CSS variables with Saga Ledger tokens (void-black `#07070d`, gold accent `#c9920a`, etc.)
@@ -250,7 +250,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.2: App Shell — Layout Components
 
-- **File(s)**: `development/frontend/src/components/layout/AppShell.tsx`, `SiteHeader.tsx`, `SideNav.tsx`, `TopBar.tsx`, `Footer.tsx`
+- **File(s)**: `development/ledger/src/components/layout/AppShell.tsx`, `SiteHeader.tsx`, `SideNav.tsx`, `TopBar.tsx`, `Footer.tsx`
 - **Depends on**: Task 2.1
 - **Implementation Notes**:
   - `AppShell.tsx` wraps all pages; provides sidebar + main content layout
@@ -264,7 +264,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.3: Easter Egg #4 — Console ASCII Art (FENRIR Runes)
 
-- **File(s)**: `development/frontend/src/components/layout/ConsoleSignature.tsx`
+- **File(s)**: `development/ledger/src/components/layout/ConsoleSignature.tsx`
 - **Depends on**: Task 2.2
 - **Implementation Notes**:
   - Outputs Elder Futhark rune glyphs spelling ᚠᛖᚾᚱᛁᚱ (FENRIR) to browser console on app load
@@ -277,7 +277,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.4: Easter Egg #5 — HTML Source Signature
 
-- **File(s)**: `development/frontend/src/app/layout.tsx`
+- **File(s)**: `development/ledger/src/app/layout.tsx`
 - **Depends on**: Task 2.2
 - **Implementation Notes**:
   - JSDoc comment block injected into the HTML source
@@ -288,7 +288,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.5: Easter Egg #7 — Runic Meta Tag Cipher
 
-- **File(s)**: `development/frontend/src/app/layout.tsx`
+- **File(s)**: `development/ledger/src/app/layout.tsx`
 - **Depends on**: Task 2.4
 - **Implementation Notes**:
   - `metadata.other["fenrir:runes"]` contains an Elder Futhark encoded message
@@ -299,7 +299,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.6: Easter Egg #2 — Konami Code Howl
 
-- **File(s)**: `development/frontend/src/components/layout/KonamiHowl.tsx`
+- **File(s)**: `development/ledger/src/components/layout/KonamiHowl.tsx`
 - **Depends on**: Task 2.2
 - **Implementation Notes**:
   - Listens for the Konami sequence: ↑↑↓↓←→←→BA
@@ -311,7 +311,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.7: Easter Egg #3 — Loki Mode
 
-- **File(s)**: `development/frontend/src/components/layout/Footer.tsx`
+- **File(s)**: `development/ledger/src/components/layout/Footer.tsx`
 - **Depends on**: Task 2.2
 - **Implementation Notes**:
   - Clicking the "Loki" span in the footer 7 times triggers Loki Mode
@@ -322,7 +322,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.8: Easter Egg #1 Fragments — Gleipnir Hunt
 
-- **File(s)**: `development/frontend/src/components/cards/GleipnirFishBreath.tsx`, `GleipnirMountainRoots.tsx`, `GleipnirCatFootfall.tsx`, `GleipnirBirdSpittle.tsx`, `GleipnirBearSinews.tsx`, `GleipnirWomansBeard.tsx`
+- **File(s)**: `development/ledger/src/components/cards/GleipnirFishBreath.tsx`, `GleipnirMountainRoots.tsx`, `GleipnirCatFootfall.tsx`, `GleipnirBirdSpittle.tsx`, `GleipnirBearSinews.tsx`, `GleipnirWomansBeard.tsx`
 - **Depends on**: Task 2.2
 - **Implementation Notes**:
   - Six fragment components, each representing one ingredient of Gleipnir
@@ -334,7 +334,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.9: Shared Easter Egg Modal
 
-- **File(s)**: `development/frontend/src/components/easter-eggs/EasterEggModal.tsx`
+- **File(s)**: `development/ledger/src/components/easter-eggs/EasterEggModal.tsx`
 - **Depends on**: Task 2.2
 - **Implementation Notes**:
   - Reusable modal wrapper for all Gleipnir fragment reveals
@@ -346,7 +346,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.10: Forgemaster Easter Egg
 
-- **File(s)**: `development/frontend/src/components/layout/ForgeMasterEgg.tsx`
+- **File(s)**: `development/ledger/src/components/layout/ForgeMasterEgg.tsx`
 - **Depends on**: Task 2.9
 - **Implementation Notes**:
   - Extracted from Footer.tsx into its own component for clarity
@@ -357,7 +357,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 2.11: Supporting Layout Components
 
-- **File(s)**: `development/frontend/src/components/layout/AboutModal.tsx`, `SyncIndicator.tsx`
+- **File(s)**: `development/ledger/src/components/layout/AboutModal.tsx`, `SyncIndicator.tsx`
 - **Depends on**: Task 2.2
 - **Implementation Notes**:
   - `AboutModal.tsx` — "About" dialog accessible from the nav
@@ -390,7 +390,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.2.1: Create `realm-utils.ts`
 
-- **File(s)**: `development/frontend/src/lib/realm-utils.ts`
+- **File(s)**: `development/ledger/src/lib/realm-utils.ts`
 - **Depends on**: Nothing (pure utility, no component dependencies)
 - **Implementation Notes**:
   - `getRealmLabel(status: CardStatus): string` — returns Norse realm name for each status
@@ -408,7 +408,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.2.2: Wire `realm-utils.ts` into `constants.ts`
 
-- **File(s)**: `development/frontend/src/lib/constants.ts`
+- **File(s)**: `development/ledger/src/lib/constants.ts`
 - **Depends on**: Task 3.2.1
 - **Implementation Notes**:
   - `STATUS_TOOLTIPS` record delegates to `getRealmDescription()` instead of duplicating strings
@@ -421,7 +421,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.2.3: Update `StatusBadge.tsx` to use `realm-utils.ts`
 
-- **File(s)**: `development/frontend/src/components/dashboard/StatusBadge.tsx`
+- **File(s)**: `development/ledger/src/components/dashboard/StatusBadge.tsx`
 - **Depends on**: Task 3.2.1
 - **Implementation Notes**:
   - Replace `STATUS_TOOLTIPS[status]` lookup with direct call to `getRealmDescription(status)`
@@ -435,10 +435,10 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 ### Task 3.2.4: Norse Copy Pass — Empty State, Page Headings, Loading States
 
 - **File(s)**:
-  - `development/frontend/src/components/dashboard/EmptyState.tsx`
-  - `development/frontend/src/app/page.tsx`
-  - `development/frontend/src/app/cards/new/page.tsx`
-  - `development/frontend/src/app/cards/[id]/edit/page.tsx`
+  - `development/ledger/src/components/dashboard/EmptyState.tsx`
+  - `development/ledger/src/app/page.tsx`
+  - `development/ledger/src/app/cards/new/page.tsx`
+  - `development/ledger/src/app/cards/[id]/edit/page.tsx`
 - **Depends on**: Nothing (copy-only changes)
 - **Implementation Notes**:
   - `EmptyState.tsx`: heading → "Before Gleipnir was forged, Fenrir roamed free." / body → "Before your first card is added, no chain can be broken." (from `copywriting.md` no-cards empty state)
@@ -458,7 +458,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 - **File(s)**: N/A (verification step)
 - **Depends on**: Tasks 3.2.1–3.2.4
 - **Implementation Notes**:
-  - `cd development/frontend && npm run build`
+  - `cd development/ledger && npm run build`
   - Zero TypeScript errors, zero lint errors
 - **Definition of Done**: `npm run build` completes with no errors
 
@@ -490,10 +490,10 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.3.1: Install framer-motion
 
-- **File(s)**: `development/frontend/package.json`, `development/frontend/package-lock.json`
+- **File(s)**: `development/ledger/package.json`, `development/ledger/package-lock.json`
 - **Depends on**: Nothing
 - **Implementation Notes**:
-  - `cd development/frontend && npm install framer-motion`
+  - `cd development/ledger && npm install framer-motion`
   - Installs as a production dependency (not devDependency)
   - All Framer Motion components must be in `"use client"` boundaries (per ADR-001)
 - **Definition of Done**: `framer-motion` appears in `dependencies` in `package.json`; `npm run build` passes
@@ -502,7 +502,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.3.2: Add `saga-shimmer` CSS keyframe to globals.css
 
-- **File(s)**: `development/frontend/src/app/globals.css`
+- **File(s)**: `development/ledger/src/app/globals.css`
 - **Depends on**: Nothing
 - **Implementation Notes**:
   - Add `@keyframes saga-shimmer` and `.skeleton` class
@@ -516,7 +516,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.3.3: Create `CardSkeletonGrid` component
 
-- **File(s)**: `development/frontend/src/components/dashboard/CardSkeletonGrid.tsx`
+- **File(s)**: `development/ledger/src/components/dashboard/CardSkeletonGrid.tsx`
 - **Depends on**: Task 3.3.2
 - **Implementation Notes**:
   - Pure client component (`"use client"`)
@@ -532,7 +532,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.3.4: Create `AnimatedCardGrid` component
 
-- **File(s)**: `development/frontend/src/components/dashboard/AnimatedCardGrid.tsx`
+- **File(s)**: `development/ledger/src/components/dashboard/AnimatedCardGrid.tsx`
 - **Depends on**: Task 3.3.1
 - **Implementation Notes**:
   - `"use client"` directive required (Framer Motion)
@@ -553,7 +553,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.3.5: Wire `AnimatedCardGrid` into `Dashboard.tsx`
 
-- **File(s)**: `development/frontend/src/components/dashboard/Dashboard.tsx`
+- **File(s)**: `development/ledger/src/components/dashboard/Dashboard.tsx`
 - **Depends on**: Task 3.3.4
 - **Implementation Notes**:
   - Replace the raw `<div className="grid ...">` with `<AnimatedCardGrid>`
@@ -566,7 +566,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.3.6: Wire `CardSkeletonGrid` into `page.tsx`
 
-- **File(s)**: `development/frontend/src/app/page.tsx`
+- **File(s)**: `development/ledger/src/app/page.tsx`
 - **Depends on**: Task 3.3.3
 - **Implementation Notes**:
   - Replace `isLoading` branch (plain "The Norns are weaving..." div) with `<CardSkeletonGrid count={6} />`
@@ -582,7 +582,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 - **File(s)**: N/A (verification step)
 - **Depends on**: Tasks 3.3.1–3.3.6
 - **Implementation Notes**:
-  - `cd development/frontend && npm run build`
+  - `cd development/ledger && npm run build`
   - Zero TypeScript errors, zero lint errors
 - **Definition of Done**: `npm run build` completes with no errors
 
@@ -606,8 +606,8 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 ### Prerequisites
 
 - Sprint 3, Stories 3.2 and 3.3 complete (realm-utils, Framer Motion animations)
-- `development/frontend/src/lib/types.ts` — `Card` interface reviewed
-- `development/frontend/src/lib/storage.ts` — existing CRUD functions reviewed
+- `development/ledger/src/lib/types.ts` — `Card` interface reviewed
+- `development/ledger/src/lib/storage.ts` — existing CRUD functions reviewed
 - `ux/wireframes/valhalla.html`, `product/copywriting.md`, `ux/interactions.md` reviewed
 
 ### Tasks (ordered)
@@ -616,7 +616,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.5.1: Add `closedAt` field to `Card` type
 
-- **File(s)**: `development/frontend/src/lib/types.ts`
+- **File(s)**: `development/ledger/src/lib/types.ts`
 - **Depends on**: Nothing
 - **Implementation Notes**:
   - Add `closedAt?: string` (UTC ISO 8601 timestamp) to the `Card` interface
@@ -630,7 +630,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.5.2: Add `closeCard()` and `getClosedCards()` to `storage.ts`
 
-- **File(s)**: `development/frontend/src/lib/storage.ts`
+- **File(s)**: `development/ledger/src/lib/storage.ts`
 - **Depends on**: Task 3.5.1
 - **Implementation Notes**:
   - `closeCard(householdId, cardId)`:
@@ -652,7 +652,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.5.3: Verify `computeCardStatus()` — "closed" short-circuit
 
-- **File(s)**: `development/frontend/src/lib/card-utils.ts` (read-only verification)
+- **File(s)**: `development/ledger/src/lib/card-utils.ts` (read-only verification)
 - **Depends on**: Nothing
 - **Implementation Notes**:
   - `computeCardStatus()` already checks `card.status === "closed"` first and returns "closed" immediately
@@ -665,7 +665,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.5.4: Add "Close Card" action to `CardForm.tsx`
 
-- **File(s)**: `development/frontend/src/components/cards/CardForm.tsx`
+- **File(s)**: `development/ledger/src/components/cards/CardForm.tsx`
 - **Depends on**: Task 3.5.2
 - **Implementation Notes**:
   - Import `closeCard` from `@/lib/storage`
@@ -687,7 +687,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.5.5: Create `/valhalla` route — `app/valhalla/page.tsx`
 
-- **File(s)**: `development/frontend/src/app/valhalla/page.tsx` (new)
+- **File(s)**: `development/ledger/src/app/valhalla/page.tsx` (new)
 - **Depends on**: Task 3.5.2
 - **Implementation Notes**:
   - `"use client"` — localStorage read happens client-side
@@ -724,7 +724,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.5.6: Add Valhalla nav link to `SideNav.tsx`
 
-- **File(s)**: `development/frontend/src/components/layout/SideNav.tsx`
+- **File(s)**: `development/ledger/src/components/layout/SideNav.tsx`
 - **Depends on**: Task 3.5.5
 - **Implementation Notes**:
   - Add `RuneIcon` helper component: renders an Elder Futhark rune glyph in a `<span>` sized to match the 16×16 Lucide icon footprint
@@ -743,7 +743,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 - **File(s)**: N/A (verification step)
 - **Depends on**: Tasks 3.5.1–3.5.6
 - **Implementation Notes**:
-  - `cd development/frontend && npm run build`
+  - `cd development/ledger && npm run build`
   - Zero TypeScript errors, zero lint errors
   - All 7 routes present in build output: `/`, `/_not-found`, `/cards/[id]/edit`, `/cards/new`, `/icon.svg`, `/valhalla`, plus any existing routes
 - **Definition of Done**: `npm run build` completes with no errors; `/valhalla` route present in build output
@@ -794,10 +794,10 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.1.2: Install next-auth@beta
 
-- **File(s)**: `development/frontend/package.json`, `development/frontend/package-lock.json`
+- **File(s)**: `development/ledger/package.json`, `development/ledger/package-lock.json`
 - **Depends on**: Nothing
 - **Implementation Notes**:
-  - `cd development/frontend && npm install next-auth@beta`
+  - `cd development/ledger && npm install next-auth@beta`
   - Installs as a production dependency
 - **Definition of Done**: `next-auth` at version `^5.0.0-beta.x` in `dependencies`
 
@@ -806,9 +806,9 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 ### Task 3.1.3: Create `auth.ts` and API route handler
 
 - **File(s)**:
-  - `development/frontend/src/auth.ts`
-  - `development/frontend/src/app/api/auth/[...nextauth]/route.ts`
-  - `development/frontend/next-auth.d.ts` (TypeScript augmentation — project root, not `src/`)
+  - `development/ledger/src/auth.ts`
+  - `development/ledger/src/app/api/auth/[...nextauth]/route.ts`
+  - `development/ledger/next-auth.d.ts` (TypeScript augmentation — project root, not `src/`)
 - **Depends on**: Task 3.1.2
 - **Implementation Notes**:
   - `auth.ts`: Google provider, `session: { strategy: "jwt" }`, JWT callback embeds `token.householdId = profile.sub`, session callback surfaces `session.user.householdId`
@@ -823,8 +823,8 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 ### Task 3.1.4: Create `AuthProvider.tsx` and wrap root layout
 
 - **File(s)**:
-  - `development/frontend/src/components/layout/AuthProvider.tsx`
-  - `development/frontend/src/app/layout.tsx` (modified)
+  - `development/ledger/src/components/layout/AuthProvider.tsx`
+  - `development/ledger/src/app/layout.tsx` (modified)
 - **Depends on**: Task 3.1.3
 - **Implementation Notes**:
   - `AuthProvider.tsx`: thin `"use client"` wrapper around `SessionProvider` from `next-auth/react`
@@ -837,7 +837,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.1.5: Create middleware for route protection
 
-- **File(s)**: `development/frontend/src/middleware.ts`
+- **File(s)**: `development/ledger/src/middleware.ts`
 - **Depends on**: Task 3.1.3
 - **Implementation Notes**:
   - Uses Auth.js `auth()` as the middleware wrapper
@@ -852,7 +852,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.1.6: Refactor `storage.ts` — per-household keys
 
-- **File(s)**: `development/frontend/src/lib/storage.ts`, `development/frontend/src/lib/constants.ts`
+- **File(s)**: `development/ledger/src/lib/storage.ts`, `development/ledger/src/lib/constants.ts`
 - **Depends on**: Nothing (independent of auth wiring)
 - **Implementation Notes**:
   - New private key builders: `cardsKey(householdId)` → `fenrir_ledger:{householdId}:cards`, `householdKey(householdId)` → `fenrir_ledger:{householdId}:household`
@@ -872,13 +872,13 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 ### Task 3.1.7: Thread `householdId` from session through all pages and components
 
 - **File(s)**:
-  - `development/frontend/src/app/page.tsx`
-  - `development/frontend/src/app/valhalla/page.tsx`
-  - `development/frontend/src/app/cards/new/page.tsx`
-  - `development/frontend/src/app/cards/[id]/edit/page.tsx`
-  - `development/frontend/src/components/cards/CardForm.tsx`
-  - `development/frontend/src/components/layout/KonamiHowl.tsx`
-  - `development/frontend/src/components/layout/TopBar.tsx`
+  - `development/ledger/src/app/page.tsx`
+  - `development/ledger/src/app/valhalla/page.tsx`
+  - `development/ledger/src/app/cards/new/page.tsx`
+  - `development/ledger/src/app/cards/[id]/edit/page.tsx`
+  - `development/ledger/src/components/cards/CardForm.tsx`
+  - `development/ledger/src/components/layout/KonamiHowl.tsx`
+  - `development/ledger/src/components/layout/TopBar.tsx`
 - **Depends on**: Tasks 3.1.4, 3.1.6
 - **Implementation Notes**:
   - All pages: `const { data: session, status } = useSession()` to get `householdId`; `useEffect` waits for `status !== "loading"` before reading localStorage
@@ -893,7 +893,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 
 ### Task 3.1.8: Update `.env.example`
 
-- **File(s)**: `development/frontend/.env.example`
+- **File(s)**: `development/ledger/.env.example`
 - **Depends on**: Task 3.1.3
 - **Implementation Notes**:
   - Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST`
@@ -908,7 +908,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 - **File(s)**: N/A (verification step)
 - **Depends on**: Tasks 3.1.1–3.1.8
 - **Implementation Notes**:
-  - `cd development/frontend && npm run build`
+  - `cd development/ledger && npm run build`
   - Zero TypeScript errors, zero lint errors
   - Build output must include `/api/auth/[...nextauth]` route
 - **Definition of Done**: `npm run build` completes with no errors; all 7 routes present

@@ -24,7 +24,7 @@ on:
   push:
     branches-ignore: [main]
     paths:
-      - "development/frontend/**"
+      - "development/ledger/**"
       - "development/odins-spear/**"
       - "quality/test-suites/**"
       - ".github/workflows/ci-tests.yml"
@@ -75,7 +75,7 @@ jobs:
         run: pnpm run verify:unit
 
       - name: Install Playwright browsers
-        working-directory: development/frontend
+        working-directory: development/ledger
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright E2E tests
@@ -89,7 +89,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
-          path: development/frontend/playwright-report/
+          path: development/ledger/playwright-report/
           retention-days: 14
 
       - name: Upsert PR comment with CI results

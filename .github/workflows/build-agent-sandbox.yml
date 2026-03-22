@@ -23,7 +23,7 @@ on:
     paths:
       - "infrastructure/k8s/agents/Dockerfile"
       - "infrastructure/k8s/agents/entrypoint.sh"
-      - "development/frontend/package-lock.json"
+      - "development/ledger/package-lock.json"
   workflow_dispatch:
     inputs:
       image_tag:

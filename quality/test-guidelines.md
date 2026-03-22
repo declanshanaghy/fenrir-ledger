@@ -35,7 +35,7 @@ FiremanDecko writes tests with implementation. Loki augments gaps only.
 
 ## Unit Tests (Vitest)
 
-**Location:** `development/frontend/src/__tests__/`
+**Location:** `development/ledger/src/__tests__/`
 **Runner:** `npm run test:unit`
 
 ### What belongs here
@@ -66,7 +66,7 @@ FiremanDecko writes tests with implementation. Loki augments gaps only.
 
 ## Integration Tests (Vitest + happy-dom)
 
-**Location:** `development/frontend/src/__tests__/`
+**Location:** `development/ledger/src/__tests__/`
 **Runner:** `npm run test:unit` (same runner, happy-dom environment)
 **Environment:** happy-dom (configured in `vitest.config.ts`)
 
@@ -161,7 +161,7 @@ mockRequireAuth.mockResolvedValueOnce({
 
 **Location:** `quality/test-suites/<feature>/`
 **Runner:** `npx playwright test`
-**Config:** `development/frontend/playwright.config.ts`
+**Config:** `development/ledger/playwright.config.ts`
 
 ### What belongs here
 

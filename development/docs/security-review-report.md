@@ -34,56 +34,56 @@ However, **3 HIGH severity findings** require remediation before the security po
 
 #### 1. [SEV-001] Open Redirect in OAuth Callback
 - **Source**: Static analysis (Heimdall)
-- **Location**: `development/frontend/src/app/auth/callback/page.tsx:177`
+- **Location**: `development/ledger/src/app/auth/callback/page.tsx:177`
 - **Issue**: `callbackUrl` from `sessionStorage["fenrir:pkce"]` is used in `window.location.href = destination` without origin validation. While currently hard-coded to `"/"`, the pattern is fragile — any future user-supplied `callbackUrl` would be immediately exploitable.
 - **Fix**: Add origin allowlist check. Reject any `callbackUrl` whose origin does not match `window.location.origin`. Fall back to `"/"`.
 
 #### 2. [SEV-002] Absence of HTTP Security Headers
 - **Source**: Static analysis (Heimdall)
-- **Location**: `development/frontend/next.config.ts`
+- **Location**: `development/ledger/next.config.ts`
 - **Issue**: No Content Security Policy, `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, or `Referrer-Policy` headers are configured. With tokens in `localStorage`, CSP is the primary XSS mitigation layer.
 - **Fix**: Add `headers()` function to `next.config.ts` with full security header set including CSP that allows Google APIs.
 
 #### 3. [SEV-003] No Rate Limiting on Token Exchange Endpoint
 - **Source**: Static analysis (Heimdall)
-- **Location**: `development/frontend/src/app/api/auth/token/route.ts`
+- **Location**: `development/ledger/src/app/api/auth/token/route.ts`
 - **Issue**: The unauthenticated `/api/auth/token` endpoint has no rate limiting. Enables DoS amplification, GKE pod resource exhaustion, and authorization code interception race attacks.
 - **Fix**: Add in-memory rate limiting per IP. For a serverless environment, use simple IP-based tracking with a per-IP limit (~10 requests/minute). Full distributed rate limiting (e.g., Upstash) is a future enhancement.
 
 ### MEDIUM — Should Fix
 
 #### 4. [SEV-004] Picker API Key — No Cache-Control Header
-- **Location**: `development/frontend/src/app/api/config/picker/route.ts:16`
+- **Location**: `development/ledger/src/app/api/config/picker/route.ts:16`
 - **Issue**: Response lacks `Cache-Control: no-store`, allowing the API key to persist in browser HTTP cache.
 - **Fix**: Add `Cache-Control: no-store` header to the response.
 
 #### 5. [SEV-005] LLM Prompt Injection via CSV Content
-- **Location**: `development/frontend/src/lib/sheets/prompt.ts:44`
+- **Location**: `development/ledger/src/lib/sheets/prompt.ts:44`
 - **Issue**: User-supplied CSV interpolated directly into LLM prompt with no structural boundary.
 - **Fix**: Separate system prompt from user data using Anthropic API's `system` parameter vs `user` message role.
 
 #### 6. [SEV-006] Drive Token Persisted to localStorage
-- **Location**: `development/frontend/src/hooks/useDriveToken.ts:52-57`
+- **Location**: `development/ledger/src/hooks/useDriveToken.ts:52-57`
 - **Issue**: Short-lived Drive access token persisted to `localStorage`, expanding XSS blast radius.
 - **Fix**: Store in React state (memory) only. Remove `localStorage` persistence.
 
 #### 7. [SEV-007] Google Error Responses Forwarded to Client DOM
-- **Location**: `development/frontend/src/app/api/auth/token/route.ts:133-140` and `development/frontend/src/app/auth/callback/page.tsx:133-134`
+- **Location**: `development/ledger/src/app/api/auth/token/route.ts:133-140` and `development/ledger/src/app/auth/callback/page.tsx:133-134`
 - **Issue**: Raw Google error body is forwarded to browser and rendered in DOM via `setErrorMessage()`.
 - **Fix**: Map known error codes to user-safe messages. Log raw details to console only.
 
 ### LOW — Document / Future Work
 
 #### 8. [SEV-008] LLM Singleton Stale Key on Warm Instances
-- **Location**: `development/frontend/src/lib/llm/extract.ts:75-105`
+- **Location**: `development/ledger/src/lib/llm/extract.ts:75-105`
 - **Action**: Document behavior. Add provider version check to invalidate singleton.
 
 #### 9. [SEV-009] Missing `.env.example` Entries
-- **Location**: `development/frontend/.env.example`
+- **Location**: `development/ledger/.env.example`
 - **Action**: Add `FENRIR_OPENAI_API_KEY` and `LLM_PROVIDER` with documentation.
 
 #### 10. [SEV-010] Middleware No-op
-- **Location**: `development/frontend/src/middleware.ts`
+- **Location**: `development/ledger/src/middleware.ts`
 - **Action**: Defense-in-depth gap. Covered by SEV-002 remediation.
 
 ### INFO — No Action Required

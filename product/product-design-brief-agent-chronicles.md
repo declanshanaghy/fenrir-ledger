@@ -1,6 +1,6 @@
 # Product Design Brief: Agent Chronicle MDX Parity
 
-**Status (2026-03-20):** Shipped. `chronicle-norse.css` is live at `development/frontend/src/app/(marketing)/chronicles/chronicle-norse.css`. The `--publish` codepath in `generate-agent-report.mjs` emits decree header, agent callback footer, heckler chat bubbles, and explosion animations in MDX output. `sanitize-chronicle.mjs` handles secret sanitization. All Norse CSS is scoped under `.chronicle-page` and shared across chronicle tiers.
+**Status (2026-03-20):** Shipped. `chronicle-norse.css` is live at `development/ledger/src/app/(marketing)/chronicles/chronicle-norse.css`. The `--publish` codepath in `generate-agent-report.mjs` emits decree header, agent callback footer, heckler chat bubbles, and explosion animations in MDX output. `sanitize-chronicle.mjs` handles secret sanitization. All Norse CSS is scoped under `.chronicle-page` and shared across chronicle tiers.
 
 ---
 
@@ -109,7 +109,7 @@ Must match the existing HTML report aesthetic. The Dark Nordic War Room. Specifi
 ## Handoff Notes
 
 - The HTML generator lives at `.claude/skills/brandify-agent/scripts/generate-agent-report.mjs`
-- The existing chronicle CSS lives at `development/frontend/src/app/(marketing)/chronicles/chronicle.css`
+- The existing chronicle CSS lives at `development/ledger/src/app/(marketing)/chronicles/chronicle.css`
 - The existing MDX publish codepath already handles frontmatter, stats grid, changes,
   commits, and collapsible turns -- this work adds the Norse ceremonial layer on top
 - The heckler engine is imported from `infrastructure/k8s/agents/mayo-heckler.mjs` --

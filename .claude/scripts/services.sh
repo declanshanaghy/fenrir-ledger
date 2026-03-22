@@ -10,11 +10,11 @@
 #   services.sh stop    — stop everything, restore original webhook secret
 #   services.sh restart — stop then start
 #   services.sh status  — show status of all services
-#   services.sh logs    — tail the frontend log
+#   services.sh logs    — tail the ledger log
 #
 # Environment overrides (for worktrees):
 #   FENRIR_FRONTEND_PORT — port to listen on (default: 9653)
-#   FENRIR_FRONTEND_DIR  — path to development/frontend (default: auto-detected)
+#   FENRIR_LEDGER_DIR  — path to development/ledger (default: auto-detected)
 #
 # Prerequisites:
 #   - Stripe CLI: brew install stripe/stripe-cli/stripe
@@ -24,17 +24,17 @@
 set -euo pipefail
 
 PORT="${FENRIR_FRONTEND_PORT:-${FENRIR_PORT:-9653}}"
-FRONTEND_DIR="${FENRIR_FRONTEND_DIR:-${FENRIR_DEV_DIR:-$(cd "$(dirname "$0")/../../development/frontend" && pwd)}}"
+LEDGER_DIR="${FENRIR_LEDGER_DIR:-${FENRIR_DEV_DIR:-$(cd "$(dirname "$0")/../../development/ledger" && pwd)}}"
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-LOG_DIR="${FRONTEND_DIR}/logs"
+LOG_DIR="${LEDGER_DIR}/logs"
 mkdir -p "$LOG_DIR"
 
-FRONTEND_LOG="${LOG_DIR}/frontend-server.log"
+FRONTEND_LOG="${LOG_DIR}/ledger-server.log"
 STRIPE_LOG="${LOG_DIR}/stripe-listen.log"
-PORT_FILE="${FRONTEND_DIR}/.port"
-STRIPE_PID_FILE="${FRONTEND_DIR}/.stripe-listen.pid"
-ENV_FILE="${FRONTEND_DIR}/.env.local"
-STRIPE_OVERRIDE="${FRONTEND_DIR}/.env.stripe-listen"
+PORT_FILE="${LEDGER_DIR}/.port"
+STRIPE_PID_FILE="${LEDGER_DIR}/.stripe-listen.pid"
+ENV_FILE="${LEDGER_DIR}/.env.local"
+STRIPE_OVERRIDE="${LEDGER_DIR}/.env.stripe-listen"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -48,7 +48,7 @@ actual_port() {
   fi
 }
 
-frontend_pid() {
+ledger_pid() {
   local p
   p=$(actual_port)
   [[ "$p" == "0" ]] && return 1
@@ -97,7 +97,7 @@ wait_for_port() {
 
 do_start() {
   # -- Check if already running --
-  if p=$(frontend_pid); then
+  if p=$(ledger_pid); then
     echo "Frontend: already running (pid $p) on port $(actual_port)"
     stripe_pid >/dev/null 2>&1 && echo "Stripe listen: running (pid $(stripe_pid))"
     return 0
@@ -112,7 +112,7 @@ do_start() {
   STRIPE_KEY=$(get_stripe_key)
   if [[ -z "$STRIPE_KEY" ]]; then
     echo "ERROR: STRIPE_SECRET_KEY not found in $ENV_FILE"
-    echo "Run: cd $FRONTEND_DIR && npx vercel env pull .env.local --environment=development"
+    echo "Run: cd $LEDGER_DIR && npx vercel env pull .env.local --environment=development"
     exit 1
   fi
 
@@ -145,7 +145,7 @@ do_start() {
   echo "Stripe listen: running (webhook secret in .env.stripe-listen)"
 
   # -- 3. Start vercel dev (with stripe override if present) --
-  echo "Starting frontend (vercel dev) on port ${PORT}..."
+  echo "Starting ledger (vercel dev) on port ${PORT}..."
   > "$FRONTEND_LOG"
   STRIPE_ENV=""
   if [[ -f "$STRIPE_OVERRIDE" ]]; then
@@ -190,8 +190,8 @@ do_stop() {
 
   rm -f "$STRIPE_OVERRIDE"
 
-  # Stop frontend
-  if p=$(frontend_pid); then
+  # Stop ledger
+  if p=$(ledger_pid); then
     kill "$p" 2>/dev/null
     echo "Frontend: stopped"
   fi
@@ -203,7 +203,7 @@ do_stop() {
 # ---------------------------------------------------------------------------
 
 do_status() {
-  if p=$(frontend_pid); then
+  if p=$(ledger_pid); then
     echo "Frontend: running (pid $p) on port $(actual_port)"
   else
     echo "Frontend: not running"
@@ -244,11 +244,11 @@ case "${1:-}" in
   *)
     echo "Usage: $0 {start|stop|restart|status|logs|stripe-logs}"
     echo ""
-    echo "  start        Start Stripe webhook forwarding + frontend (vercel dev)"
+    echo "  start        Start Stripe webhook forwarding + ledger (vercel dev)"
     echo "  stop         Stop everything, restore webhook secret"
     echo "  restart      Stop then start"
     echo "  status       Show status of all services"
-    echo "  logs         Tail frontend log"
+    echo "  logs         Tail ledger log"
     echo "  stripe-logs  Tail Stripe webhook log"
     exit 1
     ;;

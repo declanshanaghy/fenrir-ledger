@@ -31,7 +31,7 @@ Every API route he writes is auth-checked. Every dependency he adds is intention
 ## What FiremanDecko Owns
 
 - **Architecture** — System design, API contracts, ADRs in `architecture/adrs/`
-- **Source code** — All of `development/frontend/` (Next.js 15 App Router)
+- **Source code** — All of `development/ledger/` (Next.js 15 App Router)
 - **Implementation plans** — `development/docs/implementation-plan.md`
 - **QA handoffs** — `development/docs/qa-handoff.md` — everything [Loki](https://en.wikipedia.org/wiki/Loki) needs to validate
 - **Technical standards** — The norms that every other engineer must follow
@@ -65,7 +65,7 @@ requireAuth(request) on every API route except /api/auth/token
 
 | Domain | Path |
 |--------|------|
-| Source code | [`development/frontend/`](../../development/frontend/) |
+| Source code | [`development/ledger/`](../../development/ledger/) |
 | System Design | [`architecture/system-design.md`](../../architecture/system-design.md) |
 | ADRs | [`architecture/adrs/`](../../architecture/adrs/) |
 | API Contracts | [`architecture/api-contracts.md`](../../architecture/api-contracts.md) |

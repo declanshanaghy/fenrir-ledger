@@ -4,11 +4,11 @@ set -euo pipefail
 
 PORT="${FENRIR_FRONTEND_PORT:-9653}"
 REPO_ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
-FRONTEND_DIR="${FENRIR_FRONTEND_DIR:-$REPO_ROOT/development/frontend}"
-LOG_DIR="${FRONTEND_DIR}/logs"
+LEDGER_DIR="${FENRIR_LEDGER_DIR:-$REPO_ROOT/development/ledger}"
+LOG_DIR="${LEDGER_DIR}/logs"
 mkdir -p "$LOG_DIR"
-LOG="${LOG_DIR}/frontend-server.log"
-PORT_FILE="${FRONTEND_DIR}/.port"
+LOG="${LOG_DIR}/ledger-server.log"
+PORT_FILE="${LEDGER_DIR}/.port"
 
 pid() {
   lsof -ti "TCP:$PORT" -sTCP:LISTEN 2>/dev/null | head -1
@@ -22,7 +22,7 @@ case "${1:-status}" in
     fi
     echo "Starting Next.js dev server on port $PORT..."
     > "$LOG"
-    nohup bash -c "cd '$FRONTEND_DIR' && npm run dev" >> "$LOG" 2>&1 &
+    nohup bash -c "cd '$LEDGER_DIR' && npm run dev" >> "$LOG" 2>&1 &
     echo "$PORT" > "$PORT_FILE"
     for _ in $(seq 1 15); do
       grep -q "Ready" "$LOG" 2>/dev/null && break

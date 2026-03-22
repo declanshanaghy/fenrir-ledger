@@ -93,13 +93,13 @@ RUN npm install -g @anthropic-ai/claude-code@latest \
 #    sandbox-setup.sh skips this step when browsers are already present.
 # --------------------------------------------------------------------------
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml /tmp/workspace/
-COPY development/frontend/package.json /tmp/workspace/development/frontend/
+COPY development/ledger/package.json /tmp/workspace/development/ledger/
 COPY development/odins-spear/package.json /tmp/workspace/development/odins-spear/
 COPY development/monitor/package.json /tmp/workspace/development/monitor/
 COPY development/monitor-ui/package.json /tmp/workspace/development/monitor-ui/
 RUN cd /tmp/workspace \
     && pnpm install --frozen-lockfile --ignore-scripts \
-    && cd development/frontend \
+    && cd development/ledger \
     && npx playwright install chromium \
     && rm -rf /tmp/workspace
 

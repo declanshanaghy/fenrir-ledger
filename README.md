@@ -130,7 +130,7 @@ In the old forge-lore, the greatest weapons were not found — they were made, s
 
 **Owns:**
 - System architecture and ADRs ([architecture/adrs/](architecture/adrs/))
-- Full Next.js implementation ([development/frontend/](development/frontend/))
+- Full Next.js implementation ([development/ledger/](development/ledger/))
 - GKE Autopilot infrastructure ([infrastructure/](infrastructure/)) — Terraform, networking, deployment
 - API contracts and technical standards
 - QA handoffs ([development/docs/qa-handoff.md](development/docs/qa-handoff.md))
@@ -171,7 +171,7 @@ In the old songs, [Loki](https://en.wikipedia.org/wiki/Loki) is father to [Fenri
 - Security audits and reports ([security/reports/](security/reports/)) — the audit trail that never gets deleted
 - Security architecture ([security/architecture/](security/architecture/)) — threat model, data flows, auth architecture, trust boundaries
 - Security checklists ([security/checklists/](security/checklists/))
-- Auth standard enforcement — every API handler under `development/frontend/src/app/api/` must call `requireAuth(request)`
+- Auth standard enforcement — every API handler under `development/ledger/src/app/api/` must call `requireAuth(request)`
 
 **Weapon of Choice:**
 - **Gjallarhorn:** The security report — when it sounds, everyone acts immediately

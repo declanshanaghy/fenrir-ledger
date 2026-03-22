@@ -15,7 +15,7 @@ Fenrir Ledger has an inverted testing pyramid: 41 Playwright E2E suites (~502 te
 - Verify existing 9 test files pass under new config
 - Update `/coverage-report` skill and `quality/scripts/coverage.mjs` to support `--unit-only` mode
 
-**Key files:** `development/frontend/vitest.config.ts`, `development/frontend/package.json`, `quality/scripts/coverage.mjs`, `.claude/skills/coverage-report/SKILL.md`
+**Key files:** `development/ledger/vitest.config.ts`, `development/ledger/package.json`, `quality/scripts/coverage.mjs`, `.claude/skills/coverage-report/SKILL.md`
 
 ### Issue 2: Unit tests for requireAuth, require-karl, and rate limiter
 **Type:** enhancement | **Priority:** high | **Depends on:** #1
@@ -82,6 +82,6 @@ Issues 2, 3, 4 can run in parallel after 1 lands. Issue 5 runs last.
 ## Verification
 
 After all 5 issues merge:
-1. `cd development/frontend && npm run test:unit:coverage` — all unit tests pass, coverage HTML report generated
+1. `cd development/ledger && npm run test:unit:coverage` — all unit tests pass, coverage HTML report generated
 2. `/coverage-report` — combined Vitest + Playwright coverage report at `quality/reports/coverage/`
 3. `quality/reports/playwright-assessment.md` exists with KEEP/MIGRATE/SPLIT tags for all 41 suites

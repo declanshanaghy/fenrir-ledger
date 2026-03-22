@@ -6,8 +6,8 @@
 - [`heilung-norse-restyle.html`](./heilung-norse-restyle.html) — **Current design (Issue #1068)**
 - [`heilung-modal.html`](./heilung-modal.html) — Previous design (Issue #955, superseded)
 
-**Component:** `development/frontend/src/components/easter-eggs/HeilungModal.tsx`
-**Styles:** `development/frontend/src/app/globals.css` (Heilung section)
+**Component:** `development/ledger/src/components/easter-eggs/HeilungModal.tsx`
+**Styles:** `development/ledger/src/app/globals.css` (Heilung section)
 
 ---
 
@@ -250,7 +250,7 @@ const dismiss = useCallback(() => {
 
 ## Visual Tokens
 
-All tokens from `ux/theme-system.md` and `development/frontend/src/app/globals.css`.
+All tokens from `ux/theme-system.md` and `development/ledger/src/app/globals.css`.
 
 | Role | Token | Value |
 |---|---|---|

@@ -20,7 +20,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-const FRONTEND_TESTS = path.join(REPO_ROOT, "development/frontend/src/__tests__");
+const LEDGER_TESTS = path.join(REPO_ROOT, "development/ledger/src/__tests__");
 const E2E_TESTS = path.join(REPO_ROOT, "quality/test-suites");
 const COVERAGE_DIR = path.join(REPO_ROOT, "quality/reports/coverage");
 const OUTPUT_PATH  = path.join(REPO_ROOT, "quality/reports/quality-report.md");
@@ -191,7 +191,7 @@ function coverageRow(label, data, link) {
 async function main() {
   log("Generating quality report...");
 
-  const vitestFiles = walkDir(FRONTEND_TESTS, [".test.ts", ".test.tsx"]);
+  const vitestFiles = walkDir(LEDGER_TESTS, [".test.ts", ".test.tsx"]);
   const e2eFiles    = walkDir(E2E_TESTS,       [".spec.ts", ".spec.tsx"]);
   const allFiles    = [...vitestFiles, ...e2eFiles];
 

@@ -69,7 +69,7 @@ development/agent-monitor/
 ├── index.html                          [NEW] 1700+ lines, single SPA
 └── README.md                           [NEW] Comprehensive setup guide
 
-development/frontend/src/__tests__/
+development/ledger/src/__tests__/
 └── agent-monitor-utils.test.ts         [NEW] 38 Vitest unit tests
 
 architecture/adrs/
@@ -197,7 +197,7 @@ architecture/adrs/
 
 ## Unit Tests
 
-**Location:** `development/frontend/src/__tests__/agent-monitor-utils.test.ts`
+**Location:** `development/ledger/src/__tests__/agent-monitor-utils.test.ts`
 
 **Status:** All 38 tests passing ✓
 
@@ -212,7 +212,7 @@ architecture/adrs/
 
 **To Run:**
 ```bash
-cd development/frontend
+cd development/ledger
 npm run test:unit -- src/__tests__/agent-monitor-utils.test.ts
 ```
 
@@ -305,4 +305,4 @@ All acceptance criteria from #743 are met:
 - **Architecture:** See `architecture/adrs/ADR-013-agent-monitor-spa.md`
 - **Setup:** See `development/agent-monitor/README.md`
 - **Code:** See `development/agent-monitor/index.html`
-- **Tests:** See `development/frontend/src/__tests__/agent-monitor-utils.test.ts`
+- **Tests:** See `development/ledger/src/__tests__/agent-monitor-utils.test.ts`

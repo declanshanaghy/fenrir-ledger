@@ -50,7 +50,7 @@ Routes to test:
 ### Test 3: Type check and build
 
 ```bash
-cd development/frontend
+cd development/ledger
 npx tsc --noEmit    # should pass
 npx next build      # should succeed
 ```

@@ -11,7 +11,7 @@ Create a new git worktree in the trees directory (sibling to repo root) with com
 
 **Worktrees are created OUTSIDE the repo** to prevent nesting and pollution. The trees directory is always `$(git rev-parse --show-toplevel)-trees` — a sibling directory to the repo root with `-trees` appended.
 
-**Ports are auto-assigned by the OS** (port 0). The frontend-server.sh script starts Next.js with `--port 0`, parses the assigned port from stdout, and writes it to `development/frontend/.port`. Agents read this file to discover their server URL.
+**Ports are auto-assigned by the OS** (port 0). The ledger-server.sh script starts Next.js with `--port 0`, parses the assigned port from stdout, and writes it to `development/ledger/.port`. Agents read this file to discover their server URL.
 
 ## Shell Command Rules (UNBREAKABLE)
 
@@ -35,10 +35,10 @@ REPO_ROOT: $(git rev-parse --show-toplevel)
 BRANCH_NAME: $1 (required)
 WORKTREE_BASE_DIR: ${REPO_ROOT}-trees
 WORKTREE_DIR: ${REPO_ROOT}-trees/<BRANCH_NAME>
-APP_DIR: <WORKTREE_DIR>/development/frontend
+APP_DIR: <WORKTREE_DIR>/development/ledger
 BACKEND_DIR: <WORKTREE_DIR>/development/backend
 FRONTEND_PORT: 0 (OS-assigned, actual port written to .port file)
-FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/frontend-server.sh
+FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/ledger-server.sh
 BACKEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/backend-server.sh
 
 NOTE: Main repo uses frontend port 9653 (fixed)
@@ -51,7 +51,7 @@ NOTE: Main repo uses frontend port 9653 (fixed)
 At the start of every Bash call, resolve all paths with semicolons:
 
 ```bash
-REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; APP_DIR="${WORKTREE_DIR}/development/frontend"
+REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; APP_DIR="${WORKTREE_DIR}/development/ledger"
 ```
 
 Then use the resolved variables in subsequent commands.
@@ -61,9 +61,9 @@ Then use the resolved variables in subsequent commands.
 - This is a ONE-SHOT command that creates AND starts a worktree automatically
 - Creates a fully functional, isolated clone of the codebase in a separate worktree
 - Each worktree gets an OS-assigned port (no manual port management needed)
-- The actual port is written to `development/frontend/.port` after startup
+- The actual port is written to `development/ledger/.port` after startup
 - Dependencies are installed automatically via npm
-- After setup, the dev server is started using the frontend-server script
+- After setup, the dev server is started using the ledger-server script
 - If branch doesn't exist locally, create it from current HEAD
 - If branch exists but isn't checked out, create worktree from it
 - Provide clear access URL so user can immediately use the running instance
@@ -96,34 +96,34 @@ Then use the resolved variables in subsequent commands.
 
 ### 4. Setup Environment
 
-- Check if `development/frontend/.env.local` exists in main project
+- Check if `development/ledger/.env.local` exists in main project
 - If it exists:
-  - Copy it to worktree: `cp development/frontend/.env.local <WORKTREE_DIR>/development/frontend/.env.local`
+  - Copy it to worktree: `cp development/ledger/.env.local <WORKTREE_DIR>/development/ledger/.env.local`
   - Note: This preserves API keys and service configuration
 - If it doesn't exist:
-  - Check for `.env.example`: `cp development/frontend/.env.example <WORKTREE_DIR>/development/frontend/.env.local`
+  - Check for `.env.example`: `cp development/ledger/.env.example <WORKTREE_DIR>/development/ledger/.env.local`
   - Add warning to report that user needs to configure env vars
 
 ### 5. Install Dependencies
 
 - Install dependencies (use resolved APP_DIR path, not variable expansion in `&&`):
   ```bash
-  REPO_ROOT=$(git rev-parse --show-toplevel); APP_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>/development/frontend"; cd "$APP_DIR" && npm install
+  REPO_ROOT=$(git rev-parse --show-toplevel); APP_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>/development/ledger"; cd "$APP_DIR" && npm install
   ```
 - If `node_modules` already exists (idempotent re-run), skip `npm install`
-- Verify `<WORKTREE_DIR>/development/frontend/node_modules` directory was created
+- Verify `<WORKTREE_DIR>/development/ledger/node_modules` directory was created
 
 ### 6. Start Dev Servers
 
 **Frontend (Next.js):**
-- Use the frontend-server script with PORT=0 for OS-assigned port:
+- Use the ledger-server script with PORT=0 for OS-assigned port:
   ```
-  FENRIR_FRONTEND_PORT=0 FENRIR_FRONTEND_DIR=<WORKTREE_DIR>/development/frontend <REPO_ROOT>/.claude/scripts/frontend-server.sh start
+  FENRIR_LEDGER_PORT=0 FENRIR_LEDGER_DIR=<WORKTREE_DIR>/development/ledger <REPO_ROOT>/.claude/scripts/ledger-server.sh start
   ```
-- The script waits for Next.js to start, parses the assigned port, and writes it to `<WORKTREE_DIR>/development/frontend/.port`
-- Read the assigned port: `cat <WORKTREE_DIR>/development/frontend/.port`
+- The script waits for Next.js to start, parses the assigned port, and writes it to `<WORKTREE_DIR>/development/ledger/.port`
+- Read the assigned port: `cat <WORKTREE_DIR>/development/ledger/.port`
 - Verify server is running:
-  - Health check: `curl -s -o /dev/null -w "%{http_code}" http://localhost:$(cat <WORKTREE_DIR>/development/frontend/.port)`
+  - Health check: `curl -s -o /dev/null -w "%{http_code}" http://localhost:$(cat <WORKTREE_DIR>/development/ledger/.port)`
 
 **Backend (Node/TS):**
 - If `<WORKTREE_DIR>/development/backend` exists and has a `package.json`:
@@ -138,13 +138,13 @@ Then use the resolved variables in subsequent commands.
 
 - Verify directory structure:
   - Confirm WORKTREE_DIR exists
-  - Confirm `<WORKTREE_DIR>/development/frontend/.env.local` exists (or warn)
-  - Confirm `<WORKTREE_DIR>/development/frontend/node_modules` exists
-  - Confirm `<WORKTREE_DIR>/development/frontend/.port` exists and contains a port number
+  - Confirm `<WORKTREE_DIR>/development/ledger/.env.local` exists (or warn)
+  - Confirm `<WORKTREE_DIR>/development/ledger/node_modules` exists
+  - Confirm `<WORKTREE_DIR>/development/ledger/.port` exists and contains a port number
   - If backend exists: confirm `<WORKTREE_DIR>/development/backend/node_modules` exists
 - List worktrees to confirm: `git worktree list`
-- Read actual port: `cat <WORKTREE_DIR>/development/frontend/.port`
-- Confirm frontend dev server is responding on the assigned port
+- Read actual port: `cat <WORKTREE_DIR>/development/ledger/.port`
+- Confirm ledger dev server is responding on the assigned port
 
 ### 8. Report
 
@@ -166,25 +166,25 @@ Status:     RUNNING
 Access URL:
   Frontend: http://localhost:<ACTUAL_PORT>
 
-Port file: <WORKTREE_DIR>/development/frontend/.port
+Port file: <WORKTREE_DIR>/development/ledger/.port
 
 Dependencies:
-  Frontend: npm packages installed at <WORKTREE_DIR>/development/frontend/node_modules
+  Frontend: npm packages installed at <WORKTREE_DIR>/development/ledger/node_modules
 
 Environment:
   .env.local copied from main project (or: WARNING - needs manual setup)
 
 Frontend Dev Server:
-  Started via frontend-server.sh (port auto-assigned by OS)
-  Logs: <WORKTREE_DIR>/development/frontend/logs/frontend-server.log
+  Started via ledger-server.sh (port auto-assigned by OS)
+  Logs: <WORKTREE_DIR>/development/ledger/logs/ledger-server.log
 
 To discover the port:
-  cat <WORKTREE_DIR>/development/frontend/.port
+  cat <WORKTREE_DIR>/development/ledger/.port
   # or
-  FENRIR_FRONTEND_DIR=<WORKTREE_DIR>/development/frontend .claude/scripts/frontend-server.sh port
+  FENRIR_LEDGER_DIR=<WORKTREE_DIR>/development/ledger .claude/scripts/ledger-server.sh port
 
 To manage this worktree's frontend:
-  FENRIR_FRONTEND_DIR=<WORKTREE_DIR>/development/frontend .claude/scripts/frontend-server.sh status|restart|stop|logs
+  FENRIR_LEDGER_DIR=<WORKTREE_DIR>/development/ledger .claude/scripts/ledger-server.sh status|restart|stop|logs
 
 To remove this worktree:
   /remove_worktree <BRANCH_NAME>

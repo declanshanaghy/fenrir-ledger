@@ -5,7 +5,7 @@
 ```bash
 REPO_ROOT="$(git worktree list --porcelain | head -1 | sed 's/worktree //')"
 SCRIPT_DIR="$REPO_ROOT/.claude/skills/brandify-session/scripts"
-BLOG_DIR="$REPO_ROOT/development/frontend/content/blog"
+BLOG_DIR="$REPO_ROOT/development/ledger/content/blog"
 node "$SCRIPT_DIR/generate-chronicle.mjs" \
   --input tmp/sessions/{{NAME}}.json \
   --output "$BLOG_DIR/{{NAME}}.mdx"

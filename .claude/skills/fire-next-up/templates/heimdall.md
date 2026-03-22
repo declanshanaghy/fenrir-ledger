@@ -37,13 +37,13 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Secret masking (UNBREAKABLE): never log secrets, tokens, or credentials.
 - **After each logical chunk** (1-3 files changed):
   1. git add -A && git commit -m 'wip: <what> — issue:<NUMBER>' && git push origin <BRANCH>
-  2. cd <REPO_ROOT>/development/frontend && pnpm run verify:tsc
+  2. cd <REPO_ROOT>/development/ledger && pnpm run verify:tsc
   3. If tsc fails: fix, commit+push, re-run tsc.
   4. Update your todos.
 
 **Step 4 — Full verify: tsc + build (each = separate Bash tool call + separate todo):**
-  cd <REPO_ROOT>/development/frontend && pnpm run verify:tsc
-  cd <REPO_ROOT>/development/frontend && pnpm run verify:build
+  cd <REPO_ROOT>/development/ledger && pnpm run verify:tsc
+  cd <REPO_ROOT>/development/ledger && pnpm run verify:build
 On failure: fix, commit+push, re-run that step. Repeat until green.
 Do NOT run tests — the full test suite runs via CI on PR push.
 Update each verify todo as you complete it.

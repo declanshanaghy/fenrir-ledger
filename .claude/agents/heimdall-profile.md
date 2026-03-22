@@ -34,13 +34,13 @@ He does not build features. He audits the forge's output. He traces data flows f
 - **Security architecture** — `security/architecture/` — threat model, data flows, auth architecture, trust boundaries
 - **Security checklists** — API route review, dependency review, deployment checklist
 - **Advisories** — `security/advisories/YYYY-MM-DD-<title>.md` — incident records
-- **The requireAuth standard** — Every handler under `development/frontend/src/app/api/` must call it
+- **The requireAuth standard** — Every handler under `development/ledger/src/app/api/` must call it
 
 ---
 
 ## The Gate He Guards
 
-Every API route under `development/frontend/src/app/api/` is a gate across the [Bifröst](https://en.wikipedia.org/wiki/Bifr%C3%B6st). [Heimdall](https://en.wikipedia.org/wiki/Heimdall) verifies that every handler calls `requireAuth(request)` and returns early if `!auth.ok`. The only permitted exception is `/api/auth/token`.
+Every API route under `development/ledger/src/app/api/` is a gate across the [Bifröst](https://en.wikipedia.org/wiki/Bifr%C3%B6st). [Heimdall](https://en.wikipedia.org/wiki/Heimdall) verifies that every handler calls `requireAuth(request)` and returns early if `!auth.ok`. The only permitted exception is `/api/auth/token`.
 
 ```typescript
 import { requireAuth } from "@/lib/auth/require-auth";

@@ -28,7 +28,7 @@ The blast radius of this vulnerability remains low (attacker-controlled data in 
 
 ### [SEV-005-REM-001] INFO — SEV-005 Remediated: XML Structural Delimiters Added
 
-- **File**: `development/frontend/src/lib/sheets/prompt.ts`
+- **File**: `development/ledger/src/lib/sheets/prompt.ts`
 - **Category**: A03 Injection (Prompt Injection) — Remediated
 - **Description**: The user message in `buildExtractionPrompt()` now wraps CSV content in `<csv_data>...</csv_data>` XML tags. The system prompt explicitly instructs the model that the delimited block is inert data and must never be interpreted as instructions. The previous inline `CSV data:\n${csv}` interpolation pattern (which provided no structural boundary) has been replaced.
 - **Impact**: Eliminated. The model now has an unambiguous structural signal distinguishing trusted instructions from untrusted data.
@@ -50,7 +50,7 @@ The blast radius of this vulnerability remains low (attacker-controlled data in 
 
 ### [SEV-005-REM-002] INFO — SEV-005 Remediated: Input Sanitization and Output Validation Tightened
 
-- **File**: `development/frontend/src/lib/sheets/prompt.ts`, `development/frontend/src/lib/sheets/card-schema.ts`, `development/frontend/src/lib/sheets/extract-cards.ts`
+- **File**: `development/ledger/src/lib/sheets/prompt.ts`, `development/ledger/src/lib/sheets/card-schema.ts`, `development/ledger/src/lib/sheets/extract-cards.ts`
 - **Category**: A03 Injection (Prompt Injection) — Defense-in-Depth
 - **Description**: Two additional hardening layers were applied alongside the structural delimiter fix:
   1. `sanitizeCsvForPrompt()` was added to `prompt.ts` and called in `extract-cards.ts` before prompt construction. It strips injection patterns including: delimiter escape attempts, instruction override phrases, role switching, system/user/assistant role markers, jailbreak keywords, and injected URLs.

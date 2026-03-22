@@ -43,7 +43,7 @@ logs/
 # Temp files (for parallel agent development)
 tmp/
 !tmp/epics/
-development/frontend/.claude/
+development/ledger/.claude/
 .vercel/
 
 # Lock files (ephemeral)

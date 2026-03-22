@@ -33,7 +33,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-001] HIGH: HMAC-MD5 Used for Webhook Signature Validation
 
-- **File**: `development/frontend/src/app/api/patreon/webhook/route.ts:71-74`
+- **File**: `development/ledger/src/app/api/patreon/webhook/route.ts:71-74`
 - **Category**: A02 Cryptographic Failures
 - **Description**: The webhook signature validation uses HMAC-MD5 to authenticate payloads from Patreon. MD5 is a broken hash function; while HMAC construction provides some protection against preimage attacks, MD5's collision vulnerabilities and 128-bit output make it well below the security bar for production cryptographic authentication. Patreon's own documentation states they use MD5, but this is a known weakness in Patreon's design that we absorb by using it.
 - **Impact**: A sufficiently resourced attacker who can observe webhook traffic can attempt to forge HMAC-MD5 signatures. A forged webhook could downgrade a paying user to the `thrall` tier or falsely elevate a non-paying user to `karl` tier. While Patreon's own API enforces the MD5 algorithm for webhooks (it is what they send), we have no ability to upgrade the incoming algorithm. The risk is therefore inherent to using Patreon webhooks.
@@ -43,7 +43,7 @@ However, six findings require remediation before deployment. The most significan
   3. Mark this finding as ACCEPTED RISK with appropriate documentation.
 - **Evidence**:
   ```typescript
-  // development/frontend/src/app/api/patreon/webhook/route.ts:71-74
+  // development/ledger/src/app/api/patreon/webhook/route.ts:71-74
   const expectedSignature = crypto
     .createHmac("md5", secret)  // MD5 is Patreon's mandated algorithm — platform constraint
     .update(body)
@@ -54,7 +54,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-002] HIGH: Redirect URI Built from User-Controlled Headers Without Allowlist Validation
 
-- **File**: `development/frontend/src/app/api/patreon/authorize/route.ts:31-38` and `development/frontend/src/app/api/patreon/callback/route.ts:32-49`
+- **File**: `development/ledger/src/app/api/patreon/authorize/route.ts:31-38` and `development/ledger/src/app/api/patreon/callback/route.ts:32-49`
 - **Category**: A01 Broken Access Control / A03 Injection
 - **Description**: Both `buildRedirectUri()` functions construct the OAuth redirect URI by reading `x-forwarded-proto` and `host` HTTP request headers. These headers can be spoofed by a malicious intermediary or in certain proxy configurations. If an attacker can control the `host` header reaching the Next.js server (e.g., through a misconfigured load balancer, a same-server SSRF, or a host header injection in shared infrastructure), the redirect URI sent to Patreon becomes `https://attacker.com/api/patreon/callback`. Patreon will then redirect the authorization code to the attacker's domain.
 - **Impact**: Host header injection in the authorize route causes Patreon to redirect the user's authorization code to an attacker-controlled URI. The attacker can then exchange the code for Patreon tokens and link a victim's Patreon account to their own Fenrir account, or simply steal Patreon access tokens. In the callback route, a manipulated `host` causes the reconstructed redirect URI to mismatch what was sent during authorization, likely causing a Patreon validation error — but the mismatch could also be exploited to redirect the user to an attacker-controlled domain.
@@ -75,7 +75,7 @@ However, six findings require remediation before deployment. The most significan
   This removes all reliance on user-controlled headers. Note that `VERCEL_URL` is automatically set by Vercel and is not user-controlled.
 - **Evidence**:
   ```typescript
-  // development/frontend/src/app/api/patreon/authorize/route.ts:31-38
+  // development/ledger/src/app/api/patreon/authorize/route.ts:31-38
   function buildRedirectUri(request: NextRequest): string {
     const proto = request.headers.get("x-forwarded-proto") ?? "https";  // user-controlled
     const host = request.headers.get("host") ?? "localhost:9653";        // user-controlled
@@ -88,7 +88,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-003] MEDIUM: In-Memory Rate Limiter Ineffective in Serverless Multi-Instance Deployment
 
-- **File**: `development/frontend/src/lib/rate-limit.ts:19` (used by all four Patreon routes)
+- **File**: `development/ledger/src/lib/rate-limit.ts:19` (used by all four Patreon routes)
 - **Category**: A04 Insecure Design
 - **Description**: The rate limiter uses a module-level in-memory `Map`. On Vercel's serverless platform, each function invocation may run on a different instance with its own memory space. A single IP address can make 5 requests per minute per instance, with dozens of concurrent instances, resulting in no effective rate limiting across the fleet. The existing `rate-limit.ts` file itself documents this limitation ("it won't survive cold starts or span across multiple instances") but all four new Patreon routes use it regardless.
 - **Impact**: The `/api/patreon/authorize` and `/api/patreon/callback` endpoints are rate-limited at 5 and 10 requests per minute respectively, but these limits are per-instance only. An attacker with a botnet or multiple IP addresses can flood these endpoints, exhausting Patreon API quota, triggering OAuth confusion, or brute-forcing state token validation. The `/api/patreon/membership` route at 20 req/min per instance is similarly trivially bypassed.
@@ -108,7 +108,7 @@ However, six findings require remediation before deployment. The most significan
   For now, treat in-memory rate limiting as a best-effort advisory defense only.
 - **Evidence**:
   ```typescript
-  // development/frontend/src/lib/rate-limit.ts:19
+  // development/ledger/src/lib/rate-limit.ts:19
   // Comment in source: "it won't survive cold starts or span across multiple instances"
   const store = new Map<string, RateLimitEntry>();
   ```
@@ -117,7 +117,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-004] MEDIUM: No Webhook Replay Protection
 
-- **File**: `development/frontend/src/app/api/patreon/webhook/route.ts`
+- **File**: `development/ledger/src/app/api/patreon/webhook/route.ts`
 - **Category**: A04 Insecure Design
 - **Description**: The webhook handler validates the HMAC-MD5 signature and event type, but does not implement replay protection. An attacker who captures a legitimate `members:pledge:delete` webhook can replay it indefinitely to repeatedly downgrade a user to `thrall` tier. Since Patreon does not include a timestamp in the webhook payload's root attributes, and the current code does not check for one, there is no mechanism to detect replayed requests. Similarly, there is no idempotency key or event deduplication.
 - **Impact**: A captured `members:pledge:delete` webhook can be replayed to downgrade a paying user to `thrall` tier. The user would need to re-check membership (which re-queries Patreon's API) to recover. This is a denial-of-service against paying users' entitlements. A captured `members:pledge:create` replay could be used to reset a user's `checkedAt` timestamp but would not grant unauthorized access.
@@ -134,13 +134,13 @@ However, six findings require remediation before deployment. The most significan
   }
   ```
   Additionally, check if Patreon includes a timestamp in payload attributes and reject events older than 5 minutes.
-- **Evidence**: No replay protection code exists in `development/frontend/src/app/api/patreon/webhook/route.ts`.
+- **Evidence**: No replay protection code exists in `development/ledger/src/app/api/patreon/webhook/route.ts`.
 
 ---
 
 ### [SEV-005] MEDIUM: CSP `connect-src` Does Not Include Patreon Domain
 
-- **File**: `development/frontend/next.config.ts:31-43`
+- **File**: `development/ledger/next.config.ts:31-43`
 - **Category**: A05 Security Misconfiguration
 - **Description**: The Content Security Policy `connect-src` directive does not include `https://www.patreon.com`. The authorize route redirects the browser to Patreon's OAuth page, which is a navigation (handled by `frame-src` / navigation, not `connect-src`). However, if any future frontend code attempts to make a direct `fetch()` or `XMLHttpRequest` to `www.patreon.com` (e.g., checking Patreon status from the client, or if a Patreon widget is ever embedded), the CSP would block it without clear error messaging. More critically, the `frame-src` directive also does not include `https://www.patreon.com`, which would block any Patreon OAuth consent UI rendered in an iframe.
 - **Impact**: Low-impact today because all Patreon communication is server-side. However, it represents a CSP gap that could cause silent failures if client-side Patreon integration is ever added. The missing `frame-src` entry could block Patreon's OAuth consent popup if it is ever rendered in an iframe context.
@@ -152,7 +152,7 @@ However, six findings require remediation before deployment. The most significan
   ```
 - **Evidence**:
   ```typescript
-  // development/frontend/next.config.ts:31-43
+  // development/ledger/next.config.ts:31-43
   // connect-src does not include www.patreon.com
   // frame-src does not include www.patreon.com
   [
@@ -168,7 +168,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-006] LOW: OAuth State Token Nonce Not Bound to Session or Browser Fingerprint
 
-- **File**: `development/frontend/src/lib/patreon/state.ts`
+- **File**: `development/ledger/src/lib/patreon/state.ts`
 - **Category**: A07 Identification and Authentication Failures
 - **Description**: The encrypted OAuth state token contains `googleSub`, `nonce`, and `createdAt`. The `nonce` is a 16-byte random value generated server-side, but it is not stored server-side. Because the token is only decrypted and validated (not looked up in a store), any valid encrypted state token for the correct `googleSub` that is not expired will be accepted. A state token cannot be "used up" — it remains valid for its full 10-minute window and could theoretically be used multiple times.
 - **Impact**: An attacker who steals a state token from a user's browser during the 10-minute window (e.g., via network interception, log leakage, or referrer header) could initiate their own callback request using that token. The encrypted state provides integrity and confidentiality, so theft requires compromising the token in transit or from logs. The nonce provides no additional protection without server-side storage. This is a defense-in-depth gap rather than an immediately exploitable vulnerability.
@@ -182,7 +182,7 @@ However, six findings require remediation before deployment. The most significan
   This makes state tokens single-use, preventing replay.
 - **Evidence**:
   ```typescript
-  // development/frontend/src/lib/patreon/state.ts:57-93
+  // development/ledger/src/lib/patreon/state.ts:57-93
   // No server-side nonce store; token remains valid for full 10 minutes after use
   export function validateState(stateToken: string): PatreonOAuthState | null {
     // ... decrypts, validates expiry, but does not consume the nonce
@@ -193,7 +193,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-007] LOW: Patreon Error Body Logged at ERROR Level May Contain Sensitive Information
 
-- **File**: `development/frontend/src/lib/patreon/api.ts:83-88` and `api.ts:253-258`
+- **File**: `development/ledger/src/lib/patreon/api.ts:83-88` and `api.ts:253-258`
 - **Category**: A09 Security Logging and Monitoring Failures
 - **Description**: When Patreon's token endpoint or identity API returns an error, the raw response body is captured via `await response.text()` and logged at `log.error()` level with the full body text. Patreon error responses may include fields that echo back partial request data (e.g., a truncated `code`, the `client_id`, or error detail strings). While the fenrir logger masks known secret key names, it does not mask arbitrary content inside an opaque error body string.
 - **Impact**: Patreon error responses logged verbatim in production logs could expose partial OAuth codes or other data in logs accessible to Vercel dashboard viewers. This is a low-severity concern because: (1) the fenrir logger's regex patterns would catch most token-format strings; (2) Patreon error bodies typically contain non-secret diagnostic information.
@@ -205,7 +205,7 @@ However, six findings require remediation before deployment. The most significan
   If the full error body is needed for debugging, log it at `debug` level which is suppressed in production (`minLevel: 2` in production means only `info` and above are emitted).
 - **Evidence**:
   ```typescript
-  // development/frontend/src/lib/patreon/api.ts:83-88
+  // development/ledger/src/lib/patreon/api.ts:83-88
   const errorBody = await response.text();
   log.error("exchangeCode: Patreon token exchange failed", {
     status: response.status,
@@ -217,7 +217,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-008] LOW: No Audit Log for Patreon Account Link / Unlink Events
 
-- **File**: `development/frontend/src/app/api/patreon/callback/route.ts` and `development/frontend/src/app/api/patreon/webhook/route.ts`
+- **File**: `development/ledger/src/app/api/patreon/callback/route.ts` and `development/ledger/src/app/api/patreon/webhook/route.ts`
 - **Category**: A09 Security Logging and Monitoring Failures
 - **Description**: When a Patreon account is successfully linked (callback route) or when a membership changes (webhook route), only `log.debug()` is used for the success path. In production, `minLevel: 2` suppresses debug logs. There is therefore no persistent audit trail for: account link events, tier upgrades, tier downgrades, or webhook-triggered changes. The only production-level log events are errors.
 - **Impact**: If a user disputes a tier change, or if a security incident involves manipulation of entitlements, there is no server-side audit trail to reconstruct what happened and when. This is a compliance and forensics gap.
@@ -237,7 +237,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-009] INFO: Patreon Token Expiry Not Tracked in Entitlement Store
 
-- **File**: `development/frontend/src/lib/patreon/types.ts:117-134`
+- **File**: `development/ledger/src/lib/patreon/types.ts:117-134`
 - **Category**: A07 Identification and Authentication Failures
 - **Description**: The `StoredEntitlement` type does not include a field for when the Patreon `access_token` expires (`expires_in` from the token response). The membership route always attempts a token refresh when the entitlement is stale (> 1 hour), using the `refresh_token`. If the refresh token itself has expired or been revoked by Patreon (users can revoke app access from their Patreon settings), the refresh will fail silently and the stale cached entitlement is returned with `{ stale: true }`. This is the correct degraded behavior, but there is no proactive notification or re-link prompt.
 - **Impact**: Users who revoke Patreon access will continue to see stale (potentially incorrect) entitlement data for up to 30 days (KV TTL), with `stale: true` in the API response. If the UI does not surface this flag, users may see incorrect tier information.
@@ -247,7 +247,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-010] INFO: `PATREON_CLIENT_ID` Used Without `NEXT_PUBLIC_` Prefix — Verify This Is Intentional
 
-- **File**: `development/frontend/src/app/api/patreon/authorize/route.ts:75` and `development/frontend/src/lib/patreon/api.ts:51`
+- **File**: `development/ledger/src/app/api/patreon/authorize/route.ts:75` and `development/ledger/src/lib/patreon/api.ts:51`
 - **Category**: INFO — Environment Variable Hygiene
 - **Description**: `PATREON_CLIENT_ID` is correctly a server-only env var (no `NEXT_PUBLIC_` prefix). However, unlike `NEXT_PUBLIC_GOOGLE_CLIENT_ID` which is intentionally public (needed client-side for the OAuth redirect), the Patreon client ID is never needed in the browser. The current design is correct. This is a verification note confirming the intentional difference.
 - **Impact**: None. The correct prefix (absence of `NEXT_PUBLIC_`) is applied.
@@ -257,7 +257,7 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-011] INFO: `KV_REST_API_TOKEN` Exposure Risk if KV Errors Logged Verbatim
 
-- **File**: `development/frontend/src/lib/kv/entitlement-store.ts:60-65`
+- **File**: `development/ledger/src/lib/kv/entitlement-store.ts:60-65`
 - **Category**: A09 Security Logging and Monitoring Failures
 - **Description**: KV errors are caught and logged as `err.message`. The `@vercel/kv` client may include the KV REST API URL or a partial token in error messages for connection failures. The fenrir logger's `maskValuesOfKeys` list includes `token` (case-insensitive), which would mask a field named `token`, but a token embedded in a URL string within an error message would only be caught if it matches the regex patterns. `KV_REST_API_TOKEN` is not in the regex pattern list.
 - **Impact**: Low. KV error messages that embed the API token in a URL would be logged in production. Vercel's KV client typically does not embed the token in error messages, but this is implementation-dependent.
@@ -267,14 +267,14 @@ However, six findings require remediation before deployment. The most significan
 
 ### [SEV-012] INFO: `host` Header Used for Response Redirect URL Construction (SSRF-Adjacent)
 
-- **File**: `development/frontend/src/app/api/patreon/callback/route.ts:32-39`
+- **File**: `development/ledger/src/app/api/patreon/callback/route.ts:32-39`
 - **Category**: A10 Server-Side Request Forgery
 - **Description**: The `getBaseUrl()` function uses the `host` header to construct the base URL used for all redirect responses (e.g., `${baseUrl}/settings?patreon=linked`). If an attacker can inject a malicious `host` header, the user would be redirected to an attacker-controlled domain after the OAuth flow completes. This is related to SEV-002 but affects the final redirect destinations rather than the OAuth redirect URI.
 - **Impact**: If `host` injection succeeds, users completing the Patreon OAuth flow would be redirected to `https://attacker.com/settings?patreon=linked&tier=karl` instead of the real application. This is an open redirect that can be used for phishing.
 - **Remediation**: This is fixed by the same env-var-based approach recommended in SEV-002. Use `APP_BASE_URL` from environment for all redirect construction, eliminating all reliance on the `host` header.
 - **Evidence**:
   ```typescript
-  // development/frontend/src/app/api/patreon/callback/route.ts:32-38
+  // development/ledger/src/app/api/patreon/callback/route.ts:32-38
   function getBaseUrl(request: NextRequest): string {
     const proto = request.headers.get("x-forwarded-proto") ?? "https";  // user-controlled
     const host = request.headers.get("host") ?? "localhost:9653";        // user-controlled

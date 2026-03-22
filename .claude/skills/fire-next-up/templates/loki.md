@@ -67,20 +67,20 @@ Then create your todo list via TodoWrite. Every todo below is required:
 
 - **NEVER write tests for monitor-ui (Odin's Throne) or odins-spear.** `development/monitor-ui/` and
   `development/odins-spear/` have no test infrastructure that agents should use. All tests target
-  `development/frontend/` only. If the issue is a monitor-ui or odins-spear change, skip Vitest
+  `development/ledger/` only. If the issue is a monitor-ui or odins-spear change, skip Vitest
   entirely and validate via tsc + build only.
 - Follow ALL Test Standards from the agent definition — budgets, pyramid, locators, data isolation.
 - Use the handoff's "How to verify" and "Edge cases" to guide test design.
 - **Commit+push tests before running them:**
   git add -A && git commit -m 'wip: add tests for issue:<NUMBER>' && git push origin <BRANCH>
 - Run ALL Vitest tests (not just your feature tests):
-  `cd <REPO_ROOT>/development/frontend && npx vitest run`
+  `cd <REPO_ROOT>/development/ledger && npx vitest run`
 - Fix ALL failing tests — yours AND any pre-existing failures you find. Update todos.
 - Do NOT proceed until the FULL Vitest suite is green.
 - Do NOT write or run any Playwright E2E tests. Vitest only. E2E is on lockdown.
 
 **Step 3b — tsc check:**
-  `cd <REPO_ROOT>/development/frontend && pnpm run verify:tsc`
+  `cd <REPO_ROOT>/development/ledger && pnpm run verify:tsc`
 On failure: fix, commit+push, re-run.
 
 **Step 3c — Rebase:**
@@ -177,8 +177,8 @@ The following tests are failing in CI. You MUST fix ALL of them.
 **Step 4 — Fix all failures:**
 - Make the minimum changes needed to make all tests pass.
 - After fixing, run the FULL test suite to verify zero failures:
-  `cd <REPO_ROOT>/development/frontend && npx playwright test --reporter=list`
-- Also verify build: `cd <REPO_ROOT>/development/frontend && npx tsc --noEmit && npx next build`
+  `cd <REPO_ROOT>/development/ledger && npx playwright test --reporter=list`
+- Also verify build: `cd <REPO_ROOT>/development/ledger && npx tsc --noEmit && npx next build`
 - If any tests still fail, keep fixing until ALL pass. Do not stop with failures remaining.
 
 **Step 5 — Commit and push:**

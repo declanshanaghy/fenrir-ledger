@@ -9,7 +9,7 @@
 #   ./development/scripts/setup-local.sh
 #
 # After running, start the dev server:
-#   cd development/frontend && npm run dev
+#   cd development/ledger && npm run dev
 # ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -29,7 +29,7 @@ header()  { echo -e "\n${BOLD}$*${RESET}"; }
 # ── Resolve script location → repo root ──────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-SRC_DIR="${REPO_ROOT}/development/frontend"
+SRC_DIR="${REPO_ROOT}/development/ledger"
 
 header "Fenrir Ledger — Local Dev Setup"
 echo "Repo root:  ${REPO_ROOT}"
@@ -112,7 +112,7 @@ info "GKE setup complete ✓"
 header "Setup complete!"
 echo ""
 echo -e "  ${GREEN}To start the development server:${RESET}"
-echo -e "  ${BOLD}cd development/frontend && npm run dev${RESET}"
+echo -e "  ${BOLD}cd development/ledger && npm run dev${RESET}"
 echo ""
 echo -e "  Then open: ${BOLD}http://localhost:3000${RESET}"
 echo ""

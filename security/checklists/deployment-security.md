@@ -11,7 +11,7 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 ## 1. Secret Hygiene
 
 - [ ] [MANUAL] **`.env.local` is in `.gitignore`**
-  - Verify: `git check-ignore -v development/frontend/.env.local`
+  - Verify: `git check-ignore -v development/ledger/.env.local`
   - Expected: `.gitignore` matches the file
 
 - [ ] [MANUAL] **No secrets in `.env.example`**
@@ -20,10 +20,10 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [MANUAL] **Grep for hardcoded secrets in source**
   ```
-  grep -r "AIza" development/frontend/src/      # Google API keys
-  grep -r "sk-ant-" development/frontend/src/   # Anthropic keys
-  grep -r "sk-" development/frontend/src/       # OpenAI keys
-  grep -r "client_secret" development/frontend/src/ # OAuth secrets
+  grep -r "AIza" development/ledger/src/      # Google API keys
+  grep -r "sk-ant-" development/ledger/src/   # Anthropic keys
+  grep -r "sk-" development/ledger/src/       # OpenAI keys
+  grep -r "client_secret" development/ledger/src/ # OAuth secrets
   ```
   All results should be references to `process.env.*`, not literal values.
 
@@ -40,11 +40,11 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [MANUAL] **No server secrets use `NEXT_PUBLIC_` prefix**
   ```
-  grep -r "NEXT_PUBLIC_GOOGLE_CLIENT_SECRET" development/frontend/
-  grep -r "NEXT_PUBLIC_FENRIR" development/frontend/
-  grep -r "NEXT_PUBLIC_GOOGLE_PICKER" development/frontend/
-  grep -r "NEXT_PUBLIC_STRIPE_SECRET" development/frontend/
-  grep -r "NEXT_PUBLIC_STRIPE_WEBHOOK" development/frontend/
+  grep -r "NEXT_PUBLIC_GOOGLE_CLIENT_SECRET" development/ledger/
+  grep -r "NEXT_PUBLIC_FENRIR" development/ledger/
+  grep -r "NEXT_PUBLIC_GOOGLE_PICKER" development/ledger/
+  grep -r "NEXT_PUBLIC_STRIPE_SECRET" development/ledger/
+  grep -r "NEXT_PUBLIC_STRIPE_WEBHOOK" development/ledger/
   ```
   All should return no results. (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is intentionally public.)
 
@@ -54,7 +54,7 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [MANUAL] **Every API route calls `requireAuth()` as first operation**
   ```
-  grep -rn "export async function" development/frontend/src/app/api/ | grep -v "token/route" | grep -v "webhook/route"
+  grep -rn "export async function" development/ledger/src/app/api/ | grep -v "token/route" | grep -v "webhook/route"
   ```
   For each route found (except `/api/auth/token` and `/api/stripe/webhook`), open the file
   and confirm `requireAuth(request)` is the first call.
@@ -110,7 +110,7 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [AUTOMATED / CI] **No critical or high CVEs in npm dependencies**
   ```
-  cd development/frontend && npm audit --audit-level=high
+  cd development/ledger && npm audit --audit-level=high
   ```
   Expected: 0 vulnerabilities at high or critical severity
 
@@ -128,12 +128,12 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [AUTOMATED / CI] **Production build succeeds without TypeScript errors**
   ```
-  cd development/frontend && npm run build
+  cd development/ledger && npm run build
   ```
 
 - [ ] [AUTOMATED / CI] **Full Playwright test suite passes**
   ```
-  cd development/frontend && npx playwright test
+  cd development/ledger && npx playwright test
   ```
   Expected: 0 failures (baseline count grows with each sprint)
 

@@ -60,16 +60,16 @@ if [ -n "$BRANCH" ]; then
   fi
 fi
 
-# 4. Install frontend dependencies from lockfile (exact versions)
-cd "$REPO_ROOT/development/frontend"
+# 4. Install ledger dependencies from lockfile (exact versions)
+cd "$REPO_ROOT/development/ledger"
 npm ci --prefer-offline 2>/dev/null || npm ci
-echo "[ok] frontend dependencies installed from lockfile"
+echo "[ok] ledger dependencies installed from lockfile"
 
 # 5. Playwright setup — tests live in quality/test-suites/ but node_modules
-#    is in development/frontend/. Symlink so Node can resolve @playwright/test.
+#    is in development/ledger/. Symlink so Node can resolve @playwright/test.
 if [ ! -e "$REPO_ROOT/quality/node_modules" ]; then
-  ln -s "$REPO_ROOT/development/frontend/node_modules" "$REPO_ROOT/quality/node_modules"
-  echo "[ok] quality/node_modules symlinked to frontend"
+  ln -s "$REPO_ROOT/development/ledger/node_modules" "$REPO_ROOT/quality/node_modules"
+  echo "[ok] quality/node_modules symlinked to ledger"
 fi
 
 # 6. Install Playwright browsers + system deps (Chromium only for speed)

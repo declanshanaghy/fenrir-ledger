@@ -58,7 +58,7 @@ travel only via `extraHTTPHeaders` and `${{ secrets.* }}`.
 
 ### API Route Auth (UNBREAKABLE RULE)
 
-Every handler under `development/frontend/src/app/api/` MUST call `requireAuth(request)`
+Every handler under `development/ledger/src/app/api/` MUST call `requireAuth(request)`
 and return early if `!auth.ok`. Only exception: `/api/auth/token`.
 
 ```typescript

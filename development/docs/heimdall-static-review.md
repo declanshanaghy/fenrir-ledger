@@ -31,7 +31,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-001] HIGH — Open Redirect in OAuth Callback via Unvalidated `callbackUrl`
 
 - **Category**: A01 Broken Access Control / A04 Insecure Design
-- **Location**: `development/frontend/src/app/auth/callback/page.tsx:177`
+- **Location**: `development/ledger/src/app/auth/callback/page.tsx:177`
 - **Description**: After the OAuth token exchange completes, the callback page reads `callbackUrl` from `sessionStorage["fenrir:pkce"]` and performs an unconditional `window.location.href = destination` redirect. The `callbackUrl` value is never validated against an origin allowlist. An attacker who can set `sessionStorage["fenrir:pkce"]` before the OAuth flow (e.g., via XSS or a subdomain takeover) can redirect the freshly authenticated user to any external URL, facilitating phishing and credential theft. The sign-in page hard-codes `callbackUrl: "/"` today, so the current default is safe — but the pattern is fragile; any future feature that makes `callbackUrl` user-supplied (e.g., `?next=` query param) would immediately be exploitable.
 - **Impact**: Post-authentication redirect to attacker-controlled domain. Victim lands on a phishing page with a believable URL transition.
 - **Evidence**:
@@ -58,7 +58,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-002] HIGH — Absence of HTTP Security Headers
 
 - **Category**: A05 Security Misconfiguration
-- **Location**: `development/frontend/next.config.ts`
+- **Location**: `development/ledger/next.config.ts`
 - **Description**: `next.config.ts` configures only URL rewrites. No security headers are set: no Content Security Policy (CSP), no `Strict-Transport-Security` (HSTS), no `X-Frame-Options`, no `X-Content-Type-Options`, and no `Referrer-Policy`. Because tokens and card data are held in `localStorage`, a successful XSS attack has no browser-enforced boundary to slow it down.
 - **Impact**: XSS payloads can exfiltrate tokens from `localStorage`. Without HSTS, downgrade attacks are possible. Without `X-Frame-Options`, the app can be clickjacked.
 - **Evidence**:
@@ -72,7 +72,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-003] HIGH — No Rate Limiting on Unauthenticated Token Exchange Endpoint
 
 - **Category**: A04 Insecure Design / A07 Identification and Authentication Failures
-- **Location**: `development/frontend/src/app/api/auth/token/route.ts`
+- **Location**: `development/ledger/src/app/api/auth/token/route.ts`
 - **Description**: The `/api/auth/token` endpoint is intentionally exempt from `requireAuth()` (correct). However, there is no rate limiting, no IP-based throttling, and no per-code uniqueness enforcement. This enables: (a) DoS against Google's token endpoint; (b) amplification of authorization code interception; (c) GKE pod resource exhaustion.
 - **Impact**: Function cost exhaustion, DoS amplification during PKCE race conditions, potential lockout of GCP OAuth app.
 - **Evidence**:
@@ -88,7 +88,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-004] MEDIUM — Google Picker API Key Transmitted to Browser in Plaintext JSON
 
 - **Category**: A02 Cryptographic Failures / A05 Security Misconfiguration
-- **Location**: `development/frontend/src/app/api/config/picker/route.ts:16`
+- **Location**: `development/ledger/src/app/api/config/picker/route.ts:16`
 - **Description**: The `GOOGLE_PICKER_API_KEY` is served via auth-gated endpoint as plaintext JSON. Any authenticated user can extract it from the network inspector. Without CSP (SEV-002), XSS can also read it from React state.
 - **Impact**: API key extraction by authenticated users or XSS payloads.
 - **Remediation**: Add `Cache-Control: no-store` to the response. Document that the GCP key MUST have HTTP referrer restrictions enabled.
@@ -98,7 +98,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-005] MEDIUM — LLM Prompt Injection via User-Controlled CSV Content
 
 - **Category**: A03 Injection (Prompt Injection)
-- **Location**: `development/frontend/src/lib/sheets/prompt.ts:44`
+- **Location**: `development/ledger/src/lib/sheets/prompt.ts:44`
 - **Description**: User-supplied CSV is interpolated directly into the LLM system prompt with no structural separation. A user controlling CSV content can inject instructions to override model behavior.
 - **Impact**: Denial of extraction service, false negatives on sensitive data detection, attacker-controlled strings in card `notes`.
 - **Evidence**:
@@ -114,7 +114,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-006] MEDIUM — Drive Access Token Stored in localStorage (XSS Blast Radius)
 
 - **Category**: A07 Identification and Authentication Failures
-- **Location**: `development/frontend/src/hooks/useDriveToken.ts:52-57`
+- **Location**: `development/ledger/src/hooks/useDriveToken.ts:52-57`
 - **Description**: Drive-scoped OAuth access token is persisted to `localStorage["fenrir:drive-token"]`. Combined with absent CSP (SEV-002), XSS can exfiltrate it for up to 1 hour.
 - **Impact**: Token theft enabling read access to user's Google Drive files.
 - **Remediation**: Store Drive token in React state (memory) only — do not persist to localStorage.
@@ -124,7 +124,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-007] MEDIUM — Error Message from Google Token Endpoint Forwarded to Client
 
 - **Category**: A09 Security Logging and Monitoring / A05 Security Misconfiguration
-- **Location**: `development/frontend/src/app/api/auth/token/route.ts:133-140`
+- **Location**: `development/ledger/src/app/api/auth/token/route.ts:133-140`
 - **Description**: Google's raw error response body is forwarded verbatim to the browser client, which then renders it in the DOM via `setErrorMessage(message)`.
 - **Impact**: Information disclosure about GCP OAuth configuration.
 - **Remediation**: Map known HTTP status codes to user-safe messages. Log raw errors to console only.
@@ -134,7 +134,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-008] LOW — LLM Provider Singleton May Persist Stale API Key Across Deployments
 
 - **Category**: A05 Security Misconfiguration
-- **Location**: `development/frontend/src/lib/llm/extract.ts:75-105`
+- **Location**: `development/ledger/src/lib/llm/extract.ts:75-105`
 - **Description**: Module-level singleton caches LLM provider instance. On warm serverless containers, rotated API keys won't take effect until cold start.
 - **Remediation**: Document this behavior. Add provider env-var version check to invalidate singleton.
 
@@ -143,7 +143,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-009] LOW — `FENRIR_OPENAI_API_KEY` and `LLM_PROVIDER` Absent from `.env.example`
 
 - **Category**: A05 Security Misconfiguration
-- **Location**: `development/frontend/.env.example`
+- **Location**: `development/ledger/.env.example`
 - **Description**: `extract.ts` references these env vars but they aren't documented in `.env.example`.
 - **Remediation**: Add both to `.env.example` with comments noting no `NEXT_PUBLIC_` prefix.
 
@@ -152,7 +152,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-010] LOW — Middleware is a No-op (Defense-in-Depth Gap)
 
 - **Category**: A01 Broken Access Control (defense-in-depth)
-- **Location**: `development/frontend/src/middleware.ts`
+- **Location**: `development/ledger/src/middleware.ts`
 - **Description**: Middleware calls `NextResponse.next()` unconditionally. No security processing.
 - **Remediation**: Use middleware to set security response headers at the Edge. Covered by SEV-002.
 
@@ -161,7 +161,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-011] INFO — OAuth Scope Includes `openid email profile` Only at Sign-In (Correct)
 
 - **Category**: A01 Broken Access Control (scope minimization)
-- **Location**: `development/frontend/src/app/sign-in/page.tsx:90-93`
+- **Location**: `development/ledger/src/app/sign-in/page.tsx:90-93`
 - **Description**: Initial OAuth request correctly uses minimal scopes. Drive scopes acquired via incremental consent only when needed.
 - **Status**: PASS. No action required.
 
@@ -170,7 +170,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-012] INFO — `NEXT_PUBLIC_GOOGLE_CLIENT_ID` Used Server-Side in `verify-id-token.ts`
 
 - **Category**: A05 Security Misconfiguration (naming convention)
-- **Location**: `development/frontend/src/lib/auth/verify-id-token.ts:59`
+- **Location**: `development/ledger/src/lib/auth/verify-id-token.ts:59`
 - **Description**: Server-side module reads `NEXT_PUBLIC_` variable. The client ID is legitimately public and the naming is technically correct.
 - **Status**: Informational only. No action required.
 
@@ -179,7 +179,7 @@ However, several meaningful weaknesses exist. The most significant are: (1) a mi
 ### [SEV-013] INFO — `mergeAnonymousCards` Reads Raw JSON from localStorage Without Schema Validation
 
 - **Category**: A08 Software and Data Integrity Failures
-- **Location**: `development/frontend/src/lib/merge-anonymous.ts:57`
+- **Location**: `development/ledger/src/lib/merge-anonymous.ts:57`
 - **Description**: `JSON.parse()` result is used without Zod validation before merging into authenticated store.
 - **Remediation**: Validate with `CardsArraySchema.safeParse()` before merging.
 

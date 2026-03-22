@@ -1,6 +1,6 @@
 # Fenrir Ledger — Project Commands
 # Run `just --list` to see all available recipes.
-# Run `just --list <module>` to see recipes in a submodule (e.g., `just --list frontend`).
+# Run `just --list <module>` to see recipes in a submodule (e.g., `just --list ledger`).
 
 set dotenv-load := false
 set shell := ["bash", "-euo", "pipefail", "-c"]
@@ -12,7 +12,7 @@ pack      := repo_root / ".claude" / "skills" / "fire-next-up" / "scripts" / "pa
 
 # ── Submodules ─────────────────────────────────────────────────────────────
 
-mod frontend 'development/frontend'
+mod ledger 'development/ledger'
 mod spear 'development/odins-spear'
 mod quality 'quality'
 mod infra 'infrastructure'
@@ -118,4 +118,4 @@ terminal-install:
 
 # Clean all build artifacts and coverage reports
 clean:
-    rm -rf "{{repo_root}}/development/frontend/.next" "{{repo_root}}/development/frontend/out" quality/reports/
+    rm -rf "{{repo_root}}/development/ledger/.next" "{{repo_root}}/development/ledger/out" quality/reports/

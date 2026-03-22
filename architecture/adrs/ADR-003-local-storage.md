@@ -63,7 +63,7 @@ Prefixed keys prevent collisions with other apps on the same origin during devel
 
 ### Abstraction Layer
 
-All localStorage access goes through `development/frontend/src/lib/storage.ts`. No component or page accesses `window.localStorage` directly.
+All localStorage access goes through `development/ledger/src/lib/storage.ts`. No component or page accesses `window.localStorage` directly.
 
 ```typescript
 // Public interface of storage.ts (Sprint 1)
@@ -114,6 +114,6 @@ export function migrateIfNeeded(): void {
 - localStorage is synchronous — large reads/writes could theoretically block the main thread. At Sprint 1 scale (< 100 cards), this is not a concern.
 
 **Constraints introduced**:
-- All localStorage access must go through `development/frontend/src/lib/storage.ts`
+- All localStorage access must go through `development/ledger/src/lib/storage.ts`
 - Components that read/write cards must use `"use client"` (localStorage is browser-only)
 - The schema version key must be bumped and a migration written whenever the Card or Household interfaces change

@@ -9,12 +9,12 @@ by date (newest first).
 
 ## How it works
 
-- **Index page:** `development/frontend/src/app/(marketing)/chronicles/page.tsx`
+- **Index page:** `development/ledger/src/app/(marketing)/chronicles/page.tsx`
   - Uses `getAllChronicles()` from `@/lib/chronicles` to list all entries
-- **Detail page:** `development/frontend/src/app/(marketing)/chronicles/[slug]/page.tsx`
+- **Detail page:** `development/ledger/src/app/(marketing)/chronicles/[slug]/page.tsx`
   - Uses `getChronicleBySlug(slug)` to render individual chronicles via MDXRemote
-- **Data source:** `development/frontend/content/blog/*.mdx`
-  - Parsed by `development/frontend/src/lib/chronicles.ts` using `gray-matter`
+- **Data source:** `development/ledger/content/blog/*.mdx`
+  - Parsed by `development/ledger/src/lib/chronicles.ts` using `gray-matter`
 
 ## Adding a new chronicle
 

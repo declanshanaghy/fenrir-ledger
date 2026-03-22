@@ -8,7 +8,7 @@ importers:
 
   .: {}
 
-  development/frontend:
+  development/ledger:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.78.0
@@ -234,7 +234,7 @@ importers:
         version: 8.3.0
       fenrir-ledger:
         specifier: workspace:*
-        version: link:../frontend
+        version: link:../ledger
       ink:
         specifier: ^6.8.0
         version: 6.8.0(@types/react@19.2.14)(react@19.2.4)

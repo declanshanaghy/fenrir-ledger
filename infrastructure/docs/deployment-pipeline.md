@@ -29,7 +29,7 @@ The `detect-changes` job compares `HEAD~1..HEAD` and outputs boolean flags. All 
 
 | Output flag | Triggers when these paths change |
 |---|---|
-| `app` | `development/frontend/`, `Dockerfile`, `package*.json` |
+| `app` | `development/ledger/`, `Dockerfile`, `package*.json` |
 | `k8s-app` | `infrastructure/k8s/app/`, `infrastructure/helm/fenrir-app/` |
 | `monitor` | `development/monitor/` |
 | `monitor-ui` | `development/monitor-ui/` |

@@ -575,7 +575,7 @@ Cinzel Decorative (display), Cinzel (headings), Source Serif 4 (body), JetBrains
 | All dates | Stored as ISO 8601 strings (YYYY-MM-DD for dates, full ISO for timestamps) |
 | Card IDs | Generated with `crypto.randomUUID()` |
 | Household ID | Anonymous UUID via `getOrCreateAnonHouseholdId()`; Google `sub` claim when signed in |
-| Docker image source | `development/frontend/` (Dockerfile at repo root) |
+| Docker image source | `development/ledger/` (Dockerfile at repo root) |
 | Font loading | `next/font/google` with `display: 'swap'` on all four Norse typefaces |
 | API route auth | Every API route (except `/api/auth/token`) must call `requireAuth(request)` |
 | Subscription platform | Stripe Direct only (Patreon fully removed) |
