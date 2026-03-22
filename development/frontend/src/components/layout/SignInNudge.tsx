@@ -1,23 +1,17 @@
 "use client";
 
 /**
- * SignInNudge — Sign-in prompt for anonymous users.
+ * SignInNudge — Sign-in prompt for anonymous users with ≥1 card.
  *
- * Two modes driven by `hasCards`:
+ * Renders the full-width sign-in banner (the previous UpsellBanner from
+ * components/layout/UpsellBanner.tsx) with atmospheric copy + CTA + dismiss.
  *
- *   hasCards = false (zero-cards state):
- *     Renders a single subtle muted line below the empty state:
- *     "Sign in to sync your data" as a small link.
- *     No border, no banner, no competing CTA.
- *
- *   hasCards = true (user has ≥1 card):
- *     Renders the full-width sign-in banner (the previous UpsellBanner from
- *     components/layout/UpsellBanner.tsx) with atmospheric copy + CTA + dismiss.
- *
- * Hidden entirely for authenticated users.
+ * Hidden entirely for authenticated users or anonymous users with zero cards
+ * (the zero-cards case is now handled by AnonEmptyState in Dashboard.tsx).
  *
  * See ADR-006 for the anonymous-first auth model.
  * Issue #156: Logged-out empty state simplification.
+ * Issue #1748: Subtle link mode removed — replaced by AnonEmptyState primary CTA.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -58,24 +52,9 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
 
   const isAnonymous = status !== "authenticated" && status !== "loading";
 
-  // Not shown to authenticated users or when already dismissed (full banner only)
-  if (!isAnonymous) return null;
-
-  // ── Subtle link mode (zero cards) ─────────────────────────────────────────
-  // Always visible until the user signs in — no dismiss in the subtle mode.
-  if (!hasCards) {
-    return (
-      <p className="text-center text-sm text-muted-foreground/70 font-body mt-2 mb-4">
-        <button
-          type="button"
-          onClick={() => router.push(buildSignInUrl(pathname))}
-          className="underline underline-offset-2 decoration-muted-foreground/40 hover:text-muted-foreground transition-colors"
-        >
-          Sign in to sync your data &mdash; start your free 30-day trial
-        </button>
-      </p>
-    );
-  }
+  // Not shown to authenticated users or anonymous users with zero cards.
+  // Zero-cards anon state is now handled by AnonEmptyState (issue #1748).
+  if (!isAnonymous || !hasCards) return null;
 
   // ── Full banner mode (has cards) ───────────────────────────────────────────
   if (dismissed) return null;

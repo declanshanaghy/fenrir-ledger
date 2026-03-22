@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Anon Cards Screen — Sign-in CTA — Issue #1748</title>
+  <style>
+    /* ── Wireframe layout rules ONLY — no theme styling ──────────────────── */
+    /* No colors, no backgrounds, no border-radius, no box-shadow, no fonts   */
+    /* beyond sans-serif. Permitted: flex/grid, border, width/height,          */
+    /* padding/margin, font-size/weight.                                        */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 48px; }
+
+    /* ── Section headers ─────────────────────────────────────────────────── */
+    .section { display: flex; flex-direction: column; gap: 16px; }
+    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid; padding-bottom: 4px; }
+    .section-desc { font-size: 12px; font-style: italic; }
+
+    /* ── Note annotation style ────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; border-left: 2px solid; padding: 4px 8px; margin-top: 6px; }
+    .note strong { font-style: normal; }
+
+    /* ── Frame shell: page shell with header ─────────────────────────────── */
+    .frame { border: 1px solid; }
+    .frame-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 8px; border-bottom: 1px solid; }
+    .page-shell { display: flex; flex-direction: column; }
+
+    /* ── App chrome: top nav bar ─────────────────────────────────────────── */
+    .app-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      border-bottom: 1px solid;
+    }
+    .nav-brand { font-size: 16px; font-weight: bold; }
+    .nav-actions { display: flex; gap: 8px; align-items: center; }
+    .nav-link { font-size: 13px; text-decoration: underline; }
+
+    /* ── Page content area ───────────────────────────────────────────────── */
+    .page-content { padding: 24px; }
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-title { font-size: 20px; font-weight: bold; }
+
+    /* ── Empty state hero ────────────────────────────────────────────────── */
+    .empty-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      text-align: center;
+      gap: 0;
+    }
+    .empty-hero-heading { font-size: 24px; font-weight: bold; margin-bottom: 12px; }
+    .empty-hero-subtext { font-size: 14px; margin-bottom: 32px; max-width: 380px; font-style: italic; }
+
+    /* ── CTA group ────────────────────────────────────────────────────────── */
+    .cta-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px 24px;
+      border: 2px solid;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 10px 24px;
+      border: 1px solid;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-label-primary { font-size: 11px; font-weight: normal; margin-top: 2px; }
+    .cta-divider {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 2px 0;
+    }
+    .cta-footnote {
+      font-size: 11px;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* ── Annotated callout boxes ─────────────────────────────────────────── */
+    .callout {
+      border: 1px dashed;
+      padding: 8px 12px;
+      font-size: 12px;
+      margin-top: 12px;
+    }
+    .callout-label { font-weight: bold; font-size: 11px; text-transform: uppercase; margin-bottom: 4px; }
+
+    /* ── Side-by-side layout ─────────────────────────────────────────────── */
+    .cols { display: flex; gap: 24px; flex-wrap: wrap; }
+    .col { flex: 1; min-width: 260px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid; padding-bottom: 4px; margin-bottom: 12px; }
+
+    /* ── Mobile simulation frame ─────────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-status-bar {
+      padding: 6px 12px;
+      font-size: 10px;
+      border-bottom: 1px solid;
+      text-align: center;
+    }
+
+    /* ── Hierarchy annotation diagram ───────────────────────────────────── */
+    .hierarchy-block {
+      border: 1px solid;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .h-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .h-indicator {
+      width: 16px;
+      height: 16px;
+      border: 2px solid;
+      flex-shrink: 0;
+    }
+    .h-indicator.filled { background: currentColor; /* structural only */ }
+    .h-label { font-size: 13px; }
+    .h-meta { font-size: 11px; font-style: italic; }
+
+    /* ── State matrix table ──────────────────────────────────────────────── */
+    table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid; padding: 6px 8px; text-align: left; }
+    th { font-weight: bold; }
+
+    /* ── Removed element callout ─────────────────────────────────────────── */
+    .removed {
+      border: 1px dashed;
+      padding: 8px 12px;
+      font-size: 12px;
+      text-decoration: line-through;
+    }
+    .removed-label { font-size: 11px; font-weight: bold; text-transform: uppercase; text-decoration: none; margin-bottom: 2px; }
+
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="section">
+      <div class="section-title">Issue #1748 — Anon Cards Screen: Sign-in CTA + Secondary Add Card</div>
+      <div class="section-desc">
+        The anonymous (logged-out) empty state at /ledger currently buries the sign-in link as a subtle muted text
+        line above the hero. This wireframe defines the new hierarchy: sign-in as primary CTA,
+        add-card-locally as a clearly secondary option. Interaction spec: anon-empty-state-interaction-spec.md.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SECTION A — Current State (reference, showing the problem)
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">(A) Current State — Problem Reference</div>
+      <div class="section-desc">
+        What anonymous users see today. Sign-in is a tiny muted text link above the hero;
+        "Add Card" is the visually dominant action. Hierarchy is inverted for a product that
+        needs account creation as its primary funnel.
+      </div>
+
+      <div class="frame">
+        <div class="frame-label">Current: /ledger — Anonymous User — Zero Cards</div>
+        <div class="page-shell">
+          <div class="app-nav">
+            <span class="nav-brand">Fenrir Ledger</span>
+            <div class="nav-actions">
+              <span class="nav-link">Sign in</span>
+              <span>Settings</span>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="page-header">
+              <span class="page-title">The Ledger of Fates</span>
+              <!-- No Add Card in header — only in EmptyState when zero cards -->
+            </div>
+
+            <!-- SignInNudge (hasCards=false) — current subtle mode -->
+            <p style="text-align:center; font-size:13px; margin-bottom:16px; font-style:italic;">
+              <span style="text-decoration:underline;">Sign in to sync your data — start your free 30-day trial</span>
+            </p>
+
+            <!-- EmptyState hero -->
+            <div class="empty-hero">
+              <div class="empty-hero-heading">Before Gleipnir was forged, Fenrir roamed free.</div>
+              <p class="empty-hero-subtext">Before your first card is added, no chain can be broken.</p>
+              <!-- Import button hidden via AuthGate (anon user sees nothing here) -->
+              <div class="btn-secondary" style="max-width:280px; margin-bottom:12px;">Add Card</div>
+            </div>
+
+            <div class="callout">
+              <div class="callout-label">Problems</div>
+              1. Sign-in link is tiny, muted, above the hero — not scannable as primary action.<br/>
+              2. "Add Card" is the only visible button — suggests adding locally is the intended path.<br/>
+              3. AuthGate hides "Import" entirely — anon user sees no sign-in benefit demonstrated.<br/>
+              4. No trial value proposition presented at point of decision.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SECTION B — New Anon Empty State (desktop, primary design)
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">(B) New Design — Anonymous Empty State — Desktop</div>
+      <div class="section-desc">
+        Primary CTA: Start free trial / Sign in. Secondary CTA: Add a card locally.
+        The value proposition is front-and-centre. The local-add path is available but
+        visually subordinated. The SignInNudge subtle-text mode is replaced entirely
+        by this in-place hierarchy — remove the SignInNudge when hasCards=false.
+      </div>
+
+      <div class="frame">
+        <div class="frame-label">New: /ledger — Anonymous User — Zero Cards — Desktop (>= 600px)</div>
+        <div class="page-shell">
+          <div class="app-nav">
+            <span class="nav-brand">Fenrir Ledger</span>
+            <div class="nav-actions">
+              <span class="nav-link">Sign in</span>
+              <span>Settings</span>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="page-header">
+              <span class="page-title">The Ledger of Fates</span>
+              <!-- No actions in header — zero cards state, all CTAs in empty hero -->
+            </div>
+
+            <!-- NEW anon empty state -->
+            <div class="empty-hero" style="padding: 64px 24px;">
+              <!-- Atmospheric heading (unchanged from current EmptyState) -->
+              <div class="empty-hero-heading">Before Gleipnir was forged, Fenrir roamed free.</div>
+              <p class="empty-hero-subtext">Before your first card is added, no chain can be broken.</p>
+
+              <!-- CTA group: primary then secondary -->
+              <div class="cta-group">
+
+                <!-- PRIMARY: Sign in / Start trial -->
+                <button class="btn-primary">
+                  Start your free 30-day trial
+                </button>
+                <p class="cta-footnote">Sign in to sync cards, access all devices &amp; unlock Karl.</p>
+
+                <!-- Visual separator -->
+                <span class="cta-divider">or</span>
+
+                <!-- SECONDARY: Add card locally -->
+                <button class="btn-secondary">
+                  Add a card locally
+                </button>
+                <p class="cta-footnote">No account needed — cards are stored on this device only.</p>
+
+              </div>
+            </div>
+
+            <div class="callout">
+              <div class="callout-label">Design Decisions</div>
+              1. Primary button uses full border-weight (2px) and bold type — largest interactive element on screen.<br/>
+              2. Secondary button uses 1px border, smaller font — clearly subordinate but still easily tappable (44px+ touch target).<br/>
+              3. "or" divider makes the binary choice explicit without a visual line/rule that adds noise.<br/>
+              4. Footnotes under each CTA provide context without cluttering the buttons.<br/>
+              5. The SignInNudge component's hasCards=false branch is deprecated — remove it to avoid duplication.<br/>
+              6. Atmospheric heading preserved: Gleipnir/Fenrir copy stays — it's brand voice, not wayfinding.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual hierarchy annotation -->
+      <div class="hierarchy-block">
+        <div style="font-size:11px; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">Visual Hierarchy</div>
+        <div class="h-row">
+          <div class="h-indicator" style="border-width:3px;"></div>
+          <div>
+            <div class="h-label">PRIMARY: Start your free 30-day trial</div>
+            <div class="h-meta">btn-primary — 2px border, bold 15px, full container width (max 320px), min-height 48px</div>
+          </div>
+        </div>
+        <div class="h-row">
+          <div class="h-indicator"></div>
+          <div>
+            <div class="h-label">SECONDARY: Add a card locally</div>
+            <div class="h-meta">btn-secondary — 1px border, 13px, full container width (max 320px), min-height 44px</div>
+          </div>
+        </div>
+        <div class="h-row">
+          <div>
+            <div class="h-label">CONTEXTUAL: Footnote copy under each button</div>
+            <div class="h-meta">11px italic — not interactive, purely informational</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SECTION C — Mobile 375px
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">(C) Mobile 375px — Anon Empty State</div>
+      <div class="section-desc">
+        Same hierarchy as desktop. CTA group is full-width (minus 32px horizontal padding).
+        Atmospheric heading scales down to 20px. Footnotes remain 11px.
+        Both buttons meet 44px minimum touch target height.
+      </div>
+
+      <div class="mobile-frame">
+        <div class="mobile-status-bar">375px viewport</div>
+        <div class="app-nav" style="padding: 10px 16px;">
+          <span class="nav-brand" style="font-size:14px;">Fenrir Ledger</span>
+          <div class="nav-actions">
+            <span class="nav-link" style="font-size:12px;">Sign in</span>
+          </div>
+        </div>
+        <div style="padding: 16px;">
+          <div class="page-header" style="margin-bottom:16px;">
+            <span class="page-title" style="font-size:18px;">The Ledger of Fates</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; text-align:center; padding: 32px 0; gap:0;">
+            <div style="font-size:20px; font-weight:bold; margin-bottom:10px;">Before Gleipnir was forged, Fenrir roamed free.</div>
+            <p style="font-size:13px; font-style:italic; margin-bottom:24px; max-width:300px;">Before your first card is added, no chain can be broken.</p>
+
+            <div style="display:flex; flex-direction:column; align-items:stretch; gap:12px; width:100%;">
+              <button class="btn-primary" style="width:100%;">
+                Start your free 30-day trial
+              </button>
+              <p style="font-size:11px; font-style:italic; text-align:center;">Sign in to sync cards, access all devices &amp; unlock Karl.</p>
+
+              <span class="cta-divider" style="text-align:center;">or</span>
+
+              <button class="btn-secondary" style="width:100%;">
+                Add a card locally
+              </button>
+              <p style="font-size:11px; font-style:italic; text-align:center;">No account needed — cards are stored on this device only.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Touch targets:</strong> Both buttons must have min-height 44px (primary 48px recommended).
+        The "or" divider is non-interactive — no tap target needed. Footnotes are not tappable.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SECTION D — Authenticated User: Unchanged Empty State (reference)
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">(D) Authenticated User — Empty State (unchanged reference)</div>
+      <div class="section-desc">
+        When the user IS signed in and has zero cards, the current EmptyState remains correct:
+        "Import from Google Sheets" (primary) + "Add Card" (secondary). No changes needed here.
+        Shown for completeness so FiremanDecko can see the conditional rendering requirement.
+      </div>
+
+      <div class="frame">
+        <div class="frame-label">Unchanged: /ledger — Authenticated User — Zero Cards</div>
+        <div class="page-shell">
+          <div class="app-nav">
+            <span class="nav-brand">Fenrir Ledger</span>
+            <div class="nav-actions">
+              <span>user@example.com</span>
+              <span>Settings</span>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="page-header">
+              <span class="page-title">The Ledger of Fates</span>
+            </div>
+            <div class="empty-hero">
+              <div class="empty-hero-heading">Before Gleipnir was forged, Fenrir roamed free.</div>
+              <p class="empty-hero-subtext">Before your first card is added, no chain can be broken.</p>
+              <div style="display:flex; flex-direction:column; align-items:center; gap:12px;">
+                <button class="btn-primary" style="max-width:280px;">Import from Google Sheets</button>
+                <button class="btn-secondary" style="max-width:280px;">Add Card</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>No change required</strong> for the authenticated empty state. The conditional rendering
+        splits at the component level — see Section F for the recommended component structure.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SECTION E — "Has Cards" State: SignInNudge Banner (unchanged)
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">(E) Has Cards — SignInNudge Full Banner (unchanged)</div>
+      <div class="section-desc">
+        When an anonymous user has 1+ cards, the existing full SignInNudge banner at the top of
+        the page remains correct — it provides persistent but dismissible context.
+        Only the hasCards=false branch of SignInNudge is deprecated by this design.
+      </div>
+
+      <div class="frame">
+        <div class="frame-label">/ledger — Anonymous User — With Cards — SignInNudge Banner</div>
+        <div class="page-shell">
+          <div class="app-nav">
+            <span class="nav-brand">Fenrir Ledger</span>
+            <div class="nav-actions">
+              <span class="nav-link">Sign in</span>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 24px; border-bottom:1px solid;">
+            <!-- SignInNudge full banner -->
+            <div style="flex:1;">
+              <p style="font-size:12px; font-style:italic;">Your chains are stored here alone.</p>
+              <p style="font-size:13px;">Sign in to back up your cards, sync across devices, and start your free 30-day trial.</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+              <button style="padding:6px 12px; border:1px solid; font-size:13px;">Sign in to sync</button>
+              <button style="padding:6px 8px; border:none; font-size:16px;" aria-label="Dismiss">×</button>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="page-header">
+              <span class="page-title">The Ledger of Fates</span>
+              <div style="display:flex; gap:8px;">
+                <button style="padding:6px 12px; border:1px solid; font-size:13px;">Add Card</button>
+              </div>
+            </div>
+            <!-- card grid would appear here -->
+            <div style="border:1px dashed; padding:20px; text-align:center; font-size:12px; font-style:italic;">
+              [ Card grid — tabs — The Howl · The Hunt · Idle · Valhalla · All ]
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Unchanged:</strong> SignInNudge's hasCards=true banner is correct as-is. Only the hasCards=false
+        branch (the subtle muted text link) is removed — its job is now done by the in-hero CTA group.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SECTION F — Component Structure Recommendation
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">(F) Component Structure — Implementation Notes</div>
+      <div class="section-desc">
+        Recommended approach for FiremanDecko. Two implementation paths are offered;
+        Path 1 is preferred for minimal blast radius.
+      </div>
+
+      <div class="cols">
+        <div class="col">
+          <div class="col-label">Path 1 — AnonEmptyState component (preferred)</div>
+          <div style="border:1px solid; padding:12px; font-size:12px;">
+            <strong>New file:</strong> components/dashboard/AnonEmptyState.tsx<br/>
+            <strong>Renders:</strong> Heading + subtext + CTA group (Sign in primary, Add Card secondary)<br/><br/>
+            <strong>Dashboard.tsx change:</strong><br/>
+            Import useAuth. In the zero-cards early return:<br/>
+            <code style="font-size:11px; font-family:monospace;">
+              if (isAnon) return &lt;AnonEmptyState /&gt;;<br/>
+              return &lt;EmptyState /&gt;; // authenticated
+            </code><br/><br/>
+            <strong>SignInNudge.tsx change:</strong><br/>
+            Remove the hasCards=false branch (the &lt;p&gt; subtle-link block). The hasCards=true
+            banner branch is unchanged.
+          </div>
+          <div class="note">
+            <strong>Why preferred:</strong> EmptyState stays focused on the authenticated case.
+            AnonEmptyState owns the full conversion-optimised anon flow without mixing concerns.
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="col-label">Path 2 — Extend EmptyState with isAnonymous prop</div>
+          <div style="border:1px solid; padding:12px; font-size:12px;">
+            <strong>Modified:</strong> EmptyState.tsx — accept isAnonymous?: boolean prop<br/>
+            <strong>Conditional inside EmptyState:</strong><br/>
+            When isAnonymous=true: render sign-in primary + add-card secondary<br/>
+            When isAnonymous=false (default): render current import + add-card<br/><br/>
+            <strong>Dashboard.tsx change:</strong><br/>
+            Pass isAnonymous from useAuth:<br/>
+            <code style="font-size:11px; font-family:monospace;">
+              return &lt;EmptyState isAnonymous={status !== "authenticated"} /&gt;;
+            </code>
+          </div>
+          <div class="note">
+            <strong>Acceptable</strong> if keeping the component count low is preferred.
+            More prop-threading required.
+          </div>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:0;">
+        <div class="callout-label">SignInNudge Deprecation Scope</div>
+        Only the <code>!hasCards</code> branch (lines 66-78 of SignInNudge.tsx) is removed.
+        The <code>hasCards=true</code> full banner (lines 81-188) is unchanged.
+        The prop interface stays the same; the component just never renders the subtle-link mode.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SECTION G — State × Render Matrix
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">(G) State × Render Matrix</div>
+      <div class="section-desc">
+        Complete truth table for what renders at /ledger based on auth state and card count.
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Auth State</th>
+            <th>Cards</th>
+            <th>Empty State Component</th>
+            <th>SignInNudge</th>
+            <th>Header Add Card btn</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Anonymous</td>
+            <td>0</td>
+            <td><strong>AnonEmptyState</strong> (NEW)</td>
+            <td>Hidden (hasCards=false branch removed)</td>
+            <td>Hidden</td>
+            <td>Primary CTA: Sign in. Secondary: Add card locally.</td>
+          </tr>
+          <tr>
+            <td>Anonymous</td>
+            <td>1+</td>
+            <td>None (Dashboard tabs shown)</td>
+            <td>Full banner (unchanged)</td>
+            <td>Visible</td>
+            <td>No change. User added cards without account.</td>
+          </tr>
+          <tr>
+            <td>Authenticated (any tier)</td>
+            <td>0</td>
+            <td>EmptyState (unchanged)</td>
+            <td>Hidden (isAnonymous=false)</td>
+            <td>Hidden</td>
+            <td>Import + Add Card CTAs.</td>
+          </tr>
+          <tr>
+            <td>Authenticated (any tier)</td>
+            <td>1+</td>
+            <td>None (Dashboard tabs shown)</td>
+            <td>Hidden</td>
+            <td>Visible</td>
+            <td>No change.</td>
+          </tr>
+          <tr>
+            <td>Loading</td>
+            <td>—</td>
+            <td>Skeleton / null</td>
+            <td>Hidden</td>
+            <td>Hidden</td>
+            <td>No change. Skeleton fires after 500ms.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SECTION H — Accessibility Requirements (WCAG 2.1 AA)
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">(H) Accessibility — WCAG 2.1 AA</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Requirement</th>
+            <th>Implementation Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Primary CTA button</td>
+            <td>Focus ring visible, min 44x44px touch target, descriptive label</td>
+            <td>Use &lt;button type="button"&gt; with aria-label or visible text "Start your free 30-day trial"</td>
+          </tr>
+          <tr>
+            <td>Secondary CTA button</td>
+            <td>Focus ring visible, min 44px touch target</td>
+            <td>&lt;Link href="/ledger/cards/new"&gt; renders as anchor; aria not needed beyond visible text</td>
+          </tr>
+          <tr>
+            <td>"or" divider</td>
+            <td>Non-interactive — hide from SR if purely decorative</td>
+            <td>aria-hidden="true" on the divider span. SR reads the two buttons sequentially — the "or" is implied.</td>
+          </tr>
+          <tr>
+            <td>Footnotes under buttons</td>
+            <td>Readable by SR; associate with their button if possible</td>
+            <td>Use aria-describedby on each button pointing to the corresponding footnote paragraph ID.</td>
+          </tr>
+          <tr>
+            <td>Heading hierarchy</td>
+            <td>h1 for page title, h2 for hero heading</td>
+            <td>"The Ledger of Fates" = h1. "Before Gleipnir was forged..." = h2 (currently rendered as h2 in EmptyState — keep this).</td>
+          </tr>
+          <tr>
+            <td>Sign-in navigation</td>
+            <td>Primary CTA navigates to sign-in page via buildSignInUrl(pathname)</td>
+            <td>Use router.push(buildSignInUrl(pathname)) matching the existing SignInNudge pattern.</td>
+          </tr>
+          <tr>
+            <td>Keyboard navigation</td>
+            <td>Tab order: page h1 → hero h2 → primary CTA → secondary CTA</td>
+            <td>Natural DOM order produces correct tab sequence. No tabIndex manipulation needed.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SECTION I — Removed Elements
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">(I) Removed / Deprecated Elements</div>
+      <div class="section-desc">
+        Elements that must be removed as part of this change to avoid duplication or mixed signals.
+      </div>
+
+      <div class="removed">
+        <div class="removed-label">Removed: SignInNudge hasCards=false branch</div>
+        SignInNudge.tsx lines 66–78: the &lt;p&gt; tag wrapping the subtle "Sign in to sync your data" link.
+        This path is replaced by AnonEmptyState's in-hero primary CTA.
+        <br/>
+        <br/>
+        <span style="text-decoration:none; font-style:italic;">
+          After removal: SignInNudge renders null for all anonymous users with zero cards (hasCards=false).
+          The hasCards=true full banner (lines 81–188) is untouched.
+        </span>
+      </div>
+    </div>
+
+  </div><!-- .page -->
+</body>
+</html>
