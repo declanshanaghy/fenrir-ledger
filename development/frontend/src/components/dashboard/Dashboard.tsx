@@ -37,6 +37,7 @@
 import { restoreCard, expungeCard, expungeAllCards } from "@/lib/storage";
 import { CardTile } from "./CardTile";
 import { EmptyState } from "./EmptyState";
+import { AnonEmptyState } from "./AnonEmptyState";
 import { AnimatedCardGrid } from "./AnimatedCardGrid";
 import { TabHeader } from "./TabHeader";
 import { TabSummary } from "./TabSummary";
@@ -57,6 +58,7 @@ import { TrashView } from "@/components/dashboard/TrashView";
 import { useDashboardTabs } from "@/hooks/useDashboardTabs";
 import { useLokiMode } from "@/hooks/useLokiMode";
 import { DashboardTabButton } from "@/components/dashboard/DashboardTabButton";
+import { useAuth } from "@/hooks/useAuth";
 
 // ─── Tab classifiers ──────────────────────────────────────────────────────────
 
@@ -312,6 +314,7 @@ export function Dashboard({
   initialTab,
 }: DashboardProps) {
   const { ragnarokActive } = useRagnarok();
+  const { status } = useAuth();
 
   // ── Card bucket splits (stable filters) ────────────────────────────────────
   const howlCards = cards.filter(isHowlCard);
@@ -348,7 +351,8 @@ export function Dashboard({
   // Non-Valhalla cards only pass to EmptyState check (closed/graduated are in Valhalla)
   const nonValhallaCards = cards.filter((c) => !isValhallaCard(c));
   if (nonValhallaCards.length === 0 && valhallaCards.length === 0) {
-    return <EmptyState />;
+    const isAnon = status !== "authenticated" && status !== "loading";
+    return isAnon ? <AnonEmptyState /> : <EmptyState />;
   }
 
   // In Loki mode: shuffle all cards, then re-split into tabs by status.

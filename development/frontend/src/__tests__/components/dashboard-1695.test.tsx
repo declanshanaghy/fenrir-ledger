@@ -24,6 +24,10 @@ vi.mock("@/contexts/RagnarokContext", () => ({
   useRagnarok: () => ({ ragnarokActive: false }),
 }));
 
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ status: "authenticated", householdId: "hh-1", data: null, signOut: vi.fn(), ensureHouseholdId: () => "hh-1" }),
+}));
+
 vi.mock("@/lib/trial-utils", () => ({
   THRALL_CARD_LIMIT: 5,
 }));
