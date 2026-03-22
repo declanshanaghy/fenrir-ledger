@@ -123,7 +123,44 @@ Construct the following markdown body. Use `gh issue edit <N> --body "<body>"` t
 Generated with [Claude Code](https://claude.com/claude-code) `/touch-sweep`
 ```
 
-### Step 6 — Report back
+### Step 6 — Cross-app impact check (Odin's Spear)
+
+After compiling findings, check whether the issue changes behaviour in the Ledger app
+(`development/ledger/`) that could affect Odin's Spear (`development/odins-spear/`).
+
+Odin's Spear is the admin tool that manages Ledger data. Changes to any of the following
+in the Ledger are likely to require a follow-up issue for Odin's Spear:
+
+- **API routes** (`development/ledger/src/app/api/`) — Spear calls these endpoints
+- **Firestore schema / collection names** — Spear reads/writes the same collections
+- **Auth / session handling** (`@/lib/auth/`) — Spear uses the same auth system
+- **Shared types or interfaces** — tier names, card status values, user models
+- **Environment variables** consumed by both apps
+- **URL routes** that Spear links to or redirects to
+
+**How to check:**
+1. From the issue's affected files, identify any Ledger API routes, Firestore paths,
+   shared types, or auth changes.
+2. Grep `development/odins-spear/` for references to those same routes, types, or paths.
+3. If matches are found, there is cross-app impact.
+
+**If cross-app impact is detected**, use `AskUserQuestion` to recommend filing a follow-up:
+
+```
+Question: "This change affects Ledger behaviour that Odin's Spear depends on (<brief reason>). File a follow-up issue for Odin's Spear?"
+Options:
+  - "Yes, file it" — after the sweep completes, invoke /file-issue with the Spear-specific scope
+  - "No, skip" — continue without filing
+```
+
+If the user says yes, file the follow-up issue via `/file-issue` with:
+- Title referencing the parent issue: "Update Odin's Spear for #<N> — <short description>"
+- Label: `enhancement`
+- Body noting which Spear files need updating and why
+
+**If no cross-app impact**, skip this step silently — do not mention Odin's Spear.
+
+### Step 7 — Report back
 
 Output a summary to the caller:
 
