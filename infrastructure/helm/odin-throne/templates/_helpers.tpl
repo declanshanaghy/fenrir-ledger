@@ -4,7 +4,7 @@ Common labels for Odin's Throne
 {{- define "odin-throne.labels" -}}
 app.kubernetes.io/name: odin-throne
 app.kubernetes.io/part-of: fenrir-ledger
-app.kubernetes.io/component: {{ .component | default "monitor" }}
+app.kubernetes.io/component: {{ .component | default "odins-throne" }}
 app.kubernetes.io/managed-by: helm
 {{- end -}}
 

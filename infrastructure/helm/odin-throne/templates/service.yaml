@@ -4,7 +4,7 @@ metadata:
   name: odin-throne
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   selector:

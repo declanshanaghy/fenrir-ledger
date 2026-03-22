@@ -21,8 +21,8 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 # Copy each package's package.json so pnpm can install all workspace deps
 COPY development/ledger/package.json ./development/ledger/
 COPY development/odins-spear/package.json ./development/odins-spear/
-COPY development/monitor/package.json ./development/monitor/
-COPY development/monitor-ui/package.json ./development/monitor-ui/
+COPY development/odins-throne/package.json ./development/odins-throne/
+COPY development/odins-throne-ui/package.json ./development/odins-throne-ui/
 
 # Install all workspace dependencies with frozen lockfile
 # pnpm-workspace.yaml allowBuilds is included so native modules (esbuild, sharp) build

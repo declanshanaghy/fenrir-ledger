@@ -4,7 +4,7 @@ metadata:
   name: odin-throne-ui
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor-ui") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne-ui") | nindent 4 }}
 spec:
   replicas: {{ .Values.ui.replicaCount }}
   revisionHistoryLimit: {{ .Values.ui.revisionHistoryLimit | default 3 }}
@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "odin-throne.labels" (dict "component" "monitor-ui") | nindent 8 }}
+        {{- include "odin-throne.labels" (dict "component" "odins-throne-ui") | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 15
       topologySpreadConstraints:

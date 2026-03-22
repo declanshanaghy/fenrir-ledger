@@ -95,8 +95,8 @@ RUN npm install -g @anthropic-ai/claude-code@latest \
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml /tmp/workspace/
 COPY development/ledger/package.json /tmp/workspace/development/ledger/
 COPY development/odins-spear/package.json /tmp/workspace/development/odins-spear/
-COPY development/monitor/package.json /tmp/workspace/development/monitor/
-COPY development/monitor-ui/package.json /tmp/workspace/development/monitor-ui/
+COPY development/odins-throne/package.json /tmp/workspace/development/odins-throne/
+COPY development/odins-throne-ui/package.json /tmp/workspace/development/odins-throne-ui/
 RUN cd /tmp/workspace \
     && pnpm install --frozen-lockfile --ignore-scripts \
     && cd development/ledger \

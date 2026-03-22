@@ -33,7 +33,7 @@ dev:
 dev-monitor:
     #!/usr/bin/env bash
     set -uo pipefail
-    cd "{{repo_root}}/development/monitor"
+    cd "{{repo_root}}/development/odins-throne"
     if [ -f .secrets ]; then
       set -a
       # shellcheck source=/dev/null
@@ -41,7 +41,7 @@ dev-monitor:
       set +a
       echo "[dev-monitor] Loaded .secrets"
     else
-      echo "[dev-monitor] WARNING: No .secrets file found at development/monitor/.secrets"
+      echo "[dev-monitor] WARNING: No .secrets file found at development/odins-throne/.secrets"
       echo "[dev-monitor]          Create it with: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET, ALLOWED_EMAIL"
       echo "[dev-monitor]          OAuth redirect URI must be: http://localhost:3001/auth/callback"
     fi

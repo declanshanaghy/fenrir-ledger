@@ -120,8 +120,8 @@ jobs:
     outputs:
       app: ${{ steps.filter.outputs.app }}
       k8s-app: ${{ steps.filter.outputs.k8s-app }}
-      monitor: ${{ steps.filter.outputs.monitor }}
-      monitor-ui: ${{ steps.filter.outputs.monitor-ui }}
+      odins-throne: ${{ steps.filter.outputs.odins-throne }}
+      odins-throne-ui: ${{ steps.filter.outputs.odins-throne-ui }}
       helm-odin: ${{ steps.filter.outputs.helm-odin }}
       infra: ${{ steps.filter.outputs.infra }}
       umami: ${{ steps.filter.outputs.umami }}
@@ -137,7 +137,7 @@ jobs:
         id: filter
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            for key in app k8s-app monitor monitor-ui helm-odin infra umami marketing; do
+            for key in app k8s-app odins-throne odins-throne-ui helm-odin infra umami marketing; do
               echo "$key=true" >> "$GITHUB_OUTPUT"
             done
             echo "### Manual dispatch — all services will deploy" >> $GITHUB_STEP_SUMMARY
@@ -150,8 +150,8 @@ jobs:
           check() { echo "$CHANGED" | grep -qE "$1" && echo "true" || echo "false"; }
           echo "app=$(check    '^development/ledger/|^Dockerfile$|^package\.json$|^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$')" >> "$GITHUB_OUTPUT"
           echo "k8s-app=$(check '^infrastructure/k8s/app/|^infrastructure/helm/fenrir-app/')"               >> "$GITHUB_OUTPUT"
-          echo "monitor=$(check '^development/monitor/')"                                                    >> "$GITHUB_OUTPUT"
-          echo "monitor-ui=$(check '^development/monitor-ui/')"                                              >> "$GITHUB_OUTPUT"
+          echo "odins-throne=$(check '^development/odins-throne/')"                                                    >> "$GITHUB_OUTPUT"
+          echo "odins-throne-ui=$(check '^development/odins-throne-ui/')"                                              >> "$GITHUB_OUTPUT"
           echo "helm-odin=$(check '^infrastructure/helm/odin-throne/')"                                      >> "$GITHUB_OUTPUT"
           echo "infra=$(check   '^infrastructure/.*\.tf$|^infrastructure/firestore/')"                       >> "$GITHUB_OUTPUT"
           echo "umami=$(check   '^infrastructure/helm/umami/')"                                              >> "$GITHUB_OUTPUT"
@@ -159,7 +159,7 @@ jobs:
           echo "### Changed Services" >> $GITHUB_STEP_SUMMARY
           echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
-          for key in app k8s-app monitor monitor-ui helm-odin infra umami marketing; do
+          for key in app k8s-app odins-throne odins-throne-ui helm-odin infra umami marketing; do
             val=$(grep "^${key}=" "$GITHUB_OUTPUT" | cut -d= -f2 | tail -1)
             echo "| $key | $val |" >> $GITHUB_STEP_SUMMARY
           done
@@ -218,10 +218,10 @@ jobs:
           echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Digest:** \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
-  build-monitor-image:
+  build-odins-throne-image:
     name: "GKE: Build Monitor Image"
     needs: [detect-changes]
-    if: needs.detect-changes.outputs.monitor == 'true'
+    if: needs.detect-changes.outputs.odins-throne == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -246,11 +246,11 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build and push
-        id: build-monitor
+        id: build-odins-throne
         uses: docker/build-push-action@v7
         with:
-          context: ./development/monitor
-          file: ./development/monitor/Dockerfile
+          context: ./development/odins-throne
+          file: ./development/odins-throne/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
@@ -262,12 +262,12 @@ jobs:
         run: |
           echo "### Monitor Image Published" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Digest:** \`${{ steps.build-monitor.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Digest:** \`${{ steps.build-odins-throne.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
-  build-monitor-ui-image:
+  build-odins-throne-ui-image:
     name: "GKE: Build Monitor UI Image"
     needs: [detect-changes]
-    if: needs.detect-changes.outputs.monitor-ui == 'true'
+    if: needs.detect-changes.outputs.odins-throne-ui == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -292,11 +292,11 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build and push
-        id: build-monitor-ui
+        id: build-odins-throne-ui
         uses: docker/build-push-action@v7
         with:
-          context: ./development/monitor-ui
-          file: ./development/monitor-ui/Dockerfile
+          context: ./development/odins-throne-ui
+          file: ./development/odins-throne-ui/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.MONITOR_UI_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
@@ -308,7 +308,7 @@ jobs:
         run: |
           echo "### Monitor UI Image Published" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** \`${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Digest:** \`${{ steps.build-monitor-ui.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Digest:** \`${{ steps.build-odins-throne-ui.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
   # ============================================================================
   # SECTION 3 — APP + TESTING
@@ -586,16 +586,16 @@ jobs:
 
   odins-throne:
     name: "Odin's Throne: Deploy Monitor"
-    needs: [build-monitor-image, build-monitor-ui-image, detect-changes]
+    needs: [build-odins-throne-image, build-odins-throne-ui-image, detect-changes]
     if: >-
       always() && !inputs.skip_deploy &&
-      (needs.build-monitor-image.result == 'success' ||
-       needs.build-monitor-ui-image.result == 'success' ||
-       (needs.build-monitor-image.result == 'skipped' &&
-        needs.build-monitor-ui-image.result == 'skipped' &&
+      (needs.build-odins-throne-image.result == 'success' ||
+       needs.build-odins-throne-ui-image.result == 'success' ||
+       (needs.build-odins-throne-image.result == 'skipped' &&
+        needs.build-odins-throne-ui-image.result == 'skipped' &&
         needs.detect-changes.outputs.helm-odin == 'true')) &&
-      needs.build-monitor-image.result != 'failure' &&
-      needs.build-monitor-ui-image.result != 'failure'
+      needs.build-odins-throne-image.result != 'failure' &&
+      needs.build-odins-throne-ui-image.result != 'failure'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -633,10 +633,10 @@ jobs:
             --from-literal=emails.txt="declanshanaghy@gmail.com" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Resolve monitor image tag
-        id: resolve-monitor-tag
+      - name: Resolve odins-throne image tag
+        id: resolve-odins-throne-tag
         run: |
-          if [ "${{ needs.build-monitor-image.result }}" = "skipped" ]; then
+          if [ "${{ needs.build-odins-throne-image.result }}" = "skipped" ]; then
             CLUSTER_TAG=$(kubectl get deployment odin-throne -n fenrir-monitor \
               -o jsonpath='{.spec.template.spec.containers[?(@.name=="odin-throne")].image}' 2>/dev/null \
               | rev | cut -d: -f1 | rev)
@@ -647,10 +647,10 @@ jobs:
             echo "tag=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Resolve monitor-ui image tag
-        id: resolve-monitor-ui-tag
+      - name: Resolve odins-throne-ui image tag
+        id: resolve-odins-throne-ui-tag
         run: |
-          if [ "${{ needs.build-monitor-ui-image.result }}" = "skipped" ]; then
+          if [ "${{ needs.build-odins-throne-ui-image.result }}" = "skipped" ]; then
             CLUSTER_TAG=$(kubectl get deployment odin-throne-ui -n fenrir-monitor \
               -o jsonpath='{.spec.template.spec.containers[?(@.name=="odin-throne-ui")].image}' 2>/dev/null \
               | rev | cut -d: -f1 | rev)
@@ -673,9 +673,9 @@ jobs:
             --namespace=fenrir-monitor \
             -f ./infrastructure/helm/odin-throne/values-prod.yaml \
             --set app.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_IMAGE_NAME }} \
-            --set app.image.tag=${{ steps.resolve-monitor-tag.outputs.tag }} \
+            --set app.image.tag=${{ steps.resolve-odins-throne-tag.outputs.tag }} \
             --set ui.image.repository=${{ env.REGISTRY }}/${{ env.MONITOR_UI_IMAGE_NAME }} \
-            --set ui.image.tag=${{ steps.resolve-monitor-ui-tag.outputs.tag }} \
+            --set ui.image.tag=${{ steps.resolve-odins-throne-ui-tag.outputs.tag }} \
             --wait --timeout=5m
 
       - name: Verify rollout
