@@ -165,6 +165,6 @@ Implementation is complete when:
 - **Wireframes:** `ux/wireframes/trial/` (4 files)
 - **Interaction Spec:** `ux/interactions.md` (Trial Flow section)
 - **Existing Gates:** `ux/wireframes/app/howl-karl-tier.html`, `valhalla-karl-gated.html`
-- **KarlUpsellDialog:** `development/frontend/src/components/entitlement/KarlUpsellDialog.tsx`
-- **Existing Toast Usage:** `development/frontend/src/app/ledger/page.tsx` (card import toast example)
+- **KarlUpsellDialog:** `development/ledger/src/components/entitlement/KarlUpsellDialog.tsx`
+- **Existing Toast Usage:** `development/ledger/src/app/ledger/page.tsx` (card import toast example)
 

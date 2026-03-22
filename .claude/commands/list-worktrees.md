@@ -15,7 +15,7 @@ REPO_ROOT: $(git rev-parse --show-toplevel)
 WORKTREE_BASE_DIR: ${REPO_ROOT}-trees
 BASE_FRONTEND_PORT: 9653
 BASE_BACKEND_PORT: 9753
-FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/frontend-server.sh
+FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/ledger-server.sh
 BACKEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/backend-server.sh
 SERVICES_SCRIPT: ${REPO_ROOT}/.claude/scripts/services.sh
 ```
@@ -24,7 +24,7 @@ SERVICES_SCRIPT: ${REPO_ROOT}/.claude/scripts/services.sh
 
 - List all worktrees managed by git
 - For each worktree in WORKTREE_BASE_DIR, gather configuration details
-- Check dev server status using the frontend-server script
+- Check dev server status using the ledger-server script
 - Display comprehensive information in a clear, organized format
 - Show which worktrees have running dev servers vs stopped
 - Provide quick action commands for each worktree
@@ -48,22 +48,22 @@ For each worktree found in WORKTREE_BASE_DIR:
 **Extract Branch/Directory Info:**
 - Worktree directory: `${REPO_ROOT}-trees/<branch-name>`
 - Branch name from git worktree list
-- App directory: `${REPO_ROOT}-trees/<branch-name>/development/frontend`
+- App directory: `${REPO_ROOT}-trees/<branch-name>/development/ledger`
 
 **Determine Ports:**
 - Infer from worktree order or check running processes
-- Check frontend ports: `lsof -i TCP:965x -sTCP:LISTEN` for ports 9654-9663
+- Check ledger ports: `lsof -i TCP:965x -sTCP:LISTEN` for ports 9654-9663
 - Check backend ports: `lsof -i TCP:975x -sTCP:LISTEN` for ports 9754-9763
 
 **Check Environment:**
-- Check if `<worktree>/development/frontend/.env.local` exists
+- Check if `<worktree>/development/ledger/.env.local` exists
 - Note presence/absence (contains API keys, don't display values)
 
 ### 3. Check Dev Server Status
 
 For each worktree:
 
-- Check frontend ports 9654 through 9663 using: `FENRIR_FRONTEND_PORT=<port> .claude/scripts/frontend-server.sh status`
+- Check ledger ports 9654 through 9663 using: `FENRIR_LEDGER_PORT=<port> .claude/scripts/ledger-server.sh status`
 - Check backend ports 9754 through 9763 using: `FENRIR_BACKEND_PORT=<port> .claude/scripts/backend-server.sh status`
 - Or check directly: `lsof -ti TCP:<port> -sTCP:LISTEN`
 - Determine if process is running and extract PID for each server type
@@ -71,7 +71,7 @@ For each worktree:
 ### 4. Check Dependencies
 
 For each worktree:
-- Check if `<worktree>/development/frontend/node_modules` exists
+- Check if `<worktree>/development/ledger/node_modules` exists
 - Note if dependencies are installed or missing
 
 ### 5. Calculate Statistics
@@ -105,7 +105,7 @@ Main Repository (Default)
   Frontend URL:    http://localhost:9653
   Backend URL:     http://localhost:9753
   Manage all:      .claude/scripts/services.sh <start|stop|status>
-  Manage FE:       .claude/scripts/frontend-server.sh <start|stop|status>
+  Manage FE:       .claude/scripts/ledger-server.sh <start|stop|status>
   Manage BE:       .claude/scripts/backend-server.sh <start|stop|status>
 
 ---
@@ -122,10 +122,10 @@ Worktree: <branch-name>
   Backend URL:     http://localhost:<BACKEND_PORT>
   Dependencies:    FE: <Installed|Missing> | BE: <Installed|Missing|N/A>
   Environment:     <.env.local present|Missing>
-  FE Logs:         ${REPO_ROOT}-trees/<branch-name>/development/frontend/logs/frontend-server.log
+  FE Logs:         ${REPO_ROOT}-trees/<branch-name>/development/ledger/logs/ledger-server.log
   BE Logs:         ${REPO_ROOT}-trees/<branch-name>/development/backend/logs/backend-server.log
-  Manage all:      FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_BACKEND_PORT=<BACKEND_PORT> ... .claude/scripts/services.sh <start|stop|status>
-  Manage FE:       FENRIR_FRONTEND_PORT=<FRONTEND_PORT> FENRIR_FRONTEND_DIR=${REPO_ROOT}-trees/<branch>/development/frontend .claude/scripts/frontend-server.sh <start|stop|status>
+  Manage all:      FENRIR_LEDGER_PORT=<FRONTEND_PORT> FENRIR_BACKEND_PORT=<BACKEND_PORT> ... .claude/scripts/services.sh <start|stop|status>
+  Manage FE:       FENRIR_LEDGER_PORT=<FRONTEND_PORT> FENRIR_LEDGER_DIR=${REPO_ROOT}-trees/<branch>/development/ledger .claude/scripts/ledger-server.sh <start|stop|status>
   Manage BE:       FENRIR_BACKEND_PORT=<BACKEND_PORT> FENRIR_BACKEND_DIR=${REPO_ROOT}-trees/<branch>/development/backend .claude/scripts/backend-server.sh <start|stop|status>
 
 ---

@@ -30,7 +30,7 @@ One script handles everything: Stripe webhook forwarding + secret injection + `v
 
 1. Stops Stripe CLI
 2. Restores the original `STRIPE_WEBHOOK_SECRET` in `.env.local`
-3. Stops the frontend server
+3. Stops the ledger server
 
 ## When to use this
 
@@ -43,14 +43,14 @@ One script handles everything: Stripe webhook forwarding + secret injection + `v
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `FENRIR_FRONTEND_PORT` | `9653` | Port the dev server listens on |
-| `FENRIR_FRONTEND_DIR` | Auto-detected `development/frontend/` | Path to the Next.js project root |
+| `FENRIR_LEDGER_PORT` | `9653` | Port the dev server listens on |
+| `FENRIR_LEDGER_DIR` | Auto-detected `development/ledger/` | Path to the Next.js project root |
 
 Backward-compatible aliases (deprecated): `FENRIR_PORT`, `FENRIR_DEV_DIR`.
 
 ## Log files
 
-- Frontend: `<FRONTEND_DIR>/logs/frontend-server.log`
+- Frontend: `<FRONTEND_DIR>/logs/ledger-server.log`
 - Stripe: `<FRONTEND_DIR>/logs/stripe-listen.log`
 
 ## Prerequisites
@@ -60,6 +60,6 @@ Backward-compatible aliases (deprecated): `FENRIR_PORT`, `FENRIR_DEV_DIR`.
 
 ## Notes
 
-- `vercel dev` runs from the repo root because the Vercel project has `Root Directory = development/frontend/`.
+- `vercel dev` runs from the repo root because the Vercel project has `Root Directory = development/ledger/`.
 - The scripts use `lsof -sTCP:LISTEN` to find only the listening server process.
 - `nohup` is used so the server survives the shell session that spawned it.

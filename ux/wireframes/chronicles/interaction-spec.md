@@ -272,7 +272,7 @@ The HTML generator (`generate-agent-report.mjs`) contains all Norse CSS inline i
 
 ### 6.1 New file: `chronicle-norse.css`
 
-Location: `development/frontend/src/app/(marketing)/chronicles/chronicle-norse.css`
+Location: `development/ledger/src/app/(marketing)/chronicles/chronicle-norse.css`
 
 Scope: All rules prefixed with `.chronicle-page` (matching existing `chronicle.css` pattern)
 
@@ -287,7 +287,7 @@ Extracts these classes from the generator:
 ### 6.2 Import in page.tsx
 
 ```typescript
-// development/frontend/src/app/(marketing)/chronicles/[slug]/page.tsx
+// development/ledger/src/app/(marketing)/chronicles/[slug]/page.tsx
 import "../chronicle.css";
 import "../chronicle-norse.css";  // ← ADD THIS
 ```
@@ -337,7 +337,7 @@ agents/profiles/heckler-lass.png
 ```
 
 **For MDX chronicles:**
-Option 1 (recommended): Copy to `development/frontend/public/agents/profiles/` and serve
+Option 1 (recommended): Copy to `development/ledger/public/agents/profiles/` and serve
 as static assets at `/agents/profiles/{filename}`.
 
 Option 2: Inline as base64 in the MDX generator (not recommended — large file size).
@@ -351,7 +351,7 @@ agents/profiles/freya-dark.png
 agents/profiles/heimdall-dark.png
 ```
 
-Check: `ls development/frontend/public/agents/profiles/` to confirm what is already there.
+Check: `ls development/ledger/public/agents/profiles/` to confirm what is already there.
 
 ---
 

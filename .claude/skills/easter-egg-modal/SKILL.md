@@ -55,25 +55,25 @@ Call these resolved values:
 ## Step 2 — Prepare Directories
 
 ```bash
-mkdir -p ./development/frontend/public/easter-eggs
-mkdir -p ./development/frontend/public/sounds
+mkdir -p ./development/ledger/public/easter-eggs
+mkdir -p ./development/ledger/public/sounds
 ```
 
 Verify the howl audio file is present:
 
 ```bash
-ls ./development/frontend/public/sounds/fenrir-howl.mp3
+ls ./development/ledger/public/sounds/fenrir-howl.mp3
 ```
 
 If the file is missing, stop and tell the user:
 > `public/sounds/fenrir-howl.mp3` is required for the easter egg howl.
-> Copy it into the project: `cp /path/to/fenrir-howl.mp3 development/frontend/public/sounds/`
+> Copy it into the project: `cp /path/to/fenrir-howl.mp3 development/ledger/public/sounds/`
 
 ---
 ## Step 3 — Create the SVG Artifact Image
 
 Write a 1024×1024 SVG file directly to:
-`./development/frontend/public/easter-eggs/gleipnir-{{N}}.svg`
+`./development/ledger/public/easter-eggs/gleipnir-{{N}}.svg`
 
 ### Universal design rules (apply to every egg)
 
@@ -197,7 +197,7 @@ The visual read: *something impossibly small, impossibly precise, impossibly pow
 ## Step 4 — Generate the TSX Component
 
 Write the component to:
-`development/frontend/src/components/cards/{{COMPONENT}}.tsx`
+`development/ledger/src/components/cards/{{COMPONENT}}.tsx`
 
 **Do not re-implement the modal structure.** Use `EasterEggModal` from
 `@/components/easter-eggs/EasterEggModal` — it owns the dialog shell, audio playback,
@@ -328,8 +328,8 @@ Confirm the following files now exist:
 
 | File | Expected |
 |------|----------|
-| `development/frontend/public/easter-eggs/gleipnir-{{N}}.svg` | SVG artifact, non-zero |
-| `development/frontend/src/components/cards/{{COMPONENT}}.tsx` | TSX component |
+| `development/ledger/public/easter-eggs/gleipnir-{{N}}.svg` | SVG artifact, non-zero |
+| `development/ledger/src/components/cards/{{COMPONENT}}.tsx` | TSX component |
 
 Report the created files and their sizes. If any file is missing, diagnose and fix before finishing.
 

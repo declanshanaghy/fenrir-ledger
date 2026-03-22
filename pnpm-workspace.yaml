@@ -1,5 +1,5 @@
 packages:
-  - development/frontend
+  - development/ledger
   - development/odins-spear
   - development/monitor
   - development/monitor-ui

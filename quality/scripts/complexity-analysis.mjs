@@ -2,7 +2,7 @@
 /**
  * complexity-analysis.mjs — Cyclomatic complexity analysis for source files.
  *
- * Walks all .ts/.tsx files under development/frontend/src/ (excluding tests,
+ * Walks all .ts/.tsx files under development/ledger/src/ (excluding tests,
  * node_modules), parses each with @typescript-eslint/typescript-estree, and
  * computes cyclomatic complexity per function.
  *
@@ -21,11 +21,11 @@ import { createRequire } from "node:module";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-const SRC_DIR = path.join(REPO_ROOT, "development/frontend/src");
+const SRC_DIR = path.join(REPO_ROOT, "development/ledger/src");
 const OUTPUT_DIR = path.join(REPO_ROOT, "quality/reports/complexity");
 
-// Resolve typescript-estree from the frontend's node_modules
-const require = createRequire(path.join(REPO_ROOT, "development/frontend/package.json"));
+// Resolve typescript-estree from the ledger's node_modules
+const require = createRequire(path.join(REPO_ROOT, "development/ledger/package.json"));
 const { parse } = require("@typescript-eslint/typescript-estree");
 const { AST_NODE_TYPES } = require("@typescript-eslint/typescript-estree");
 
@@ -402,7 +402,7 @@ function writeHtmlReport(report) {
       <thead><tr><th>#</th><th>Function</th><th>File</th><th>Line</th><th>Complexity</th><th>Risk</th></tr></thead>
       <tbody>
 ${top30.map((f, i) => {
-  const shortFile = f.file.replace("development/frontend/src/", "");
+  const shortFile = f.file.replace("development/ledger/src/", "");
   const cls = f.category === "LOW" ? "risk-low" : f.category === "MODERATE" ? "risk-mod" : f.category === "HIGH" ? "risk-high" : "risk-vhigh";
   return `        <tr>
           <td>${i + 1}</td>

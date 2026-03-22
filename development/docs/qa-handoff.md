@@ -10,7 +10,7 @@
 
 ### Root Cause
 
-`ensureAuthenticated()` in `development/frontend/scripts/odins-spear.mjs` has three
+`ensureAuthenticated()` in `development/ledger/scripts/odins-spear.mjs` has three
 credential-resolution paths:
 
 1. **Valid ADC exists** → resolves silently
@@ -39,8 +39,8 @@ and never reach the GCE metadata probe.
 
 | File | Change |
 |------|--------|
-| `development/frontend/scripts/odins-spear.mjs` | +6 lines: set env var after gcloud login in step 3 |
-| `development/frontend/src/__tests__/odins-spear-adc-auth.test.ts` | Updated mirror + branch 3/5 test expectations |
+| `development/ledger/scripts/odins-spear.mjs` | +6 lines: set env var after gcloud login in step 3 |
+| `development/ledger/src/__tests__/odins-spear-adc-auth.test.ts` | Updated mirror + branch 3/5 test expectations |
 
 ---
 
@@ -63,7 +63,7 @@ and never reach the GCE metadata probe.
 3. **Refresh token path** — ensure the existing silent-refresh path still works
    (step 2 unchanged).
 
-4. **Unit tests** — `npm run test -- odins-spear-adc-auth` in `development/frontend/`.
+4. **Unit tests** — `npm run test -- odins-spear-adc-auth` in `development/ledger/`.
    All 3 new/updated assertions should pass.
 
 ---

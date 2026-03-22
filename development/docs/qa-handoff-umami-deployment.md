@@ -37,7 +37,7 @@ Added automated Umami deployment to the CI/CD pipeline:
 
 Deployment happens after app deployment, ensuring infrastructure is ready.
 
-### 3. Test Suite (`development/frontend/src/__tests__/infrastructure/umami-helm-chart.test.ts`)
+### 3. Test Suite (`development/ledger/src/__tests__/infrastructure/umami-helm-chart.test.ts`)
 
 Comprehensive Vitest test suite (29 tests, all passing):
 
@@ -76,7 +76,7 @@ Comprehensive Vitest test suite (29 tests, all passing):
 
 | File | Change | Notes |
 |---|---|---|
-| `development/frontend/src/__tests__/infrastructure/umami-helm-chart.test.ts` | NEW | 29 test cases |
+| `development/ledger/src/__tests__/infrastructure/umami-helm-chart.test.ts` | NEW | 29 test cases |
 
 ---
 

@@ -82,7 +82,7 @@ The `REDIS_URL` env var is set directly in `infrastructure/k8s/app/deployment.ya
 
 - `infrastructure/k8s/app/redis-statefulset.yaml` — StatefulSet and Service manifests
 - `infrastructure/k8s/app/deployment.yaml` — `REDIS_URL` env injection
-- `development/frontend/src/lib/kv/redis-client.ts` — ioredis singleton
-- `development/frontend/src/lib/kv/entitlement-store.ts` — entitlement persistence
-- `development/frontend/src/lib/kv/trial-store.ts` — trial persistence
+- `development/ledger/src/lib/kv/redis-client.ts` — ioredis singleton
+- `development/ledger/src/lib/kv/entitlement-store.ts` — entitlement persistence
+- `development/ledger/src/lib/kv/trial-store.ts` — trial persistence
 - `infrastructure/k8s/app/RUNBOOK.md` — operational procedures

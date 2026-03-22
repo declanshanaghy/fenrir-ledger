@@ -9,7 +9,7 @@
 
 ## Summary
 
-Full inventory of all files under `ux/` compared against the current implementation in `development/frontend/src/`. 9 files deleted, 2 files updated (wireframes.md index + README.md), 1 new file (this report).
+Full inventory of all files under `ux/` compared against the current implementation in `development/ledger/src/`. 9 files deleted, 2 files updated (wireframes.md index + README.md), 1 new file (this report).
 
 | Metric | Count |
 |--------|-------|
@@ -184,7 +184,7 @@ All files in this list match the implemented UI or document planned features tha
 | `ux/wireframes/marketing/marketing-site.html` | Old single-page marketing site wireframe (5-section static page). Superseded by the full `ux/wireframes/marketing-site/` directory which has page-specific wireframes for each route (home, features, pricing, about, layout-shell, theme-variants). |
 | `ux/wireframes/profile-dropdown-my-cards.html` | Misplaced file at root of `wireframes/` (not in any category folder, violating ux/ conventions). Described adding a "My Cards" nav entry to the profile dropdown. The feature was implemented differently — as a direct link in `LedgerTopBar.tsx` (line 201–216), not in the profile dropdown. This provisional wireframe was superseded by the sidebar-removal and TopBar redesigns. |
 | `ux/handoff-to-fireman-anon-auth.md` | Ephemeral process handoff document from Luna to FiremanDecko. Explicitly marked "Implementation status: implemented" as of 2026-03-01. The UX decisions it described are fully captured in the wireframes it references (topbar.html, upsell-banner.html, sign-in.html, migration-prompt.html). The technical questions it raised are resolved in ADR-005 and ADR-008. Keeping this doc adds confusion, not value. |
-| `ux/interactions/claude-terminal-skin.md` | CLI terminal skin spec for Claude Code customization. Status explicitly marked "Not Yet Implemented." More critically, this describes Claude Code CLI aesthetics — not app UI. It belongs in `.claude/` tooling documentation, not in `ux/` which is exclusively app wireframes and interaction specs for `development/frontend/src/`. |
+| `ux/interactions/claude-terminal-skin.md` | CLI terminal skin spec for Claude Code customization. Status explicitly marked "Not Yet Implemented." More critically, this describes Claude Code CLI aesthetics — not app UI. It belongs in `.claude/` tooling documentation, not in `ux/` which is exclusively app wireframes and interaction specs for `development/ledger/src/`. |
 
 ---
 
@@ -219,7 +219,7 @@ The following implemented components do not have dedicated wireframes, which is 
 
 3. **Chronicles wireframes kept.** The Chronicles (Prose Edda) route `/(marketing)/chronicles/` is fully implemented. The wireframes accurately describe the current UI.
 
-4. **Wizard-animations wireframes kept.** The import wizard in `development/frontend/src/components/sheets/` includes `StepIndicator.tsx` and animated step transitions, matching the wireframe specs.
+4. **Wizard-animations wireframes kept.** The import wizard in `development/ledger/src/components/sheets/` includes `StepIndicator.tsx` and animated step transitions, matching the wireframe specs.
 
 ---
 

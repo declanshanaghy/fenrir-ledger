@@ -2,7 +2,7 @@
 
 **Reviewer**: Heimdall
 **Date**: 2026-03-04
-**Scope**: Stripe Direct integration (Story 3) — all API routes under `src/app/api/stripe/`, supporting libraries under `src/lib/stripe/`, and KV entitlement store at `src/lib/kv/entitlement-store.ts`; reviewed from worktree at `development/frontend-trees/feat/stripe-foundation/`
+**Scope**: Stripe Direct integration (Story 3) — all API routes under `src/app/api/stripe/`, supporting libraries under `src/lib/stripe/`, and KV entitlement store at `src/lib/kv/entitlement-store.ts`; reviewed from worktree at `development/ledger-trees/feat/stripe-foundation/`
 **Report**: security/reports/2026-03-04-stripe-direct-integration.md
 
 ## Verdict: BLOCK
@@ -36,7 +36,7 @@ However, one critical issue blocks merge: the worktree's `.env.local` contains r
 ### [SEV-001] CRITICAL — Real Secrets Committed to Worktree `.env.local`
 
 - **Severity**: Critical
-- **Location**: `development/frontend-trees/feat/stripe-foundation/development/frontend/.env.local`
+- **Location**: `development/ledger-trees/feat/stripe-foundation/development/ledger/.env.local`
 - **Category**: A02 Cryptographic Failures / Secret Exposure
 - **Description**: The worktree's `.env.local` file contains live credentials. Confirmed values include:
   - `GOOGLE_CLIENT_SECRET` — value present (masked: `GOCSxxxxxxxxxxxxxxxxxxxxxxxxx606`)
@@ -60,7 +60,7 @@ However, one critical issue blocks merge: the worktree's `.env.local` contains r
 ### [SEV-002] MEDIUM — User-Controlled `origin` Header Used in Stripe Redirect URLs
 
 - **Severity**: Medium
-- **Location**: `development/frontend-trees/feat/stripe-foundation/development/frontend/src/app/api/stripe/checkout/route.ts:112`, `development/frontend-trees/feat/stripe-foundation/development/frontend/src/app/api/stripe/portal/route.ts:82`
+- **Location**: `development/ledger-trees/feat/stripe-foundation/development/ledger/src/app/api/stripe/checkout/route.ts:112`, `development/ledger-trees/feat/stripe-foundation/development/ledger/src/app/api/stripe/portal/route.ts:82`
 - **Category**: A01 Broken Access Control / Open Redirect
 - **Description**: Both the checkout and portal routes construct `success_url`, `cancel_url`, and `return_url` by reading the `Origin` request header first, falling back to `APP_BASE_URL`, then to `http://localhost:9653`. The `Origin` header is attacker-controllable in non-browser contexts (server-to-server calls, proxied requests, `curl`). A malicious actor could set `Origin: https://evil.example.com` and cause Stripe to redirect the user to an attacker-controlled domain after payment.
 - **Impact**: Open redirect after Stripe Checkout or Customer Portal. A user completing payment could be silently redirected to a phishing page. The severity is partially mitigated because Stripe validates redirect URLs against an allowlist configured in the Stripe Dashboard — if the Dashboard is correctly configured, Stripe will reject the session creation. However, relying on Stripe's validation as the sole control is a defence-in-depth failure.
@@ -86,7 +86,7 @@ However, one critical issue blocks merge: the worktree's `.env.local` contains r
 ### [SEV-003] MEDIUM — CSP Missing Stripe Domains
 
 - **Severity**: Medium
-- **Location**: `development/frontend-trees/feat/stripe-foundation/development/frontend/next.config.ts`
+- **Location**: `development/ledger-trees/feat/stripe-foundation/development/ledger/next.config.ts`
 - **Category**: A05 Security Misconfiguration
 - **Description**: The Content Security Policy in `next.config.ts` does not include Stripe's required domains. When the browser is redirected to a Stripe-hosted checkout page (`checkout.stripe.com`) or returns to the application, and if the application hosts any Stripe.js elements, the CSP will block required resources. Specifically missing from `connect-src` and `frame-src`:
   - `https://js.stripe.com` (Stripe.js)
@@ -114,7 +114,7 @@ However, one critical issue blocks merge: the worktree's `.env.local` contains r
 ### [SEV-004] LOW — In-Memory Rate Limiter Does Not Persist Across Serverless Instances
 
 - **Severity**: Low
-- **Location**: `development/frontend-trees/feat/stripe-foundation/development/frontend/src/lib/rate-limit.ts`
+- **Location**: `development/ledger-trees/feat/stripe-foundation/development/ledger/src/lib/rate-limit.ts`
 - **Category**: A04 Insecure Design / Missing Rate Limiting
 - **Description**: The rate limiter uses an in-process `Map`. On Vercel, each serverless function invocation may run in a different container, so the rate limit counter resets on cold starts and is not shared across concurrent instances. An attacker with multiple IP addresses or who can force cold starts can bypass the limit entirely. This was noted as a known limitation in the module's own documentation.
 - **Impact**: The anonymous checkout endpoint (`POST /api/stripe/checkout`) has the most exposure: an attacker can create unlimited Stripe checkout sessions for arbitrary email addresses, potentially consuming rate quota on Stripe's API and generating spam checkout emails. The 10-request-per-minute-per-IP limit is not enforced at scale.
@@ -126,7 +126,7 @@ However, one critical issue blocks merge: the worktree's `.env.local` contains r
 ### [SEV-005] LOW — Webhook Does Not Deduplicate Events (No Idempotency Check)
 
 - **Severity**: Low
-- **Location**: `development/frontend-trees/feat/stripe-foundation/development/frontend/src/app/api/stripe/webhook/route.ts`
+- **Location**: `development/ledger-trees/feat/stripe-foundation/development/ledger/src/app/api/stripe/webhook/route.ts`
 - **Category**: A08 Software and Data Integrity Failures
 - **Description**: Stripe may deliver the same webhook event more than once (guaranteed-delivery with at-least-once semantics). The webhook handler processes events without checking whether the event ID (`event.id`) has already been processed. For `checkout.session.completed`, duplicate delivery would call `stripe.subscriptions.retrieve()` again and overwrite the KV entry — generally idempotent in effect, but wasted API calls and potential race conditions during overlapping deliveries.
 - **Impact**: Low risk in the current implementation because the KV writes are effectively idempotent (overwriting with the same data). However, if the handler is extended with non-idempotent operations (e.g., sending a welcome email, crediting a one-time bonus), duplicates could cause double-actions.
@@ -145,7 +145,7 @@ However, one critical issue blocks merge: the worktree's `.env.local` contains r
 ### [SEV-006] LOW — Anonymous Checkout Email Validation Is Weak
 
 - **Severity**: Low
-- **Location**: `development/frontend-trees/feat/stripe-foundation/development/frontend/src/app/api/stripe/checkout/route.ts:86`
+- **Location**: `development/ledger-trees/feat/stripe-foundation/development/ledger/src/app/api/stripe/checkout/route.ts:86`
 - **Category**: A03 Injection / Input Validation
 - **Description**: The anonymous checkout path validates the email only by checking that it is a non-empty string containing `@`. This accepts values like `@`, `a@`, `@b`, `not an email@`, and `a@b` (no TLD). While Stripe itself validates the email format before creating the session, the application should not rely on a downstream API for input validation.
 - **Impact**: Malformed email addresses reach Stripe's API. Stripe may reject them (adding latency and a failed API call) or accept degenerate formats, resulting in unusable checkout sessions associated with garbage email addresses.
@@ -167,7 +167,7 @@ However, one critical issue blocks merge: the worktree's `.env.local` contains r
 ### [SEV-007] INFO — `googleSub` in Stripe Metadata Is Implicitly Trusted from Webhook
 
 - **Severity**: Info
-- **Location**: `development/frontend-trees/feat/stripe-foundation/development/frontend/src/app/api/stripe/webhook/route.ts:92`
+- **Location**: `development/ledger-trees/feat/stripe-foundation/development/ledger/src/app/api/stripe/webhook/route.ts:92`
 - **Category**: A01 Broken Access Control / Trust Model
 - **Description**: The webhook handler reads `session.metadata?.googleSub` and uses it directly as the KV key for the entitlement record without re-verifying that the value is a valid Google subject identifier. This is acceptable because: (1) the webhook signature is verified before this code runs; (2) the only source of `googleSub` in session metadata is the checkout route, which reads it from the verified Google id_token via `requireAuth`. The trust chain is intact.
   This is noted as an observation: if the metadata field were ever populated from an untrusted source (e.g., a Stripe Dashboard metadata edit), the trust chain would break.
@@ -179,7 +179,7 @@ However, one critical issue blocks merge: the worktree's `.env.local` contains r
 ### [SEV-008] INFO — `deleteStripeEntitlement` Does Not Clean Up Reverse Index on KV Error
 
 - **Severity**: Info
-- **Location**: `development/frontend-trees/feat/stripe-foundation/development/frontend/src/lib/kv/entitlement-store.ts:396`
+- **Location**: `development/ledger-trees/feat/stripe-foundation/development/ledger/src/lib/kv/entitlement-store.ts:396`
 - **Category**: A08 Software and Data Integrity Failures / Data Consistency
 - **Description**: `deleteStripeEntitlement` performs two sequential KV deletes: primary entitlement key, then reverse index. If the second delete fails (transient KV error), the primary entitlement is gone but the reverse index `stripe-customer:{id}` still points to the deleted Google sub. Subsequent `customer.subscription.updated` webhook events would resolve the reverse index, find a missing entitlement, and silently return 200 without error — effectively losing the subscription update.
 - **Recommendation**: Wrap both deletes in a pipeline or handle the partial-delete case in `getStripeEntitlement` by returning null if the reverse index exists but the primary key is missing.
@@ -190,7 +190,7 @@ However, one critical issue blocks merge: the worktree's `.env.local` contains r
 ### [SEV-009] INFO — Stripe Publishable Key Present in `.env.example` But No Client Usage Detected
 
 - **Severity**: Info
-- **Location**: `development/frontend-trees/feat/stripe-foundation/development/frontend/.env.example:130`
+- **Location**: `development/ledger-trees/feat/stripe-foundation/development/ledger/.env.example:130`
 - **Category**: A05 Security Misconfiguration
 - **Description**: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is defined in `.env.example` with the correct `NEXT_PUBLIC_` prefix (publishable keys are safe for client exposure). No client-side code was found consuming this variable in the current branch. Its presence in `.env.example` suggests Stripe.js or Stripe Elements may be planned for a future story.
 - **Recommendation**: When Stripe.js is added to client code, update the CSP in `next.config.ts` simultaneously (see SEV-003). Ensure the publishable key is never confused with the secret key (`sk_...`), which must remain server-side only.

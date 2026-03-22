@@ -74,7 +74,7 @@ Run the pre-compiled generator script:
 ```bash
 REPO_ROOT="$(git worktree list --porcelain | head -1 | sed 's/worktree //')"
 SCRIPT_DIR="$REPO_ROOT/.claude/skills/brandify-session/scripts"
-BLOG_DIR="$REPO_ROOT/development/frontend/content/blog"
+BLOG_DIR="$REPO_ROOT/development/ledger/content/blog"
 node "$SCRIPT_DIR/generate-chronicle.mjs" \
   --input tmp/sessions/{{NAME}}.json \
   --output "$BLOG_DIR/{{NAME}}.mdx"
@@ -101,7 +101,7 @@ Create a branch, commit the generated file, and open a PR:
 
 ```bash
 git checkout -b chore/session-{{NAME}}
-git add development/frontend/content/blog/{{NAME}}.mdx
+git add development/ledger/content/blog/{{NAME}}.mdx
 git commit -m "chore: add session chronicle — {{NAME}}"
 git push -u origin chore/session-{{NAME}}
 gh pr create --title "chore: session chronicle — {{NAME}}" \

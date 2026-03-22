@@ -38,9 +38,9 @@ The trial system uses a random UUID in localStorage as "device ID". Clearing loc
 ### 1. Rename `clerkUserId` → `userId` (global)
 
 Files affected:
-- `development/frontend/src/lib/firebase/firestore-types.ts` — `FirestoreUser.clerkUserId` → `userId`, `FIRESTORE_PATHS.user()` param name
-- `development/frontend/src/lib/firebase/firestore.ts` — all references in `ensureSoloHousehold()`, user doc creation, household `ownerId`/`memberIds`
-- `development/frontend/src/lib/auth/authz.ts` — clerkUserId references in authz resolution
+- `development/ledger/src/lib/firebase/firestore-types.ts` — `FirestoreUser.clerkUserId` → `userId`, `FIRESTORE_PATHS.user()` param name
+- `development/ledger/src/lib/firebase/firestore.ts` — all references in `ensureSoloHousehold()`, user doc creation, household `ownerId`/`memberIds`
+- `development/ledger/src/lib/auth/authz.ts` — clerkUserId references in authz resolution
 - All test files referencing `clerkUserId`
 
 ### 2. HouseholdId = userId (not random UUID)

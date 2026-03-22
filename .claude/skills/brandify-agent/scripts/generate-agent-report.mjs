@@ -55,11 +55,11 @@ if (!regenOnly && !inputPath) {
 // ---------------------------------------------------------------------------
 // Shared CSS — loaded from canonical chronicle.css
 // ---------------------------------------------------------------------------
-// chronicle.css lives at: development/frontend/src/app/chronicles/chronicle.css
+// chronicle.css lives at: development/ledger/src/app/chronicles/chronicle.css
 // The script resolves it relative to its own location so it works from any CWD.
 const _chronicleCssPath = join(
   __scriptDir,
-  "../../../../development/frontend/src/app/chronicles/chronicle.css"
+  "../../../../development/ledger/src/app/chronicles/chronicle.css"
 );
 const CSS = readFileSync(_chronicleCssPath, "utf-8");
 
@@ -1098,7 +1098,7 @@ for (const t of turns) {
 // Build MDX (--publish mode)
 // ---------------------------------------------------------------------------
 if (publishMode) {
-  const defaultBlogDir = join(dirname(logFile), "../../development/frontend/content/blog");
+  const defaultBlogDir = join(dirname(logFile), "../../development/ledger/content/blog");
   const targetBlogDir = blogDir ? resolve(blogDir) : resolve(defaultBlogDir);
 
   // Build slug from session metadata (prefer dispatch session ID from filename)
@@ -1632,7 +1632,7 @@ ${mdxCallbackMarkup}
   {
     const { cpSync: cp2, existsSync: ex2, mkdirSync: mk2 } = await import("fs");
     const repoRoot2 = resolve(__scriptDir, "..", "..", "..", "..");
-    const publicDir = join(repoRoot2, "development", "frontend", "public");
+    const publicDir = join(repoRoot2, "development", "ledger", "public");
 
     // Heckler avatars → public/hecklers/
     const hecklerSrc2 = join(repoRoot2, ".claude", "agents", "profiles", "hecklers");
@@ -1667,7 +1667,7 @@ ${mdxCallbackMarkup}
   try {
     const mdxJsIndexPath = join(
       __scriptDir,
-      "../../../../development/frontend/node_modules/@mdx-js/mdx/index.js"
+      "../../../../development/ledger/node_modules/@mdx-js/mdx/index.js"
     );
     const { compile: mdxCompile } = await import(mdxJsIndexPath);
     await mdxCompile(sanitizedMdx, { format: "mdx" });

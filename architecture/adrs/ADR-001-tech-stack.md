@@ -13,7 +13,7 @@ Fenrir Ledger is a personal finance web app for credit card churners. Sprint 1 t
 - Is mobile-responsive (churners check this on the go)
 - Has strong TypeScript support for data model correctness
 
-The team has also decided that the Next.js project root will live at `development/frontend/` so the monorepo can host architecture docs, team SKILLs, and source code alongside each other without collision. Vercel will be configured with Root Directory set to `development/frontend/`.
+The team has also decided that the Next.js project root will live at `development/ledger/` so the monorepo can host architecture docs, team SKILLs, and source code alongside each other without collision. Vercel will be configured with Root Directory set to `development/ledger/`.
 
 ## Options Considered
 
@@ -58,7 +58,7 @@ Use **Next.js (App Router) + TypeScript + Tailwind CSS + shadcn/ui**, scaffolded
 npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
 ```
 
-Run from within `development/frontend/`. This produces the correct project root structure.
+Run from within `development/ledger/`. This produces the correct project root structure.
 
 shadcn/ui is initialized after scaffolding with `npx shadcn@latest init`.
 
@@ -78,5 +78,5 @@ shadcn/ui is initialized after scaffolding with `npx shadcn@latest init`.
 
 **Constraints introduced**:
 - All components that use React hooks or browser APIs must include `"use client"` at the top
-- The `development/frontend/` directory is the Next.js project root — all `npm` commands run from there
-- Vercel Root Directory must be set to `development/frontend/` when hosting is configured
+- The `development/ledger/` directory is the Next.js project root — all `npm` commands run from there
+- Vercel Root Directory must be set to `development/ledger/` when hosting is configured

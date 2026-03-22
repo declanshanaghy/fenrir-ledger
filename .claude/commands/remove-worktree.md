@@ -31,7 +31,7 @@ REPO_ROOT: $(git rev-parse --show-toplevel)
 BRANCH_NAME: $1 (required)
 WORKTREE_BASE_DIR: ${REPO_ROOT}-trees
 WORKTREE_DIR: ${REPO_ROOT}-trees/<BRANCH_NAME>
-FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/frontend-server.sh
+FRONTEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/ledger-server.sh
 BACKEND_SERVER_SCRIPT: ${REPO_ROOT}/.claude/scripts/backend-server.sh
 ```
 
@@ -48,7 +48,7 @@ Then use the resolved variables in subsequent commands.
 ## Instructions
 
 - This command safely removes a worktree and all associated resources
-- Stops the frontend server using the frontend-server script
+- Stops the ledger server using the ledger-server script
 - Stops the backend server using the backend-server script
 - Removes the git worktree using git's built-in removal command
 - Deletes the git branch associated with the worktree (PERMANENT)
@@ -75,7 +75,7 @@ Then use the resolved variables in subsequent commands.
 
 - Resolve paths first, then read the port:
   ```bash
-  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; cat "${WORKTREE_DIR}/development/frontend/.port" 2>/dev/null
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; cat "${WORKTREE_DIR}/development/ledger/.port" 2>/dev/null
   ```
 - If `.port` file doesn't exist, try to find processes in the worktree directory
 
@@ -84,16 +84,16 @@ Then use the resolved variables in subsequent commands.
 **Stop Frontend Dev Server:**
 - If port was identified from `.port` file:
   ```bash
-  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; FENRIR_FRONTEND_DIR="${WORKTREE_DIR}/development/frontend" "${REPO_ROOT}/.claude/scripts/frontend-server.sh" stop
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; FENRIR_LEDGER_DIR="${WORKTREE_DIR}/development/ledger" "${REPO_ROOT}/.claude/scripts/ledger-server.sh" stop
   ```
 - Verify stopped:
   ```bash
-  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; FENRIR_FRONTEND_DIR="${WORKTREE_DIR}/development/frontend" "${REPO_ROOT}/.claude/scripts/frontend-server.sh" status
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; FENRIR_LEDGER_DIR="${WORKTREE_DIR}/development/ledger" "${REPO_ROOT}/.claude/scripts/ledger-server.sh" status
   ```
 
 - If `.port` file didn't exist, try to find and kill any process in the worktree directory:
   ```bash
-  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; lsof -t +D "${WORKTREE_DIR}/development/frontend" | xargs kill 2>/dev/null
+  REPO_ROOT=$(git rev-parse --show-toplevel); WORKTREE_DIR="${REPO_ROOT}-trees/<BRANCH_NAME>"; lsof -t +D "${WORKTREE_DIR}/development/ledger" | xargs kill 2>/dev/null
   ```
 - Wait 2 seconds for processes to fully terminate
 

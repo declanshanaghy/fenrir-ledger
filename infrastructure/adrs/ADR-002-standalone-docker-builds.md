@@ -182,7 +182,7 @@ strategy (`maxUnavailable: 0`, `maxSurge: 1`) ensures zero-downtime deploys.
 ## References
 
 - `Dockerfile` — multi-stage build definition (repo root)
-- `development/frontend/next.config.ts` — `output: "standalone"` configuration
+- `development/ledger/next.config.ts` — `output: "standalone"` configuration
 - `infrastructure/k8s/app/deployment.yaml` — GKE Deployment spec
 - `.github/workflows/deploy.yml` — CI/CD build and deploy pipeline
 - `infrastructure/helm/fenrir-app/` — Helm chart for app deployment

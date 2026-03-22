@@ -99,7 +99,7 @@ function main() {
   log(`Merged LCOV written to ${mergedLcovPath}`);
 
   // Build genhtml command
-  const frontendDir = path.join(REPO_ROOT, "development/frontend");
+  const ledgerDir = path.join(REPO_ROOT, "development/ledger");
   const cssFlag = existsSync(CUSTOM_CSS) ? `--css-file "${CUSTOM_CSS}"` : "";
   if (cssFlag) log(`Custom CSS: ${path.relative(REPO_ROOT, CUSTOM_CSS)}`);
 
@@ -117,7 +117,7 @@ function main() {
   ].filter(Boolean).join(" ");
 
   try {
-    execSync(genHtmlCmd, { stdio: ["pipe", "pipe", "pipe"], cwd: frontendDir });
+    execSync(genHtmlCmd, { stdio: ["pipe", "pipe", "pipe"], cwd: ledgerDir });
     log("HTML report generated via genhtml");
   } catch (err) {
     if (existsSync(path.join(COMBINED_DIR, "index.html"))) {

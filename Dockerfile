@@ -19,7 +19,7 @@ RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
 # Copy each package's package.json so pnpm can install all workspace deps
-COPY development/frontend/package.json ./development/frontend/
+COPY development/ledger/package.json ./development/ledger/
 COPY development/odins-spear/package.json ./development/odins-spear/
 COPY development/monitor/package.json ./development/monitor/
 COPY development/monitor-ui/package.json ./development/monitor-ui/
@@ -52,14 +52,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # but also creates per-package node_modules with symlinks back to the store.
 # Both must be present for the build to resolve imports correctly.
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/development/frontend/node_modules ./development/frontend/node_modules
+COPY --from=deps /app/development/ledger/node_modules ./development/ledger/node_modules
 
 # Copy workspace manifests
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
 # Copy frontend source (outputFileTracingRoot points to workspace root /app,
 # so nft can trace pnpm symlinks in node_modules/.pnpm/)
-COPY development/frontend/ ./development/frontend/
+COPY development/ledger/ ./development/ledger/
 
 # Build the Next.js app in standalone mode via pnpm workspace filter
 RUN pnpm --filter fenrir-ledger run build
@@ -78,13 +78,13 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 # Copy standalone output — with outputFileTracingRoot=repo root, server.js
-# lives at .next/standalone/development/frontend/server.js and node_modules
+# lives at .next/standalone/development/ledger/server.js and node_modules
 # are at .next/standalone/node_modules/ (traced from the workspace root).
-COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/development/ledger/.next/standalone ./
 # Copy static assets to where Next.js expects them relative to server.js
-COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/.next/static ./development/frontend/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/development/ledger/.next/static ./development/ledger/.next/static
 # Copy public assets relative to server.js location
-COPY --from=builder --chown=nextjs:nodejs /app/development/frontend/public ./development/frontend/public
+COPY --from=builder --chown=nextjs:nodejs /app/development/ledger/public ./development/ledger/public
 
 USER nextjs
 
@@ -94,4 +94,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
-CMD ["node", "development/frontend/server.js"]
+CMD ["node", "development/ledger/server.js"]

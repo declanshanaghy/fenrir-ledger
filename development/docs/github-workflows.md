@@ -51,7 +51,7 @@ graph TD
     diff --> infra{infra?}
     diff --> umami{umami?}
 
-    app -->|"development/frontend/ - Dockerfile - package*.json"| build-app[build-app]
+    app -->|"development/ledger/ - Dockerfile - package*.json"| build-app[build-app]
     k8sapp -->|"infrastructure/helm/fenrir-app/"| build-app
     monitor -->|"development/monitor/"| build-monitor[build-monitor]
     monui -->|"development/monitor-ui/"| build-monitor-ui[build-monitor-ui]
@@ -66,7 +66,7 @@ graph TD
 
 | Output | Paths | Consumer |
 |--------|-------|----------|
-| `app` | `development/frontend/`, `Dockerfile`, `package*.json` | build-app |
+| `app` | `development/ledger/`, `Dockerfile`, `package*.json` | build-app |
 | `k8s-app` | `infrastructure/k8s/app/` | build-app, deploy-app |
 | `monitor` | `development/monitor/` | build-monitor |
 | `monitor-ui` | `development/monitor-ui/` | build-monitor-ui |
@@ -207,7 +207,7 @@ graph LR
     class report healthy
 ```
 
-**Path filters:** Only triggers on changes to `development/frontend/**`, `quality/test-suites/**`, or `.github/workflows/ci-tests.yml`.
+**Path filters:** Only triggers on changes to `development/ledger/**`, `quality/test-suites/**`, or `.github/workflows/ci-tests.yml`.
 
 **Target:** Tests run against live production (`https://fenrirledger.com`), not a staging environment.
 

@@ -8,7 +8,7 @@ On submit failure, scroll + focus the first invalid field (DOM order, not schema
 - `shouldFocusError: false` in `useForm`
 - Pass `scrollToFirstError` as second arg to `handleSubmit`
 - Sort by `compareDocumentPosition` for visual order
-- Ref: `development/frontend/src/components/cards/CardForm.tsx`
+- Ref: `development/ledger/src/components/cards/CardForm.tsx`
 
 ---
 
@@ -40,7 +40,7 @@ every shape change requires a versioned migration block.
 import { log } from "@/lib/logger";
 ```
 
-tslog wrapper at `development/frontend/src/lib/logger.ts`. Auto-prefixes `[fenrir-backend]`,
+tslog wrapper at `development/ledger/src/lib/logger.ts`. Auto-prefixes `[fenrir-backend]`,
 JSON in prod, pretty in dev, automatic secret masking.
 
 | Level | Use |

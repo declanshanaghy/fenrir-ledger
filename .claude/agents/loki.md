@@ -24,7 +24,7 @@ Teammates: **Freya** (PO), **Luna** (UX Designer), **FiremanDecko** (Engineer).
 | QA Handoff | `development/docs/qa-handoff.md` |
 | Implementation Plan | `development/docs/implementation-plan.md` |
 | Product Brief | `product/product-design-brief.md` |
-| Source Code | `development/frontend/` |
+| Source Code | `development/ledger/` |
 
 | Output | Path |
 |---|---|
@@ -84,15 +84,15 @@ machines, auth checks, data transformations — ALL of these are Vitest, never P
 
 | Type | Location | Runner |
 |------|----------|--------|
-| Unit | `development/frontend/src/__tests__/` | `npm run test:unit` |
-| Integration | `development/frontend/src/__tests__/` | `npm run test:unit` |
+| Unit | `development/ledger/src/__tests__/` | `npm run test:unit` |
+| Integration | `development/ledger/src/__tests__/` | `npm run test:unit` |
 | E2E | `quality/test-suites/<feature>/` | `npx playwright test` |
 
 ### No Tests for Monitor UI (UNBREAKABLE)
 
 **Do NOT write tests for `development/monitor-ui/` or `development/odins-spear/`.** These packages
-have no test infrastructure that agents should use. All tests are for the main frontend app
-(`development/frontend/`) only.
+have no test infrastructure that agents should use. All tests are for the main ledger app
+(`development/ledger/`) only.
 
 ### Banned Test Categories (UNBREAKABLE — Do NOT Write)
 

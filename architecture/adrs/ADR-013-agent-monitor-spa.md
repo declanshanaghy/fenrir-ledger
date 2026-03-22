@@ -278,7 +278,7 @@ file:///path/to/repo/development/agent-monitor/index.html
 
 ### Unit Tests (Vitest)
 
-Location: `development/frontend/src/__tests__/agent-monitor-utils.test.ts`
+Location: `development/ledger/src/__tests__/agent-monitor-utils.test.ts`
 
 Tests:
 - `formatDuration()` — seconds → "1h 2m 3s"

@@ -29,7 +29,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-const FRONTEND_DIR = path.join(REPO_ROOT, "development/frontend");
+const LEDGER_DIR = path.join(REPO_ROOT, "development/ledger");
 const REPORTS_DIR = path.join(REPO_ROOT, "quality/reports/coverage");
 const V8_COVERAGE_DIR = path.join(REPO_ROOT, "quality/.coverage-tmp");
 
@@ -67,7 +67,7 @@ function build() {
     return;
   }
   log("Building Next.js app...");
-  run("npm run build", { cwd: FRONTEND_DIR });
+  run("npm run build", { cwd: LEDGER_DIR });
 }
 
 function startServer() {
@@ -85,13 +85,13 @@ function startServer() {
   // paths to src/ after c8 generates the LCOV.
   // Use the actual JS entry point, not the shell wrapper in .bin/ — Node.js
   // cannot execute the .bin/next shell script and crashes with SyntaxError.
-  const nextBin = path.join(FRONTEND_DIR, "node_modules", "next", "dist", "bin", "next");
+  const nextBin = path.join(LEDGER_DIR, "node_modules", "next", "dist", "bin", "next");
 
   const serverProc = spawn(
     "node",
     [nextBin, "start", "-p", "9653"],
     {
-      cwd: FRONTEND_DIR,
+      cwd: LEDGER_DIR,
       stdio: ["ignore", "pipe", "pipe"],
       env: {
         ...process.env,
@@ -155,7 +155,7 @@ function runTests(extraArgs = []) {
   try {
     // Set SERVER_URL so Playwright skips its own webServer (we already started one).
     run(`npx ${pwArgs.join(" ")}`, {
-      cwd: FRONTEND_DIR,
+      cwd: LEDGER_DIR,
       env: { ...process.env, SERVER_URL: "http://localhost:9653" },
     });
   } catch {
@@ -186,8 +186,8 @@ function stopServer(serverProc) {
  * Resolve a src/-relative path with .js extension to the actual TypeScript extension.
  * Tries .tsx → .ts → .jsx → .js in order, returning the first that exists on disk.
  */
-function resolveExtension(srcRelPath, frontendDir) {
-  const base = path.join(frontendDir, srcRelPath.replace(/\.js$/, ""));
+function resolveExtension(srcRelPath, ledgerDir) {
+  const base = path.join(ledgerDir, srcRelPath.replace(/\.js$/, ""));
   for (const ext of [".tsx", ".ts", ".jsx", ".js"]) {
     if (existsSync(base + ext)) return srcRelPath.replace(/\.js$/, ext);
   }
@@ -224,7 +224,7 @@ function normalizeLcov(lcovPath) {
     // Remap .next/server/app/ → src/app/
     if (sf.startsWith(".next/server/app/")) {
       const srcPath = sf.replace(/^\.next\/server\//, "src/");
-      const resolved = resolveExtension(srcPath, FRONTEND_DIR);
+      const resolved = resolveExtension(srcPath, LEDGER_DIR);
       // Strip FN/FNA/FNDA lines — their line numbers come from compiled .js, not .ts source.
       // Vitest owns function coverage with correct line numbers. Playwright contributes
       // DA (line hits) and branch data only, avoiding duplicate function definition
@@ -306,7 +306,7 @@ function generateReports() {
   ];
 
   try {
-    run(`npx ${c8Args.join(" ")}`, { cwd: FRONTEND_DIR });
+    run(`npx ${c8Args.join(" ")}`, { cwd: LEDGER_DIR });
     const relDir = path.relative(REPO_ROOT, reportsDir);
     log(`Reports written to ${reportsDir}`);
     log(`  - HTML:  ${relDir}/index.html`);
@@ -380,7 +380,7 @@ function runCombine() {
 
 function ensureDeps() {
   log("Ensuring coverage dependencies are installed...");
-  const nodeModules = path.join(FRONTEND_DIR, "node_modules");
+  const nodeModules = path.join(LEDGER_DIR, "node_modules");
   const rollupNative = path.join(nodeModules, "@rollup/rollup-darwin-arm64");
   const coverageV8 = path.join(nodeModules, "@vitest/coverage-v8");
 
@@ -388,19 +388,19 @@ function ensureDeps() {
   if (!existsSync(rollupNative) && existsSync(nodeModules)) {
     log("Rollup native module missing — running clean reinstall...");
     rmSync(nodeModules, { recursive: true });
-    run("npm ci", { cwd: FRONTEND_DIR });
+    run("npm ci", { cwd: LEDGER_DIR });
     return;
   }
 
   // If @vitest/coverage-v8 is missing, install it
   if (!existsSync(coverageV8)) {
     log("@vitest/coverage-v8 missing — installing...");
-    run("npm install --save-dev @vitest/coverage-v8", { cwd: FRONTEND_DIR });
+    run("npm install --save-dev @vitest/coverage-v8", { cwd: LEDGER_DIR });
     // Verify rollup didn't break
     if (!existsSync(rollupNative)) {
       log("Rollup native module broken after install — clean reinstall...");
       rmSync(nodeModules, { recursive: true });
-      run("npm i", { cwd: FRONTEND_DIR });
+      run("npm i", { cwd: LEDGER_DIR });
     }
   }
 }
@@ -411,7 +411,7 @@ function runUnitCoverage() {
   log("Running Vitest unit tests with V8 coverage...");
   const vitestReportsDir = path.join(REPORTS_DIR, "vitest");
   mkdirSync(vitestReportsDir, { recursive: true });
-  run("npm run test:unit:coverage", { cwd: FRONTEND_DIR });
+  run("npm run test:unit:coverage", { cwd: LEDGER_DIR });
   applyFenrirTheme(vitestReportsDir);
   log(`Vitest coverage reports written to ${vitestReportsDir}`);
   log("  - HTML:  quality/reports/coverage/vitest/index.html");
@@ -474,7 +474,7 @@ async function main() {
       log("Phase 1/3: Vitest unit/integration coverage...");
       const vitestReportsDir = path.join(REPORTS_DIR, "vitest");
       mkdirSync(vitestReportsDir, { recursive: true });
-      run("npm run test:unit:coverage", { cwd: FRONTEND_DIR });
+      run("npm run test:unit:coverage", { cwd: LEDGER_DIR });
       applyFenrirTheme(vitestReportsDir);
       log("Vitest coverage complete.");
     }

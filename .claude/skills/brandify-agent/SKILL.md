@@ -70,7 +70,7 @@ Shared assets (`agent-report.css`, `agent-report.js`) are auto-generated alongsi
 **Publish mode (`--publish`):**
 ```bash
 SCRIPT="$REPO_ROOT/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs"
-BLOG_DIR="$REPO_ROOT/development/frontend/content/blog"
+BLOG_DIR="$REPO_ROOT/development/ledger/content/blog"
 node "$SCRIPT" --input "$LOG_FILE" --publish --blog-dir "$BLOG_DIR"
 ```
 

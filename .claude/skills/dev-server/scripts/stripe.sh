@@ -4,13 +4,13 @@ set -euo pipefail
 
 APP_PORT="${FENRIR_FRONTEND_PORT:-9653}"
 REPO_ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
-FRONTEND_DIR="${FENRIR_FRONTEND_DIR:-$REPO_ROOT/development/frontend}"
-LOG_DIR="${FRONTEND_DIR}/logs"
+LEDGER_DIR="${FENRIR_LEDGER_DIR:-$REPO_ROOT/development/ledger}"
+LOG_DIR="${LEDGER_DIR}/logs"
 mkdir -p "$LOG_DIR"
 LOG="${LOG_DIR}/stripe-listen.log"
-PID_FILE="${FRONTEND_DIR}/.stripe-listen.pid"
-ENV_FILE="${FRONTEND_DIR}/.env.local"
-STRIPE_OVERRIDE="${FRONTEND_DIR}/.env.stripe-listen"
+PID_FILE="${LEDGER_DIR}/.stripe-listen.pid"
+ENV_FILE="${LEDGER_DIR}/.env.local"
+STRIPE_OVERRIDE="${LEDGER_DIR}/.env.stripe-listen"
 
 pid() {
   if [[ -f "$PID_FILE" ]]; then

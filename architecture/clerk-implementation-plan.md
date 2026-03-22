@@ -24,11 +24,11 @@
 
 ### Task 1.1 — Install dependencies
 
-**File(s):** `development/frontend/package.json`
+**File(s):** `development/ledger/package.json`
 **Depends on:** nothing
 
 ```bash
-cd development/frontend
+cd development/ledger
 npm install @clerk/nextjs@latest
 npm install --save-dev @clerk/testing@latest
 ```
@@ -43,7 +43,7 @@ npm install --save-dev @clerk/testing@latest
 
 ### Task 1.2 — Update `.env.example` and `.gitignore`
 
-**File(s):** `development/frontend/.env.example`, `development/frontend/.gitignore`
+**File(s):** `development/ledger/.env.example`, `development/ledger/.gitignore`
 **Depends on:** nothing
 
 Add to `.env.example`:
@@ -73,11 +73,11 @@ Verify `.gitignore` already contains `.env` and `.env.*` (it does per the git-co
 
 ### Task 1.3 — Wrap app in ClerkProvider
 
-**File(s):** `development/frontend/src/app/layout.tsx`
+**File(s):** `development/ledger/src/app/layout.tsx`
 **Depends on:** Task 1.1
 
 ```typescript
-// development/frontend/src/app/layout.tsx
+// development/ledger/src/app/layout.tsx
 import { ClerkProvider } from "@clerk/nextjs";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -105,7 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ### Task 1.4 — Replace middleware.ts with clerkMiddleware
 
-**File(s):** `development/frontend/src/middleware.ts`
+**File(s):** `development/ledger/src/middleware.ts`
 **Depends on:** Task 1.1
 
 Replace the current no-op middleware entirely:
@@ -148,13 +148,13 @@ export const config = {
 
 ### Task 2.1 — Refactor AuthContext to use Clerk hooks
 
-**File(s):** `development/frontend/src/contexts/AuthContext.tsx`
+**File(s):** `development/ledger/src/contexts/AuthContext.tsx`
 **Depends on:** Tasks 1.3, 1.4
 
 The current `AuthContext` reads `fenrir:auth` from localStorage and manages a `FenrirSession`. After this task, it delegates to Clerk's `useUser()` hook.
 
 ```typescript
-// development/frontend/src/contexts/AuthContext.tsx
+// development/ledger/src/contexts/AuthContext.tsx
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
@@ -237,13 +237,13 @@ export function useAuthContext(): AuthContextValue {
 
 ### Task 2.2 — Update useAuth custom hook
 
-**File(s):** `development/frontend/src/hooks/useAuth.ts`
+**File(s):** `development/ledger/src/hooks/useAuth.ts`
 **Depends on:** Task 2.1
 
 The custom `useAuth` hook currently reads from `AuthContext`. Its public API is preserved; implementation delegates to the refactored context.
 
 ```typescript
-// development/frontend/src/hooks/useAuth.ts
+// development/ledger/src/hooks/useAuth.ts
 import { useAuthContext } from "@/contexts/AuthContext";
 import type { AuthStatus } from "@/contexts/AuthContext";
 
@@ -280,7 +280,7 @@ export function useAuth(): UseAuthResult {
 
 ### Task 2.3 — Remove FenrirSession and fenrir:auth localStorage writes
 
-**File(s):** `development/frontend/src/lib/types.ts`
+**File(s):** `development/ledger/src/lib/types.ts`
 **Depends on:** Task 2.1
 
 Remove the `FenrirSession` interface from `types.ts`. It was shaped for the Google PKCE flow (Sprint 3.1) which no longer exists.
@@ -294,9 +294,9 @@ Any code that reads/writes `fenrir:auth` in localStorage is deleted. Clerk manag
 ### Task 2.4 — Delete Auth.js remnants
 
 **File(s):**
-- `development/frontend/src/auth.ts` — Auth.js v5 config
-- `development/frontend/src/app/api/auth/[...nextauth]/route.ts` — Auth.js route handler
-- `development/frontend/next-auth.d.ts` — TypeScript module augmentation
+- `development/ledger/src/auth.ts` — Auth.js v5 config
+- `development/ledger/src/app/api/auth/[...nextauth]/route.ts` — Auth.js route handler
+- `development/ledger/next-auth.d.ts` — TypeScript module augmentation
 
 **Depends on:** Task 2.1
 
@@ -314,7 +314,7 @@ Remove `next-auth` from `package.json` dependencies if present.
 
 ### Task 3.1 — Update /sign-in/page.tsx with Clerk SignInButton
 
-**File(s):** `development/frontend/src/app/sign-in/page.tsx`
+**File(s):** `development/ledger/src/app/sign-in/page.tsx`
 **Depends on:** Tasks 1.3, 2.1
 
 The existing sign-in page has the correct UX (upsell layout, "Continue without signing in" CTA). Only the sign-in trigger changes.
@@ -344,7 +344,7 @@ The "Continue without signing in" button navigates to `/` with `router.push("/")
 
 ### Task 3.2 — Update TopBar with Clerk user info + sign-out
 
-**File(s):** `development/frontend/src/components/layout/TopBar.tsx`
+**File(s):** `development/ledger/src/components/layout/TopBar.tsx`
 **Depends on:** Task 2.2
 
 `TopBar` currently reads from the custom `useAuth()` hook. After Task 2.2, the hook still returns `{ displayName, avatarUrl, status }` — TopBar requires no logic changes.
@@ -372,7 +372,7 @@ Replace the current `clearSession()` call (which cleared `fenrir:auth` from loca
 
 ### Task 4.1 — Verify merge-anonymous.ts works with Clerk user.id
 
-**File(s):** `development/frontend/src/lib/merge-anonymous.ts`
+**File(s):** `development/ledger/src/lib/merge-anonymous.ts`
 **Depends on:** Task 2.1
 
 `mergeAnonymousCards(clerkUserId, anonHouseholdId)` is called in `AuthContext.useEffect()` (Task 2.1). The implementation in `merge-anonymous.ts` is fully agnostic about where `clerkUserId` comes from — it's just a string. No changes required.
@@ -390,7 +390,7 @@ Verification checklist:
 
 ### Task 4.2 — Update householdId key pattern in storage comments
 
-**File(s):** `development/frontend/src/lib/storage.ts` (comments only)
+**File(s):** `development/ledger/src/lib/storage.ts` (comments only)
 **Depends on:** Task 4.1
 
 Update JSDoc comments in `storage.ts` to reflect that `householdId` now comes from Clerk (`user.id`) rather than Google `sub` claim. No functional changes.
@@ -437,7 +437,7 @@ Clerk provides `@clerk/testing` which integrates with Playwright to bypass the O
 
 ### Setup
 
-**Global setup file:** `development/frontend/playwright.config.ts` (or `e2e/global-setup.ts`)
+**Global setup file:** `development/ledger/playwright.config.ts` (or `e2e/global-setup.ts`)
 
 ```typescript
 // e2e/global-setup.ts
@@ -521,43 +521,43 @@ No Testing Token values appear in the workflow YAML — `clerkSetup()` fetches t
 
 | File | Purpose |
 |------|---------|
-| `development/frontend/e2e/global-setup.ts` | Playwright global setup: `clerkSetup()` |
-| `development/frontend/e2e/auth.spec.ts` | Playwright auth tests: signed-in + anonymous flows |
+| `development/ledger/e2e/global-setup.ts` | Playwright global setup: `clerkSetup()` |
+| `development/ledger/e2e/auth.spec.ts` | Playwright auth tests: signed-in + anonymous flows |
 
 ### Modified files
 
 | File | Change |
 |------|--------|
-| `development/frontend/package.json` | Add `@clerk/nextjs`, `@clerk/testing` |
-| `development/frontend/.env.example` | Add Clerk env var template |
-| `development/frontend/src/app/layout.tsx` | Wrap in `<ClerkProvider>` |
-| `development/frontend/src/middleware.ts` | Replace no-op with `clerkMiddleware()` |
-| `development/frontend/src/contexts/AuthContext.tsx` | Replace `fenrir:auth` localStorage reads with `useUser()` from Clerk |
-| `development/frontend/src/hooks/useAuth.ts` | Thin wrapper over refactored `AuthContext` — public API unchanged |
-| `development/frontend/src/app/sign-in/page.tsx` | Replace Google OAuth button with `<SignInButton />` |
-| `development/frontend/src/components/layout/TopBar.tsx` | `signOut()` from Clerk instead of `clearSession()` |
-| `development/frontend/src/lib/storage.ts` | JSDoc comments updated (no functional changes) |
-| `development/frontend/src/lib/types.ts` | Remove `FenrirSession` interface |
+| `development/ledger/package.json` | Add `@clerk/nextjs`, `@clerk/testing` |
+| `development/ledger/.env.example` | Add Clerk env var template |
+| `development/ledger/src/app/layout.tsx` | Wrap in `<ClerkProvider>` |
+| `development/ledger/src/middleware.ts` | Replace no-op with `clerkMiddleware()` |
+| `development/ledger/src/contexts/AuthContext.tsx` | Replace `fenrir:auth` localStorage reads with `useUser()` from Clerk |
+| `development/ledger/src/hooks/useAuth.ts` | Thin wrapper over refactored `AuthContext` — public API unchanged |
+| `development/ledger/src/app/sign-in/page.tsx` | Replace Google OAuth button with `<SignInButton />` |
+| `development/ledger/src/components/layout/TopBar.tsx` | `signOut()` from Clerk instead of `clearSession()` |
+| `development/ledger/src/lib/storage.ts` | JSDoc comments updated (no functional changes) |
+| `development/ledger/src/lib/types.ts` | Remove `FenrirSession` interface |
 
 ### Deleted files
 
 | File | Reason |
 |------|--------|
-| `development/frontend/src/auth.ts` | Auth.js v5 config — replaced by Clerk |
-| `development/frontend/src/app/api/auth/[...nextauth]/route.ts` | Auth.js route handler — replaced by Clerk |
-| `development/frontend/next-auth.d.ts` | Auth.js TypeScript augmentations — no longer needed |
+| `development/ledger/src/auth.ts` | Auth.js v5 config — replaced by Clerk |
+| `development/ledger/src/app/api/auth/[...nextauth]/route.ts` | Auth.js route handler — replaced by Clerk |
+| `development/ledger/next-auth.d.ts` | Auth.js TypeScript augmentations — no longer needed |
 
 ### Unchanged files (confirmed)
 
 | File | Why unchanged |
 |------|--------------|
-| `development/frontend/src/lib/types.ts` (except `FenrirSession`) | Card, Household, CardStatus types stable |
-| `development/frontend/src/lib/storage.ts` (except comments) | All functions accept `householdId: string` — agnostic |
-| `development/frontend/src/lib/merge-anonymous.ts` | Merge logic is string-based — agnostic about householdId source |
-| `development/frontend/src/lib/auth/household.ts` | Anonymous UUID generation — unchanged |
-| `development/frontend/src/lib/card-utils.ts` | Business logic — unchanged |
-| `development/frontend/src/lib/constants.ts` | Constants — unchanged |
-| `development/frontend/src/lib/realm-utils.ts` | Display utilities — unchanged |
+| `development/ledger/src/lib/types.ts` (except `FenrirSession`) | Card, Household, CardStatus types stable |
+| `development/ledger/src/lib/storage.ts` (except comments) | All functions accept `householdId: string` — agnostic |
+| `development/ledger/src/lib/merge-anonymous.ts` | Merge logic is string-based — agnostic about householdId source |
+| `development/ledger/src/lib/auth/household.ts` | Anonymous UUID generation — unchanged |
+| `development/ledger/src/lib/card-utils.ts` | Business logic — unchanged |
+| `development/ledger/src/lib/constants.ts` | Constants — unchanged |
+| `development/ledger/src/lib/realm-utils.ts` | Display utilities — unchanged |
 | All card components | Consume `householdId` from `useAuth()` — hook API unchanged |
 
 ---

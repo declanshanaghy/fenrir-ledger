@@ -37,23 +37,23 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Follow ALL Implementation Rules from the agent definition (aria-labels, mobile-friendly, logger, paths).
 - **After each logical chunk** (1-3 files changed):
   1. git add -A && git commit -m 'wip: <what> — issue:<NUMBER>' && git push origin <BRANCH>
-  2. cd <REPO_ROOT>/development/frontend && pnpm run verify:tsc
+  2. cd <REPO_ROOT>/development/ledger && pnpm run verify:tsc
   3. If tsc fails: fix, commit+push, re-run tsc.
   4. Update your todos (mark chunk completed, start next chunk).
 
 **Step 3b — Write Vitest tests for new code:**
-- Write unit tests for new utilities, hooks, helpers in `development/frontend/src/__tests__/`
+- Write unit tests for new utilities, hooks, helpers in `development/ledger/src/__tests__/`
 - Write integration tests for new API routes, component renders
-- Run: `cd <REPO_ROOT>/development/frontend && npx vitest run src/__tests__/<feature>/`
+- Run: `cd <REPO_ROOT>/development/ledger && npx vitest run src/__tests__/<feature>/`
 - Commit+push tests with implementation.
 - Loki will add E2E tests later — you own Vitest tests.
 - **NEVER write tests for monitor-ui (Odin's Throne) or odins-spear.** `development/monitor-ui/` and
-  `development/odins-spear/` have no test infrastructure that agents should use. Tests are frontend-only.
+  `development/odins-spear/` have no test infrastructure that agents should use. Tests are ledger-only.
 
 **Step 4 — Full verify: tsc + build + Vitest (each = separate Bash tool call + separate todo):**
-  cd <REPO_ROOT>/development/frontend && pnpm run verify:tsc
-  cd <REPO_ROOT>/development/frontend && pnpm run verify:build
-  cd <REPO_ROOT>/development/frontend && pnpm run verify:unit
+  cd <REPO_ROOT>/development/ledger && pnpm run verify:tsc
+  cd <REPO_ROOT>/development/ledger && pnpm run verify:build
+  cd <REPO_ROOT>/development/ledger && pnpm run verify:unit
 On failure: fix ALL failing tests (yours AND pre-existing), commit+push, re-run.
 Do NOT proceed to handoff with ANY failing Vitest tests.
 Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.

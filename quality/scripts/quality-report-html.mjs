@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-const FRONTEND_TESTS = path.join(REPO_ROOT, "development/frontend/src/__tests__");
+const LEDGER_TESTS = path.join(REPO_ROOT, "development/ledger/src/__tests__");
 const E2E_TESTS = path.join(REPO_ROOT, "quality/test-suites");
 const COVERAGE_DIR = path.join(REPO_ROOT, "quality/reports/coverage");
 const OUTPUT_PATH = path.join(REPO_ROOT, "quality/reports/quality-report.html");
@@ -311,7 +311,7 @@ function renderComplexitySection(data) {
       <thead><tr><th>#</th><th>Function</th><th>File</th><th>Line</th><th>Complexity</th><th>Risk</th></tr></thead>
       <tbody>
 ${top15.map((f, i) => {
-  const shortFile = f.file.replace("development/frontend/src/", "");
+  const shortFile = f.file.replace("development/ledger/src/", "");
   return `        <tr>
           <td>${i + 1}</td>
           <td><code>${f.function}</code></td>
@@ -406,7 +406,7 @@ function renderOverlapSection(twins, clusters, overTested, lowCoverage) {
       <thead><tr><th>Source File</th><th>Avg Hit ×</th><th>Coverage</th><th>Note</th></tr></thead>
       <tbody>`;
     for (const f of overTested) {
-      const shortFile = f.file.replace("development/frontend/src/", "");
+      const shortFile = f.file.replace("development/ledger/src/", "");
       overlapHtml += `<tr>
         <td><code>${shortFile}</code></td>
         <td class="lo"><strong>${f.avgHits}×</strong></td>
@@ -442,7 +442,7 @@ function renderOverlapSection(twins, clusters, overTested, lowCoverage) {
       <thead><tr><th>Source File</th><th>Lines Hit</th><th>Coverage</th><th>Risk</th></tr></thead>
       <tbody>`;
     for (const f of lowCoverage) {
-      const shortFile = f.file.replace("development/frontend/src/", "src/");
+      const shortFile = f.file.replace("development/ledger/src/", "src/");
       const r = risk(f.file);
       gapsHtml += `<tr>
         <td><code>${shortFile}</code></td>
@@ -482,7 +482,7 @@ async function main() {
   log("Generating HTML quality report...");
   copyLokiProfile();
 
-  const vitestFiles = walkDir(FRONTEND_TESTS, [".test.ts", ".test.tsx"]);
+  const vitestFiles = walkDir(LEDGER_TESTS, [".test.ts", ".test.tsx"]);
   const e2eFiles = walkDir(E2E_TESTS, [".spec.ts", ".spec.tsx"]);
   const allFiles = [...vitestFiles, ...e2eFiles];
 

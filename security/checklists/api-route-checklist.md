@@ -4,7 +4,7 @@
 **Last reviewed**: 2026-03-20 (updated distributed rate limiting guidance — Upstash Redis removed in issue #1521)
 
 Use this checklist whenever adding, modifying, or reviewing an API route under
-`development/frontend/src/app/api/`.
+`development/ledger/src/app/api/`.
 
 ---
 
@@ -17,7 +17,7 @@ Every route handler MUST pass all items in this section before merge.
 - [ ] **Route calls `requireAuth(request)` as the first operation in the handler body**
   - Pattern: `const auth = await requireAuth(request); if (!auth.ok) return auth.response;`
   - Exception: `/api/auth/token` is the only accepted exception (OAuth token exchange proxy cannot require a Bearer token because the client is obtaining its token there — document any new exceptions with rationale)
-  - Reference: `development/frontend/src/lib/auth/require-auth.ts`
+  - Reference: `development/ledger/src/lib/auth/require-auth.ts`
 
 - [ ] **Handler returns `auth.response` immediately if `!auth.ok`**
   - No handler logic executes before this check

@@ -148,7 +148,7 @@ jobs:
           LAST_DEPLOY=$(git rev-parse deploy/last 2>/dev/null || echo "HEAD~1")
           CHANGED=$(git diff --name-only "$LAST_DEPLOY" HEAD)
           check() { echo "$CHANGED" | grep -qE "$1" && echo "true" || echo "false"; }
-          echo "app=$(check    '^development/frontend/|^Dockerfile$|^package\.json$|^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$')" >> "$GITHUB_OUTPUT"
+          echo "app=$(check    '^development/ledger/|^Dockerfile$|^package\.json$|^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$')" >> "$GITHUB_OUTPUT"
           echo "k8s-app=$(check '^infrastructure/k8s/app/|^infrastructure/helm/fenrir-app/')"               >> "$GITHUB_OUTPUT"
           echo "monitor=$(check '^development/monitor/')"                                                    >> "$GITHUB_OUTPUT"
           echo "monitor-ui=$(check '^development/monitor-ui/')"                                              >> "$GITHUB_OUTPUT"
@@ -357,15 +357,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: TypeScript check
-        working-directory: development/frontend
+        working-directory: development/ledger
         run: pnpm run verify:tsc
 
       - name: Build check
-        working-directory: development/frontend
+        working-directory: development/ledger
         run: pnpm run verify:build
 
       - name: Unit tests
-        working-directory: development/frontend
+        working-directory: development/ledger
         run: pnpm run verify:unit
 
       - name: Upload reports on failure
@@ -563,11 +563,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        working-directory: development/frontend
+        working-directory: development/ledger
         run: npx playwright install --with-deps chromium
 
       - name: E2E tests
-        working-directory: development/frontend
+        working-directory: development/ledger
         run: pnpm run verify:e2e
 
       - name: Upload reports on failure

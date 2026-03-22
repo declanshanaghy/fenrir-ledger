@@ -24,7 +24,7 @@ cd fenrir-ledger
 bash development/scripts/setup-local.sh
 
 # Start the dev server
-cd development/frontend && npm run dev
+cd development/ledger && npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
@@ -34,7 +34,7 @@ Open [http://localhost:3000](http://localhost:3000).
 `development/scripts/setup-local.sh` is the single entry point. It runs these steps in order:
 
 1. **Node.js check** — verifies Node >= 18 is installed
-2. **npm dependencies** — runs `npm ci` in `development/frontend/`
+2. **npm dependencies** — runs `npm ci` in `development/ledger/`
 3. **Environment file** — copies `.env.example` to `.env.local` if not present
 4. **GKE setup** — runs `scripts/gke-setup.sh` (see below)
 
@@ -95,7 +95,7 @@ kubectl logs job/<job-name> -n fenrir-agents --follow
 Copy the example file and fill in values:
 
 ```bash
-cp development/frontend/.env.example development/frontend/.env.local
+cp development/ledger/.env.example development/ledger/.env.local
 ```
 
 Required variables for local development:

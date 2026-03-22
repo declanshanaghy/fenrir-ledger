@@ -4,7 +4,7 @@ metadata:
   name: fenrir-app
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "fenrir-app.labels" (dict "name" "fenrir-app" "component" "frontend") | nindent 4 }}
+    {{- include "fenrir-app.labels" (dict "name" "fenrir-app" "component" "ledger") | nindent 4 }}
 spec:
   replicas: {{ .Values.app.replicaCount }}
   revisionHistoryLimit: {{ .Values.app.revisionHistoryLimit }}
@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "fenrir-app.labels" (dict "name" "fenrir-app" "component" "frontend") | nindent 8 }}
+        {{- include "fenrir-app.labels" (dict "name" "fenrir-app" "component" "ledger") | nindent 8 }}
     spec:
       serviceAccountName: {{ .Values.app.serviceAccountName }}
       terminationGracePeriodSeconds: 30
