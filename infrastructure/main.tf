@@ -14,6 +14,10 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 5.0"
     }
+    stripe = {
+      source  = "lukasaron/stripe"
+      version = "~> 1.9"
+    }
   }
 
   # Remote state in GCS (bucket already exists)
@@ -31,6 +35,10 @@ provider "google" {
 provider "google-beta" {
   project = var.project_id
   region  = var.region
+}
+
+provider "stripe" {
+  api_key = var.stripe_api_key
 }
 
 # --------------------------------------------------------------------------

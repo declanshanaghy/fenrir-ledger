@@ -83,3 +83,13 @@ variable "uptime_check_host" {
   type        = string
   # No default — must be provided at apply time (Ingress hostname from kubectl)
 }
+
+# --------------------------------------------------------------------------
+# Stripe
+# --------------------------------------------------------------------------
+
+variable "stripe_api_key" {
+  description = "Stripe secret API key used to manage webhook endpoints via Terraform. Never commit this value — pass via TF_VAR_stripe_api_key env var or a secrets manager."
+  type        = string
+  sensitive   = true
+}
