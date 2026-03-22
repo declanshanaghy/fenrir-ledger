@@ -29,6 +29,7 @@ import { LayoutGrid, Settings, LogOut, User, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
 import { TrialBadge } from "@/components/layout/TrialBadge";
+import { KarlBadge } from "@/components/layout/KarlBadge";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
 import { NAV_LINKS, isNavLinkActive, MarketingNavLinks } from "@/components/marketing/MarketingNavLinks";
 import { useIsKarlOrTrial } from "@/hooks/useIsKarlOrTrial";
@@ -578,6 +579,9 @@ export function LedgerTopBar() {
 
         {/* Trial badge — shows remaining days with color urgency (Issue #621) */}
         <TrialBadge />
+
+        {/* Karl/trial badge — gold for Karl, dimmed+linked for trial (Issue #1779) */}
+        {isAuthenticated && <KarlBadge />}
 
         {/* Theme toggle (icon variant) — hidden when signed in, theme lives in dropdown */}
         {!isAuthenticated && <ThemeToggle variant="icon" />}
