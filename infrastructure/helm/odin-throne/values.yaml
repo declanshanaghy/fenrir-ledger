@@ -101,7 +101,7 @@ oauth2Proxy:
     tag: v7.6.0
     pullPolicy: IfNotPresent
   port: 4180
-  redirectUrl: "https://monitor.fenrirledger.com/oauth2/callback"
+  redirectUrl: "https://odins-throne.fenrirledger.com/oauth2/callback"
   resources:
     requests:
       cpu: "50m"
@@ -126,11 +126,11 @@ ingress:
   enabled: true
   className: "gce"
   hosts:
-    - monitor.fenrirledger.com
+    - odins-throne.fenrirledger.com
   annotations:
     networking.gke.io/managed-certificates: "odin-throne-cert"
     kubernetes.io/ingress.allow-http: "false"
-    kubernetes.io/ingress.global-static-ip-name: "monitor-ip"
+    kubernetes.io/ingress.global-static-ip-name: "odins-throne-ip"
     cloud.google.com/backend-config: '{"default":"odin-throne-ui-backend-config"}'
 
   backendConfig:
@@ -150,7 +150,7 @@ ingress:
   managedCertificate:
     enabled: true
     domains:
-      - monitor.fenrirledger.com
+      - odins-throne.fenrirledger.com
 
 # -- RBAC ------------------------------------------------------------------
 # ServiceAccount with cross-namespace read access to jobs/pods/logs
@@ -168,7 +168,7 @@ oauth2Proxy:
     tag: v7.6.0
     pullPolicy: IfNotPresent
   port: 4180
-  redirectUrl: "https://monitor.fenrirledger.com/oauth2/callback"
+  redirectUrl: "https://odins-throne.fenrirledger.com/oauth2/callback"
   resources:
     requests:
       cpu: "50m"

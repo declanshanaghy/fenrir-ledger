@@ -16,7 +16,7 @@ helm upgrade --install <release-name> ./infrastructure/helm/<chart> \
 | Chart | Release name | Namespace | URL | What it deploys |
 |---|---|---|---|---|
 | `fenrir-app` | `fenrir-app` | `fenrir-app` | `fenrirledger.com` | Next.js app, Redis, Ingress, PDB, warm-node placeholder |
-| `odin-throne` | `odin-throne` | `fenrir-monitor` | `monitor.fenrirledger.com` | Monitor backend + UI + oauth2-proxy |
+| `odin-throne` | `odin-throne` | `fenrir-monitor` | `odins-throne.fenrirledger.com` | Monitor backend + UI + oauth2-proxy |
 | `umami` | `umami` | `fenrir-analytics` | `analytics.fenrirledger.com` | Umami analytics + PostgreSQL |
 
 ---
@@ -83,7 +83,7 @@ Both are fronted by an **oauth2-proxy** sidecar for Google SSO access control.
 | `deployment-ui.yaml` | `odin-throne-ui` Deployment (nginx + oauth2-proxy sidecar) |
 | `service.yaml` | ClusterIP Service for backend |
 | `service-ui.yaml` | ClusterIP Service for UI |
-| `ingress.yaml` | GCE Ingress for `monitor.fenrirledger.com` |
+| `ingress.yaml` | GCE Ingress for `odins-throne.fenrirledger.com` |
 | `managed-certificate.yaml` | Google-managed TLS cert |
 | `rbac.yaml` | ClusterRole + Binding allowing cross-namespace read of `fenrir-agents` jobs/pods/logs |
 | `secrets.yaml` | Secret skeleton for OAuth credentials |
@@ -95,7 +95,7 @@ Both are fronted by an **oauth2-proxy** sidecar for Google SSO access control.
 | `namespace` | `fenrir-monitor` | `fenrir-monitor` |
 | `app.replicaCount` | 1 | 1 |
 | `app.env.K8S_NAMESPACE` | `fenrir-agents` | (same) |
-| `oauth2Proxy.redirectUrl` | `https://monitor.fenrirledger.com/oauth2/callback` | (same) |
+| `oauth2Proxy.redirectUrl` | `https://odins-throne.fenrirledger.com/oauth2/callback` | (same) |
 | `rbac.enabled` | `true` | `true` |
 | `rbac.agentsNamespace` | `fenrir-agents` | (same) |
 
