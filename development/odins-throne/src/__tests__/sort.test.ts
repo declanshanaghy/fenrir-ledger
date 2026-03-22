@@ -268,7 +268,7 @@ describe("Fixture jobs mixed with live jobs (AC: fixture sessions sorted correct
 
 describe("WebSocket update event sort (AC: sort maintained on updates)", () => {
   /**
-   * Simulate the useJobs handleMessage sort — mirrors development/monitor-ui/src/hooks/useJobs.ts.
+   * Simulate the useJobs handleMessage sort — mirrors development/odins-throne-ui/src/hooks/useJobs.ts.
    *
    * Issue #984 fix: pending jobs (null startTime) float to the TOP via
    * Number.MAX_SAFE_INTEGER so newly dispatched agents always appear first.

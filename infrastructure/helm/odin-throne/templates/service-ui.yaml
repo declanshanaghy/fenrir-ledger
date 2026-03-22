@@ -4,7 +4,7 @@ metadata:
   name: odin-throne-ui
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor-ui") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne-ui") | nindent 4 }}
   annotations:
     cloud.google.com/backend-config: '{"default":"odin-throne-ui-backend-config"}'
     cloud.google.com/neg: '{"ingress":true}'

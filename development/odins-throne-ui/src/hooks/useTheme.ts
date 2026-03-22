@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 export type Theme = "light" | "dark";
 
-const STORAGE_KEY = "fenrir-monitor-theme";
+const STORAGE_KEY = "fenrir-odins-throne-theme";
 
 function applyTheme(theme: Theme) {
   if (theme === "light") {

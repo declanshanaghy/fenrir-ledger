@@ -9,19 +9,19 @@
 
 ```
 User opens monitor UI
-  └─ JS reads localStorage("fenrir-monitor-theme")
+  └─ JS reads localStorage("fenrir-odins-throne-theme")
        ├─ "light" → apply data-theme="light" to <html>
        └─ "dark" / null → default dark (no attribute on <html>)
 
 User clicks "Light" button
   ├─ Set data-theme="light" on <html>
-  ├─ Write localStorage.setItem("fenrir-monitor-theme", "light")
+  ├─ Write localStorage.setItem("fenrir-odins-throne-theme", "light")
   ├─ Swap Odin portrait: odin-dark.png → odin-light.png
   └─ Update aria-pressed on both buttons
 
 User clicks "Dark" button
   ├─ Remove data-theme attribute from <html> (or set to "dark")
-  ├─ Write localStorage.setItem("fenrir-monitor-theme", "dark")
+  ├─ Write localStorage.setItem("fenrir-odins-throne-theme", "dark")
   ├─ Swap Odin portrait: odin-light.png → odin-dark.png
   └─ Update aria-pressed on both buttons
 ```
@@ -32,7 +32,7 @@ User clicks "Dark" button
 
 ```mermaid
 flowchart TD
-    A[Page Load] --> B{localStorage\nfenrir-monitor-theme}
+    A[Page Load] --> B{localStorage\nfenrir-odins-throne-theme}
     B -- '"light"' --> C[Set html data-theme=light\nSwap to odin-light.png\nLight btn aria-pressed=true]
     B -- '"dark" or null' --> D[Default: no data-theme attr\nKeep odin-dark.png\nDark btn aria-pressed=true]
 
@@ -55,7 +55,7 @@ flowchart TD
 
 ### `ThemeSwitcher.tsx`
 
-**Location:** `development/monitor-ui/src/components/ThemeSwitcher.tsx`
+**Location:** `development/odins-throne-ui/src/components/ThemeSwitcher.tsx`
 
 **Props:** None (reads/writes via `useTheme` hook)
 
@@ -85,9 +85,9 @@ flowchart TD
 
 ### `useTheme.ts`
 
-**Location:** `development/monitor-ui/src/hooks/useTheme.ts`
+**Location:** `development/odins-throne-ui/src/hooks/useTheme.ts`
 
-**localStorage key:** `fenrir-monitor-theme`
+**localStorage key:** `fenrir-odins-throne-theme`
 **Values:** `"light"` | `"dark"` (default when absent = dark)
 
 **Behavior:**
@@ -211,7 +211,7 @@ This produces a dark-on-light silhouette from the existing dark image. Not ideal
 
 ## 8. localStorage Persistence
 
-- **Key:** `fenrir-monitor-theme`
+- **Key:** `fenrir-odins-throne-theme`
 - **Value:** `"light"` or `"dark"`
 - **Read:** On React app mount (before first render to avoid flash)
 - **Write:** Immediately on toggle click
@@ -224,7 +224,7 @@ Since this is a Vite/React SPA (not SSR), the simplest approach is to apply the 
 
 ```ts
 // main.tsx — before ReactDOM.createRoot(...)
-const saved = localStorage.getItem("fenrir-monitor-theme");
+const saved = localStorage.getItem("fenrir-odins-throne-theme");
 if (saved === "light") {
   document.documentElement.dataset.theme = "light";
 }

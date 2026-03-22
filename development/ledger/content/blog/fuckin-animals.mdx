@@ -72,12 +72,12 @@ slug: "fuckin-animals"
           <p className="msg-text">delete all tests in odins spear no tests in odins spear or throne, that's in the rules right?</p>
         </div>
         <div className="work-card">
-          <div className="work-body"><p>CI kept failing on <span class="mono">odins-spear</span> TypeScript errors — dozens of <span class="hl">TS2532: Object is possibly undefined</span> across 18 test files. But the rule was clear: <span class="hl">no tests in odins-spear or monitor-ui</span>. These tests should never have existed.</p><p>Deleted all 18 test files, removed <span class="mono">vitest</span> from dependencies, purged <span class="mono">vitest.config.ts</span>, stripped test scripts from <span class="mono">package.json</span>, and removed <span class="mono">__tests__</span> from <span class="mono">tsconfig.json</span> includes.</p><p>Then branded both packages with an unmistakable description: <span class="hl">TESTS ARE BANNED — DO NOT write tests for this package.</span></p></div>
+          <div className="work-body"><p>CI kept failing on <span class="mono">odins-spear</span> TypeScript errors — dozens of <span class="hl">TS2532: Object is possibly undefined</span> across 18 test files. But the rule was clear: <span class="hl">no tests in odins-spear or odins-throne-ui</span>. These tests should never have existed.</p><p>Deleted all 18 test files, removed <span class="mono">vitest</span> from dependencies, purged <span class="mono">vitest.config.ts</span>, stripped test scripts from <span class="mono">package.json</span>, and removed <span class="mono">__tests__</span> from <span class="mono">tsconfig.json</span> includes.</p><p>Then branded both packages with an unmistakable description: <span class="hl">TESTS ARE BANNED — DO NOT write tests for this package.</span></p></div>
           <div className="code-block"><pre><span class="ca">+  "description": "TESTS ARE BANNED — DO NOT write tests for this package. Validate via tsc + build ONLY.",</span></pre></div>
           <div className="file-chips">
             <span className="chip chip-mod">development/odins-spear/package.json</span>
             <span className="chip chip-mod">development/odins-spear/tsconfig.json</span>
-            <span className="chip chip-mod">development/monitor-ui/package.json</span>
+            <span className="chip chip-mod">development/odins-throne-ui/package.json</span>
           </div>
         </div>
       </div>
@@ -98,8 +98,8 @@ slug: "fuckin-animals"
         <div className="work-card">
           <div className="work-body"><p>PR #1545 — Ragnarok toast feedback for Odin's Throne — had merge conflicts from weeks of drift. Two rounds of rebase conflicts in <span class="mono">JobCard.tsx</span> and <span class="mono">Sidebar.tsx</span>, where main had introduced <span class="mono">displayMode</span> while the PR branch used <span class="mono">collapsed</span>.</p><p>Resolved by keeping main's <span class="mono">displayMode</span> architecture and merging in the PR's <span class="hl">session ID display</span> and <span class="hl">improved timestamp guards</span>. Force-pushed the rebased branch, then dispatched FiremanDecko to GKE to finish the implementation.</p></div>
           <div className="file-chips">
-            <span className="chip chip-mod">development/monitor-ui/src/components/JobCard.tsx</span>
-            <span className="chip chip-mod">development/monitor-ui/src/components/Sidebar.tsx</span>
+            <span className="chip chip-mod">development/odins-throne-ui/src/components/JobCard.tsx</span>
+            <span className="chip chip-mod">development/odins-throne-ui/src/components/Sidebar.tsx</span>
           </div>
         </div>
       </div>

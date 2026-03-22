@@ -1,8 +1,8 @@
 # Interaction Spec: NorseVerdictInscription (Issue #1019)
 
 **Component:** `NorseVerdictInscription`
-**File:** `development/monitor-ui/src/components/NorseVerdictInscription.tsx`
-**Wireframe:** `ux/wireframes/monitor-ui/verdict-inscription.html`
+**File:** `development/odins-throne-ui/src/components/NorseVerdictInscription.tsx`
+**Wireframe:** `ux/wireframes/odins-throne-ui/verdict-inscription.html`
 **Designer:** Luna | **Issue:** #1019
 
 ---

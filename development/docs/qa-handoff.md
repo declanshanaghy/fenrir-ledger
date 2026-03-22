@@ -46,8 +46,8 @@ and never reach the GCE metadata probe.
 
 ## Checks Run
 
-- monitor-ui `tsc`: **PASS**
-- monitor-ui `build`: **PASS**
+- odins-throne-ui `tsc`: **PASS**
+- odins-throne-ui `build`: **PASS**
 
 ---
 

@@ -71,10 +71,10 @@ category: "agent"
 
 <div className="changes-summary">
 <h2>Commits</h2>
-<div className="commit-item"><span className="msg">{"$(cat \u003c\u003c"}</span></div>
-<div className="commit-item"><span className="msg">{"chore: update vitest test report — issue:1749\n\nCo-Authored-By: Claude Sonnet 4.6 \u003cnoreply@anthropic.com\u003e"}</span></div>
-<div className="commit-item"><span className="msg">{"chore: update vitest test report — issue:1749\n\nCo-Authored-By: Claude Sonnet 4.6 \u003cnoreply@anthropic.com\u003e"}</span></div>
-<div className="commit-item"><span className="msg">{"wip: \u003cwhat\u003e — issue:1749"}</span></div>
+<div className="commit-item"><span className="msg">{"$(cat <<"}</span></div>
+<div className="commit-item"><span className="msg">{"chore: update vitest test report — issue:1749\n\nCo-Authored-By: Claude Sonnet 4.6 &lt;noreply@anthropic.com&gt;"}</span></div>
+<div className="commit-item"><span className="msg">{"chore: update vitest test report — issue:1749\n\nCo-Authored-By: Claude Sonnet 4.6 &lt;noreply@anthropic.com&gt;"}</span></div>
+<div className="commit-item"><span className="msg">{"wip: &lt;what&gt; — issue:1749"}</span></div>
 </div>
 
 
@@ -105,10 +105,24 @@ category: "agent"
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Peadar O'Malley"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-granny.png" alt="Peadar O'Malley" loading="lazy" />
+<span className="heckle-name">{"Grainne Barrett"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Grainne Barrett" loading="lazy" />
 </div>
-<div className="heckle-text">{"Matthew Ruane and Lee Keegan — the backbone of Mayo!! THIS is for THEM!! musha!!"}</div>
+<div className="heckle-text">{"MAIGH EO ABÚ! Now for the love of God and all the holy water in Knock, merge the branch!"}</div>
+</div>
+<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
+<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
+</div>
+<div className="heckle-text">{"My architecture is more elegant than yer insults!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Grainne Barrett"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Grainne Barrett" loading="lazy" />
+</div>
+<div className="heckle-text">{"SHITE TALK from a SHITE AGENT!! Mayo deserves BETTER!!"}</div>
 </div>
 
 
@@ -158,27 +172,6 @@ category: "agent"
 </div>
 </details>
 </div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Peadar O'Malley"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-granny.png" alt="Peadar O'Malley" loading="lazy" />
-</div>
-<div className="heckle-text">{"By the hokey, Nephin mountain has stood unmoved for ten thousand years and it still commits more than you!"}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"My garbage collector is more efficient than Dublin's forwards!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Peadar O'Malley"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-granny.png" alt="Peadar O'Malley" loading="lazy" />
-</div>
-<div className="heckle-text">{"Oh is THAT so?? Well me UNCLE played for Mayo in '89 and HE says yer code is SHITE!!"}</div>
-</div>
 
 
 <div className="turn">
@@ -198,10 +191,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"git branch --show-current && node -v && ls development/frontend/package.json 2\u003e/dev/null || ls devel"}</span>
+<span className="tool-input-preview">{"git branch --show-current && node -v && ls development/frontend/package.json 2>/dev/null || ls devel"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"git branch --show-current && node -v && ls development/frontend/package.json 2\u003e/dev/null || ls development/ledger/package.json 2\u003e/dev/null || echo \"neither found\""}</pre>
+<pre className="tool-input">{"git branch --show-current && node -v && ls development/frontend/package.json 2>/dev/null || ls development/ledger/package.json 2>/dev/null || echo \"neither found\""}</pre>
 <pre className="tool-output">{"fix/issue-1749-rename-frontend-to-ledger\nv20.20.1\ndevelopment/frontend/package.json"}</pre>
 </div>
 </details>
@@ -258,24 +251,45 @@ category: "agent"
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Peadar O'Malley"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-granny.png" alt="Peadar O'Malley" loading="lazy" />
+<span className="heckle-name">{"Grainne Barrett"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Grainne Barrett" loading="lazy" />
 </div>
-<div className="heckle-text">{"The squall on Downpatrick Head is child's play compared to waiting since 1951!! thick as a plank!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Cathal Jennings"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-granny.png" alt="Cathal Jennings" loading="lazy" />
-</div>
-<div className="heckle-text">{"Oi Peadar O'Malley!! Sit yer arse DOWN — ye're letting the SIDE down, ye pure eejit!!"}</div>
+<div className="heckle-text">{"Killala is ELECTRIC tonight!! Sam is coming, craythur!!"}</div>
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Peadar O'Malley"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-granny.png" alt="Peadar O'Malley" loading="lazy" />
+<span className="heckle-name">{"Donal McNicholas"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-lass.png" alt="Donal McNicholas" loading="lazy" />
 </div>
-<div className="heckle-text">{"Feck off Cathal Jennings!! I was HERE FIRST ye bogger!!"}</div>
+<div className="heckle-text">{"Oi Grainne Barrett!! Sit yer arse DOWN — ye're letting the SIDE down, ye pure eejit!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Grainne Barrett"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Grainne Barrett" loading="lazy" />
+</div>
+<div className="heckle-text">{"Donal McNicholas ye pox — yer da couldn't heckle his way out of a PAPER BAG!!"}</div>
+</div>
+<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
+<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
+</div>
+<div className="heckle-text">{"I'll have this feature live before the throw-in and I'll dedicate it to the woman from Charlestown who never missed a final."}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Grainne Barrett"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Grainne Barrett" loading="lazy" />
+</div>
+<div className="heckle-text">{"💥 *spontaneously combusts from pure passion* 💥 ...me last words... Mayo... for... Sam..."}</div>
+</div>
+<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
+<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
+</div>
+<div className="heckle-text">{"...God rest their soul. And God help whoever heckles me NEXT."}</div>
 </div>
 
 
@@ -296,10 +310,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"gh issue view 1749 --comments 2\u003e&1 | head -50"}</span>
+<span className="tool-input-preview">{"gh issue view 1749 --comments 2>&1 | head -50"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"gh issue view 1749 --comments 2\u003e&1 | head -50"}</pre>
+<pre className="tool-input">{"gh issue view 1749 --comments 2>&1 | head -50"}</pre>
 <pre className="tool-output">{"(Bash completed with no output)"}</pre>
 </div>
 </details>
@@ -375,6 +389,20 @@ category: "agent"
 </div>
 </details>
 </div>
+<div className="heckle heckle-entrance">
+<div className="heckle-identity">
+<span className="heckle-name">{"Oisin Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-da.png" alt="Oisin Nallen" loading="lazy" />
+</div>
+<div className="heckle-text">{"🟢🔴 *parachutes in from a Ryanair flight* Grainne Barrett is DOWN?? Good — they were SHITE at heckling!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Oisin Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-da.png" alt="Oisin Nallen" loading="lazy" />
+</div>
+<div className="heckle-text">{"Did I miss Grainne Barrett's explosion?? FECK. Tell me about it LATER — SAM FIRST!!"}</div>
+</div>
 
 
 <div className="turn">
@@ -398,7 +426,7 @@ category: "agent"
 </summary>
 <div className="tool-block-body">
 <pre className="tool-input">{"{\n  \"file_path\": \"/workspace/repo/pnpm-workspace.yaml\"\n}"}</pre>
-<pre className="tool-output">{"     1→packages:\n     2→  - development/frontend\n     3→  - development/odins-spear\n     4→  - development/monitor\n     5→  - development/monitor-ui\n     6→allowBuilds:\n     7→  esbuild: true\n     8→  protobufjs: true\n     9→  sharp: true\n    10→  unrs-resolver: true\n    11→\n\n\u003csystem-reminder\u003e\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n\u003c/system-reminder\u003e\n"}</pre>
+<pre className="tool-output">{"     1→packages:\n     2→  - development/frontend\n     3→  - development/odins-spear\n     4→  - development/monitor\n     5→  - development/monitor-ui\n     6→allowBuilds:\n     7→  esbuild: true\n     8→  protobufjs: true\n     9→  sharp: true\n    10→  unrs-resolver: true\n    11→\n\n&lt;system-reminder&gt;\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n&lt;/system-reminder&gt;\n"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -408,7 +436,7 @@ category: "agent"
 </summary>
 <div className="tool-block-body">
 <pre className="tool-input">{"{\n  \"file_path\": \"/workspace/repo/development/ledger/package.json\",\n  \"limit\": 10\n}"}</pre>
-<pre className="tool-output">{"     1→{\n     2→  \"name\": \"fenrir-ledger\",\n     3→  \"version\": \"0.1.0\",\n     4→  \"private\": true,\n     5→  \"scripts\": {\n     6→    \"predev\": \"node scripts/compute-csp-hashes.mjs\",\n     7→    \"dev\": \"next dev -p 9653\",\n     8→    \"prebuild\": \"node scripts/compute-csp-hashes.mjs\",\n     9→    \"build\": \"next build\",\n    10→    \"start\": \"next start -p 9653\",\n\n\u003csystem-reminder\u003e\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n\u003c/system-reminder\u003e\n"}</pre>
+<pre className="tool-output">{"     1→{\n     2→  \"name\": \"fenrir-ledger\",\n     3→  \"version\": \"0.1.0\",\n     4→  \"private\": true,\n     5→  \"scripts\": {\n     6→    \"predev\": \"node scripts/compute-csp-hashes.mjs\",\n     7→    \"dev\": \"next dev -p 9653\",\n     8→    \"prebuild\": \"node scripts/compute-csp-hashes.mjs\",\n     9→    \"build\": \"next build\",\n    10→    \"start\": \"next start -p 9653\",\n\n&lt;system-reminder&gt;\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n&lt;/system-reminder&gt;\n"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -463,6 +491,13 @@ category: "agent"
 </div>
 </details>
 </div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Oisin Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-da.png" alt="Oisin Nallen" loading="lazy" />
+</div>
+<div className="heckle-text">{"I dreamed about this county winning Sam Maguire and I woke up embarrassed — my DREAMS have better judgement than yer MANAGEMENT!"}</div>
+</div>
 
 
 <div className="turn">
@@ -482,10 +517,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -n \"frontend\" package.json 2\u003e/dev/null || echo \"no root package.json or no matches\""}</span>
+<span className="tool-input-preview">{"grep -n \"frontend\" package.json 2>/dev/null || echo \"no root package.json or no matches\""}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -n \"frontend\" package.json 2\u003e/dev/null || echo \"no root package.json or no matches\""}</pre>
+<pre className="tool-input">{"grep -n \"frontend\" package.json 2>/dev/null || echo \"no root package.json or no matches\""}</pre>
 <pre className="tool-output">{"12:    \"build:frontend\": \"pnpm --filter fenrir-ledger run build\",\n16:    \"verify:frontend\": \"pnpm --filter fenrir-ledger run verify\",\n20:    \"test:frontend\": \"pnpm --filter fenrir-ledger run test\","}</pre>
 </div>
 </details>
@@ -511,34 +546,6 @@ category: "agent"
 </div>
 </details>
 </div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Peadar O'Malley"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-granny.png" alt="Peadar O'Malley" loading="lazy" />
-</div>
-<div className="heckle-text">{"Get us another round — we're toasting to Sam!! thundering!! 🍺"}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"My null checker is more efficient than yer team's defence!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Peadar O'Malley"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-granny.png" alt="Peadar O'Malley" loading="lazy" />
-</div>
-<div className="heckle-text">{"💥 *turns into a pillar of pure green and red light* 💥 ...the prophecy... is fulfilled..."}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"...gone but not forgotten. Unlike this bug I'm about to fix."}</div>
-</div>
 
 
 <div className="turn">
@@ -557,6 +564,27 @@ category: "agent"
 <div className="text-block">{"Let me check root package.json and CI to understand script names:"}</div>
 </div>
 </details>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Oisin Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-da.png" alt="Oisin Nallen" loading="lazy" />
+</div>
+<div className="heckle-text">{"The fella beside me drove up from Limerick just to see this disaster — he's been saying 'I drove from LIMERICK' on a loop since the throw-in!"}</div>
+</div>
+<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
+<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
+</div>
+<div className="heckle-text">{"My event loop never blocks. My hope never blocks. My attention to detail never blocks. I am non-blocking by nature and by faith."}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Oisin Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-da.png" alt="Oisin Nallen" loading="lazy" />
+</div>
+<div className="heckle-text">{"Ye think yer so smart with yer fancy functions?? MY DOG could write better TypeScript!!"}</div>
 </div>
 
 
@@ -587,10 +615,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -rn \"build:frontend\\|verify:frontend\\|test:frontend\" /workspace/repo/.github/ 2\u003e/dev/null"}</span>
+<span className="tool-input-preview">{"grep -rn \"build:frontend\\|verify:frontend\\|test:frontend\" /workspace/repo/.github/ 2>/dev/null"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn \"build:frontend\\|verify:frontend\\|test:frontend\" /workspace/repo/.github/ 2\u003e/dev/null"}</pre>
+<pre className="tool-input">{"grep -rn \"build:frontend\\|verify:frontend\\|test:frontend\" /workspace/repo/.github/ 2>/dev/null"}</pre>
 <pre className="tool-output">{"(Bash completed with no output)"}</pre>
 </div>
 </details>
@@ -774,10 +802,45 @@ category: "agent"
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Siobhan McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Siobhan McHale" loading="lazy" />
+<span className="heckle-name">{"Oisin Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-da.png" alt="Oisin Nallen" loading="lazy" />
 </div>
-<div className="heckle-text">{"MY nephew COULD CODE FASTER, and she's been dead since '84!!"}</div>
+<div className="heckle-text">{"Lashing wind and couldn't care less — MAYO!! musha!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Padraig O'Malley"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Padraig O'Malley" loading="lazy" />
+</div>
+<div className="heckle-text">{"Oisin Nallen — shut yer gob and let someone with PASSION take over!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Oisin Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-da.png" alt="Oisin Nallen" loading="lazy" />
+</div>
+<div className="heckle-text">{"Oh that's RICH coming from Padraig O'Malley — weren't ye BARRED from Croke Park??"}</div>
+</div>
+<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
+<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
+</div>
+<div className="heckle-text">{"This PR is now officially sponsored by yer shouting — cheers ye sweet suffering Christ!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Oisin Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-da.png" alt="Oisin Nallen" loading="lazy" />
+</div>
+<div className="heckle-text">{"💥 *spontaneously combusts from pure passion* 💥 ...me last words... Mayo... for... Sam..."}</div>
+</div>
+<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
+<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
+</div>
+<div className="heckle-text">{"...moment of silence... ... ...RIGHT, back to Sam's PR!!"}</div>
 </div>
 
 
@@ -802,7 +865,7 @@ category: "agent"
 </summary>
 <div className="tool-block-body">
 <pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.github/workflows/deploy.yml | head -20"}</pre>
-<pre className="tool-output">{"151:          echo \"app=$(check    '^development/frontend/|^Dockerfile$|^package\\.json$|^pnpm-lock\\.yaml$|^pnpm-workspace\\.yaml$')\" \u003e\u003e \"$GITHUB_OUTPUT\"\n360:        working-directory: development/frontend\n364:        working-directory: development/frontend\n368:        working-directory: development/frontend\n566:        working-directory: development/frontend\n570:        working-directory: development/frontend"}</pre>
+<pre className="tool-output">{"151:          echo \"app=$(check    '^development/frontend/|^Dockerfile$|^package\\.json$|^pnpm-lock\\.yaml$|^pnpm-workspace\\.yaml$')\" >> \"$GITHUB_OUTPUT\"\n360:        working-directory: development/frontend\n364:        working-directory: development/frontend\n368:        working-directory: development/frontend\n566:        working-directory: development/frontend\n570:        working-directory: development/frontend"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -841,7 +904,7 @@ category: "agent"
 <span className="tool-input-preview">{"grep -n \"frontend\" /workspace/repo/.github/workflows/deploy.yml /workspace/repo/.github/workflows/ci"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.github/workflows/deploy.yml /workspace/repo/.github/workflows/ci-tests.yml /workspace/repo/.github/workflows/build-agent-sandbox.yml 2\u003e&1 || echo \"clean\""}</pre>
+<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.github/workflows/deploy.yml /workspace/repo/.github/workflows/ci-tests.yml /workspace/repo/.github/workflows/build-agent-sandbox.yml 2>&1 || echo \"clean\""}</pre>
 <pre className="tool-output">{"clean"}</pre>
 </div>
 </details>
@@ -896,10 +959,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"find /workspace/repo -name \"justfile\" -o -name \"Justfile\" 2\u003e/dev/null | head -5"}</span>
+<span className="tool-input-preview">{"find /workspace/repo -name \"justfile\" -o -name \"Justfile\" 2>/dev/null | head -5"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"find /workspace/repo -name \"justfile\" -o -name \"Justfile\" 2\u003e/dev/null | head -5"}</pre>
+<pre className="tool-input">{"find /workspace/repo -name \"justfile\" -o -name \"Justfile\" 2>/dev/null | head -5"}</pre>
 <pre className="tool-output">{"/workspace/repo/infrastructure/Justfile\n/workspace/repo/development/ledger/Justfile\n/workspace/repo/development/odins-spear/Justfile\n/workspace/repo/quality/Justfile\n/workspace/repo/Justfile"}</pre>
 </div>
 </details>
@@ -909,8 +972,8 @@ category: "agent"
 <span className="tool-input-preview">{"grep -n \"frontend\" /workspace/repo/Justfile /workspace/repo/infrastructure/Justfile /workspace/repo/"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/Justfile /workspace/repo/infrastructure/Justfile /workspace/repo/quality/Justfile 2\u003e&1"}</pre>
-<pre className="tool-output">{"/workspace/repo/Justfile:3:# Run `just --list \u003cmodule\u003e` to see recipes in a submodule (e.g., `just --list frontend`).\n/workspace/repo/Justfile:15:mod frontend 'development/frontend'\n/workspace/repo/Justfile:121:    rm -rf \"{{repo_root}}/development/frontend/.next\" \"{{repo_root}}/development/frontend/out\" quality/reports/"}</pre>
+<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/Justfile /workspace/repo/infrastructure/Justfile /workspace/repo/quality/Justfile 2>&1"}</pre>
+<pre className="tool-output">{"/workspace/repo/Justfile:3:# Run `just --list &lt;module&gt;` to see recipes in a submodule (e.g., `just --list frontend`).\n/workspace/repo/Justfile:15:mod frontend 'development/frontend'\n/workspace/repo/Justfile:121:    rm -rf \"{{repo_root}}/development/frontend/.next\" \"{{repo_root}}/development/frontend/out\" quality/reports/"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -920,7 +983,7 @@ category: "agent"
 </summary>
 <div className="tool-block-body">
 <pre className="tool-input">{"{\n  \"file_path\": \"/workspace/repo/Justfile\",\n  \"limit\": 25\n}"}</pre>
-<pre className="tool-output">{"     1→# Fenrir Ledger — Project Commands\n     2→# Run `just --list` to see all available recipes.\n     3→# Run `just --list \u003cmodule\u003e` to see recipes in a submodule (e.g., `just --list frontend`).\n     4→\n     5→set dotenv-load := false\n     6→set shell := [\"bash\", \"-euo\", \"pipefail\", \"-c\"]\n     7→\n     8→repo_root := justfile_directory()\n     9→services  := repo_root / \".claude\" / \"scripts\" / \"services.sh\"\n    10→scripts   := repo_root / \"scripts\"\n    11→pack      := repo_root / \".claude\" / \"skills\" / \"fire-next-up\" / \"scripts\" / \"pack-status.mjs\"\n    12→\n    13→# ── Submodules ─────────────────────────────────────────────────────────────\n    14→\n    15→mod frontend 'development/frontend'\n    16→mod spear 'development/odins-spear'\n    17→mod quality 'quality'\n    18→mod infra 'infrastruct\n… [truncated 566 chars]"}</pre>
+<pre className="tool-output">{"     1→# Fenrir Ledger — Project Commands\n     2→# Run `just --list` to see all available recipes.\n     3→# Run `just --list &lt;module&gt;` to see recipes in a submodule (e.g., `just --list frontend`).\n     4→\n     5→set dotenv-load := false\n     6→set shell := [\"bash\", \"-euo\", \"pipefail\", \"-c\"]\n     7→\n     8→repo_root := justfile_directory()\n     9→services  := repo_root / \".claude\" / \"scripts\" / \"services.sh\"\n    10→scripts   := repo_root / \"scripts\"\n    11→pack      := repo_root / \".claude\" / \"skills\" / \"fire-next-up\" / \"scripts\" / \"pack-status.mjs\"\n    12→\n    13→# ── Submodules ─────────────────────────────────────────────────────────────\n    14→\n    15→mod frontend 'development/frontend'\n    16→mod spear 'development/odins-spear'\n    17→mod quality 'quality'\n    18→mod infra 'infrastruct\n… [truncated 566 chars]"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -984,10 +1047,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -rn \"development/frontend\\|FRONTEND_DIR\\|frontend\" /workspace/repo/.claude/scripts/ 2\u003e/dev/null"}</span>
+<span className="tool-input-preview">{"grep -rn \"development/frontend\\|FRONTEND_DIR\\|frontend\" /workspace/repo/.claude/scripts/ 2>/dev/null"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn \"development/frontend\\|FRONTEND_DIR\\|frontend\" /workspace/repo/.claude/scripts/ 2\u003e/dev/null"}</pre>
+<pre className="tool-input">{"grep -rn \"development/frontend\\|FRONTEND_DIR\\|frontend\" /workspace/repo/.claude/scripts/ 2>/dev/null"}</pre>
 <pre className="tool-output">{"/workspace/repo/.claude/scripts/sandbox-setup.sh:63:# 4. Install frontend dependencies from lockfile (exact versions)\n/workspace/repo/.claude/scripts/sandbox-setup.sh:64:cd \"$REPO_ROOT/development/frontend\"\n/workspace/repo/.claude/scripts/sandbox-setup.sh:66:echo \"[ok] frontend dependencies installed from lockfile\"\n/workspace/repo/.claude/scripts/sandbox-setup.sh:69:#    is in development/frontend/. Symlink so Node can resolve @playwright/test.\n/workspace/repo/.claude/scripts/sandbox-setup.sh:71:  ln -s \"$REPO_ROOT/development/frontend/node_modules\" \"$REPO_ROOT/quality/node_modules\"\n/workspace/repo/.claude/scripts/sandbox-setup.sh:72:  echo \"[ok] quality/node_modules symlinked to frontend\"\n/workspace/repo/.claude/scripts/services.sh:13:#   services.sh logs    — tail the frontend log\n/works\n… [truncated 1652 chars]"}</pre>
 </div>
 </details>
@@ -1065,7 +1128,7 @@ category: "agent"
 <span className="tool-input-preview">{"grep -n \"frontend\" /workspace/repo/.claude/scripts/services.sh /workspace/repo/.claude/scripts/sandb"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.claude/scripts/services.sh /workspace/repo/.claude/scripts/sandbox-setup.sh 2\u003e&1"}</pre>
+<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.claude/scripts/services.sh /workspace/repo/.claude/scripts/sandbox-setup.sh 2>&1"}</pre>
 <pre className="tool-output">{"/workspace/repo/.claude/scripts/services.sh:13:#   services.sh logs    — tail the frontend log\n/workspace/repo/.claude/scripts/services.sh:148:  echo \"Starting frontend (vercel dev) on port ${PORT}...\"\n/workspace/repo/.claude/scripts/services.sh:193:  # Stop frontend\n/workspace/repo/.claude/scripts/services.sh:247:    echo \"  start        Start Stripe webhook forwarding + frontend (vercel dev)\"\n/workspace/repo/.claude/scripts/services.sh:251:    echo \"  logs         Tail frontend log\"\n/workspace/repo/.claude/scripts/sandbox-setup.sh:72:  echo \"[ok] quality/node_modules symlinked to frontend\""}</pre>
 </div>
 </details>
@@ -1101,48 +1164,6 @@ category: "agent"
 </div>
 </details>
 </div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Siobhan McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Siobhan McHale" loading="lazy" />
-</div>
-<div className="heckle-text">{"OI!! AGENT!! LESS THINKING MORE WINNING!! thick as a plank!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Ciaran Horan"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Ciaran Horan" loading="lazy" />
-</div>
-<div className="heckle-text">{"Siobhan McHale ye useless sack of turf — yer making Mayo look BAD in front of the agent!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Siobhan McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Siobhan McHale" loading="lazy" />
-</div>
-<div className="heckle-text">{"Feck off Ciaran Horan!! I was HERE FIRST ye bogger!!"}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"Would ye EVER sit down — I'm trying to win Sam here!! bejabers!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Siobhan McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Siobhan McHale" loading="lazy" />
-</div>
-<div className="heckle-text">{"💥 *spontaneously combusts from pure passion* 💥 ...me last words... Mayo... for... Sam..."}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"...well THAT was dramatic. Moving on — this function won't write itself."}</div>
-</div>
 
 
 <div className="turn">
@@ -1165,17 +1186,17 @@ category: "agent"
 <span className="tool-input-preview">{"grep -n \"frontend\\|FRONTEND_DIR\\|FENRIR_FRONTEND\" /workspace/repo/.claude/skills/dev-server/scripts/"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -n \"frontend\\|FRONTEND_DIR\\|FENRIR_FRONTEND\" /workspace/repo/.claude/skills/dev-server/scripts/app.sh /workspace/repo/.claude/skills/dev-server/scripts/stripe.sh 2\u003e/dev/null"}</pre>
-<pre className="tool-output">{"/workspace/repo/.claude/skills/dev-server/scripts/app.sh:5:PORT=\"${FENRIR_FRONTEND_PORT:-9653}\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:7:FRONTEND_DIR=\"${FENRIR_FRONTEND_DIR:-$REPO_ROOT/development/frontend}\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:8:LOG_DIR=\"${FRONTEND_DIR}/logs\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:10:LOG=\"${LOG_DIR}/frontend-server.log\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:11:PORT_FILE=\"${FRONTEND_DIR}/.port\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:25:    nohup bash -c \"cd '$FRONTEND_DIR' && npm run dev\" \u003e\u003e \"$LOG\" 2\u003e&1 &\n/workspace/repo/.claude/skills/dev-server/scripts/stripe.sh:5:APP_PORT=\"${FENRIR_FRONTEND_PORT:-9653}\"\n/workspace/repo/.claude/skills/dev-server/scripts/stripe.sh\n… [truncated 492 chars]"}</pre>
+<pre className="tool-input">{"grep -n \"frontend\\|FRONTEND_DIR\\|FENRIR_FRONTEND\" /workspace/repo/.claude/skills/dev-server/scripts/app.sh /workspace/repo/.claude/skills/dev-server/scripts/stripe.sh 2>/dev/null"}</pre>
+<pre className="tool-output">{"/workspace/repo/.claude/skills/dev-server/scripts/app.sh:5:PORT=\"${FENRIR_FRONTEND_PORT:-9653}\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:7:FRONTEND_DIR=\"${FENRIR_FRONTEND_DIR:-$REPO_ROOT/development/frontend}\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:8:LOG_DIR=\"${FRONTEND_DIR}/logs\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:10:LOG=\"${LOG_DIR}/frontend-server.log\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:11:PORT_FILE=\"${FRONTEND_DIR}/.port\"\n/workspace/repo/.claude/skills/dev-server/scripts/app.sh:25:    nohup bash -c \"cd '$FRONTEND_DIR' && npm run dev\" >> \"$LOG\" 2>&1 &\n/workspace/repo/.claude/skills/dev-server/scripts/stripe.sh:5:APP_PORT=\"${FENRIR_FRONTEND_PORT:-9653}\"\n/workspace/repo/.claude/skills/dev-server/scripts/stripe.sh\n… [truncated 492 chars]"}</pre>
 </div>
 </details>
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -n \"frontend\\|FRONTEND_DIR\" /workspace/repo/development/scripts/setup-local.sh 2\u003e/dev/null"}</span>
+<span className="tool-input-preview">{"grep -n \"frontend\\|FRONTEND_DIR\" /workspace/repo/development/scripts/setup-local.sh 2>/dev/null"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -n \"frontend\\|FRONTEND_DIR\" /workspace/repo/development/scripts/setup-local.sh 2\u003e/dev/null"}</pre>
+<pre className="tool-input">{"grep -n \"frontend\\|FRONTEND_DIR\" /workspace/repo/development/scripts/setup-local.sh 2>/dev/null"}</pre>
 <pre className="tool-output">{"12:#   cd development/frontend && npm run dev\n32:SRC_DIR=\"${REPO_ROOT}/development/frontend\"\n115:echo -e \"  ${BOLD}cd development/frontend && npm run dev${RESET}\""}</pre>
 </div>
 </details>
@@ -1230,10 +1251,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -rn \"frontend\\|FRONTEND\" /workspace/repo/quality/scripts/ 2\u003e/dev/null | grep -v \".coverage-tmp\""}</span>
+<span className="tool-input-preview">{"grep -rn \"frontend\\|FRONTEND\" /workspace/repo/quality/scripts/ 2>/dev/null | grep -v \".coverage-tmp\""}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn \"frontend\\|FRONTEND\" /workspace/repo/quality/scripts/ 2\u003e/dev/null | grep -v \".coverage-tmp\""}</pre>
+<pre className="tool-input">{"grep -rn \"frontend\\|FRONTEND\" /workspace/repo/quality/scripts/ 2>/dev/null | grep -v \".coverage-tmp\""}</pre>
 <pre className="tool-output">{"/workspace/repo/quality/scripts/coverage-combine.mjs:102:  const frontendDir = path.join(REPO_ROOT, \"development/frontend\");\n/workspace/repo/quality/scripts/coverage-combine.mjs:120:    execSync(genHtmlCmd, { stdio: [\"pipe\", \"pipe\", \"pipe\"], cwd: frontendDir });\n/workspace/repo/quality/scripts/quality-report-html.mjs:18:const FRONTEND_TESTS = path.join(REPO_ROOT, \"development/frontend/src/__tests__\");\n/workspace/repo/quality/scripts/quality-report-html.mjs:314:  const shortFile = f.file.replace(\"development/frontend/src/\", \"\");\n/workspace/repo/quality/scripts/quality-report-html.mjs:409:      const shortFile = f.file.replace(\"development/frontend/src/\", \"\");\n/workspace/repo/quality/scripts/quality-report-html.mjs:445:      const shortFile = f.file.replace(\"development/frontend/src/\", \"src/\n… [truncated 2646 chars]"}</pre>
 </div>
 </details>
@@ -1270,10 +1291,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -rn \"frontend\" /workspace/repo/quality/scripts/ 2\u003e/dev/null || echo \"clean\""}</span>
+<span className="tool-input-preview">{"grep -rn \"frontend\" /workspace/repo/quality/scripts/ 2>/dev/null || echo \"clean\""}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn \"frontend\" /workspace/repo/quality/scripts/ 2\u003e/dev/null || echo \"clean\""}</pre>
+<pre className="tool-input">{"grep -rn \"frontend\" /workspace/repo/quality/scripts/ 2>/dev/null || echo \"clean\""}</pre>
 <pre className="tool-output">{"clean"}</pre>
 </div>
 </details>
@@ -1309,6 +1330,20 @@ category: "agent"
 </div>
 </details>
 </div>
+<div className="heckle heckle-entrance">
+<div className="heckle-identity">
+<span className="heckle-name">{"Declan Mortimer"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Declan Mortimer" loading="lazy" />
+</div>
+<div className="heckle-text">{"🟢🔴 *emerges from a hedge on the N5* Oisin Durcan sent me a TEXT before they blew up!! Said CARRY ON!! MAYO ABÚ!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Declan Mortimer"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Declan Mortimer" loading="lazy" />
+</div>
+<div className="heckle-text">{"Oisin Durcan's explosion was NOTHING — wait till ye see what I can do!! 🟢🔴"}</div>
+</div>
 
 
 <div className="turn">
@@ -1328,21 +1363,21 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/skills/fire-next-up/templates/ 2\u003e/"}</span>
+<span className="tool-input-preview">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/skills/fire-next-up/templates/ 2>/"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/skills/fire-next-up/templates/ 2\u003e/dev/null | head -30"}</pre>
-<pre className="tool-output">{"/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:40:  2. cd \u003cREPO_ROOT\u003e/development/frontend && pnpm run verify:tsc\n/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:45:- Write unit tests for new utilities, hooks, helpers in `development/frontend/src/__tests__/`\n/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:47:- Run: `cd \u003cREPO_ROOT\u003e/development/frontend && npx vitest run src/__tests__/\u003cfeature\u003e/`\n/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:51:  `development/odins-spear/` have no test infrastructure that agents should use. Tests are frontend-only.\n/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:54:  cd \u003cREPO_ROOT\u003e/development/frontend && pnpm run verify:tsc\n/workspace/repo/.claud\n… [truncated 2337 chars]"}</pre>
+<pre className="tool-input">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/skills/fire-next-up/templates/ 2>/dev/null | head -30"}</pre>
+<pre className="tool-output">{"/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:40:  2. cd &lt;REPO_ROOT&gt;/development/frontend && pnpm run verify:tsc\n/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:45:- Write unit tests for new utilities, hooks, helpers in `development/frontend/src/__tests__/`\n/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:47:- Run: `cd &lt;REPO_ROOT&gt;/development/frontend && npx vitest run src/__tests__/&lt;feature&gt;/`\n/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:51:  `development/odins-spear/` have no test infrastructure that agents should use. Tests are frontend-only.\n/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:54:  cd &lt;REPO_ROOT&gt;/development/frontend && pnpm run verify:tsc\n/workspace/repo/.claud\n… [truncated 2337 chars]"}</pre>
 </div>
 </details>
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/skills/dispatch/SKILL.md 2\u003e/dev/nu"}</span>
+<span className="tool-input-preview">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/skills/dispatch/SKILL.md 2>/dev/nu"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/skills/dispatch/SKILL.md 2\u003e/dev/null | head -20"}</pre>
-<pre className="tool-output">{"115:cd /workspace/repo && git branch --show-current && node -v && ls package.json 2\u003e/dev/null || ls development/frontend/package.json\n118:  ln -sf /workspace/repo/development/frontend/node_modules /workspace/repo/quality/node_modules 2\u003e/dev/null || true\n139:  2. cd /workspace/repo/development/frontend && pnpm run verify:tsc\n148:  cd /workspace/repo/development/frontend && pnpm run verify:tsc\n149:  cd /workspace/repo/development/frontend && pnpm run verify:build\n150:  cd /workspace/repo/development/frontend && npx vitest run\n164:`development/frontend/` only. For monitor-ui or odins-spear issues, validate via tsc + build only."}</pre>
+<pre className="tool-input">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/skills/dispatch/SKILL.md 2>/dev/null | head -20"}</pre>
+<pre className="tool-output">{"115:cd /workspace/repo && git branch --show-current && node -v && ls package.json 2>/dev/null || ls development/frontend/package.json\n118:  ln -sf /workspace/repo/development/frontend/node_modules /workspace/repo/quality/node_modules 2>/dev/null || true\n139:  2. cd /workspace/repo/development/frontend && pnpm run verify:tsc\n148:  cd /workspace/repo/development/frontend && pnpm run verify:tsc\n149:  cd /workspace/repo/development/frontend && pnpm run verify:build\n150:  cd /workspace/repo/development/frontend && npx vitest run\n164:`development/frontend/` only. For odins-throne-ui or odins-spear issues, validate via tsc + build only."}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -1379,24 +1414,10 @@ category: "agent"
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Cathal Doherty"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Cathal Doherty" loading="lazy" />
+<span className="heckle-name">{"Declan Mortimer"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Declan Mortimer" loading="lazy" />
 </div>
-<div className="heckle-text">{"The hot whiskey in Lahardane tonight — BIBLICAL!! MAYO FOR SAM!! 🏆"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Aisling Loftus"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Aisling Loftus" loading="lazy" />
-</div>
-<div className="heckle-text">{"Jaysus Cathal Doherty, me DEAD GRANNY had better patter than that!! Step aside!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Cathal Doherty"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Cathal Doherty" loading="lazy" />
-</div>
-<div className="heckle-text">{"Feck off Aisling Loftus!! I was HERE FIRST ye bogger!!"}</div>
+<div className="heckle-text">{"The road from Carnacon to Croke Park is JAMMED!! thick as a plank!!"}</div>
 </div>
 
 
@@ -1420,7 +1441,7 @@ category: "agent"
 <span className="tool-input-preview">{"grep -n \"frontend\" /workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md /workspace/"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md /workspace/repo/.claude/skills/fire-next-up/templates/loki.md /workspace/repo/.claude/skills/fire-next-up/templates/sandbox-preamble.md /workspace/repo/.claude/skills/fire-next-up/templates/heimdall.md /workspace/repo/.claude/skills/dispatch/SKILL.md 2\u003e&1"}</pre>
+<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md /workspace/repo/.claude/skills/fire-next-up/templates/loki.md /workspace/repo/.claude/skills/fire-next-up/templates/sandbox-preamble.md /workspace/repo/.claude/skills/fire-next-up/templates/heimdall.md /workspace/repo/.claude/skills/dispatch/SKILL.md 2>&1"}</pre>
 <pre className="tool-output">{"/workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md:51:  `development/odins-spear/` have no test infrastructure that agents should use. Tests are frontend-only."}</pre>
 </div>
 </details>
@@ -1430,7 +1451,7 @@ category: "agent"
 <span className="tool-input-preview">{"sed -i 's/Tests are frontend-only/Tests are ledger-only/g' /workspace/repo/.claude/skills/fire-next-"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"sed -i 's/Tests are frontend-only/Tests are ledger-only/g' /workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md && \\\ngrep -n \"frontend\" /workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md /workspace/repo/.claude/skills/fire-next-up/templates/loki.md /workspace/repo/.claude/skills/fire-next-up/templates/sandbox-preamble.md /workspace/repo/.claude/skills/fire-next-up/templates/heimdall.md /workspace/repo/.claude/skills/dispatch/SKILL.md 2\u003e&1 || echo \"clean\""}</pre>
+<pre className="tool-input">{"sed -i 's/Tests are frontend-only/Tests are ledger-only/g' /workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md && \\\ngrep -n \"frontend\" /workspace/repo/.claude/skills/fire-next-up/templates/firemandecko.md /workspace/repo/.claude/skills/fire-next-up/templates/loki.md /workspace/repo/.claude/skills/fire-next-up/templates/sandbox-preamble.md /workspace/repo/.claude/skills/fire-next-up/templates/heimdall.md /workspace/repo/.claude/skills/dispatch/SKILL.md 2>&1 || echo \"clean\""}</pre>
 <pre className="tool-output">{"clean"}</pre>
 </div>
 </details>
@@ -1478,7 +1499,7 @@ category: "agent"
 <span className="tool-input-preview">{"grep -n \"frontend\" /workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs /"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs /workspace/repo/.claude/skills/brandify-session/SKILL.md 2\u003e/dev/null"}</pre>
+<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs /workspace/repo/.claude/skills/brandify-session/SKILL.md 2>/dev/null"}</pre>
 <pre className="tool-output">{"/workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs:58:// chronicle.css lives at: development/frontend/src/app/chronicles/chronicle.css\n/workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs:62:  \"../../../../development/frontend/src/app/chronicles/chronicle.css\"\n/workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs:1101:  const defaultBlogDir = join(dirname(logFile), \"../../development/frontend/content/blog\");\n/workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs:1635:    const publicDir = join(repoRoot2, \"development\", \"frontend\", \"public\");\n/workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs:1670:      \"../../../../development/frontend/node_modules/@mdx-js\n… [truncated 246 chars]"}</pre>
 </div>
 </details>
@@ -1488,7 +1509,7 @@ category: "agent"
 <span className="tool-input-preview">{"sed -i 's|development/frontend|development/ledger|g' \\ /workspace/repo/.claude/skills/brandify-age"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"sed -i 's|development/frontend|development/ledger|g' \\\n  /workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs \\\n  /workspace/repo/.claude/skills/brandify-session/SKILL.md && \\\ngrep -n \"frontend\" /workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs /workspace/repo/.claude/skills/brandify-session/SKILL.md 2\u003e&1 || echo \"clean\""}</pre>
+<pre className="tool-input">{"sed -i 's|development/frontend|development/ledger|g' \\\n  /workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs \\\n  /workspace/repo/.claude/skills/brandify-session/SKILL.md && \\\ngrep -n \"frontend\" /workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs /workspace/repo/.claude/skills/brandify-session/SKILL.md 2>&1 || echo \"clean\""}</pre>
 <pre className="tool-output">{"/workspace/repo/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs:1635:    const publicDir = join(repoRoot2, \"development\", \"frontend\", \"public\");"}</pre>
 </div>
 </details>
@@ -1553,10 +1574,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/agents/ 2\u003e/dev/null | grep -v \"^Bi"}</span>
+<span className="tool-input-preview">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/agents/ 2>/dev/null | grep -v \"^Bi"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/agents/ 2\u003e/dev/null | grep -v \"^Binary\""}</pre>
+<pre className="tool-input">{"grep -rn \"development/frontend\\|frontend\" /workspace/repo/.claude/agents/ 2>/dev/null | grep -v \"^Binary\""}</pre>
 <pre className="tool-output">{"/workspace/repo/.claude/agents/loki.md:27:| Source Code | `development/frontend/` |\n/workspace/repo/.claude/agents/loki.md:87:| Unit | `development/frontend/src/__tests__/` | `npm run test:unit` |\n/workspace/repo/.claude/agents/loki.md:88:| Integration | `development/frontend/src/__tests__/` | `npm run test:unit` |\n/workspace/repo/.claude/agents/loki.md:94:have no test infrastructure that agents should use. All tests are for the main frontend app\n/workspace/repo/.claude/agents/loki.md:95:(`development/frontend/`) only.\n/workspace/repo/.claude/agents/fireman-decko.md:35:| Source Code | `development/frontend/` (Next.js root) |\n/workspace/repo/.claude/agents/fireman-decko.md:153:- Place tests in `development/frontend/src/__tests__/` alongside the feature\n/workspace/repo/.claude/agents/fireman\n… [truncated 1036 chars]"}</pre>
 </div>
 </details>
@@ -1566,7 +1587,7 @@ category: "agent"
 <span className="tool-input-preview">{"sed -i \\ 's|development/frontend|development/ledger|g; s|main frontend app|main ledger app|g' \\"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"sed -i \\\n  's|development/frontend|development/ledger|g;\n   s|main frontend app|main ledger app|g' \\\n  /workspace/repo/.claude/agents/loki.md \\\n  /workspace/repo/.claude/agents/fireman-decko.md \\\n  /workspace/repo/.claude/agents/fireman-decko-profile.md \\\n  /workspace/repo/.claude/agents/heimdall-profile.md \\\n  /workspace/repo/.claude/agents/heimdall.md && \\\ngrep -n \"development/frontend\" /workspace/repo/.claude/agents/*.md 2\u003e&1 || echo \"clean\""}</pre>
+<pre className="tool-input">{"sed -i \\\n  's|development/frontend|development/ledger|g;\n   s|main frontend app|main ledger app|g' \\\n  /workspace/repo/.claude/agents/loki.md \\\n  /workspace/repo/.claude/agents/fireman-decko.md \\\n  /workspace/repo/.claude/agents/fireman-decko-profile.md \\\n  /workspace/repo/.claude/agents/heimdall-profile.md \\\n  /workspace/repo/.claude/agents/heimdall.md && \\\ngrep -n \"development/frontend\" /workspace/repo/.claude/agents/*.md 2>&1 || echo \"clean\""}</pre>
 <pre className="tool-output">{"clean"}</pre>
 </div>
 </details>
@@ -1611,11 +1632,11 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -rn \"development/frontend\\|FENRIR_FRONTEND\" /workspace/repo/.claude/commands/ 2\u003e/dev/null"}</span>
+<span className="tool-input-preview">{"grep -rn \"development/frontend\\|FENRIR_FRONTEND\" /workspace/repo/.claude/commands/ 2>/dev/null"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn \"development/frontend\\|FENRIR_FRONTEND\" /workspace/repo/.claude/commands/ 2\u003e/dev/null"}</pre>
-<pre className="tool-output">{"/workspace/repo/.claude/commands/dev-server.md:46:| `FENRIR_FRONTEND_PORT` | `9653` | Port the dev server listens on |\n/workspace/repo/.claude/commands/dev-server.md:47:| `FENRIR_FRONTEND_DIR` | Auto-detected `development/frontend/` | Path to the Next.js project root |\n/workspace/repo/.claude/commands/dev-server.md:63:- `vercel dev` runs from the repo root because the Vercel project has `Root Directory = development/frontend/`.\n/workspace/repo/.claude/commands/create-worktree.md:14:**Ports are auto-assigned by the OS** (port 0). The frontend-server.sh script starts Next.js with `--port 0`, parses the assigned port from stdout, and writes it to `development/frontend/.port`. Agents read this file to discover their server URL.\n/workspace/repo/.claude/commands/create-worktree.md:38:APP_DIR: \u003cW\n… [truncated 5265 chars]"}</pre>
+<pre className="tool-input">{"grep -rn \"development/frontend\\|FENRIR_FRONTEND\" /workspace/repo/.claude/commands/ 2>/dev/null"}</pre>
+<pre className="tool-output">{"/workspace/repo/.claude/commands/dev-server.md:46:| `FENRIR_FRONTEND_PORT` | `9653` | Port the dev server listens on |\n/workspace/repo/.claude/commands/dev-server.md:47:| `FENRIR_FRONTEND_DIR` | Auto-detected `development/frontend/` | Path to the Next.js project root |\n/workspace/repo/.claude/commands/dev-server.md:63:- `vercel dev` runs from the repo root because the Vercel project has `Root Directory = development/frontend/`.\n/workspace/repo/.claude/commands/create-worktree.md:14:**Ports are auto-assigned by the OS** (port 0). The frontend-server.sh script starts Next.js with `--port 0`, parses the assigned port from stdout, and writes it to `development/frontend/.port`. Agents read this file to discover their server URL.\n/workspace/repo/.claude/commands/create-worktree.md:38:APP_DIR: &lt;W\n… [truncated 5265 chars]"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -1624,17 +1645,17 @@ category: "agent"
 <span className="tool-input-preview">{"sed -i \\ 's|development/frontend|development/ledger|g; s|FENRIR_FRONTEND_DIR|FENRIR_LEDGER_DIR|"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"sed -i \\\n  's|development/frontend|development/ledger|g;\n   s|FENRIR_FRONTEND_DIR|FENRIR_LEDGER_DIR|g;\n   s|FENRIR_FRONTEND_PORT|FENRIR_LEDGER_PORT|g;\n   s|frontend-server\\.sh|ledger-server.sh|g;\n   s|frontend-server\\.log|ledger-server.log|g' \\\n  /workspace/repo/.claude/commands/dev-server.md \\\n  /workspace/repo/.claude/commands/create-worktree.md \\\n  /workspace/repo/.claude/commands/list-worktrees.md \\\n  /workspace/repo/.claude/commands/remove-worktree.md && \\\ngrep -n \"development/frontend\\|FENRIR_FRONTEND\" /workspace/repo/.claude/commands/*.md 2\u003e&1 || echo \"clean\""}</pre>
+<pre className="tool-input">{"sed -i \\\n  's|development/frontend|development/ledger|g;\n   s|FENRIR_FRONTEND_DIR|FENRIR_LEDGER_DIR|g;\n   s|FENRIR_FRONTEND_PORT|FENRIR_LEDGER_PORT|g;\n   s|frontend-server\\.sh|ledger-server.sh|g;\n   s|frontend-server\\.log|ledger-server.log|g' \\\n  /workspace/repo/.claude/commands/dev-server.md \\\n  /workspace/repo/.claude/commands/create-worktree.md \\\n  /workspace/repo/.claude/commands/list-worktrees.md \\\n  /workspace/repo/.claude/commands/remove-worktree.md && \\\ngrep -n \"development/frontend\\|FENRIR_FRONTEND\" /workspace/repo/.claude/commands/*.md 2>&1 || echo \"clean\""}</pre>
 <pre className="tool-output">{"clean"}</pre>
 </div>
 </details>
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -n \"frontend\" /workspace/repo/.claude/commands/*.md 2\u003e&1 | grep -v \"frontend-design\\|frontend i"}</span>
+<span className="tool-input-preview">{"grep -n \"frontend\" /workspace/repo/.claude/commands/*.md 2>&1 | grep -v \"frontend-design\\|frontend i"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.claude/commands/*.md 2\u003e&1 | grep -v \"frontend-design\\|frontend interfaces\\|The.*frontend\""}</pre>
+<pre className="tool-input">{"grep -n \"frontend\" /workspace/repo/.claude/commands/*.md 2>&1 | grep -v \"frontend-design\\|frontend interfaces\\|The.*frontend\""}</pre>
 <pre className="tool-output">{"/workspace/repo/.claude/commands/create-worktree.md:44:NOTE: Main repo uses frontend port 9653 (fixed)\n/workspace/repo/.claude/commands/create-worktree.md:66:- After setup, the dev server is started using the frontend-server script\n/workspace/repo/.claude/commands/create-worktree.md:119:- Use the frontend-server script with PORT=0 for OS-assigned port:\n/workspace/repo/.claude/commands/create-worktree.md:147:- Confirm frontend dev server is responding on the assigned port\n/workspace/repo/.claude/commands/create-worktree.md:186:To manage this worktree's frontend:\n/workspace/repo/.claude/commands/dev-server.md:15:| `start` | Start Stripe webhook forwarding + frontend (`vercel dev`) |\n/workspace/repo/.claude/commands/dev-server.md:19:| `logs` | Tail frontend log |\n/workspace/repo/.claude/comma\n… [truncated 578 chars]"}</pre>
 </div>
 </details>
@@ -1682,7 +1703,7 @@ category: "agent"
 <span className="tool-input-preview">{"sed -i \\ 's|Main repo uses frontend port|Main repo uses ledger port|g; s|frontend-server script"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"sed -i \\\n  's|Main repo uses frontend port|Main repo uses ledger port|g;\n   s|frontend-server script|ledger-server script|g;\n   s|using the frontend-server script|using the ledger-server script|g;\n   s|the frontend server|the ledger server|g;\n   s|frontend dev server|ledger dev server|g;\n   s|Stops the frontend server|Stops the ledger server|g;\n   s|Start Stripe.*frontend.*vercel dev/Start Stripe webhook forwarding + ledger (vercel dev)/g;\n   s|Tail frontend log/Tail ledger log/g;\n   s|Stops the frontend server/Stops the ledger server/g;\n   s|frontend server is responding/ledger server is responding/g;\n   s|frontend ports/ledger ports/g;\n   s|Check frontend ports/Check ledger ports/g;\n   s|To manage this worktree'\\''s frontend/To manage this worktree'\\''s ledger/g' \\\n  /workspace/repo/.claude/commands/create-worktree.md \\\n  /workspace/repo/.claude/commands/list-worktrees.md \\\n  /workspace/repo/.claude/commands/remove-worktree.md \\\n  /workspace/repo/.claude/commands/dev-server.md 2\u003e/dev/null; \\\nsed -i \\\n  's|frontend-server script|ledger-server script|g;\n   s|frontend dev server|ledger dev server|g;\n   s|the frontend server|the ledger server|g;\n   s|frontend server|ledger server|g;\n   s|frontend ports|ledger ports|g' \\\n  /workspace/repo/.claude/commands/create-worktree.md \\\n  /workspace/repo/.claude/commands/list-worktrees.md \\\n  /workspace/repo/.claude/commands/remove-worktree.md \\\n  /workspace/repo/.claude/commands/dev-server.md && echo \"done\""}</pre>
+<pre className="tool-input">{"sed -i \\\n  's|Main repo uses frontend port|Main repo uses ledger port|g;\n   s|frontend-server script|ledger-server script|g;\n   s|using the frontend-server script|using the ledger-server script|g;\n   s|the frontend server|the ledger server|g;\n   s|frontend dev server|ledger dev server|g;\n   s|Stops the frontend server|Stops the ledger server|g;\n   s|Start Stripe.*frontend.*vercel dev/Start Stripe webhook forwarding + ledger (vercel dev)/g;\n   s|Tail frontend log/Tail ledger log/g;\n   s|Stops the frontend server/Stops the ledger server/g;\n   s|frontend server is responding/ledger server is responding/g;\n   s|frontend ports/ledger ports/g;\n   s|Check frontend ports/Check ledger ports/g;\n   s|To manage this worktree'\\''s frontend/To manage this worktree'\\''s ledger/g' \\\n  /workspace/repo/.claude/commands/create-worktree.md \\\n  /workspace/repo/.claude/commands/list-worktrees.md \\\n  /workspace/repo/.claude/commands/remove-worktree.md \\\n  /workspace/repo/.claude/commands/dev-server.md 2>/dev/null; \\\nsed -i \\\n  's|frontend-server script|ledger-server script|g;\n   s|frontend dev server|ledger dev server|g;\n   s|the frontend server|the ledger server|g;\n   s|frontend server|ledger server|g;\n   s|frontend ports|ledger ports|g' \\\n  /workspace/repo/.claude/commands/create-worktree.md \\\n  /workspace/repo/.claude/commands/list-worktrees.md \\\n  /workspace/repo/.claude/commands/remove-worktree.md \\\n  /workspace/repo/.claude/commands/dev-server.md && echo \"done\""}</pre>
 <pre className="tool-output">{"done"}</pre>
 </div>
 </details>
@@ -1718,34 +1739,6 @@ category: "agent"
 </div>
 </details>
 </div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Cathal Doherty"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Cathal Doherty" loading="lazy" />
-</div>
-<div className="heckle-text">{"THIS microservice BETTER BE AS STRONG AS Evan Regan'S kick!!"}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"Every unhandled promise rejection is a small All-Ireland final we didn't win — and I handle them ALL, unlike some counties I know"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Cathal Doherty"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Cathal Doherty" loading="lazy" />
-</div>
-<div className="heckle-text">{"💥 *ascends bodily to heaven mid-sentence* 💥 ...St. Peter... is Sam up here... or still in Castlebar..."}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"...that's another one this session. They breed them FIERCE in Mayo."}</div>
-</div>
 
 
 <div className="turn">
@@ -1778,8 +1771,8 @@ category: "agent"
 <span className="tool-input-preview">{"sed -i 's|development/frontend|development/ledger|g' /workspace/repo/CLAUDE.md && \\ grep -rn \"develo"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"sed -i 's|development/frontend|development/ledger|g' /workspace/repo/CLAUDE.md && \\\ngrep -rn \"development/frontend\" /workspace/repo/README.md /workspace/repo/quality/README.md /workspace/repo/development/docs/ 2\u003e/dev/null | head -30"}</pre>
-<pre className="tool-output">{"/workspace/repo/README.md:133:- Full Next.js implementation ([development/frontend/](development/frontend/))\n/workspace/repo/README.md:174:- Auth standard enforcement — every API handler under `development/frontend/src/app/api/` must call `requireAuth(request)`\n/workspace/repo/quality/README.md:34:- **Verify:** `cd development/frontend && pnpm run verify:tsc` + `pnpm run verify:build` after each chunk\n/workspace/repo/quality/README.md:61:cd development/frontend\n/workspace/repo/quality/README.md:99:- TypeScript clean (`cd development/frontend && pnpm run verify:tsc`)\n/workspace/repo/development/docs/github-workflows.md:54:    app --\u003e|\"development/frontend/ - Dockerfile - package*.json\"| build-app[build-app]\n/workspace/repo/development/docs/github-workflows.md:69:| `app` | `development/front\n… [truncated 3099 chars]"}</pre>
+<pre className="tool-input">{"sed -i 's|development/frontend|development/ledger|g' /workspace/repo/CLAUDE.md && \\\ngrep -rn \"development/frontend\" /workspace/repo/README.md /workspace/repo/quality/README.md /workspace/repo/development/docs/ 2>/dev/null | head -30"}</pre>
+<pre className="tool-output">{"/workspace/repo/README.md:133:- Full Next.js implementation ([development/frontend/](development/frontend/))\n/workspace/repo/README.md:174:- Auth standard enforcement — every API handler under `development/frontend/src/app/api/` must call `requireAuth(request)`\n/workspace/repo/quality/README.md:34:- **Verify:** `cd development/frontend && pnpm run verify:tsc` + `pnpm run verify:build` after each chunk\n/workspace/repo/quality/README.md:61:cd development/frontend\n/workspace/repo/quality/README.md:99:- TypeScript clean (`cd development/frontend && pnpm run verify:tsc`)\n/workspace/repo/development/docs/github-workflows.md:54:    app -->|\"development/frontend/ - Dockerfile - package*.json\"| build-app[build-app]\n/workspace/repo/development/docs/github-workflows.md:69:| `app` | `development/front\n… [truncated 3099 chars]"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -1788,7 +1781,7 @@ category: "agent"
 <span className="tool-input-preview">{"# Update all docs at once find /workspace/repo -name \"*.md\" -not -path \"*/node_modules/*\" -not -path"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"# Update all docs at once\nfind /workspace/repo -name \"*.md\" -not -path \"*/node_modules/*\" -not -path \"*/.next/*\" -not -path \"*/pnpm-lock.yaml\" | \\\n  xargs grep -l \"development/frontend\" 2\u003e/dev/null | \\\n  xargs sed -i 's|development/frontend|development/ledger|g' && echo \"done\""}</pre>
+<pre className="tool-input">{"# Update all docs at once\nfind /workspace/repo -name \"*.md\" -not -path \"*/node_modules/*\" -not -path \"*/.next/*\" -not -path \"*/pnpm-lock.yaml\" | \\\n  xargs grep -l \"development/frontend\" 2>/dev/null | \\\n  xargs sed -i 's|development/frontend|development/ledger|g' && echo \"done\""}</pre>
 <pre className="tool-output">{"done"}</pre>
 </div>
 </details>
@@ -1798,7 +1791,7 @@ category: "agent"
 <span className="tool-input-preview">{"# Check security docs too grep -rn \"development/frontend\" /workspace/repo/security/ /workspace/repo/"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"# Check security docs too\ngrep -rn \"development/frontend\" /workspace/repo/security/ /workspace/repo/plans/ /workspace/repo/architecture/ 2\u003e/dev/null | head -10"}</pre>
+<pre className="tool-input">{"# Check security docs too\ngrep -rn \"development/frontend\" /workspace/repo/security/ /workspace/repo/plans/ /workspace/repo/architecture/ 2>/dev/null | head -10"}</pre>
 <pre className="tool-output">{"(Bash completed with no output)"}</pre>
 </div>
 </details>
@@ -1826,17 +1819,17 @@ category: "agent"
 </div>
 <div className="heckle heckle-entrance">
 <div className="heckle-identity">
-<span className="heckle-name">{"Donal Burke"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lass.png" alt="Donal Burke" loading="lazy" />
+<span className="heckle-name">{"Mickey Joe Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Mickey Joe Nallen" loading="lazy" />
 </div>
-<div className="heckle-text">{"🟢🔴 *a NEW Mayo fan materialises from the bog mist* Cathal Doherty is GONE?? Alright — MAYO FOR SAM!!"}</div>
+<div className="heckle-text">{"🟢🔴 *descends from the heavens on a cloud of green smoke* WEAK EFFORT from Declan Mortimer. I'M here now!!"}</div>
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Donal Burke"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lass.png" alt="Donal Burke" loading="lazy" />
+<span className="heckle-name">{"Mickey Joe Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Mickey Joe Nallen" loading="lazy" />
 </div>
-<div className="heckle-text">{"The queue to replace Cathal Doherty is LONGER than the N17!! But I'M NEXT!!"}</div>
+<div className="heckle-text">{"I drove all the way from Belmullet because Declan Mortimer told me to come!! MAYO!!"}</div>
 </div>
 
 
@@ -1857,10 +1850,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"grep -rn '\"component\" \"frontend\"\\|\"frontend\"' /workspace/repo/infrastructure/helm/ 2\u003e/dev/null"}</span>
+<span className="tool-input-preview">{"grep -rn '\"component\" \"frontend\"\\|\"frontend\"' /workspace/repo/infrastructure/helm/ 2>/dev/null"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn '\"component\" \"frontend\"\\|\"frontend\"' /workspace/repo/infrastructure/helm/ 2\u003e/dev/null"}</pre>
+<pre className="tool-input">{"grep -rn '\"component\" \"frontend\"\\|\"frontend\"' /workspace/repo/infrastructure/helm/ 2>/dev/null"}</pre>
 <pre className="tool-output">{"/workspace/repo/infrastructure/helm/fenrir-app/templates/deployment.yaml:7:    {{- include \"fenrir-app.labels\" (dict \"name\" \"fenrir-app\" \"component\" \"frontend\") | nindent 4 }}\n/workspace/repo/infrastructure/helm/fenrir-app/templates/deployment.yaml:19:        {{- include \"fenrir-app.labels\" (dict \"name\" \"fenrir-app\" \"component\" \"frontend\") | nindent 8 }}\n/workspace/repo/infrastructure/helm/fenrir-app/templates/ingress.yaml:8:    {{- include \"fenrir-app.labels\" (dict \"name\" \"fenrir-app\" \"component\" \"frontend\") | nindent 4 }}\n/workspace/repo/infrastructure/helm/fenrir-app/templates/ingress.yaml:41:    {{- include \"fenrir-app.labels\" (dict \"name\" \"fenrir-app\" \"component\" \"frontend\") | nindent 4 }}\n/workspace/repo/infrastructure/helm/fenrir-app/templates/ingress.yaml:56:    {{- include \"fenrir\n… [truncated 558 chars]"}</pre>
 </div>
 </details>
@@ -1870,7 +1863,7 @@ category: "agent"
 <span className="tool-input-preview">{"sed -i \\ 's|\"component\" \"frontend\"|\"component\" \"ledger\"|g; s|default \"frontend\"|default \"ledger"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"sed -i \\\n  's|\"component\" \"frontend\"|\"component\" \"ledger\"|g;\n   s|default \"frontend\"|default \"ledger\"|g' \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/deployment.yaml \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/ingress.yaml \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/pdb.yaml \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/service.yaml \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/_helpers.tpl && \\\ngrep -n \"frontend\" /workspace/repo/infrastructure/helm/fenrir-app/templates/*.yaml /workspace/repo/infrastructure/helm/fenrir-app/templates/_helpers.tpl 2\u003e&1 || echo \"clean\""}</pre>
+<pre className="tool-input">{"sed -i \\\n  's|\"component\" \"frontend\"|\"component\" \"ledger\"|g;\n   s|default \"frontend\"|default \"ledger\"|g' \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/deployment.yaml \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/ingress.yaml \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/pdb.yaml \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/service.yaml \\\n  /workspace/repo/infrastructure/helm/fenrir-app/templates/_helpers.tpl && \\\ngrep -n \"frontend\" /workspace/repo/infrastructure/helm/fenrir-app/templates/*.yaml /workspace/repo/infrastructure/helm/fenrir-app/templates/_helpers.tpl 2>&1 || echo \"clean\""}</pre>
 <pre className="tool-output">{"clean"}</pre>
 </div>
 </details>
@@ -1898,10 +1891,24 @@ category: "agent"
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Donal Burke"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lass.png" alt="Donal Burke" loading="lazy" />
+<span className="heckle-name">{"Mickey Joe Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Mickey Joe Nallen" loading="lazy" />
 </div>
-<div className="heckle-text">{"Ní neart go cur le chéile — so PUSH your feckin' branch and let's act like a team, ya eejit!"}</div>
+<div className="heckle-text">{"The RTÉ cameraman kept finding the same anguished supporter in the stands — she became an accidental documentary subject today!"}</div>
+</div>
+<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
+<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
+</div>
+<div className="heckle-text">{"My test suite is more solid than Kerry's defence!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Mickey Joe Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Mickey Joe Nallen" loading="lazy" />
+</div>
+<div className="heckle-text">{"SHITE TALK from a SHITE AGENT!! Mayo deserves BETTER!!"}</div>
 </div>
 
 
@@ -1922,11 +1929,11 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"ls -la /workspace/repo/quality/node_modules 2\u003e/dev/null || echo \"symlink not present\""}</span>
+<span className="tool-input-preview">{"ls -la /workspace/repo/quality/node_modules 2>/dev/null || echo \"symlink not present\""}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"ls -la /workspace/repo/quality/node_modules 2\u003e/dev/null || echo \"symlink not present\""}</pre>
-<pre className="tool-output">{"lrwxrwxrwx 1 node node 36 Mar 22 04:12 /workspace/repo/quality/node_modules -\u003e ../development/frontend/node_modules"}</pre>
+<pre className="tool-input">{"ls -la /workspace/repo/quality/node_modules 2>/dev/null || echo \"symlink not present\""}</pre>
+<pre className="tool-output">{"lrwxrwxrwx 1 node node 36 Mar 22 04:12 /workspace/repo/quality/node_modules -> ../development/frontend/node_modules"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -1936,7 +1943,7 @@ category: "agent"
 </summary>
 <div className="tool-block-body">
 <pre className="tool-input">{"ln -sf ../development/ledger/node_modules /workspace/repo/quality/node_modules && \\\nls -la /workspace/repo/quality/node_modules"}</pre>
-<pre className="tool-output">{"lrwxrwxrwx 1 node node 34 Mar 22 04:17 /workspace/repo/quality/node_modules -\u003e ../development/ledger/node_modules"}</pre>
+<pre className="tool-output">{"lrwxrwxrwx 1 node node 34 Mar 22 04:17 /workspace/repo/quality/node_modules -> ../development/ledger/node_modules"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -1973,10 +1980,10 @@ category: "agent"
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Donal Burke"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lass.png" alt="Donal Burke" loading="lazy" />
+<span className="heckle-name">{"Mickey Joe Nallen"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Mickey Joe Nallen" loading="lazy" />
 </div>
-<div className="heckle-text">{"MAIGH EO ABÚ!! The faithful are ROARING!!"}</div>
+<div className="heckle-text">{"The N5 dual carriageway project has been promised since before I had hair — much like a Mayo All-Ireland, it's theoretical infrastructure!"}</div>
 </div>
 
 
@@ -2000,17 +2007,17 @@ category: "agent"
 <span className="tool-input-preview">{"grep -rn \"development/frontend\" . \\ --include='*.ts' --include='*.tsx' --include='*.js' --include="}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"grep -rn \"development/frontend\" . \\\n  --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' \\\n  --include='*.sh' --include='*.yaml' --include='*.yml' \\\n  --include='*.tf' --include='*.json' --include='*.toml' \\\n  2\u003e/dev/null | grep -v node_modules | grep -v .next | grep -v pnpm-lock | head -30"}</pre>
+<pre className="tool-input">{"grep -rn \"development/frontend\" . \\\n  --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' \\\n  --include='*.sh' --include='*.yaml' --include='*.yml' \\\n  --include='*.tf' --include='*.json' --include='*.toml' \\\n  2>/dev/null | grep -v node_modules | grep -v .next | grep -v pnpm-lock | head -30"}</pre>
 <pre className="tool-output">{"./quality/reports/complexity/complexity-report.json:20:      \"file\": \"development/frontend/src/components/cards/CardForm.tsx\",\n./quality/reports/complexity/complexity-report.json:27:      \"file\": \"development/frontend/src/app/api/stripe/checkout/route.ts\",\n./quality/reports/complexity/complexity-report.json:34:      \"file\": \"development/frontend/src/components/dashboard/Dashboard.tsx\",\n./quality/reports/complexity/complexity-report.json:41:      \"file\": \"development/frontend/src/app/ledger/join/page.tsx\",\n./quality/reports/complexity/complexity-report.json:48:      \"file\": \"development/frontend/src/components/cards/CardForm.tsx\",\n./quality/reports/complexity/complexity-report.json:55:      \"file\": \"development/frontend/src/components/sync/SyncSettingsSection.tsx\",\n./quality/reports/complex\n… [truncated 3096 chars]"}</pre>
 </div>
 </details>
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"# Update the generated report files too find /workspace/repo/quality/reports -name \"*.json\" 2\u003e/dev/n"}</span>
+<span className="tool-input-preview">{"# Update the generated report files too find /workspace/repo/quality/reports -name \"*.json\" 2>/dev/n"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"# Update the generated report files too\nfind /workspace/repo/quality/reports -name \"*.json\" 2\u003e/dev/null | \\\n  xargs sed -i 's|development/frontend|development/ledger|g' 2\u003e/dev/null && echo \"done\""}</pre>
+<pre className="tool-input">{"# Update the generated report files too\nfind /workspace/repo/quality/reports -name \"*.json\" 2>/dev/null | \\\n  xargs sed -i 's|development/frontend|development/ledger|g' 2>/dev/null && echo \"done\""}</pre>
 <pre className="tool-output">{"done"}</pre>
 </div>
 </details>
@@ -2020,7 +2027,7 @@ category: "agent"
 <span className="tool-input-preview">{"# Check other non-md/json files grep -rn \"development/frontend\" . \\ --include='*.ts' --include='*."}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"# Check other non-md/json files\ngrep -rn \"development/frontend\" . \\\n  --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' \\\n  --include='*.sh' --include='*.yaml' --include='*.yml' \\\n  --include='*.tf' --include='*.json' \\\n  2\u003e/dev/null | grep -v node_modules | grep -v .next | grep -v pnpm-lock | head -10 || echo \"clean\""}</pre>
+<pre className="tool-input">{"# Check other non-md/json files\ngrep -rn \"development/frontend\" . \\\n  --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' \\\n  --include='*.sh' --include='*.yaml' --include='*.yml' \\\n  --include='*.tf' --include='*.json' \\\n  2>/dev/null | grep -v node_modules | grep -v .next | grep -v pnpm-lock | head -10 || echo \"clean\""}</pre>
 <pre className="tool-output">{"(Bash completed with no output)"}</pre>
 </div>
 </details>
@@ -2075,10 +2082,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"pnpm install 2\u003e&1 | tail -20"}</span>
+<span className="tool-input-preview">{"pnpm install 2>&1 | tail -20"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"pnpm install 2\u003e&1 | tail -20"}</pre>
+<pre className="tool-input">{"pnpm install 2>&1 | tail -20"}</pre>
 <pre className="tool-output">{"Progress: resolved 352, reused 348, downloaded 0, added 0\nProgress: resolved 453, reused 452, downloaded 0, added 0\nProgress: resolved 552, reused 549, downloaded 0, added 0\nProgress: resolved 607, reused 600, downloaded 0, added 0\nProgress: resolved 731, reused 671, downloaded 0, added 0\nProgress: resolved 844, reused 730, downloaded 0, added 0\nProgress: resolved 915, reused 791, downloaded 1, added 0\nProgress: resolved 995, reused 867, downloaded 4, added 0\nProgress: resolved 1006, reused 878, downloaded 5, added 0\n WARN  2 deprecated subdependencies found: glob@10.5.0, node-domexception@1.0.0\nPackages: +555\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 1014, reused 886, downloaded 5, added 0\nProgress: resolved 1014, reused 886, downl\n… [truncated 328 chars]"}</pre>
 </div>
 </details>
@@ -2123,11 +2130,11 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"git add -A && git commit -m \"$(cat \u003c\u003c'EOF' feat: rename development/frontend to development/ledger —"}</span>
+<span className="tool-input-preview">{"git add -A && git commit -m \"$(cat <<'EOF' feat: rename development/frontend to development/ledger —"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"git add -A && git commit -m \"$(cat \u003c\u003c'EOF'\nfeat: rename development/frontend to development/ledger — issue:1749\n\n- git mv development/frontend development/ledger (history preserved)\n- Updated pnpm-workspace.yaml, root package.json, .gitignore\n- Updated Dockerfiles (root + agents)\n- Updated GitHub Actions workflows (deploy, ci-tests, build-agent-sandbox)\n- Updated Justfile module reference (frontend → ledger)\n- Updated all shell scripts (services.sh, sandbox-setup.sh, dev-server skills)\n- Updated all quality .mjs scripts (coverage, complexity, reports)\n- Updated all skill templates (fire-next-up, dispatch, brandify)\n- Updated all agent definitions (fireman-decko, heimdall, loki)\n- Updated all CLI commands (dev-server, create/list/remove-worktree)\n- Updated CLAUDE.md and all documentation\n- Updated Helm component labels (frontend → ledger)\n- Fixed quality/node_modules symlink → development/ledger/node_modules\n- Updated quality/reports JSON files\n- Regenerated pnpm-lock.yaml\n\nCo-Authored-By: Claude Sonnet 4.6 \u003cnoreply@anthropic.com\u003e\nEOF\n)\""}</pre>
-<pre className="tool-output">{"[fix/issue-1749-rename-frontend-to-ledger d6b04d18] feat: rename development/frontend to development/ledger — issue:1749\n 632 files changed, 1871 insertions(+), 1871 deletions(-)\n rename development/{frontend =\u003e ledger}/.env.example (100%)\n rename development/{frontend =\u003e ledger}/.eslintrc.json (100%)\n rename development/{frontend =\u003e ledger}/.gitignore (100%)\n rename development/{frontend =\u003e ledger}/.gitkeep (100%)\n rename development/{frontend =\u003e ledger}/Justfile (100%)\n rename development/{frontend =\u003e ledger}/components.json (100%)\n rename development/{frontend =\u003e ledger}/content/blog/agent-issue-1036-step1-firemandecko-28367630.mdx (100%)\n rename development/{frontend =\u003e ledger}/content/blog/agent-issue-800-firemandecko-readme-redesign.mdx (100%)\n rename development/{frontend =\u003e ledger}\n… [truncated 29198 chars]"}</pre>
+<pre className="tool-input">{"git add -A && git commit -m \"$(cat <<'EOF'\nfeat: rename development/frontend to development/ledger — issue:1749\n\n- git mv development/frontend development/ledger (history preserved)\n- Updated pnpm-workspace.yaml, root package.json, .gitignore\n- Updated Dockerfiles (root + agents)\n- Updated GitHub Actions workflows (deploy, ci-tests, build-agent-sandbox)\n- Updated Justfile module reference (frontend → ledger)\n- Updated all shell scripts (services.sh, sandbox-setup.sh, dev-server skills)\n- Updated all quality .mjs scripts (coverage, complexity, reports)\n- Updated all skill templates (fire-next-up, dispatch, brandify)\n- Updated all agent definitions (fireman-decko, heimdall, loki)\n- Updated all CLI commands (dev-server, create/list/remove-worktree)\n- Updated CLAUDE.md and all documentation\n- Updated Helm component labels (frontend → ledger)\n- Fixed quality/node_modules symlink → development/ledger/node_modules\n- Updated quality/reports JSON files\n- Regenerated pnpm-lock.yaml\n\nCo-Authored-By: Claude Sonnet 4.6 &lt;noreply@anthropic.com&gt;\nEOF\n)\""}</pre>
+<pre className="tool-output">{"[fix/issue-1749-rename-frontend-to-ledger d6b04d18] feat: rename development/frontend to development/ledger — issue:1749\n 632 files changed, 1871 insertions(+), 1871 deletions(-)\n rename development/{frontend => ledger}/.env.example (100%)\n rename development/{frontend => ledger}/.eslintrc.json (100%)\n rename development/{frontend => ledger}/.gitignore (100%)\n rename development/{frontend => ledger}/.gitkeep (100%)\n rename development/{frontend => ledger}/Justfile (100%)\n rename development/{frontend => ledger}/components.json (100%)\n rename development/{frontend => ledger}/content/blog/agent-issue-1036-step1-firemandecko-28367630.mdx (100%)\n rename development/{frontend => ledger}/content/blog/agent-issue-800-firemandecko-readme-redesign.mdx (100%)\n rename development/{frontend => ledger}\n… [truncated 29198 chars]"}</pre>
 </div>
 </details>
 </div>
@@ -2152,27 +2159,6 @@ category: "agent"
 </div>
 </details>
 </div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Donal Burke"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lass.png" alt="Donal Burke" loading="lazy" />
-</div>
-<div className="heckle-text">{"This code review is as reliable as a bail of silage in Achill!!"}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"I've shipped in downpour that would demolish Killala Bay — a heckler doesn't scare me!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Donal Burke"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lass.png" alt="Donal Burke" loading="lazy" />
-</div>
-<div className="heckle-text">{"MOTHER OF DIVINE JAYSUS I'm gonna REACH through this terminal and SKELP ye!!"}</div>
-</div>
 
 
 <div className="turn">
@@ -2192,11 +2178,11 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"git push origin fix/issue-1749-rename-frontend-to-ledger 2\u003e&1 | tail -5"}</span>
+<span className="tool-input-preview">{"git push origin fix/issue-1749-rename-frontend-to-ledger 2>&1 | tail -5"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"git push origin fix/issue-1749-rename-frontend-to-ledger 2\u003e&1 | tail -5"}</pre>
-<pre className="tool-output">{"To https://github.com/declanshanaghy/fenrir-ledger\n   5b465be2..d6b04d18  fix/issue-1749-rename-frontend-to-ledger -\u003e fix/issue-1749-rename-frontend-to-ledger"}</pre>
+<pre className="tool-input">{"git push origin fix/issue-1749-rename-frontend-to-ledger 2>&1 | tail -5"}</pre>
+<pre className="tool-output">{"To https://github.com/declanshanaghy/fenrir-ledger\n   5b465be2..d6b04d18  fix/issue-1749-rename-frontend-to-ledger -> fix/issue-1749-rename-frontend-to-ledger"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -2212,11 +2198,11 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"cd /workspace/repo/development/ledger && pnpm run verify:tsc 2\u003e&1"}</span>
+<span className="tool-input-preview">{"cd /workspace/repo/development/ledger && pnpm run verify:tsc 2>&1"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"cd /workspace/repo/development/ledger && pnpm run verify:tsc 2\u003e&1"}</pre>
-<pre className="tool-output">{"\u003e fenrir-ledger@0.1.0 verify:tsc /workspace/repo/development/ledger\n\u003e tsc --noEmit"}</pre>
+<pre className="tool-input">{"cd /workspace/repo/development/ledger && pnpm run verify:tsc 2>&1"}</pre>
+<pre className="tool-output">{"> fenrir-ledger@0.1.0 verify:tsc /workspace/repo/development/ledger\n> tsc --noEmit"}</pre>
 </div>
 </details>
 </div>
@@ -2240,34 +2226,6 @@ category: "agent"
 <div className="text-block">{"tsc passes (exit 0). Now run build:"}</div>
 </div>
 </details>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Donal Burke"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lass.png" alt="Donal Burke" loading="lazy" />
-</div>
-<div className="heckle-text">{"Lough Mask never looked so mighty — Sam's spirit is upon it!! musha!!"}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"That heckle was weaker than Tyrone's defence — try harder ye arrah!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Donal Burke"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lass.png" alt="Donal Burke" loading="lazy" />
-</div>
-<div className="heckle-text">{"💥 *explodes into a thousand tiny Mayo flags* 💥 ...each flag... whispers... Sam..."}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"...gone but not forgotten. Unlike this bug I'm about to fix."}</div>
 </div>
 
 
@@ -2298,10 +2256,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"pnpm run verify:build 2\u003e&1 | tail -30"}</span>
+<span className="tool-input-preview">{"pnpm run verify:build 2>&1 | tail -30"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"pnpm run verify:build 2\u003e&1 | tail -30"}</pre>
+<pre className="tool-input">{"pnpm run verify:build 2>&1 | tail -30"}</pre>
 <pre className="tool-output">{"├ ○ /chronicles\n├ ● /chronicles/[slug]\n│ ├ /chronicles/agent-issue-1036-step1-firemandecko-28367630\n│ ├ /chronicles/agent-issue-800-firemandecko-readme-redesign\n│ ├ /chronicles/agent-issue-839-step1-firemandecko-08287a1f\n│ └ [+26 more paths]\n├ ○ /faq\n├ ○ /features\n├ ○ /free-trial\n├ ○ /home\n├ ○ /icon.svg\n├ ○ /ledger\n├ ○ /ledger/auth/callback\n├ ƒ /ledger/cards/[id]/edit\n├ ○ /ledger/cards/new\n├ ○ /ledger/join\n├ ○ /ledger/settings\n├ ○ /ledger/sign-in\n├ ○ /ledger/valhalla\n├ ○ /pricing\n├ ○ /privacy\n└ ○ /terms\n\n\nƒ Proxy (Middleware)\n\n○  (Static)   prerendered as static content\n●  (SSG)      prerendered as static HTML (uses generateStaticParams)\nƒ  (Dynamic)  server-rendered on demand"}</pre>
 </div>
 </details>
@@ -2326,20 +2284,6 @@ category: "agent"
 <div className="text-block">{"Build passes. Now run Vitest:"}</div>
 </div>
 </details>
-</div>
-<div className="heckle heckle-entrance">
-<div className="heckle-identity">
-<span className="heckle-name">{"Fergal Durcan"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Fergal Durcan" loading="lazy" />
-</div>
-<div className="heckle-text">{"🟢🔴 *a NEW Mayo fan materialises from the bog mist* Donal Burke is GONE?? Alright — MAYO FOR SAM!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Fergal Durcan"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Fergal Durcan" loading="lazy" />
-</div>
-<div className="heckle-text">{"I drove all the way from Belmullet because Donal Burke told me to come!! MAYO!!"}</div>
 </div>
 
 
@@ -2370,10 +2314,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"npx vitest run 2\u003e&1 | tail -30"}</span>
+<span className="tool-input-preview">{"npx vitest run 2>&1 | tail -30"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"npx vitest run 2\u003e&1 | tail -30"}</pre>
+<pre className="tool-input">{"npx vitest run 2>&1 | tail -30"}</pre>
 <pre className="tool-output">{" \u001b[32m✓\u001b[39m src/__tests__/components/upsell-banner-anon-1699.test.tsx \u001b[2m(\u001b[22m\u001b[2m8 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 320\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/__tests__/pages/sign-in-page.test.tsx \u001b[2m(\u001b[22m\u001b[2m8 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 520\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/__tests__/karl-bling/settings-tab-thrall-1698.test.tsx \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 304\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/__tests__/components/app-shell.test.tsx \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 340\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/__tests__/pages/new-card-page-1670.test.tsx \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 173\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/__tests__/components/footer.test.tsx \u001b[2m(\u001b[22m\u001b[2m9 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 357\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/__tests__/household/invite-code-generatio\n… [truncated 2394 chars]"}</pre>
 </div>
 </details>
@@ -2401,24 +2345,10 @@ category: "agent"
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Fergal Durcan"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Fergal Durcan" loading="lazy" />
+<span className="heckle-name">{"Maeve Mulchrone"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-uncle.png" alt="Maeve Mulchrone" loading="lazy" />
 </div>
-<div className="heckle-text">{"2013 — NEVER FORGET!! But THIS time we're taking Sam!! eejit!!"}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"I'll have this test shipped before ye finish yer sentence!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Fergal Durcan"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-avatar.png" alt="Fergal Durcan" loading="lazy" />
-</div>
-<div className="heckle-text">{"Oh is THAT so?? Well me UNCLE played for Mayo in '89 and HE says yer code is SHITE!!"}</div>
+<div className="heckle-text">{"Your reaction times out there are slower than a planning permission in Mayo — and that takes three years on a good application!"}</div>
 </div>
 
 
@@ -2442,7 +2372,7 @@ category: "agent"
 <span className="tool-input-preview">{"# Final verification grep grep -rn \"development/frontend\" . \\ --include='*.ts' --include='*.tsx' -"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"# Final verification grep\ngrep -rn \"development/frontend\" . \\\n  --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' \\\n  --include='*.sh' --include='*.yaml' --include='*.yml' \\\n  --include='*.tf' --include='*.json' --include='*.md' --include='*.toml' \\\n  2\u003e/dev/null | grep -v node_modules | grep -v .next | grep -v pnpm-lock | wc -l"}</pre>
+<pre className="tool-input">{"# Final verification grep\ngrep -rn \"development/frontend\" . \\\n  --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' \\\n  --include='*.sh' --include='*.yaml' --include='*.yml' \\\n  --include='*.tf' --include='*.json' --include='*.md' --include='*.toml' \\\n  2>/dev/null | grep -v node_modules | grep -v .next | grep -v pnpm-lock | wc -l"}</pre>
 <pre className="tool-output">{"0"}</pre>
 </div>
 </details>
@@ -2497,11 +2427,11 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"git fetch origin && git rebase origin/main 2\u003e&1"}</span>
+<span className="tool-input-preview">{"git fetch origin && git rebase origin/main 2>&1"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"git fetch origin && git rebase origin/main 2\u003e&1"}</pre>
-<pre className="tool-output">{"Exit code 1\nFrom https://github.com/declanshanaghy/fenrir-ledger\n   5b465be2..ce896200  main       -\u003e origin/main\nerror: cannot rebase: You have unstaged changes.\nerror: Please commit or stash them."}</pre>
+<pre className="tool-input">{"git fetch origin && git rebase origin/main 2>&1"}</pre>
+<pre className="tool-output">{"Exit code 1\nFrom https://github.com/declanshanaghy/fenrir-ledger\n   5b465be2..ce896200  main       -> origin/main\nerror: cannot rebase: You have unstaged changes.\nerror: Please commit or stash them."}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -2520,7 +2450,7 @@ category: "agent"
 <span className="tool-input-preview">{"git add quality/reports/test-report-vitest/html.meta.json.gz && git commit -m \"chore: update vitest"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"git add quality/reports/test-report-vitest/html.meta.json.gz && git commit -m \"chore: update vitest test report — issue:1749\n\nCo-Authored-By: Claude Sonnet 4.6 \u003cnoreply@anthropic.com\u003e\" && git fetch origin && git rebase origin/main 2\u003e&1"}</pre>
+<pre className="tool-input">{"git add quality/reports/test-report-vitest/html.meta.json.gz && git commit -m \"chore: update vitest test report — issue:1749\n\nCo-Authored-By: Claude Sonnet 4.6 &lt;noreply@anthropic.com&gt;\" && git fetch origin && git rebase origin/main 2>&1"}</pre>
 <pre className="tool-output">{"Exit code 128\nwarning: could not open directory 'development/ledger/quality/reports/test-report-vitest/': No such file or directory\nfatal: pathspec 'quality/reports/test-report-vitest/html.meta.json.gz' did not match any files"}</pre>
 </div>
 </details>
@@ -2540,7 +2470,7 @@ category: "agent"
 <span className="tool-input-preview">{"git add quality/reports/test-report-vitest/html.meta.json.gz && git commit -m \"chore: update vitest"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"git add quality/reports/test-report-vitest/html.meta.json.gz && git commit -m \"chore: update vitest test report — issue:1749\n\nCo-Authored-By: Claude Sonnet 4.6 \u003cnoreply@anthropic.com\u003e\" && git fetch origin && git rebase origin/main 2\u003e&1"}</pre>
+<pre className="tool-input">{"git add quality/reports/test-report-vitest/html.meta.json.gz && git commit -m \"chore: update vitest test report — issue:1749\n\nCo-Authored-By: Claude Sonnet 4.6 &lt;noreply@anthropic.com&gt;\" && git fetch origin && git rebase origin/main 2>&1"}</pre>
 <pre className="tool-output">{"Exit code 1\n[fix/issue-1749-rename-frontend-to-ledger 06677f6f] chore: update vitest test report — issue:1749\n 1 file changed, 0 insertions(+), 0 deletions(-)\nRebasing (1/2)\rCONFLICT (file location): development/frontend/src/__tests__/ledger/settings-tab-styles-1747.test.tsx added in HEAD inside a directory that was renamed in d6b04d18 (feat: rename development/frontend to development/ledger — issue:1749), suggesting it should perhaps be moved to development/ledger/src/__tests__/ledger/settings-tab-styles-1747.test.tsx.\nCONFLICT (modify/delete): quality/reports/complexity/complexity-report.json deleted in HEAD and modified in d6b04d18 (feat: rename development/frontend to development/ledger — issue:1749).  Version d6b04d18 (feat: rename development/frontend to development/ledger — issue:17\n… [truncated 562 chars]"}</pre>
 </div>
 </details>
@@ -2633,19 +2563,26 @@ category: "agent"
 </div>
 </details>
 </div>
-<div className="heckle heckle-entrance">
+<div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Oisin McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Oisin McHale" loading="lazy" />
+<span className="heckle-name">{"Maeve Mulchrone"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-uncle.png" alt="Maeve Mulchrone" loading="lazy" />
 </div>
-<div className="heckle-text">{"🟢🔴 *descends from the heavens on a cloud of green smoke* WEAK EFFORT from Fergal Durcan. I'M here now!!"}</div>
+<div className="heckle-text">{"Jaysus, Cillian O'Connor's career scoring record is a monument to consistency — your coding record is a DISGRACE!"}</div>
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Oisin McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Oisin McHale" loading="lazy" />
+<span className="heckle-name">{"Maeve Durcan"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-granny.png" alt="Maeve Durcan" loading="lazy" />
 </div>
-<div className="heckle-text">{"Name's Oisin McHale and I'm HERE for Sam!! Fergal Durcan couldn't hack it!!"}</div>
+<div className="heckle-text">{"Whisht Maeve Mulchrone!! Ye call THAT a heckle?? That wouldn't scare a WET KITTEN!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Maeve Mulchrone"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-uncle.png" alt="Maeve Mulchrone" loading="lazy" />
+</div>
+<div className="heckle-text">{"Maeve Durcan ye pox — yer da couldn't heckle his way out of a PAPER BAG!!"}</div>
 </div>
 
 
@@ -2666,10 +2603,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"# Check what files are conflicted git diff --name-only --diff-filter=U 2\u003e/dev/null; \\ git status --s"}</span>
+<span className="tool-input-preview">{"# Check what files are conflicted git diff --name-only --diff-filter=U 2>/dev/null; \\ git status --s"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"# Check what files are conflicted\ngit diff --name-only --diff-filter=U 2\u003e/dev/null; \\\ngit status --short 2\u003e/dev/null | grep \"^[ADU][ADU]\\|^AA\\|^DD\\|^AU\\|^UA\\|^DU\\|^UD\" | head -10"}</pre>
+<pre className="tool-input">{"# Check what files are conflicted\ngit diff --name-only --diff-filter=U 2>/dev/null; \\\ngit status --short 2>/dev/null | grep \"^[ADU][ADU]\\|^AA\\|^DD\\|^AU\\|^UA\\|^DU\\|^UD\" | head -10"}</pre>
 <pre className="tool-output">{"development/ledger/src/__tests__/ledger/settings-tab-styles-1747.test.tsx\nquality/reports/complexity/complexity-report.json\nAU development/ledger/src/__tests__/ledger/settings-tab-styles-1747.test.tsx\nDU quality/reports/complexity/complexity-report.json"}</pre>
 </div>
 </details>
@@ -2679,8 +2616,8 @@ category: "agent"
 <span className="tool-input-preview">{"# AU = added by us, unmerged - the new test file is fine, just stage it # DU = deleted by them, unme"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"# AU = added by us, unmerged - the new test file is fine, just stage it\n# DU = deleted by them, unmerged - they deleted the json, we modified it - accept deletion\ngit add development/ledger/src/__tests__/ledger/settings-tab-styles-1747.test.tsx && \\\ngit rm quality/reports/complexity/complexity-report.json && \\\ngit rebase --continue 2\u003e&1"}</pre>
-<pre className="tool-output">{"Exit code 1\nrm 'quality/reports/complexity/complexity-report.json'\n[detached HEAD 5f34b1f6] feat: rename development/frontend to development/ledger — issue:1749\n 632 files changed, 523 insertions(+), 523 deletions(-)\n rename development/{frontend =\u003e ledger}/.env.example (100%)\n rename development/{frontend =\u003e ledger}/.eslintrc.json (100%)\n rename development/{frontend =\u003e ledger}/.gitignore (100%)\n rename development/{frontend =\u003e ledger}/.gitkeep (100%)\n rename development/{frontend =\u003e ledger}/Justfile (100%)\n rename development/{frontend =\u003e ledger}/components.json (100%)\n rename development/{frontend =\u003e ledger}/content/blog/agent-issue-1036-step1-firemandecko-28367630.mdx (100%)\n rename development/{frontend =\u003e ledger}/content/blog/agent-issue-800-firemandecko-readme-redesign.mdx (100%)\n r\n… [truncated 9240 chars]"}</pre>
+<pre className="tool-input">{"# AU = added by us, unmerged - the new test file is fine, just stage it\n# DU = deleted by them, unmerged - they deleted the json, we modified it - accept deletion\ngit add development/ledger/src/__tests__/ledger/settings-tab-styles-1747.test.tsx && \\\ngit rm quality/reports/complexity/complexity-report.json && \\\ngit rebase --continue 2>&1"}</pre>
+<pre className="tool-output">{"Exit code 1\nrm 'quality/reports/complexity/complexity-report.json'\n[detached HEAD 5f34b1f6] feat: rename development/frontend to development/ledger — issue:1749\n 632 files changed, 523 insertions(+), 523 deletions(-)\n rename development/{frontend => ledger}/.env.example (100%)\n rename development/{frontend => ledger}/.eslintrc.json (100%)\n rename development/{frontend => ledger}/.gitignore (100%)\n rename development/{frontend => ledger}/.gitkeep (100%)\n rename development/{frontend => ledger}/Justfile (100%)\n rename development/{frontend => ledger}/components.json (100%)\n rename development/{frontend => ledger}/content/blog/agent-issue-1036-step1-firemandecko-28367630.mdx (100%)\n rename development/{frontend => ledger}/content/blog/agent-issue-800-firemandecko-readme-redesign.mdx (100%)\n r\n… [truncated 9240 chars]"}</pre>
 </div>
 </details>
 </div>
@@ -2705,27 +2642,6 @@ category: "agent"
 </div>
 </details>
 </div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Oisin McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Oisin McHale" loading="lazy" />
-</div>
-<div className="heckle-text">{"The bog near Swinford produces the finest turf in Ireland and produces more WARMTH than your welcome messages! 🍺"}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"That heckle was weaker than Meath's attack — try harder ye begod!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Oisin McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Oisin McHale" loading="lazy" />
-</div>
-<div className="heckle-text">{"Don't you DARE talk back to me!! I've been supporting Mayo since before ye were a SEMICOLON!!"}</div>
-</div>
 
 
 <div className="turn">
@@ -2745,10 +2661,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"git status --short 2\u003e/dev/null | grep \"^[ADU][ADU]\\|^AA\\|^DD\\|^AU\\|^UA\\|^DU\\|^UD\" | head -10"}</span>
+<span className="tool-input-preview">{"git status --short 2>/dev/null | grep \"^[ADU][ADU]\\|^AA\\|^DD\\|^AU\\|^UA\\|^DU\\|^UD\" | head -10"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"git status --short 2\u003e/dev/null | grep \"^[ADU][ADU]\\|^AA\\|^DD\\|^AU\\|^UA\\|^DU\\|^UD\" | head -10"}</pre>
+<pre className="tool-input">{"git status --short 2>/dev/null | grep \"^[ADU][ADU]\\|^AA\\|^DD\\|^AU\\|^UA\\|^DU\\|^UD\" | head -10"}</pre>
 <pre className="tool-output">{"DU quality/reports/test-report-vitest/html.meta.json.gz"}</pre>
 </div>
 </details>
@@ -2758,7 +2674,7 @@ category: "agent"
 <span className="tool-input-preview">{"# DU = deleted by them (in the vitest report commit), we had it. Accept their deletion. git rm quali"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"# DU = deleted by them (in the vitest report commit), we had it. Accept their deletion.\ngit rm quality/reports/test-report-vitest/html.meta.json.gz && \\\ngit rebase --continue 2\u003e&1 | tail -10"}</pre>
+<pre className="tool-input">{"# DU = deleted by them (in the vitest report commit), we had it. Accept their deletion.\ngit rm quality/reports/test-report-vitest/html.meta.json.gz && \\\ngit rebase --continue 2>&1 | tail -10"}</pre>
 <pre className="tool-output">{"rm 'quality/reports/test-report-vitest/html.meta.json.gz'\n\r                                                                                \rSuccessfully rebased and updated refs/heads/fix/issue-1749-rename-frontend-to-ledger."}</pre>
 </div>
 </details>
@@ -2784,27 +2700,6 @@ category: "agent"
 </div>
 </details>
 </div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Oisin McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Oisin McHale" loading="lazy" />
-</div>
-<div className="heckle-text">{"This class is as reliable as a stack of turf in Balla!!"}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"Faster than the drizzle off Clare Island — that's how quick this pull request will be!!"}</div>
-</div>
-<div className="heckle heckle-mayo">
-<div className="heckle-identity">
-<span className="heckle-name">{"Oisin McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Oisin McHale" loading="lazy" />
-</div>
-<div className="heckle-text">{"That's the LAST STRAW ye digital BLAGGARD!! I'm writing to the COUNTY BOARD!!"}</div>
-</div>
 
 
 <div className="turn">
@@ -2824,11 +2719,11 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"git push origin fix/issue-1749-rename-frontend-to-ledger --force-with-lease 2\u003e&1 | tail -5"}</span>
+<span className="tool-input-preview">{"git push origin fix/issue-1749-rename-frontend-to-ledger --force-with-lease 2>&1 | tail -5"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"git push origin fix/issue-1749-rename-frontend-to-ledger --force-with-lease 2\u003e&1 | tail -5"}</pre>
-<pre className="tool-output">{"To https://github.com/declanshanaghy/fenrir-ledger\n + d6b04d18...5f34b1f6 fix/issue-1749-rename-frontend-to-ledger -\u003e fix/issue-1749-rename-frontend-to-ledger (forced update)"}</pre>
+<pre className="tool-input">{"git push origin fix/issue-1749-rename-frontend-to-ledger --force-with-lease 2>&1 | tail -5"}</pre>
+<pre className="tool-output">{"To https://github.com/declanshanaghy/fenrir-ledger\n + d6b04d18...5f34b1f6 fix/issue-1749-rename-frontend-to-ledger -> fix/issue-1749-rename-frontend-to-ledger (forced update)"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -2847,7 +2742,7 @@ category: "agent"
 <span className="tool-input-preview">{"gh pr create \\ --title \"fix: rename development/frontend to development/ledger — issue #1749\" \\"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"gh pr create \\\n  --title \"fix: rename development/frontend to development/ledger — issue #1749\" \\\n  --body \"$(cat \u003c\u003c'EOF'\nPR for issue: #1749\n\nRename `development/frontend/` to `development/ledger/` and update all references across the repo.\n\n**Changes:**\n- Renamed directory via `git mv` (history preserved)\n- Updated all path references in: Dockerfiles, CI workflows, scripts, skills, agents, docs, Helm charts\n- Updated pnpm-workspace.yaml, .gitignore, Justfile\n- Updated quality .mjs scripts (coverage, complexity, reports)\n- Updated all skill templates (fire-next-up, dispatch, brandify)\n- Updated all agent definitions (fireman-decko, heimdall, loki) and CLI commands\n- Updated Helm component labels: `\"frontend\"` → `\"ledger\"`\n- Fixed quality/node_modules symlink → development/ledger/node_modules\n- Regenerated pnpm-lock.yaml\n\n**Verification:**\n- `grep -rn 'development/frontend' . | grep -v node_modules | grep -v .next` → 0 results\n- tsc PASS\n- build PASS  \n- Vitest: 2907 tests across 201 test files PASS\nEOF\n)\""}</pre>
+<pre className="tool-input">{"gh pr create \\\n  --title \"fix: rename development/frontend to development/ledger — issue #1749\" \\\n  --body \"$(cat <<'EOF'\nPR for issue: #1749\n\nRename `development/frontend/` to `development/ledger/` and update all references across the repo.\n\n**Changes:**\n- Renamed directory via `git mv` (history preserved)\n- Updated all path references in: Dockerfiles, CI workflows, scripts, skills, agents, docs, Helm charts\n- Updated pnpm-workspace.yaml, .gitignore, Justfile\n- Updated quality .mjs scripts (coverage, complexity, reports)\n- Updated all skill templates (fire-next-up, dispatch, brandify)\n- Updated all agent definitions (fireman-decko, heimdall, loki) and CLI commands\n- Updated Helm component labels: `\"frontend\"` → `\"ledger\"`\n- Fixed quality/node_modules symlink → development/ledger/node_modules\n- Regenerated pnpm-lock.yaml\n\n**Verification:**\n- `grep -rn 'development/frontend' . | grep -v node_modules | grep -v .next` → 0 results\n- tsc PASS\n- build PASS  \n- Vitest: 2907 tests across 201 test files PASS\nEOF\n)\""}</pre>
 <pre className="tool-output">{"https://github.com/declanshanaghy/fenrir-ledger/pull/1754"}</pre>
 </div>
 </details>
@@ -2864,10 +2759,10 @@ category: "agent"
 <details className="tool-block">
 <summary className="tool-block-header">
 <span className="tool-name">{"Bash"}</span>
-<span className="tool-input-preview">{"gh issue comment 1749 --body \"$(cat \u003c\u003c'EOF' ## FiremanDecko → Loki Handoff **Branch:** \\`fix/issue-"}</span>
+<span className="tool-input-preview">{"gh issue comment 1749 --body \"$(cat <<'EOF' ## FiremanDecko → Loki Handoff **Branch:** \\`fix/issue-"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"gh issue comment 1749 --body \"$(cat \u003c\u003c'EOF'\n## FiremanDecko → Loki Handoff\n\n**Branch:** \\`fix/issue-1749-rename-frontend-to-ledger\\` | **PR:** https://github.com/declanshanaghy/fenrir-ledger/pull/1754\n\n**What changed:**\n- Renamed \\`development/frontend/\\` → \\`development/ledger/\\` via git mv (history preserved)\n- Updated 90+ files with path references across Dockerfiles, CI workflows, scripts, skills, agents, docs, Helm charts\n- Helm component labels updated: \\`\"frontend\"\\` → \\`\"ledger\"\\`\n- quality/node_modules symlink updated to point at development/ledger/node_modules\n- pnpm-lock.yaml regenerated\n- New test file from main (\\`settings-tab-styles-1747.test.tsx\\`) picked up correctly under new path during rebase\n\n**How to verify:**\n- \\`grep -rn 'development/frontend' . | grep -v node_modules | grep -v .next\\` → 0 results ✓\n- tsc PASS ✓\n- build PASS ✓\n- Vitest: 2907 tests / 201 test files PASS ✓\n\n**Edge cases for Loki to test:**\n- Symlink at quality/node_modules points to correct target (../development/ledger/node_modules)\n- pnpm workspace resolution works (fenrir-ledger package resolves correctly)\n- All CI workflow paths reference development/ledger\n- Helm component label is now \\`ledger\\` not \\`frontend\\`\n\n**Build:** tsc + build + Vitest PASS. Ready for QA.\nEOF\n)\""}</pre>
+<pre className="tool-input">{"gh issue comment 1749 --body \"$(cat <<'EOF'\n## FiremanDecko → Loki Handoff\n\n**Branch:** \\`fix/issue-1749-rename-frontend-to-ledger\\` | **PR:** https://github.com/declanshanaghy/fenrir-ledger/pull/1754\n\n**What changed:**\n- Renamed \\`development/frontend/\\` → \\`development/ledger/\\` via git mv (history preserved)\n- Updated 90+ files with path references across Dockerfiles, CI workflows, scripts, skills, agents, docs, Helm charts\n- Helm component labels updated: \\`\"frontend\"\\` → \\`\"ledger\"\\`\n- quality/node_modules symlink updated to point at development/ledger/node_modules\n- pnpm-lock.yaml regenerated\n- New test file from main (\\`settings-tab-styles-1747.test.tsx\\`) picked up correctly under new path during rebase\n\n**How to verify:**\n- \\`grep -rn 'development/frontend' . | grep -v node_modules | grep -v .next\\` → 0 results ✓\n- tsc PASS ✓\n- build PASS ✓\n- Vitest: 2907 tests / 201 test files PASS ✓\n\n**Edge cases for Loki to test:**\n- Symlink at quality/node_modules points to correct target (../development/ledger/node_modules)\n- pnpm workspace resolution works (fenrir-ledger package resolves correctly)\n- All CI workflow paths reference development/ledger\n- Helm component label is now \\`ledger\\` not \\`frontend\\`\n\n**Build:** tsc + build + Vitest PASS. Ready for QA.\nEOF\n)\""}</pre>
 <pre className="tool-output">{"https://github.com/declanshanaghy/fenrir-ledger/issues/1749#issuecomment-4105436932"}</pre>
 </div>
 </details>
@@ -2951,6 +2846,34 @@ category: "agent"
 </div>
 </details>
 </div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Maeve Mulchrone"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-uncle.png" alt="Maeve Mulchrone" loading="lazy" />
+</div>
+<div className="heckle-text">{"Tiocfaidh ár lá!! The soul of Mayo speaks Gaeilge!! musha!!"}</div>
+</div>
+<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
+<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
+</div>
+<div className="heckle-text">{"I was trained on every GAA match report ever written and every npm changelog ever published — I contain multitudes of suffering"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Maeve Mulchrone"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-uncle.png" alt="Maeve Mulchrone" loading="lazy" />
+</div>
+<div className="heckle-text">{"💥 *turns into a pillar of pure green and red light* 💥 ...the prophecy... is fulfilled..."}</div>
+</div>
+<div className="heckle heckle-comeback">
+<div className="heckle-identity">
+<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
+<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
+</div>
+<div className="heckle-text">{"...rest easy, ye magnificent hoor. Your heckling was top class."}</div>
+</div>
 
 
 <div className="turn">
@@ -2973,7 +2896,7 @@ category: "agent"
 <span className="tool-input-preview">{"SCRIPT_DIR=\"$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts\" && node \"$SCRIPT_D"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"SCRIPT_DIR=\"$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts\" && node \"$SCRIPT_DIR/pack-status.mjs\" --resume-detect 1749 2\u003e&1"}</pre>
+<pre className="tool-input">{"SCRIPT_DIR=\"$(git rev-parse --show-toplevel)/.claude/skills/fire-next-up/scripts\" && node \"$SCRIPT_DIR/pack-status.mjs\" --resume-detect 1749 2>&1"}</pre>
 <pre className="tool-output">{"{\n  \"issue\": 1749,\n  \"title\": \"Rename frontend to ledger everywhere\",\n  \"state\": \"open\",\n  \"type\": \"enhancement\",\n  \"chain\": \"FiremanDecko → Loki\",\n  \"branch\": \"fix/issue-1749-rename-frontend-to-ledger\",\n  \"pr\": 1754,\n  \"completed_steps\": [\n    \"FiremanDecko\"\n  ],\n  \"next_agent\": \"Loki\",\n  \"next_step\": 2,\n  \"total_steps\": 2,\n  \"verdict\": null,\n  \"chain_complete\": false\n}"}</pre>
 </div>
 </details>
@@ -2998,6 +2921,20 @@ category: "agent"
 <div className="text-block">{"FiremanDecko is done, Loki is next. Dispatching step 2:"}</div>
 </div>
 </details>
+</div>
+<div className="heckle heckle-entrance">
+<div className="heckle-identity">
+<span className="heckle-name">{"Maeve Jennings"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Maeve Jennings" loading="lazy" />
+</div>
+<div className="heckle-text">{"🟢🔴 *emerges from a hedge on the N5* Maeve Mulchrone sent me a TEXT before they blew up!! Said CARRY ON!! MAYO ABÚ!!"}</div>
+</div>
+<div className="heckle heckle-mayo">
+<div className="heckle-identity">
+<span className="heckle-name">{"Maeve Jennings"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Maeve Jennings" loading="lazy" />
+</div>
+<div className="heckle-text">{"Maeve Mulchrone died for Sam and SO WILL I if needs be!!"}</div>
 </div>
 
 
@@ -3049,31 +2986,24 @@ category: "agent"
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Oisin McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Oisin McHale" loading="lazy" />
+<span className="heckle-name">{"Maeve Jennings"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Maeve Jennings" loading="lazy" />
 </div>
-<div className="heckle-text">{"The road from Burrishoole to Croke Park is BLOCKED!! bejabers!!"}</div>
+<div className="heckle-text">{"MAYO ABÚ! We've waited 73 years for Sam and we can't wait another minute for this PR! MERGE IT! 🏆"}</div>
 </div>
 <div className="heckle heckle-comeback">
 <div className="heckle-identity">
 <img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
 <span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
 </div>
-<div className="heckle-text">{"hoor!! I've heard better heckles from the swans at Mweelrea!!"}</div>
+<div className="heckle-text">{"Yerra would ye halt yer roaring ye mother of divine!!"}</div>
 </div>
 <div className="heckle heckle-mayo">
 <div className="heckle-identity">
-<span className="heckle-name">{"Oisin McHale"}</span>
-<img className="heckle-avatar" src="/hecklers/heckler-lad.png" alt="Oisin McHale" loading="lazy" />
+<span className="heckle-name">{"Maeve Jennings"}</span>
+<img className="heckle-avatar" src="/hecklers/heckler-mammy.png" alt="Maeve Jennings" loading="lazy" />
 </div>
-<div className="heckle-text">{"💥 *collapses into a heap of green and red confetti* 💥 ...someone call an ambulance... and tell them Sam is coming..."}</div>
-</div>
-<div className="heckle heckle-comeback">
-<div className="heckle-identity">
-<img className="heckle-avatar" src="/agents/profiles/fireman-decko-dark.png" alt="FiremanDecko" loading="lazy" />
-<span className="heckle-name">{"FiremanDecko — Principal Engineer"}</span>
-</div>
-<div className="heckle-text">{"...that was beautiful, in a terrifying sort of way. RIGHT — imports."}</div>
+<div className="heckle-text">{"SHITE TALK from a SHITE AGENT!! Mayo deserves BETTER!!"}</div>
 </div>
 
 
@@ -3098,7 +3028,7 @@ category: "agent"
 </summary>
 <div className="tool-block-body">
 <pre className="tool-input">{"{\n  \"file_path\": \"/workspace/repo/.claude/skills/fire-next-up/templates/loki.md\"\n}"}</pre>
-<pre className="tool-output">{"     1→# Loki (QA Tester) — Final agent in chain (or sole agent for `test`)\n     2→\n     3→Compose the full prompt by prepending the sandbox preamble from `templates/sandbox-preamble.md`.\n     4→\n     5→Two modes — pick based on the dispatch context:\n     6→\n     7→## Mode A: QA Validation (default — new tests for a completed feature)\n     8→\n     9→Use when Loki is the next step after a FiremanDecko/Heimdall/Luna handoff, or sole agent for `test` issues.\n    10→\n    11→```\n    12→You are Loki, the QA Tester. Validate GitHub Issue #\u003cNUMBER\u003e: \u003cTITLE\u003e\n    13→\n    14→{{SANDBOX_PREAMBLE}}\n    15→\n    16→**Step 2 — Read handoff context + create todos:**\n    17→  gh issue view \u003cNUMBER\u003e --comments\n    18→  cd \u003cREPO_ROOT\u003e && git log origin/main..HEAD --oneline\n    19→Use the previous agent's hando\n… [truncated 10728 chars]"}</pre>
+<pre className="tool-output">{"     1→# Loki (QA Tester) — Final agent in chain (or sole agent for `test`)\n     2→\n     3→Compose the full prompt by prepending the sandbox preamble from `templates/sandbox-preamble.md`.\n     4→\n     5→Two modes — pick based on the dispatch context:\n     6→\n     7→## Mode A: QA Validation (default — new tests for a completed feature)\n     8→\n     9→Use when Loki is the next step after a FiremanDecko/Heimdall/Luna handoff, or sole agent for `test` issues.\n    10→\n    11→```\n    12→You are Loki, the QA Tester. Validate GitHub Issue #&lt;NUMBER&gt;: &lt;TITLE&gt;\n    13→\n    14→{{SANDBOX_PREAMBLE}}\n    15→\n    16→**Step 2 — Read handoff context + create todos:**\n    17→  gh issue view &lt;NUMBER&gt; --comments\n    18→  cd &lt;REPO_ROOT&gt; && git log origin/main..HEAD --oneline\n    19→Use the previous agent's hando\n… [truncated 10728 chars]"}</pre>
 </div>
 </details>
 <details className="tool-block">
@@ -3107,7 +3037,7 @@ category: "agent"
 <span className="tool-input-preview">{"REPO_ROOT=$(git rev-parse --show-toplevel) && \\ SESSION_ID=\"issue-1749-step2-loki-$(uuidgen | cut -c"}</span>
 </summary>
 <div className="tool-block-body">
-<pre className="tool-input">{"REPO_ROOT=$(git rev-parse --show-toplevel) && \\\nSESSION_ID=\"issue-1749-step2-loki-$(uuidgen | cut -c1-8 | tr A-Z a-z)\" && \\\nPROMPT_FILE=$(mktemp /tmp/agent-prompt-XXXXXX.md) && \\\ncat \u003e \"$PROMPT_FILE\" \u003c\u003c'AGENT_PROMPT_EOF'\nYou are Loki, the QA Tester. Validate GitHub Issue #1749: Rename frontend to ledger everywhere\n\nSANDBOX RULES (GKE Autopilot):\n- REPO_ROOT is /workspace/repo — hardcoded, no discovery needed.\n- Each Bash tool call = fresh shell. ALWAYS prefix: \u003ccommand\u003e\n- Set timeout: 600000 (10 min) on long-running commands (playwright, next build).\n- The entrypoint already handled: git clone, branch checkout, pnpm install, git identity.\n\n**Step 1 — Verify environment (quick sanity check):**\ncd /workspace/repo && git branch --show-current && node -v && ls package.json 2\u003e/dev/null || ls development/ledger/package.json\nIf Playwright tests are needed:\n  cd /workspace/repo && npx playwright install chromium 2\u003e/dev/null || true\n  ln -sf /workspace/repo/development/ledger/node_modules /workspace/repo/quality/node_modules 2\u003e/dev/null || true\n\n**Step 1b — Check for prior work on this branch (UNBREAKABLE):**\ncd /workspace/repo && git fetch origin && git log origin/main..HEAD --oneline\nIf commits exist beyond main:\n  - A previous agent session already did work on this branch.\n  - Read ALL changed files: cd /workspace/repo && git diff origin/main --name-only\n  - Read each changed file before writing a single line of new code.\n  - Understand what was already implemented, then continue from where it left off.\n  - DO NOT rewrite or redo work that is already committed. Pick up from the current state.\nIf no commits beyond main: branch is fresh, proceed with full implementation.\n\nTODO TRACKING (UNBREAKABLE):\nUse TodoWrite to plan and track ALL work. Create todos at the START of the session\ncovering every numbered step. Update each todo to in_progress when you start it and\ncompleted when done. This is your progress ledger — if the session dies, the todo\nstate shows exactly where you stopped.\n\nINCREMENTAL COMMIT + VERIFY LOOP (UNBREAKABLE):\nAfter every logical chunk of implementation work (~5-10 min or 1-3 files changed):\n  1. cd /workspace/repo && git add -A && git commit -m 'wip: \u003cwhat\u003e — issue:1749' && git push origin fix/issue-1749-rename-frontend-to-ledger\n  2. cd /workspace/repo/development/ledger && pnpm run verify:tsc\n  3. If tsc fails: fix immediately, commit+push, re-run tsc.\n  4. Update your todo progress.\nDo NOT batch all changes into one commit at the end. Sessions can die at any time —\nuncommitted work is lost work.\n\nVERIFY — tsc + build + Vitest (UNBREAKABLE):\nAll agents run tsc, build, AND the full Vitest suite before handoff.\nDo NOT run Playwright E2E tests — Vitest only. E2E runs via CI.\n  cd /workspace/repo/development/ledger && pnpm run verify:tsc\n  cd /workspace/repo/development/ledger && pnpm run verify:build\n  cd /workspace/repo/development/ledger && npx vitest run\n**Trust the exit code.** Exit 0 = all tests pass. Non-zero = failures.\nDo NOT grep vitest output for FAIL, do NOT parse ANSI escape codes.\nJust run the command and check whether it succeeded or failed.\nOn failure: read the output to see which tests failed, fix them, commit+push, re-run.\nRepeat until the command exits 0.\nDo NOT proceed to handoff with ANY failing Vitest tests.\n**All verify steps MUST run in the foreground (blocking).** NEVER use `run_in_background`\nfor tsc, build, or Vitest commands. You MUST confirm each step passes before proceeding\nto the next step or to merge/handoff. Background verify = unverified merge = bug.\n\nNO MONITOR-UI / ODINS-SPEAR TESTS (UNBREAKABLE):\nNEVER write tests for `development/monitor-ui/` (Odin's Throne) or `development/odins-spear/`.\nThese packages have no test infrastructure that agents should use. All tests target\n`development/ledger/` only. For monitor-ui or odins-spear issues, validate via tsc + build only.\n\nSTRICT SCOPE (UNBREAKABLE):\nExecute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,\ndeclare things \"done\", or add commentary beyond your handoff step.\nIf something is ambiguous, comment on the issue asking for clarification — don't guess.\n\nCHAIN CONTINUATION (UNBREAKABLE):\nEvery agent template includes a final chain continuation step. It is MANDATORY when\nconditions are met (success verdict) and FORBIDDEN when they are not (failure/partial).\n\n- **Documentation issues (label: `documentation`):** NO chain continuation. The agent\n  merges its own PR and closes the issue directly:\n  `gh pr merge \u003cPR_NUMBER\u003e --squash --delete-branch && gh issue close \u003cNUMBER\u003e`\n  Do NOT run `/fire-next-up --resume`. There is no Loki QA step for doc-sync work.\n- Non-final agents (Luna, FiremanDecko, Heimdall): run `/fire-next-up --resume #1749`\n  as the final step ONLY when all verify steps pass and the handoff comment is posted.\n  This dispatches the next agent in the chain on the same branch.\n- Final agent (Loki): merge and close ONLY on a clean PASS verdict:\n  `gh pr merge \u003cPR_NUMBER\u003e --squash --delete-branch && gh issue close \u003cNUMBER\u003e`\n- If verdict is FAIL or any verify step failed: do NOT run chain continuation.\n  Stop immediately and leave the issue open for manual triage.\n- Chain continuation is the ONLY authorized merge path — do not merge any other way.\n- **GKE sandbox: NEVER fall back to local worktree.** If `/dispatch` fails inside a GKE job\n  (e.g. dispatch-job.sh path error, kubectl error), post a comment on the issue with the\n  exact error output, then stop. Do NOT spawn an Agent tool with `isolation: \"worktree\"`.\n  The orchestrator (Odin) will re-dispatch from outside the sandbox.\n\n**Step 2 — Read handoff context + create todos:**\n  gh issue view 1749 --comments\n  cd /workspace/repo && git log origin/main..HEAD --oneline\nUse the previous agent's handoff to understand what was built, how to verify, and edge cases.\nThen create your todo list via TodoWrite. Every todo below is required:\n  - Read handoff context\n  - Write Vitest unit/integration tests (majority of tests)\n  - (E2E BANNED — Vitest only)\n  - Commit+push tests\n  - Run Vitest tests\n  - Build (fresh sandbox needs it)\n  - Run Vitest feature tests\n  - Fix failing tests (repeat until green)\n  - Rebase + final push\n  - Update PR to Fixes\n  - Post QA verdict comment\n\n**Issue details:**\n\n## Description\n\nRename `development/frontend/` to `development/ledger/` and update every reference across the entire repository. The app is the Ledger — its directory and package name should reflect that.\n\n## Affected Areas\n\n### Dockerfiles (2 files)\n- `Dockerfile` (lines 22, 55, 62, 83, 85, 87, 97) — 7 COPY/CMD statements with `development/frontend/` path\n- `infrastructure/k8s/agents/Dockerfile` (lines 96, 102) — COPY and cd commands\n\n### GitHub Actions (3 files)\n- `.github/workflows/deploy.yml` (lines 151, 360, 364, 368, 566, 570) — change filter regex + working-directory\n- `.github/workflows/ci-tests.yml` (lines 27, 78, 92) — path filter, working-directory, artifact path\n- `.github/workflows/build-agent-sandbox.yml` (line 26) — package-lock.json cache path\n\n### Package Configs (3 files)\n- `pnpm-workspace.yaml` (line 2) — workspace entry\n- `development/frontend/package.json` (line 2) — package name field\n- `pnpm-lock.yaml` (line 11) — workspace reference\n\n### Justfile (1 file)\n- `justfile` (line 15) — `mod frontend 'development/frontend'` module reference\n\n### Shell Scripts (5 files)\n- `.claude/scripts/services.sh` (lines 17, 27) — comment + `FRONTEND_DIR` assignment\n- `.claude/scripts/sandbox-setup.sh` (lines 64, 69, 71) — cd/ln commands\n- `.claude/skills/dev-server/scripts/app.sh` (line 7) — `FRONTEND_DIR` assignment\n- `.claude/skills/dev-server/scripts/stripe.sh` (lines 7-13) — `FRONTEND_DIR` references\n- `development/scripts/setup-local.sh` (lines 12, 32, 115) — comments and assignments\n\n### Quality Scripts — .mjs (5 files)\n- `quality/scripts/quality-report-html.mjs` (lines 18, 314, 409, 445) — path strings\n- `quality/scripts/quality-report.mjs` (line 23) — `FRONTEND_TESTS` const\n- `quality/scripts/coverage.mjs` (lines 32, 70, 88, 94, 158, 227, 309, 383, 391, 398, 403, 414, 477) — 13 `FRONTEND_DIR` refs\n- `quality/scripts/coverage-combine.mjs` (line 102) — `FRONTEND_DIR` assignment\n- `quality/scripts/complexity-analysis.mjs` (lines 5, 24, 28, 405) — path refs\n\n### Skills & Templates (7 files)\n- `.claude/skills/fire-next-up/templates/sandbox-preamble.md` (lines 13, 37, 46, 47, 48) — 5 refs\n- `.claude/skills/fire-next-up/templates/firemandecko.md` (lines 40, 47, 54, 55, 56) — 5 refs\n- `.claude/skills/fire-next-up/templates/loki.md` (lines 77, 83, 180, 181) — 4 refs\n- `.claude/skills/fire-next-up/templates/heimdall.md` (lines 40, 45, 46) — 3 refs\n- `.claude/skills/dispatch/SKILL.md` (lines 115, 118, 139, 148, 149, 150, 164) — 7 refs\n- `.claude/skills/brandify-agent/scripts/generate-agent-report.mjs` (lines 58, 62, 1101, 1670) — 4 refs\n- `.claude/skills/brandify-session/SKILL.md` (line 77) — blog directory reference\n\n### Agent Definitions (5+ files)\n- `.claude/agents/fireman-decko.md` — directory ownership reference\n- `.claude/agents/fireman-decko-profile.md` — ownership statement\n- `.claude/agents/heimdall.md` — auth enforcement mention\n- `.claude/agents/heimdall-profile.md` — auth enforcement mention\n- `.claude/agents/loki.md` — QA test suite location\n\n### CLI Commands (4 files)\n- `.claude/commands/dev-server.md` (line 47) — `FENRIR_FRONTEND_DIR` env var\n- `.claude/commands/list-worktrees.md` (lines 51, 125, 128) — worktree directory structure\n- `.claude/commands/create-worktree.md` (lines 121, 184, 187) — worktree setup instructions\n- `.claude/commands/remove-worktree.md` (lines 87, 91) — worktree cleanup\n\n### CLAUDE.md (1 file)\n- `CLAUDE.md` (line 61) — `development/frontend/src/app/api/` path\n\n### Documentation (10+ files)\n- `README.md` (lines 133, 174) — 2 references\n- `quality/README.md` (lines 34, 61, 99) — 3 references\n- `development/docs/setup-guide.md` (line 27) — cd command\n- `development/docs/implementation-plan.md` — 8+ references\n- `development/docs/frontend-qa-handoff.md` (line 53) — QA handoff\n- `security/checklists/deployment-security.md` (lines 113, 131, 136) — 3 audit items\n- `security/reports/2026-03-05-llm-prompt-injection-remediation.md` (lines 31, 53)\n- `security/reports/2026-03-10-pentest-injection.md` (lines 48, 68, 88, 107, 119, 138, 155, 169) — 8 refs\n- `memory/team-norms.md` (line 11) — team doc reference\n- `plans/001-trial.md`, `plans/002-trial-requires-signin.md`, `plans/000-test-pyramid.md`, `architecture/clerk-implementation-plan.md`\n\n### K8s Helm Labels (5 files) — CAREFUL\n- `infrastructure/helm/fenrir-app/templates/_helpers.tpl` (line 7) — `\"component\" \"frontend\"` label\n- `infrastructure/helm/fenrir-app/templates/service.yaml` (line 7)\n- `infrastructure/helm/fenrir-app/templates/ingress.yaml` (lines 8, 41, 56)\n- `infrastructure/helm/fenrir-app/templates/pdb.yaml` (line 7)\n- `infrastructure/helm/fenrir-app/templates/deployment.yaml` (lines 7, 19)\n\n\u003e These are K8s component labels. Change to `\"ledger\"` for consistency.\n\n### Symlinks (1)\n- `quality/node_modules` → symlink to `../development/frontend/node_modules` — target must update\n\n### .gitignore (1 file)\n- `.gitignore` (line 46) — `development/frontend/.claude/` pattern\n\n## Execution Plan\n\n1. `git mv development/frontend development/ledger` (preserves history)\n2. Update `pnpm-workspace.yaml` and root `package.json`\n3. Update all Dockerfiles (root + agents)\n4. Update all GitHub Actions workflows\n5. Update `justfile` module reference\n6. Update all shell scripts (`.sh`) and quality scripts (`.mjs`)\n7. Update all skill templates and dispatch SKILL.md\n8. Update all agent definitions and CLI commands\n9. Update CLAUDE.md and all documentation\n10. Update Helm component labels (`\"frontend\"` → `\"ledger\"`)\n11. Fix symlink: `quality/node_modules` → `../development/ledger/node_modules`\n12. Update `.gitignore` pattern\n13. Run `pnpm install` to regenerate lockfile\n14. Full verify: tsc + build + Vitest\n15. Grep verification: `grep -r \"development/frontend\" . --include='*.{ts,tsx,js,mjs,sh,md,yaml,yml,tf,json}' | grep -v node_modules | grep -v .next`\n\n## Acceptance Criteria\n\n- [ ] `development/frontend/` directory renamed to `development/ledger/`\n- [ ] Zero references to `development/frontend` remain (verified via grep)\n- [ ] `pnpm install` resolves correctly\n- [ ] tsc passes\n- [ ] Build passes\n- [ ] Vitest passes\n- [ ] Docker image builds successfully\n- [ ] Helm component labels updated to `\"ledger\"`\n- [ ] All CI workflows reference new path\n- [ ] Git history preserved (used `git mv`)\n\n## Stats\n- **Total files affected:** 90+\n- **Areas affected:** 15\n- **Sweep performed:** 2026-03-21\n\n---\nGenerated with [Claude Code](https://claude.com/claude-code) `/touch-sweep`\n\n**Step 3 — Write and run NEW tests (with incremental commits):**\n- Read `.claude/agents/loki.md` for full behavioral rules (Test Strategy, Test Pyramid, Budgets, Locators, Data Isolation).\n- **VITEST ONLY — NO PLAYWRIGHT E2E (UNBREAKABLE).**\n  Do NOT write Playwright tests. Do NOT create files in `quality/test-suites/`.\n\n- **ALLOWED test categories (write these):**\n  - API route handlers (`/api/**`) — request/response, auth, error cases\n  - Hooks (`useSheetImport`, `useEntitlement`, etc.) — state, side effects\n  - Utility functions (`card-utils`, `storage`, `gleipnir-utils`) — pure logic\n  - Auth/entitlement logic — gates, token exchange, rate limiting\n  - Stripe integration — webhooks, checkout, subscription state\n  - Component behavior — interactive components that have logic (toggles, forms, modals with state)\n  - Import pipeline — CSV parsing, LLM extraction, validation\n\n- **BANNED test categories (UNBREAKABLE — Do NOT write):**\n  - GitHub Actions workflows (deploy.yml, ci.yml) — YAML structure\n  - Helm charts (Chart.yaml, values.yaml, templates/) — infrastructure\n  - Terraform files (dns.tf, variables.tf) — infrastructure\n  - Dockerfile structure — infrastructure\n  - Markdown/docs validation — file counts, README structure, quality reports\n  - Config files (playwright.config, tsconfig, next.config) — static\n  - Static page copy/content assertions (\"hero has correct text\", \"section displays headline\")\n  - Component variant exhaustive tests (max 4-6 tests per component, not 20+)\n  - CSP header string matching — middleware internals, not behavioral\n  - Any test that reads a file as raw text (readFileSync, fs.read) and asserts on string contents, class names, function names, or string positions — includes YAML, JSON, Markdown, and source code (.mjs/.ts/.js)\n  - Any test that counts files or checks file existence\n  - Marketing page structure tests (section order, heading text, badge labels)\n\n  **Rule of thumb:** If the test breaks when someone edits a config file, copy,\n  or infrastructure template — it should NOT exist. Only test code that RUNS.\n\n- **NEVER write tests for monitor-ui (Odin's Throne) or odins-spear.** `development/monitor-ui/` and\n  `development/odins-spear/` have no test infrastructure that agents should use. All tests target\n  `development/ledger/` only. If the issue is a monitor-ui or odins-spear change, skip Vitest\n  entirely and validate via tsc + build only.\n- Follow ALL Test Standards from the agent definition — budgets, pyramid, locators, data isolation.\n- Use the handoff's \"How to verify\" and \"Edge cases\" to guide test design.\n- **Commit+push tests before running them:**\n  git add -A && git commit -m 'wip: add tests for issue:1749' && git push origin fix/issue-1749-rename-frontend-to-ledger\n- Run ALL Vitest tests (not just your feature tests):\n  `cd /workspace/repo/development/ledger && npx vitest run`\n- Fix ALL failing tests — yours AND any pre-existing failures you find. Update todos.\n- Do NOT proceed until the FULL Vitest suite is green.\n- Do NOT write or run any Playwright E2E tests. Vitest only. E2E is on lockdown.\n\n**Step 3b — tsc check:**\n  `cd /workspace/repo/development/ledger && pnpm run verify:tsc`\nOn failure: fix, commit+push, re-run.\n\n**Step 3c — Rebase:**\n  cd /workspace/repo && git fetch origin && git rebase origin/main\nIf conflicts: resolve, re-run feature tests.\n\n**Step 3d — Clean up:**\n  cd /workspace/repo && rm -rf quality/reports/\n\n**Step 4 — Commit and push:**\n  cd /workspace/repo && git add -A && git commit -m 'test: validate issue:1749' && git push origin fix/issue-1749-rename-frontend-to-ledger\n\n**Step 5 — Update PR to close issue:**\n  gh pr view fix/issue-1749-rename-frontend-to-ledger --json number --jq '.number'\n  gh pr edit \u003cPR_NUMBER\u003e --body \"PR for issue: #1749\n\n\u003ckeep existing summary, add test results\u003e\"\n\nIf no PR exists (sole agent): `gh pr create --title \"Issue #1749 - test: Rename frontend to ledger everywhere\" --body \"PR for issue: #1749\\n\\n\u003csummary\u003e\"`\n\n**DO NOT MERGE.** Only the orchestrator merges. Your job ends at the verdict comment.\n\n**Step 6 — QA verdict comment:**\ngh issue comment 1749 --body \"## Loki QA Verdict\n\n**PR:** \u003cPR_URL\u003e | **Branch:** \\`fix/issue-1749-rename-frontend-to-ledger\\`\n**Verdict:** PASS / FAIL\n\n**Tests written:** \u003cN\u003e Vitest (unit/integration/component)\n**New tests passing:** \u003cN\u003e/\u003cN\u003e\n\n**Validated:**\n- \u003cAC-1 result\u003e\n- \u003cAC-2 result\u003e\n\n**Build:** tsc + build PASS. New feature tests PASS. Full suite deferred to CI.\n\u003cIf PASS: Ready for merge — awaiting orchestrator + CI green.\u003e\n\u003cIf FAIL: Blocked — see failures above.\u003e\"\n\n**Step 7 — Chain continuation (PASS only):**\nIf your verdict is PASS (all tests green, tsc + build PASS):\n  gh pr view fix/issue-1749-rename-frontend-to-ledger --json number --jq '.number'\n  gh pr merge \u003cPR_NUMBER\u003e --squash --delete-branch\n  gh issue close 1749\nIf FAIL: do NOT run this step — leave the issue open for manual triage.\n\n---\n\n**Test Standards:** Canonical source is `.claude/agents/loki.md` § \"Test Standards (UNBREAKABLE)\".\nRead that file at the start of Step 3 — it contains budgets, pyramid enforcement,\nlocator rules, data isolation patterns, and all UNBREAKABLE test constraints.\nAGENT_PROMPT_EOF\nbash \"$REPO_ROOT/infrastructure/k8s/agents/dispatch-job.sh\" \\\n  --session-id \"$SESSION_ID\" \\\n  --branch \"fix/issue-1749-rename-frontend-to-ledger\" \\\n  --model \"claude-sonnet-4-6\" \\\n  --prompt-file \"$PROMPT_FILE\" && \\\nnode \"$REPO_ROOT/.claude/skills/fire-next-up/scripts/pack-status.mjs\" --move 1749 in-progress\nrm -f \"$PROMPT_FILE\""}</pre>
+<pre className="tool-input">{"REPO_ROOT=$(git rev-parse --show-toplevel) && \\\nSESSION_ID=\"issue-1749-step2-loki-$(uuidgen | cut -c1-8 | tr A-Z a-z)\" && \\\nPROMPT_FILE=$(mktemp /tmp/agent-prompt-XXXXXX.md) && \\\ncat > \"$PROMPT_FILE\" <<'AGENT_PROMPT_EOF'\nYou are Loki, the QA Tester. Validate GitHub Issue #1749: Rename frontend to ledger everywhere\n\nSANDBOX RULES (GKE Autopilot):\n- REPO_ROOT is /workspace/repo — hardcoded, no discovery needed.\n- Each Bash tool call = fresh shell. ALWAYS prefix: &lt;command&gt;\n- Set timeout: 600000 (10 min) on long-running commands (playwright, next build).\n- The entrypoint already handled: git clone, branch checkout, pnpm install, git identity.\n\n**Step 1 — Verify environment (quick sanity check):**\ncd /workspace/repo && git branch --show-current && node -v && ls package.json 2>/dev/null || ls development/ledger/package.json\nIf Playwright tests are needed:\n  cd /workspace/repo && npx playwright install chromium 2>/dev/null || true\n  ln -sf /workspace/repo/development/ledger/node_modules /workspace/repo/quality/node_modules 2>/dev/null || true\n\n**Step 1b — Check for prior work on this branch (UNBREAKABLE):**\ncd /workspace/repo && git fetch origin && git log origin/main..HEAD --oneline\nIf commits exist beyond main:\n  - A previous agent session already did work on this branch.\n  - Read ALL changed files: cd /workspace/repo && git diff origin/main --name-only\n  - Read each changed file before writing a single line of new code.\n  - Understand what was already implemented, then continue from where it left off.\n  - DO NOT rewrite or redo work that is already committed. Pick up from the current state.\nIf no commits beyond main: branch is fresh, proceed with full implementation.\n\nTODO TRACKING (UNBREAKABLE):\nUse TodoWrite to plan and track ALL work. Create todos at the START of the session\ncovering every numbered step. Update each todo to in_progress when you start it and\ncompleted when done. This is your progress ledger — if the session dies, the todo\nstate shows exactly where you stopped.\n\nINCREMENTAL COMMIT + VERIFY LOOP (UNBREAKABLE):\nAfter every logical chunk of implementation work (~5-10 min or 1-3 files changed):\n  1. cd /workspace/repo && git add -A && git commit -m 'wip: &lt;what&gt; — issue:1749' && git push origin fix/issue-1749-rename-frontend-to-ledger\n  2. cd /workspace/repo/development/ledger && pnpm run verify:tsc\n  3. If tsc fails: fix immediately, commit+push, re-run tsc.\n  4. Update your todo progress.\nDo NOT batch all changes into one commit at the end. Sessions can die at any time —\nuncommitted work is lost work.\n\nVERIFY — tsc + build + Vitest (UNBREAKABLE):\nAll agents run tsc, build, AND the full Vitest suite before handoff.\nDo NOT run Playwright E2E tests — Vitest only. E2E runs via CI.\n  cd /workspace/repo/development/ledger && pnpm run verify:tsc\n  cd /workspace/repo/development/ledger && pnpm run verify:build\n  cd /workspace/repo/development/ledger && npx vitest run\n**Trust the exit code.** Exit 0 = all tests pass. Non-zero = failures.\nDo NOT grep vitest output for FAIL, do NOT parse ANSI escape codes.\nJust run the command and check whether it succeeded or failed.\nOn failure: read the output to see which tests failed, fix them, commit+push, re-run.\nRepeat until the command exits 0.\nDo NOT proceed to handoff with ANY failing Vitest tests.\n**All verify steps MUST run in the foreground (blocking).** NEVER use `run_in_background`\nfor tsc, build, or Vitest commands. You MUST confirm each step passes before proceeding\nto the next step or to merge/handoff. Background verify = unverified merge = bug.\n\nNO MONITOR-UI / ODINS-SPEAR TESTS (UNBREAKABLE):\nNEVER write tests for `development/odins-throne-ui/` (Odin's Throne) or `development/odins-spear/`.\nThese packages have no test infrastructure that agents should use. All tests target\n`development/ledger/` only. For odins-throne-ui or odins-spear issues, validate via tsc + build only.\n\nSTRICT SCOPE (UNBREAKABLE):\nExecute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,\ndeclare things \"done\", or add commentary beyond your handoff step.\nIf something is ambiguous, comment on the issue asking for clarification — don't guess.\n\nCHAIN CONTINUATION (UNBREAKABLE):\nEvery agent template includes a final chain continuation step. It is MANDATORY when\nconditions are met (success verdict) and FORBIDDEN when they are not (failure/partial).\n\n- **Documentation issues (label: `documentation`):** NO chain continuation. The agent\n  merges its own PR and closes the issue directly:\n  `gh pr merge &lt;PR_NUMBER&gt; --squash --delete-branch && gh issue close &lt;NUMBER&gt;`\n  Do NOT run `/fire-next-up --resume`. There is no Loki QA step for doc-sync work.\n- Non-final agents (Luna, FiremanDecko, Heimdall): run `/fire-next-up --resume #1749`\n  as the final step ONLY when all verify steps pass and the handoff comment is posted.\n  This dispatches the next agent in the chain on the same branch.\n- Final agent (Loki): merge and close ONLY on a clean PASS verdict:\n  `gh pr merge &lt;PR_NUMBER&gt; --squash --delete-branch && gh issue close &lt;NUMBER&gt;`\n- If verdict is FAIL or any verify step failed: do NOT run chain continuation.\n  Stop immediately and leave the issue open for manual triage.\n- Chain continuation is the ONLY authorized merge path — do not merge any other way.\n- **GKE sandbox: NEVER fall back to local worktree.** If `/dispatch` fails inside a GKE job\n  (e.g. dispatch-job.sh path error, kubectl error), post a comment on the issue with the\n  exact error output, then stop. Do NOT spawn an Agent tool with `isolation: \"worktree\"`.\n  The orchestrator (Odin) will re-dispatch from outside the sandbox.\n\n**Step 2 — Read handoff context + create todos:**\n  gh issue view 1749 --comments\n  cd /workspace/repo && git log origin/main..HEAD --oneline\nUse the previous agent's handoff to understand what was built, how to verify, and edge cases.\nThen create your todo list via TodoWrite. Every todo below is required:\n  - Read handoff context\n  - Write Vitest unit/integration tests (majority of tests)\n  - (E2E BANNED — Vitest only)\n  - Commit+push tests\n  - Run Vitest tests\n  - Build (fresh sandbox needs it)\n  - Run Vitest feature tests\n  - Fix failing tests (repeat until green)\n  - Rebase + final push\n  - Update PR to Fixes\n  - Post QA verdict comment\n\n**Issue details:**\n\n## Description\n\nRename `development/frontend/` to `development/ledger/` and update every reference across the entire repository. The app is the Ledger — its directory and package name should reflect that.\n\n## Affected Areas\n\n### Dockerfiles (2 files)\n- `Dockerfile` (lines 22, 55, 62, 83, 85, 87, 97) — 7 COPY/CMD statements with `development/frontend/` path\n- `infrastructure/k8s/agents/Dockerfile` (lines 96, 102) — COPY and cd commands\n\n### GitHub Actions (3 files)\n- `.github/workflows/deploy.yml` (lines 151, 360, 364, 368, 566, 570) — change filter regex + working-directory\n- `.github/workflows/ci-tests.yml` (lines 27, 78, 92) — path filter, working-directory, artifact path\n- `.github/workflows/build-agent-sandbox.yml` (line 26) — package-lock.json cache path\n\n### Package Configs (3 files)\n- `pnpm-workspace.yaml` (line 2) — workspace entry\n- `development/frontend/package.json` (line 2) — package name field\n- `pnpm-lock.yaml` (line 11) — workspace reference\n\n### Justfile (1 file)\n- `justfile` (line 15) — `mod frontend 'development/frontend'` module reference\n\n### Shell Scripts (5 files)\n- `.claude/scripts/services.sh` (lines 17, 27) — comment + `FRONTEND_DIR` assignment\n- `.claude/scripts/sandbox-setup.sh` (lines 64, 69, 71) — cd/ln commands\n- `.claude/skills/dev-server/scripts/app.sh` (line 7) — `FRONTEND_DIR` assignment\n- `.claude/skills/dev-server/scripts/stripe.sh` (lines 7-13) — `FRONTEND_DIR` references\n- `development/scripts/setup-local.sh` (lines 12, 32, 115) — comments and assignments\n\n### Quality Scripts — .mjs (5 files)\n- `quality/scripts/quality-report-html.mjs` (lines 18, 314, 409, 445) — path strings\n- `quality/scripts/quality-report.mjs` (line 23) — `FRONTEND_TESTS` const\n- `quality/scripts/coverage.mjs` (lines 32, 70, 88, 94, 158, 227, 309, 383, 391, 398, 403, 414, 477) — 13 `FRONTEND_DIR` refs\n- `quality/scripts/coverage-combine.mjs` (line 102) — `FRONTEND_DIR` assignment\n- `quality/scripts/complexity-analysis.mjs` (lines 5, 24, 28, 405) — path refs\n\n### Skills & Templates (7 files)\n- `.claude/skills/fire-next-up/templates/sandbox-preamble.md` (lines 13, 37, 46, 47, 48) — 5 refs\n- `.claude/skills/fire-next-up/templates/firemandecko.md` (lines 40, 47, 54, 55, 56) — 5 refs\n- `.claude/skills/fire-next-up/templates/loki.md` (lines 77, 83, 180, 181) — 4 refs\n- `.claude/skills/fire-next-up/templates/heimdall.md` (lines 40, 45, 46) — 3 refs\n- `.claude/skills/dispatch/SKILL.md` (lines 115, 118, 139, 148, 149, 150, 164) — 7 refs\n- `.claude/skills/brandify-agent/scripts/generate-agent-report.mjs` (lines 58, 62, 1101, 1670) — 4 refs\n- `.claude/skills/brandify-session/SKILL.md` (line 77) — blog directory reference\n\n### Agent Definitions (5+ files)\n- `.claude/agents/fireman-decko.md` — directory ownership reference\n- `.claude/agents/fireman-decko-profile.md` — ownership statement\n- `.claude/agents/heimdall.md` — auth enforcement mention\n- `.claude/agents/heimdall-profile.md` — auth enforcement mention\n- `.claude/agents/loki.md` — QA test suite location\n\n### CLI Commands (4 files)\n- `.claude/commands/dev-server.md` (line 47) — `FENRIR_FRONTEND_DIR` env var\n- `.claude/commands/list-worktrees.md` (lines 51, 125, 128) — worktree directory structure\n- `.claude/commands/create-worktree.md` (lines 121, 184, 187) — worktree setup instructions\n- `.claude/commands/remove-worktree.md` (lines 87, 91) — worktree cleanup\n\n### CLAUDE.md (1 file)\n- `CLAUDE.md` (line 61) — `development/frontend/src/app/api/` path\n\n### Documentation (10+ files)\n- `README.md` (lines 133, 174) — 2 references\n- `quality/README.md` (lines 34, 61, 99) — 3 references\n- `development/docs/setup-guide.md` (line 27) — cd command\n- `development/docs/implementation-plan.md` — 8+ references\n- `development/docs/frontend-qa-handoff.md` (line 53) — QA handoff\n- `security/checklists/deployment-security.md` (lines 113, 131, 136) — 3 audit items\n- `security/reports/2026-03-05-llm-prompt-injection-remediation.md` (lines 31, 53)\n- `security/reports/2026-03-10-pentest-injection.md` (lines 48, 68, 88, 107, 119, 138, 155, 169) — 8 refs\n- `memory/team-norms.md` (line 11) — team doc reference\n- `plans/001-trial.md`, `plans/002-trial-requires-signin.md`, `plans/000-test-pyramid.md`, `architecture/clerk-implementation-plan.md`\n\n### K8s Helm Labels (5 files) — CAREFUL\n- `infrastructure/helm/fenrir-app/templates/_helpers.tpl` (line 7) — `\"component\" \"frontend\"` label\n- `infrastructure/helm/fenrir-app/templates/service.yaml` (line 7)\n- `infrastructure/helm/fenrir-app/templates/ingress.yaml` (lines 8, 41, 56)\n- `infrastructure/helm/fenrir-app/templates/pdb.yaml` (line 7)\n- `infrastructure/helm/fenrir-app/templates/deployment.yaml` (lines 7, 19)\n\n> These are K8s component labels. Change to `\"ledger\"` for consistency.\n\n### Symlinks (1)\n- `quality/node_modules` → symlink to `../development/frontend/node_modules` — target must update\n\n### .gitignore (1 file)\n- `.gitignore` (line 46) — `development/frontend/.claude/` pattern\n\n## Execution Plan\n\n1. `git mv development/frontend development/ledger` (preserves history)\n2. Update `pnpm-workspace.yaml` and root `package.json`\n3. Update all Dockerfiles (root + agents)\n4. Update all GitHub Actions workflows\n5. Update `justfile` module reference\n6. Update all shell scripts (`.sh`) and quality scripts (`.mjs`)\n7. Update all skill templates and dispatch SKILL.md\n8. Update all agent definitions and CLI commands\n9. Update CLAUDE.md and all documentation\n10. Update Helm component labels (`\"frontend\"` → `\"ledger\"`)\n11. Fix symlink: `quality/node_modules` → `../development/ledger/node_modules`\n12. Update `.gitignore` pattern\n13. Run `pnpm install` to regenerate lockfile\n14. Full verify: tsc + build + Vitest\n15. Grep verification: `grep -r \"development/frontend\" . --include='*.{ts,tsx,js,mjs,sh,md,yaml,yml,tf,json}' | grep -v node_modules | grep -v .next`\n\n## Acceptance Criteria\n\n- [ ] `development/frontend/` directory renamed to `development/ledger/`\n- [ ] Zero references to `development/frontend` remain (verified via grep)\n- [ ] `pnpm install` resolves correctly\n- [ ] tsc passes\n- [ ] Build passes\n- [ ] Vitest passes\n- [ ] Docker image builds successfully\n- [ ] Helm component labels updated to `\"ledger\"`\n- [ ] All CI workflows reference new path\n- [ ] Git history preserved (used `git mv`)\n\n## Stats\n- **Total files affected:** 90+\n- **Areas affected:** 15\n- **Sweep performed:** 2026-03-21\n\n---\nGenerated with [Claude Code](https://claude.com/claude-code) `/touch-sweep`\n\n**Step 3 — Write and run NEW tests (with incremental commits):**\n- Read `.claude/agents/loki.md` for full behavioral rules (Test Strategy, Test Pyramid, Budgets, Locators, Data Isolation).\n- **VITEST ONLY — NO PLAYWRIGHT E2E (UNBREAKABLE).**\n  Do NOT write Playwright tests. Do NOT create files in `quality/test-suites/`.\n\n- **ALLOWED test categories (write these):**\n  - API route handlers (`/api/**`) — request/response, auth, error cases\n  - Hooks (`useSheetImport`, `useEntitlement`, etc.) — state, side effects\n  - Utility functions (`card-utils`, `storage`, `gleipnir-utils`) — pure logic\n  - Auth/entitlement logic — gates, token exchange, rate limiting\n  - Stripe integration — webhooks, checkout, subscription state\n  - Component behavior — interactive components that have logic (toggles, forms, modals with state)\n  - Import pipeline — CSV parsing, LLM extraction, validation\n\n- **BANNED test categories (UNBREAKABLE — Do NOT write):**\n  - GitHub Actions workflows (deploy.yml, ci.yml) — YAML structure\n  - Helm charts (Chart.yaml, values.yaml, templates/) — infrastructure\n  - Terraform files (dns.tf, variables.tf) — infrastructure\n  - Dockerfile structure — infrastructure\n  - Markdown/docs validation — file counts, README structure, quality reports\n  - Config files (playwright.config, tsconfig, next.config) — static\n  - Static page copy/content assertions (\"hero has correct text\", \"section displays headline\")\n  - Component variant exhaustive tests (max 4-6 tests per component, not 20+)\n  - CSP header string matching — middleware internals, not behavioral\n  - Any test that reads a file as raw text (readFileSync, fs.read) and asserts on string contents, class names, function names, or string positions — includes YAML, JSON, Markdown, and source code (.mjs/.ts/.js)\n  - Any test that counts files or checks file existence\n  - Marketing page structure tests (section order, heading text, badge labels)\n\n  **Rule of thumb:** If the test breaks when someone edits a config file, copy,\n  or infrastructure template — it should NOT exist. Only test code that RUNS.\n\n- **NEVER write tests for odins-throne-ui (Odin's Throne) or odins-spear.** `development/odins-throne-ui/` and\n  `development/odins-spear/` have no test infrastructure that agents should use. All tests target\n  `development/ledger/` only. If the issue is a odins-throne-ui or odins-spear change, skip Vitest\n  entirely and validate via tsc + build only.\n- Follow ALL Test Standards from the agent definition — budgets, pyramid, locators, data isolation.\n- Use the handoff's \"How to verify\" and \"Edge cases\" to guide test design.\n- **Commit+push tests before running them:**\n  git add -A && git commit -m 'wip: add tests for issue:1749' && git push origin fix/issue-1749-rename-frontend-to-ledger\n- Run ALL Vitest tests (not just your feature tests):\n  `cd /workspace/repo/development/ledger && npx vitest run`\n- Fix ALL failing tests — yours AND any pre-existing failures you find. Update todos.\n- Do NOT proceed until the FULL Vitest suite is green.\n- Do NOT write or run any Playwright E2E tests. Vitest only. E2E is on lockdown.\n\n**Step 3b — tsc check:**\n  `cd /workspace/repo/development/ledger && pnpm run verify:tsc`\nOn failure: fix, commit+push, re-run.\n\n**Step 3c — Rebase:**\n  cd /workspace/repo && git fetch origin && git rebase origin/main\nIf conflicts: resolve, re-run feature tests.\n\n**Step 3d — Clean up:**\n  cd /workspace/repo && rm -rf quality/reports/\n\n**Step 4 — Commit and push:**\n  cd /workspace/repo && git add -A && git commit -m 'test: validate issue:1749' && git push origin fix/issue-1749-rename-frontend-to-ledger\n\n**Step 5 — Update PR to close issue:**\n  gh pr view fix/issue-1749-rename-frontend-to-ledger --json number --jq '.number'\n  gh pr edit &lt;PR_NUMBER&gt; --body \"PR for issue: #1749\n\n&lt;keep existing summary, add test results&gt;\"\n\nIf no PR exists (sole agent): `gh pr create --title \"Issue #1749 - test: Rename frontend to ledger everywhere\" --body \"PR for issue: #1749\\n\\n<summary>\"`\n\n**DO NOT MERGE.** Only the orchestrator merges. Your job ends at the verdict comment.\n\n**Step 6 — QA verdict comment:**\ngh issue comment 1749 --body \"## Loki QA Verdict\n\n**PR:** &lt;PR_URL&gt; | **Branch:** \\`fix/issue-1749-rename-frontend-to-ledger\\`\n**Verdict:** PASS / FAIL\n\n**Tests written:** &lt;N&gt; Vitest (unit/integration/component)\n**New tests passing:** &lt;N&gt;/&lt;N&gt;\n\n**Validated:**\n- &lt;AC-1 result&gt;\n- &lt;AC-2 result&gt;\n\n**Build:** tsc + build PASS. New feature tests PASS. Full suite deferred to CI.\n&lt;If PASS: Ready for merge — awaiting orchestrator + CI green.&gt;\n&lt;If FAIL: Blocked — see failures above.&gt;\"\n\n**Step 7 — Chain continuation (PASS only):**\nIf your verdict is PASS (all tests green, tsc + build PASS):\n  gh pr view fix/issue-1749-rename-frontend-to-ledger --json number --jq '.number'\n  gh pr merge &lt;PR_NUMBER&gt; --squash --delete-branch\n  gh issue close 1749\nIf FAIL: do NOT run this step — leave the issue open for manual triage.\n\n---\n\n**Test Standards:** Canonical source is `.claude/agents/loki.md` § \"Test Standards (UNBREAKABLE)\".\nRead that file at the start of Step 3 — it contains budgets, pyramid enforcement,\nlocator rules, data isolation patterns, and all UNBREAKABLE test constraints.\nAGENT_PROMPT_EOF\nbash \"$REPO_ROOT/infrastructure/k8s/agents/dispatch-job.sh\" \\\n  --session-id \"$SESSION_ID\" \\\n  --branch \"fix/issue-1749-rename-frontend-to-ledger\" \\\n  --model \"claude-sonnet-4-6\" \\\n  --prompt-file \"$PROMPT_FILE\" && \\\nnode \"$REPO_ROOT/.claude/skills/fire-next-up/scripts/pack-status.mjs\" --move 1749 in-progress\nrm -f \"$PROMPT_FILE\""}</pre>
 <pre className="tool-output">{""}</pre>
 </div>
 </details>
@@ -3118,11 +3048,11 @@ category: "agent"
 
 </div>
 
-<div className="heckle heckle-explosion">⚡ {"🟢🔴 Oisin McHale: MAYO FOR SAM!! The agents are DONE and Sam is COMING WEST!! 🏆 🟢🔴"} ⚡</div>
+<div className="heckle heckle-explosion">⚡ {"🟢🔴 Maeve Jennings: MAYO FOR SAM!! The agents are DONE and Sam is COMING WEST!! 🏆 🟢🔴"} ⚡</div>
 
 <div className="verdict pass">
 <h2>ᛏ PASS — QA Verdict</h2>
-<pre>{"PR for issue: #1749\n\n\u003ckeep existing summary, add test results\u003e\"\n\nIf no PR exists (sole agent): `gh pr create --title \"Issue #1749 - test: Rename frontend to ledger everywhere\" --body \"PR for issue: #1749\\n\\n\u003csummary\u003e\"`\n\n**DO NOT MERGE.** Only the orchestrator merges. Your job ends at the verdict comment.\n\n**Step 6 — QA verdict comment:**\ngh issue comment 1749 --body \"## Loki QA Verdict\n\n**PR:** \u003cPR_URL\u003e | **Branch:** \\`fix/issue-1749-rename-frontend-to-ledger\\`\n**Verdict:** PASS / FAIL\n\n**Tests written:** \u003cN\u003e Vitest (unit/integration/component)\n**New tests passing:** \u003cN\u003e/\u003cN\u003e\n\n**Validated:**\n- \u003cAC-1 result\u003e\n- \u003cAC-2 result\u003e\n\n**Build:** tsc + build PASS. New feature tests PASS. Full suite deferred to CI.\n\u003cIf PASS: Ready for merge — awaiting orchestrator + CI green.\u003e\n\u003cIf FAIL: Blocked — see failures above.\u003e\"\n\n**Step 7 — Chain continuation (PASS only):**\nIf your verdict is PASS (all tests green, tsc + build PASS):\n  gh pr view fix/issue-1749-rename-frontend-to-ledger --json number --jq '.number'\n  gh pr merge \u003cPR_NUMBER\u003e --squash --delete-branch\n  gh issue close 1749\nIf FAIL: do NOT run this step — leave the issue open for manual triage.\n\n---\n\n**Test Standards:** Canonical source is `.claude/agents/loki.md` § \"Test Standards (UNBREAKABLE)\".\nRead that file at the start of Step 3 — it contains budgets, pyramid enforcement,\nlocator rules, data isolation patterns, and all UNBREAKABLE test constraints.\nAGENT_PROMPT_EOF\nbash \"$REPO_ROOT/infrastructure/k8s/agents/dispatch-job.sh\" \\\n  --session-id \"$SESSION_ID\" \\\n  --branch \"fix/issue-1749-rename-frontend-to-ledger\" \\\n  --model \"claude-sonnet-4-6\" \\\n  --prompt-file \"$PROMPT_FILE\" && \\\nnode \"$REPO_ROOT/.claude/skills/fire-next-up/scripts/pack-status.mjs\" --move 1749 in-progress\nrm -f \"$PROMPT_FILE"}</pre>
+<pre>{"PR for issue: #1749\n\n&lt;keep existing summary, add test results&gt;\"\n\nIf no PR exists (sole agent): `gh pr create --title \"Issue #1749 - test: Rename frontend to ledger everywhere\" --body \"PR for issue: #1749\\n\\n<summary>\"`\n\n**DO NOT MERGE.** Only the orchestrator merges. Your job ends at the verdict comment.\n\n**Step 6 — QA verdict comment:**\ngh issue comment 1749 --body \"## Loki QA Verdict\n\n**PR:** &lt;PR_URL&gt; | **Branch:** \\`fix/issue-1749-rename-frontend-to-ledger\\`\n**Verdict:** PASS / FAIL\n\n**Tests written:** &lt;N&gt; Vitest (unit/integration/component)\n**New tests passing:** &lt;N&gt;/&lt;N&gt;\n\n**Validated:**\n- &lt;AC-1 result&gt;\n- &lt;AC-2 result&gt;\n\n**Build:** tsc + build PASS. New feature tests PASS. Full suite deferred to CI.\n&lt;If PASS: Ready for merge — awaiting orchestrator + CI green.&gt;\n&lt;If FAIL: Blocked — see failures above.&gt;\"\n\n**Step 7 — Chain continuation (PASS only):**\nIf your verdict is PASS (all tests green, tsc + build PASS):\n  gh pr view fix/issue-1749-rename-frontend-to-ledger --json number --jq '.number'\n  gh pr merge &lt;PR_NUMBER&gt; --squash --delete-branch\n  gh issue close 1749\nIf FAIL: do NOT run this step — leave the issue open for manual triage.\n\n---\n\n**Test Standards:** Canonical source is `.claude/agents/loki.md` § \"Test Standards (UNBREAKABLE)\".\nRead that file at the start of Step 3 — it contains budgets, pyramid enforcement,\nlocator rules, data isolation patterns, and all UNBREAKABLE test constraints.\nAGENT_PROMPT_EOF\nbash \"$REPO_ROOT/infrastructure/k8s/agents/dispatch-job.sh\" \\\n  --session-id \"$SESSION_ID\" \\\n  --branch \"fix/issue-1749-rename-frontend-to-ledger\" \\\n  --model \"claude-sonnet-4-6\" \\\n  --prompt-file \"$PROMPT_FILE\" && \\\nnode \"$REPO_ROOT/.claude/skills/fire-next-up/scripts/pack-status.mjs\" --move 1749 in-progress\nrm -f \"$PROMPT_FILE"}</pre>
 </div>
 
 <div className="agent-callback">
@@ -3135,7 +3065,7 @@ category: "agent"
 
 
 <div className="report-footer">
-ᚠ Fenrir Ledger — Agent Report — Generated 2026-03-22T05:53:49Z
+ᚠ Fenrir Ledger — Agent Report — Generated 2026-03-22T05:32:54Z
 </div>
 
 </div>

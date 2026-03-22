@@ -1,8 +1,8 @@
 packages:
   - development/ledger
   - development/odins-spear
-  - development/monitor
-  - development/monitor-ui
+  - development/odins-throne
+  - development/odins-throne-ui
 allowBuilds:
   esbuild: true
   protobufjs: true

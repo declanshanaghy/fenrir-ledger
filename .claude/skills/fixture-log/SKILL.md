@@ -34,7 +34,7 @@ REPO_ROOT=$(git -C /Users/declanshanaghy/src/github.com/declanshanaghy/fenrir-le
 Ensure the fixtures directory exists:
 
 ```bash
-mkdir -p "$REPO_ROOT/development/monitor/fixtures"
+mkdir -p "$REPO_ROOT/development/odins-throne/fixtures"
 ```
 
 ### 2. Resolve session IDs
@@ -70,7 +70,7 @@ Extract the session ID by stripping the `agent-` prefix from the job name.
 SESSION_ID="<extracted-session-id>"
 JOB_NAME="agent-${SESSION_ID}"
 TEMP_FILE="/tmp/agent-${SESSION_ID}.jsonl"
-DEST_FILE="$REPO_ROOT/development/monitor/fixtures/agent-${SESSION_ID}.jsonl"
+DEST_FILE="$REPO_ROOT/development/odins-throne/fixtures/agent-${SESSION_ID}.jsonl"
 
 # Step A: Download to temp
 kubectl logs "job/${JOB_NAME}" -n fenrir-agents > "$TEMP_FILE" 2>&1
@@ -96,7 +96,7 @@ fi
 cp "$TEMP_FILE" "$DEST_FILE"
 SIZE=$(wc -c < "$DEST_FILE" | tr -d ' ')
 
-echo "OK: ${LINES} lines, ${SIZE} bytes -> development/monitor/fixtures/agent-${SESSION_ID}.jsonl"
+echo "OK: ${LINES} lines, ${SIZE} bytes -> development/odins-throne/fixtures/agent-${SESSION_ID}.jsonl"
 ```
 
 ### 4. Clean up temp files
@@ -128,8 +128,8 @@ Saved:  N fixture(s)
 Failed: M job(s)
 
 Fixtures written:
-  - development/monitor/fixtures/agent-<id1>.jsonl (123 lines, 45.2 KB)
-  - development/monitor/fixtures/agent-<id2>.jsonl (456 lines, 128.7 KB)
+  - development/odins-throne/fixtures/agent-<id1>.jsonl (123 lines, 45.2 KB)
+  - development/odins-throne/fixtures/agent-<id2>.jsonl (456 lines, 128.7 KB)
 
 Failures:
   - agent-<id3>: pod not found (logs evicted)

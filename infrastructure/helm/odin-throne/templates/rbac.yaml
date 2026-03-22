@@ -6,7 +6,7 @@ metadata:
   name: {{ .Values.app.serviceAccountName }}
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}
 
 ---
 # Role that grants read+delete access to jobs, pods, and pod logs in the agents namespace
@@ -16,7 +16,7 @@ metadata:
   name: odin-throne-agent-reader
   namespace: {{ .Values.rbac.agentsNamespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}
 rules:
   - apiGroups: ["batch"]
     resources: ["jobs"]
@@ -33,7 +33,7 @@ metadata:
   name: odin-throne-agent-reader
   namespace: {{ .Values.rbac.agentsNamespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

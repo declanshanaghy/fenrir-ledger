@@ -5,7 +5,7 @@ metadata:
   name: odin-throne
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}
   annotations:
     kubernetes.io/ingress.class: {{ .Values.ingress.className | quote }}
     {{- range $key, $value := .Values.ingress.annotations }}
@@ -38,7 +38,7 @@ metadata:
   name: odin-throne-cert
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}
 spec:
   domains:
     {{- range .Values.ingress.managedCertificate.domains }}
@@ -53,7 +53,7 @@ metadata:
   name: odin-throne-ui-backend-config
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}
 spec:
   healthCheck:
     {{- toYaml .Values.ingress.backendConfig.healthCheck | nindent 4 }}

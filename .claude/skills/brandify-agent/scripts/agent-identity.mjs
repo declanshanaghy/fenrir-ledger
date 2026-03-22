@@ -5,7 +5,7 @@
  *   - generate-agent-report.mjs (brandify HTML/MDX rendering)
  *
  * Kept in sync with:
- *   - development/monitor-ui/src/lib/constants.ts (TypeScript mirror — update both)
+ *   - development/odins-throne-ui/src/lib/constants.ts (TypeScript mirror — update both)
  *
  * Per-agent data: name, title, rune name (Elder Futhark), rune title, signoff quote,
  * decree verdict label, and callback quote (for agent-callback footer).

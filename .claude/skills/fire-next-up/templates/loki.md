@@ -65,9 +65,9 @@ Then create your todo list via TodoWrite. Every todo below is required:
   **Rule of thumb:** If the test breaks when someone edits a config file, copy,
   or infrastructure template — it should NOT exist. Only test code that RUNS.
 
-- **NEVER write tests for monitor-ui (Odin's Throne) or odins-spear.** `development/monitor-ui/` and
+- **NEVER write tests for odins-throne-ui (Odin's Throne) or odins-spear.** `development/odins-throne-ui/` and
   `development/odins-spear/` have no test infrastructure that agents should use. All tests target
-  `development/ledger/` only. If the issue is a monitor-ui or odins-spear change, skip Vitest
+  `development/ledger/` only. If the issue is a odins-throne-ui or odins-spear change, skip Vitest
   entirely and validate via tsc + build only.
 - Follow ALL Test Standards from the agent definition — budgets, pyramid, locators, data isolation.
 - Use the handoff's "How to verify" and "Edge cases" to guide test design.

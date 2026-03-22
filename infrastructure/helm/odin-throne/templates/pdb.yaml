@@ -5,7 +5,7 @@ metadata:
   name: odin-throne-pdb
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}
 spec:
   minAvailable: 1
   selector:
@@ -21,7 +21,7 @@ metadata:
   name: odin-throne-ui-pdb
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "odin-throne.labels" (dict "component" "monitor-ui") | nindent 4 }}
+    {{- include "odin-throne.labels" (dict "component" "odins-throne-ui") | nindent 4 }}
 spec:
   minAvailable: 1
   selector:
