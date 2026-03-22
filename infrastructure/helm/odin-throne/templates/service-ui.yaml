@@ -12,7 +12,7 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: odin-throne
-    app.kubernetes.io/component: monitor-ui
+    app.kubernetes.io/component: odins-throne-ui
   ports:
     - name: http
       port: 80

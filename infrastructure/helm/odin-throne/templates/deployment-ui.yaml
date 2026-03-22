@@ -16,7 +16,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: odin-throne
-      app.kubernetes.io/component: monitor-ui
+      app.kubernetes.io/component: odins-throne-ui
   template:
     metadata:
       labels:
@@ -30,7 +30,7 @@ spec:
           labelSelector:
             matchLabels:
               app.kubernetes.io/name: odin-throne
-              app.kubernetes.io/component: monitor-ui
+              app.kubernetes.io/component: odins-throne-ui
       {{- if .Values.oauth2Proxy.enabled }}
       volumes:
         - name: oauth2-proxy-emails

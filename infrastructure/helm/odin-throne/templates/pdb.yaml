@@ -11,7 +11,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: odin-throne
-      app.kubernetes.io/component: monitor
+      app.kubernetes.io/component: odins-throne
 ---
 {{- end }}
 {{- if ge (int .Values.ui.replicaCount) 2 }}
@@ -27,5 +27,5 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: odin-throne
-      app.kubernetes.io/component: monitor-ui
+      app.kubernetes.io/component: odins-throne-ui
 {{- end }}
