@@ -4,7 +4,7 @@ import { AGENT_COLORS, AGENT_AVATARS, STATUS_COLORS, STATUS_LABELS } from "../li
 import { StatusIconSvg } from "./StatusIcon";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 import type { DisplayMode } from "./Sidebar";
-import { downloadLog } from "../lib/localStorageLogs";
+import { downloadLogFile } from "../lib/localStorageLogs";
 
 interface Props {
   job: DisplayJob;
@@ -150,7 +150,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
             {onTogglePin && (
               <CardPinButtonLabeled isPinned={isPinned} onTogglePin={onTogglePin} />
             )}
-            {isPinned && job.status === "succeeded" && (
+            {job.status === "succeeded" && (
               <CardDownloadButtonLabeled sessionId={job.sessionId} />
             )}
           </>
@@ -182,7 +182,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
             {onTogglePin && (
               <CardPinButton isPinned={isPinned} onTogglePin={onTogglePin} />
             )}
-            {isPinned && job.status === "succeeded" && (
+            {job.status === "succeeded" && (
               <CardDownloadButton sessionId={job.sessionId} />
             )}
             <CardCopySessionIdButton sessionId={job.sessionId} />
@@ -390,7 +390,7 @@ function CardDownloadButton({ sessionId }: { sessionId: string }) {
       className="card-pin-btn"
       onClick={(e) => {
         e.stopPropagation();
-        downloadLog(sessionId);
+        void downloadLogFile(sessionId);
       }}
       title="Download session log"
       aria-label="Download session log"
@@ -406,7 +406,7 @@ function CardDownloadButtonLabeled({ sessionId }: { sessionId: string }) {
       className="card-extended-action-btn"
       onClick={(e) => {
         e.stopPropagation();
-        downloadLog(sessionId);
+        void downloadLogFile(sessionId);
       }}
       title="Download session log"
       aria-label="Download session log"

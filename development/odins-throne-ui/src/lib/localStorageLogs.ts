@@ -114,6 +114,43 @@ export function downloadLog(sessionId: string): void {
   URL.revokeObjectURL(url);
 }
 
+function triggerBlobDownload(content: string, filename: string): void {
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Download a session log by fetching the latest from the K8s pod via the
+ * monitor API. Falls back to localStorage (temp log or pinned cache) if the
+ * pod is no longer available.
+ */
+export async function downloadLogFile(sessionId: string): Promise<void> {
+  try {
+    const res = await fetch(`/api/logs/${encodeURIComponent(sessionId)}`);
+    if (res.ok) {
+      const content = await res.text();
+      if (content) {
+        triggerBlobDownload(content, `${sessionId}.log`);
+        return;
+      }
+    }
+  } catch {
+    // Network error — fall through to localStorage
+  }
+  // Fallback: localStorage (pinned cache or temp log)
+  const content = getLog(sessionId) ?? getCachedLog(sessionId);
+  if (content) {
+    triggerBlobDownload(content, `${sessionId}.log`);
+  }
+}
+
 // ── Pin cache API ────────────────────────────────────────────────────────────
 
 /** Returns true if this session has a cache entry (is pinned). */

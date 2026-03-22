@@ -84,7 +84,7 @@ import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscrip
 import { DecreeBlock, isDecreeBlock } from "./DecreeBlock";
 import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
 import { StatusIconSvg } from "./StatusIcon";
-import { downloadLog } from "../lib/localStorageLogs";
+import { downloadLogFile } from "../lib/localStorageLogs";
 
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 
@@ -198,7 +198,7 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
             </button>
           )
         )}
-        {isPinned && job.status === "succeeded" && (
+        {job.status === "succeeded" && (
           <DownloadSessionButton sessionId={job.sessionId} />
         )}
       </span>
@@ -1053,7 +1053,7 @@ function DownloadSessionButton({ sessionId }: { sessionId: string }) {
   return (
     <button
       className="copy-session-btn"
-      onClick={() => downloadLog(sessionId)}
+      onClick={() => void downloadLogFile(sessionId)}
       title="Download session log"
       aria-label="Download session log"
     >
