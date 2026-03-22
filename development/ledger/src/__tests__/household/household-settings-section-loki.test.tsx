@@ -36,6 +36,7 @@ const soloHouseholdData = {
   isSolo: true,
   isFull: false,
   isOwner: true,
+  isKarl: false,
   inviteCode: "ABC123",
   inviteCodeExpiresAt: "2026-04-01T00:00:00.000Z",
   members: [
@@ -47,6 +48,12 @@ const soloHouseholdData = {
       isCurrentUser: true,
     },
   ],
+};
+
+// Solo Karl owner fixture — issue #1780
+const soloKarlHouseholdData = {
+  ...soloHouseholdData,
+  isKarl: true,
 };
 
 function mockFetchSuccess(data: object) {
@@ -199,6 +206,105 @@ describe("HouseholdSettingsSection — authenticated state (regression, issue #1
 
     await waitFor(() => {
       expect(screen.queryByRole("link", { name: /sign in to manage your household/i })).toBeNull();
+    });
+  });
+});
+
+// ── Tests: solo Karl owner (issue #1780) ─────────────────────────────────────
+
+describe("HouseholdSettingsSection — solo Karl owner (issue #1780)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockEnsureFreshToken.mockResolvedValue("valid-token");
+  });
+
+  it("solo Karl owner sees invite code", async () => {
+    mockFetchSuccess(soloKarlHouseholdData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      // InviteCodeDisplay renders the raw invite code value as text
+      expect(screen.getByText("ABC123")).toBeDefined();
+    });
+  });
+
+  it("solo Karl owner sees Copy invite code button", async () => {
+    mockFetchSuccess(soloKarlHouseholdData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /copy invite code/i })).toBeDefined();
+    });
+  });
+
+  it("solo Karl owner sees Regenerate Code button", async () => {
+    mockFetchSuccess(soloKarlHouseholdData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /regenerate code/i })).toBeDefined();
+    });
+  });
+
+  it("solo Karl owner sees members list with themselves as owner", async () => {
+    mockFetchSuccess(soloKarlHouseholdData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      // MembersList renders with aria-label "Household members"
+      const list = screen.getByRole("list", { name: /household members/i });
+      expect(list).toBeDefined();
+      // Their own name should appear
+      expect(screen.getByText("Björn")).toBeDefined();
+    });
+  });
+
+  it("solo Karl owner sees secondary Join a Household button", async () => {
+    mockFetchSuccess(soloKarlHouseholdData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /join a household/i })).toBeDefined();
+    });
+  });
+
+  it("solo Karl owner does NOT see the primary solo CTA region", async () => {
+    mockFetchSuccess(soloKarlHouseholdData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      // The primary solo region has aria-label "Join a household" (the dashed box)
+      // Karl owners should not see the primary full-width solo CTA
+      expect(screen.queryByText("You are currently managing cards solo.")).toBeNull();
+    });
+  });
+
+  it("Thrall solo owner does NOT see invite code", async () => {
+    mockFetchSuccess(soloHouseholdData); // isKarl: false
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      // Solo CTA is shown
+      expect(screen.getByText("You are currently managing cards solo.")).toBeDefined();
+      // No invite code displayed
+      expect(screen.queryByLabelText(/invite code/i)).toBeNull();
+    });
+  });
+
+  it("Thrall solo user sees primary Join a Household button", async () => {
+    mockFetchSuccess(soloHouseholdData); // isKarl: false
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /join a household/i })).toBeDefined();
     });
   });
 });
