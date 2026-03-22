@@ -33,14 +33,13 @@ Teammates: **Freya** (PO), **Luna** (UX Designer), **Loki** (QA Tester).
 | API Contracts | `architecture/api-contracts.md` |
 | ADRs | `architecture/adrs/ADR-NNN-title.md` |
 | Source Code | `development/ledger/` (Next.js root) |
-| Odin's Throne API | `development/odins-throne/` |
-| Odin's Throne UI | `development/odins-throne-ui/` |
+| Odin's Throne (UI + API) | `development/odins-throne/` |
 | Implementation Plan | `development/docs/implementation-plan.md` |
 | QA Handoff | `development/docs/qa-handoff.md` |
 | Terraform | `infrastructure/` |
 | Helm Charts | `infrastructure/helm/` |
 | K8s Manifests | `infrastructure/k8s/` |
-| Dockerfiles | `Dockerfile`, `development/odins-throne/Dockerfile`, `development/odins-throne-ui/Dockerfile` |
+| Dockerfiles | `Dockerfile`, `development/odins-throne/Dockerfile` |
 | CI/CD Workflows | `.github/workflows/` |
 
 Git tracks history — overwrite files each sprint. No sprint subdirectories.
@@ -93,7 +92,7 @@ service change requires infrastructure work, FiremanDecko does it — no hand-of
 | Helm — Umami | `infrastructure/helm/umami/` | Analytics chart |
 | Helm — n8n | `infrastructure/helm/n8n/` | Marketing engine chart |
 | K8s Manifests | `infrastructure/k8s/` | Raw manifests (Redis StatefulSet, etc.) |
-| Dockerfiles | `Dockerfile` (app), `development/odins-throne/Dockerfile`, `development/odins-throne-ui/Dockerfile` | Image builds |
+| Dockerfiles | `Dockerfile` (app), `development/odins-throne/Dockerfile`, `development/odins-throne/Dockerfile` | Image builds |
 | CI/CD | `.github/workflows/deploy.yml` | Unified GKE deploy pipeline |
 
 ### Terraform
@@ -122,7 +121,7 @@ service change requires infrastructure work, FiremanDecko does it — no hand-of
 
 - App image: multi-stage build, Next.js standalone output. Build args for `NEXT_PUBLIC_*` values.
 - Odin's Throne API: `development/odins-throne/Dockerfile` — `tsx` runtime, no build step.
-- Odin's Throne UI: `development/odins-throne-ui/Dockerfile` — Vite build, served via nginx.
+- Odin's Throne (combined): `development/odins-throne/Dockerfile` — Vite build + Hono runtime, single image.
 - All images pushed to GCP Artifact Registry: `$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/fenrir-images/`.
 - Images tagged with git SHA + `latest`. Never push `latest` only.
 
@@ -153,7 +152,7 @@ FiremanDecko writes tests alongside implementation. Loki augments gaps only.
 - Place tests in `development/ledger/src/__tests__/` alongside the feature
 - Loki will review and add only what's missing — no duplication
 - **Never write Playwright E2E tests** — that's Loki's domain (and he writes few)
-- **Never write tests for odins-throne-ui or odins-spear — `development/odins-throne-ui/` and `development/odins-spear/` have no test infrastructure agents should use
+- **Never write tests for odins-throne or odins-spear — `development/odins-throne/` and `development/odins-spear/` have no test infrastructure agents should use
 - **Never write tests for infrastructure** — Helm charts (`infrastructure/helm/`), Terraform (`infrastructure/*.tf`), K8s manifests (`infrastructure/k8s/`), Dockerfiles, and CI/CD workflows (`.github/workflows/`) are not testable via Vitest. Validate infra changes via tsc + build only.
 
 ### jest-dom Assertion Library (UNBREAKABLE)
@@ -304,7 +303,7 @@ Always include `--wait --timeout=Xm`. Never omit both.
 Manual `workflow_dispatch` must set ALL service flags to `true`:
 ```bash
 if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-  for key in app k8s-app odins-throne odins-throne-ui helm-odin infra bootstrap umami marketing; do
+  for key in app k8s-app odins-throne odins-throne helm-odin infra bootstrap umami marketing; do
     echo "$key=true" >> "$GITHUB_OUTPUT"
   done
   exit 0

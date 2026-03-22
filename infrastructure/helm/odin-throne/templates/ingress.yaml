@@ -14,7 +14,7 @@ metadata:
 spec:
   defaultBackend:
     service:
-      name: odin-throne-ui
+      name: odin-throne
       port:
         number: {{ .Values.service.port }}
   rules:
@@ -26,7 +26,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: odin-throne-ui
+                name: odin-throne
                 port:
                   number: {{ $.Values.service.port }}
     {{- end }}
@@ -50,7 +50,7 @@ spec:
 apiVersion: cloud.google.com/v1
 kind: BackendConfig
 metadata:
-  name: odin-throne-ui-backend-config
+  name: odin-throne-backend-config
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}

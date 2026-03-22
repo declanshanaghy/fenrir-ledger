@@ -12,20 +12,4 @@ spec:
     matchLabels:
       app.kubernetes.io/name: odin-throne
       app.kubernetes.io/component: odins-throne
----
-{{- end }}
-{{- if ge (int .Values.ui.replicaCount) 2 }}
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: odin-throne-ui-pdb
-  namespace: {{ .Values.namespace }}
-  labels:
-    {{- include "odin-throne.labels" (dict "component" "odins-throne-ui") | nindent 4 }}
-spec:
-  minAvailable: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: odin-throne
-      app.kubernetes.io/component: odins-throne-ui
 {{- end }}

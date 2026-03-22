@@ -1,0 +1,10 @@
+# Build output
+dist/
+dist-ui/
+*.tsbuildinfo
+
+# Logs
+logs/
+
+# Runtime
+node_modules/

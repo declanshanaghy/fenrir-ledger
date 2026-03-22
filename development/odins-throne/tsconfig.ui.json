@@ -27,5 +27,5 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false
   },
-  "include": ["src"]
+  "include": ["ui"]
 }

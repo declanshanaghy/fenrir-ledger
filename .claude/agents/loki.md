@@ -90,7 +90,7 @@ machines, auth checks, data transformations — ALL of these are Vitest, never P
 
 ### No Tests for Monitor UI (UNBREAKABLE)
 
-**Do NOT write tests for `development/odins-throne-ui/` or `development/odins-spear/`.** These packages
+**Do NOT write tests for `development/odins-throne/` or `development/odins-spear/`.** These packages
 have no test infrastructure that agents should use. All tests are for the main ledger app
 (`development/ledger/`) only.
 
@@ -191,7 +191,7 @@ When in a worktree: run tests against the provided port (not 9653), read
 
 PASS requires: code review passes, build passes, tsc passes, GH Actions pass,
 AND new Playwright tests written and passing — EXCEPT:
-- **odins-throne-ui / odins-spear changes** (`development/odins-throne-ui/`, `development/odins-spear/`): tsc + build only, no tests. PASS with 0 tests.
+- **odins-throne / odins-spear changes** (`development/odins-throne/`, `development/odins-spear/`): tsc + build only, no tests. PASS with 0 tests.
 - **Static/CSS-only changes** (no logic, no behaviour): build verification only, no tests. PASS with 0 tests.
 Do NOT FAIL an issue solely because no Playwright tests were written if the change falls into one of these exception categories.
 
