@@ -52,6 +52,12 @@ export interface HouseholdDetail {
   stripeSubscriptionId: string | null;
   stripeStatus: string | null;
   currentPeriodEnd: string | null;
+  // Extended Stripe fields
+  cancelAtPeriodEnd: boolean | null;
+  stripePlanName: string | null;
+  stripePeriodStart: string | null;
+  stripePaymentLast4: string | null;
+  stripePaymentBrand: string | null;
 }
 
 // ─── Pure helpers (unit-testable) ─────────────────────────────────────────────
@@ -105,6 +111,34 @@ export function isExpired(expiresAt: string | null): boolean {
   return new Date(expiresAt).getTime() < Date.now();
 }
 
+/** Color for Stripe subscription status */
+export function stripeStatusColor(status: string | null): string {
+  if (!status) return GRAY;
+  switch (status) {
+    case "active":    return GREEN;
+    case "trialing":  return "yellowBright";
+    case "past_due":  return "yellow";
+    case "canceled":  return RED;
+    case "unpaid":    return RED;
+    case "paused":    return BLUE;
+    default:          return LAVENDER;
+  }
+}
+
+/** Human-readable label for Stripe subscription status */
+export function stripeStatusLabel(status: string | null): string {
+  if (!status) return "none";
+  switch (status) {
+    case "active":    return "active";
+    case "trialing":  return "trialing";
+    case "past_due":  return "past_due";
+    case "canceled":  return "canceled";
+    case "unpaid":    return "unpaid";
+    case "paused":    return "paused";
+    default:          return status;
+  }
+}
+
 // ─── Confirmation action type ─────────────────────────────────────────────────
 
 type ConfirmAction =
@@ -153,7 +187,11 @@ interface HouseholdDetailViewProps {
 }
 
 export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React.JSX.Element {
-  const { household, members, cardTotal, activeCards, stripeCustomerId, stripeSubscriptionId, stripeStatus, currentPeriodEnd } = detail;
+  const {
+    household, members, cardTotal, activeCards,
+    stripeCustomerId, stripeSubscriptionId, stripeStatus, currentPeriodEnd,
+    cancelAtPeriodEnd, stripePlanName, stripePeriodStart, stripePaymentLast4, stripePaymentBrand,
+  } = detail;
 
   const expired = isExpired(household.inviteCodeExpiresAt);
   const inviteDisplay = household.inviteCode
@@ -202,14 +240,34 @@ export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React
         </Box>
       )}
 
-      {/* Stripe — read from /households/{id}/stripe/subscription subcollection */}
-      {household.tier === "karl" && (
+      {/* Stripe subscription — shown for karl tier; graceful no-op for free/thrall */}
+      <HSectionTitle title="Stripe" />
+      {household.tier !== "karl" ? (
+        <Text color={GRAY} dimColor>No Stripe subscription (Thrall / free tier)</Text>
+      ) : (
         <>
-          <HSectionTitle title="Stripe" />
+          <HDetailRow
+            label="Status"
+            value={stripeStatusLabel(stripeStatus)}
+            valueColor={stripeStatusColor(stripeStatus)}
+          />
+          {cancelAtPeriodEnd === true && (
+            <HDetailRow label="  Cancel at end" value="yes" valueColor={RED} />
+          )}
+          <HDetailRow label="Plan"          value={stripePlanName ?? "—"} />
           <HDetailRow label="Customer ID"   value={stripeCustomerId ?? "—"} />
           <HDetailRow label="Sub ID"        value={stripeSubscriptionId ?? "—"} />
-          <HDetailRow label="Status"        value={stripeStatus ?? "—"} />
+          <HDetailRow label="Period Start"  value={fmtDateShort(stripePeriodStart)} />
           <HDetailRow label="Period End"    value={fmtDateShort(currentPeriodEnd)} />
+          <HDetailRow label="Renewal Date"  value={fmtDateShort(currentPeriodEnd)} />
+          <HDetailRow
+            label="Payment"
+            value={
+              stripePaymentLast4
+                ? `${stripePaymentBrand ? stripePaymentBrand + " " : ""}••••${stripePaymentLast4}`
+                : "—"
+            }
+          />
         </>
       )}
 
@@ -309,7 +367,7 @@ async function loadHouseholds(): Promise<HouseholdListItem[]> {
 async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDetail> {
   log.debug("loadHouseholdDetail called", { id: hh.id });
   if (!firestoreClient) {
-    return { household: hh, members: [], cardTotal: 0, activeCards: 0, stripeCustomerId: null, stripeSubscriptionId: null, stripeStatus: null, currentPeriodEnd: null };
+    return { household: hh, members: [], cardTotal: 0, activeCards: 0, stripeCustomerId: null, stripeSubscriptionId: null, stripeStatus: null, currentPeriodEnd: null, cancelAtPeriodEnd: null, stripePlanName: null, stripePeriodStart: null, stripePaymentLast4: null, stripePaymentBrand: null };
   }
 
   // Members: query users by householdId
@@ -352,6 +410,11 @@ async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDeta
   let stripeSubscriptionId: string | null = null;
   let stripeStatus: string | null = null;
   let currentPeriodEnd: string | null = null;
+  let cancelAtPeriodEnd: boolean | null = null;
+  let stripePlanName: string | null = null;
+  let stripePeriodStart: string | null = null;
+  let stripePaymentLast4: string | null = null;
+  let stripePaymentBrand: string | null = null;
 
   if (hh.tier === "karl") {
     try {
@@ -367,9 +430,56 @@ async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDeta
         stripeSubscriptionId = (sd["stripeSubscriptionId"] as string | null) || null;
         stripeStatus         = (sd["stripeStatus"] as string | null) || null;
         currentPeriodEnd     = (sd["currentPeriodEnd"] as string | null) || null;
+        cancelAtPeriodEnd    = typeof sd["cancelAtPeriodEnd"] === "boolean" ? sd["cancelAtPeriodEnd"] : null;
       }
     } catch (err) {
       log.debug("loadHouseholdDetail: stripe subcollection fetch failed", err as Error);
+    }
+
+    // Live Stripe API fetch for plan name, period start, and payment method
+    if (stripeSubscriptionId) {
+      try {
+        const { getStripeKey } = await import("../lib/stripe.js");
+        const key = await getStripeKey();
+        if (key) {
+          const { createRequire } = await import("module");
+          const require = createRequire(import.meta.url);
+          const Stripe = (require("stripe") as { default: typeof import("stripe").default }).default;
+          const stripe = new Stripe(key);
+          const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId, {
+            expand: ["default_payment_method", "items.data.price.product"],
+          });
+          // Billing cycle anchor = effective period start
+          if (sub.billing_cycle_anchor) {
+            stripePeriodStart = new Date(sub.billing_cycle_anchor * 1000).toISOString();
+          }
+          // Plan name from first subscription item
+          const item = sub.items?.data?.[0];
+          if (item) {
+            const price = item.price;
+            const product = price?.product;
+            const interval = price?.recurring?.interval;
+            const intervalLabel = interval === "year" ? "annual" : interval === "month" ? "monthly" : (interval ?? "");
+            if (product && typeof product === "object" && "name" in product) {
+              stripePlanName = `${(product as { name: string }).name}${intervalLabel ? ` (${intervalLabel})` : ""}`;
+            } else if (price?.nickname) {
+              stripePlanName = `${price.nickname}${intervalLabel ? ` (${intervalLabel})` : ""}`;
+            } else {
+              stripePlanName = intervalLabel ? `Karl (${intervalLabel})` : "Karl";
+            }
+          }
+          // Payment method
+          const pm = sub.default_payment_method;
+          if (pm && typeof pm === "object" && "card" in pm) {
+            const card = (pm as { card?: { last4?: string; brand?: string } }).card;
+            stripePaymentLast4 = card?.last4 ?? null;
+            stripePaymentBrand = card?.brand ?? null;
+          }
+          log.debug("loadHouseholdDetail: stripe live fetch ok", { stripeSubscriptionId, stripePlanName });
+        }
+      } catch (err) {
+        log.debug("loadHouseholdDetail: stripe live API fetch failed (non-fatal)", err as Error);
+      }
     }
   }
 
@@ -383,6 +493,11 @@ async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDeta
     stripeSubscriptionId,
     stripeStatus,
     currentPeriodEnd,
+    cancelAtPeriodEnd,
+    stripePlanName,
+    stripePeriodStart,
+    stripePaymentLast4,
+    stripePaymentBrand,
   };
 }
 
