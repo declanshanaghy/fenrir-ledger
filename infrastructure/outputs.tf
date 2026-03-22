@@ -74,6 +74,21 @@ output "firestore_project_id" {
 }
 
 # --------------------------------------------------------------------------
+# Stripe
+# --------------------------------------------------------------------------
+
+output "stripe_webhook_url" {
+  description = "Stripe webhook endpoint URL managed by Terraform"
+  value       = stripe_webhook_endpoint.main.url
+}
+
+output "stripe_webhook_signing_secret" {
+  description = "Stripe webhook signing secret — set as STRIPE_WEBHOOK_SECRET env var in app pods. Retrieve with: terraform output -raw stripe_webhook_signing_secret"
+  value       = stripe_webhook_endpoint.main.secret
+  sensitive   = true
+}
+
+# --------------------------------------------------------------------------
 # Local dev: Firestore Emulator
 #
 # To use the Firebase Emulator for local development:
