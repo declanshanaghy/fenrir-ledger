@@ -1,0 +1,454 @@
+{
+  "updatedAt": "2026-03-22T00:00:00.000Z",
+  "createdAt": "2026-03-22T00:00:00.000Z",
+  "id": "gmail-f5bot-monitor",
+  "name": "Gmail — F5Bot Keyword Monitor",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f5b0-0001-4000-8000-000000000001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "notes": "Odin kicks this off manually to process F5Bot keyword alert emails.\n\nFUTURE: Replace with a Webhook node — set up a Gmail filter (From: alerts@f5bot.com, Subject: F5Bot found something) that forwards matching emails to the n8n webhook URL. This eliminates manual polling entirely."
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 20,
+        "filters": {
+          "sender": "f5bot",
+          "subject": "F5Bot found something",
+          "readStatus": "unread"
+        },
+        "simple": false,
+        "options": {
+          "attachmentsBinaryData": false
+        }
+      },
+      "id": "f5b0-0002-4000-8000-000000000002",
+      "name": "Gmail — Fetch F5Bot Alerts",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Eck5j1Xj1x6zyc9A",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "Reads unread F5Bot keyword alert emails from freyafenrir@gmail.com.\n\nF5Bot sends from alerts@f5bot.com with subject 'F5Bot found something: <keyword>'.\nsimple: false returns the full Gmail message payload (including HTML body) rather than the simplified snippet. This is required to extract Reddit URLs from the email body."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-f5bot-subject",
+              "leftValue": "={{ $json.Subject || $json.subject || '' }}",
+              "rightValue": "F5Bot found something",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f5b0-0003-4000-8000-000000000003",
+      "name": "Filter — F5Bot Emails",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "notes": "Secondary guard: only process emails whose subject explicitly contains 'F5Bot found something'. The Gmail fetch already filters by sender + subject, but this provides defense-in-depth against mis-filtered messages."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const emailId = item.json.id || '';\n  const subject = item.json.Subject || item.json.subject || '';\n\n  // Extract keyword from: \"F5Bot found something: <keyword>\"\n  const keywordMatch = subject.match(/F5Bot found something:\\s*(.+)/i);\n  const keyword = keywordMatch ? keywordMatch[1].trim() : 'unknown';\n\n  // Extract HTML body — simple: false returns full Gmail payload with base64-encoded parts\n  let bodyText = '';\n  if (item.json.payload) {\n    const getParts = (part) => {\n      if (!part) return [];\n      const out = [];\n      if (part.body && part.body.data) {\n        out.push({ mimeType: part.mimeType || '', data: part.body.data });\n      }\n      if (part.parts) {\n        for (const p of part.parts) out.push(...getParts(p));\n      }\n      return out;\n    };\n    const parts = getParts(item.json.payload);\n    const htmlPart = parts.find(p => p.mimeType === 'text/html')\n      || parts.find(p => p.mimeType === 'text/plain')\n      || parts[0];\n    if (htmlPart && htmlPart.data) {\n      try {\n        bodyText = Buffer.from(htmlPart.data, 'base64url').toString('utf-8');\n      } catch (e) {\n        bodyText = Buffer.from(htmlPart.data, 'base64').toString('utf-8');\n      }\n    }\n  }\n\n  // Fallback to simplified body fields if payload not available\n  if (!bodyText) {\n    bodyText = item.json.html || item.json.text || item.json.snippet || '';\n  }\n\n  // Extract all reddit.com post/comment URLs from body\n  const urlRegex = /https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[A-Za-z0-9_]+\\/comments\\/[A-Za-z0-9_]+(?:\\/[^\\s\"'<>)\\]&]*)*/g;\n  const rawUrls = bodyText.match(urlRegex) || [];\n\n  // Decode HTML entities, clean trailing punctuation, dedup\n  const seen = new Set();\n  for (let url of rawUrls) {\n    url = url\n      .replace(/&amp;/g, '&')\n      .replace(/&#47;/g, '/')\n      .replace(/[,.)\\]]+$/, '');\n\n    // Strip query string + fragment; use lowercase for dedup key\n    const cleanUrl = url.split('?')[0].split('#')[0].replace(/\\/$/, '');\n    const normalKey = cleanUrl.toLowerCase();\n    if (seen.has(normalKey)) continue;\n    seen.add(normalKey);\n\n    // Detect comment vs post: /r/sub/comments/id/title/comment_id = 6+ path segments\n    const pathParts = cleanUrl\n      .replace(/https?:\\/\\/(?:www\\.)?reddit\\.com/, '')\n      .split('/')\n      .filter(Boolean);\n    const isComment = pathParts.length >= 6;\n\n    results.push({\n      json: {\n        emailId,\n        subject,\n        keyword,\n        redditUrl: cleanUrl,\n        isComment\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "id": "f5b0-0004-4000-8000-000000000004",
+      "name": "Extract — Reddit Links",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        220
+      ],
+      "notes": "Parses the HTML body of each F5Bot alert email to extract all Reddit post/comment URLs.\nEmits one item per unique Reddit link — n8n fan-out iterates all downstream nodes per item.\nDeduplicates URLs within each email. Detects comment vs post by URL path depth (6+ segments = comment)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-has-link",
+              "leftValue": "={{ $json.redditUrl }}",
+              "rightValue": "http",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f5b0-0005-4000-8000-000000000005",
+      "name": "Filter — Has Links?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        220
+      ],
+      "notes": "Safety guard: only process items with a valid Reddit URL (starts with http). Handles edge cases where Extract — Reddit Links might emit a malformed item."
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.redditUrl }}.json",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "fenrir-ledger-n8n/1.0"
+            }
+          ]
+        },
+        "options": {
+          "splitIntoItems": false,
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "f5b0-0006-4000-8000-000000000006",
+      "name": "HTTP — Get Reddit Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        220
+      ],
+      "notes": "Fetches the Reddit post JSON via the undocumented .json API endpoint.\nUser-Agent header is required — Reddit returns 429 for anonymous requests without it.\nsplitIntoItems: false prevents n8n from splitting the [post_listing, comments_listing] array into separate output items.\nReddit rate-limits anonymous requests to ~10/min — fine for manual trigger with small batches."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst linkItems = $('Extract — Reddit Links').all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  // Index-match context from Extract — Reddit Links (fan-out preserves order)\n  const ctx = linkItems[i]?.json || {};\n\n  let postData = {};\n  try {\n    const body = item.json;\n    if (Array.isArray(body)) {\n      // Reddit .json returns [post_listing, comments_listing]\n      postData = body[0]?.data?.children?.[0]?.data || {};\n    } else if (body?.data?.children) {\n      // Fallback if n8n partially parsed the response\n      postData = body.data.children[0]?.data || {};\n    }\n  } catch (e) {\n    postData = {};\n  }\n\n  const subreddit = postData.subreddit_name_prefixed\n    || (postData.subreddit ? 'r/' + postData.subreddit : ctx.subreddit || 'r/unknown');\n\n  results.push({\n    json: {\n      emailId: ctx.emailId || '',\n      subject: ctx.subject || '',\n      keyword: ctx.keyword || 'unknown',\n      redditUrl: ctx.redditUrl || '',\n      isComment: ctx.isComment || false,\n      title: postData.title || 'Untitled Post',\n      postBody: (postData.selftext || '').substring(0, 800).trim(),\n      author: postData.author || 'unknown',\n      subreddit,\n      score: postData.score || 0,\n      numComments: postData.num_comments || 0\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "f5b0-0007-4000-8000-000000000007",
+      "name": "Extract — Post Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        220
+      ],
+      "notes": "Parses the Reddit JSON API response ([post_listing, comments_listing]) to extract post title, body, author, subreddit, score, and comment count.\nIndex-matches with Extract — Reddit Links output to restore the original email context (emailId, keyword, redditUrl, isComment)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-haiku-20241022\",\n  \"max_tokens\": 512,\n  \"system\": \"You are Freya, a helpful member of personal finance communities who uses Fenrir Ledger to track credit card annual fees and bonus milestones. Your tone is friendly, knowledgeable, and never promotional. You give real value first — specific advice, honest opinions, genuine engagement. You never say 'Fenrir Ledger' unless directly asked. You write short Reddit comments (2–4 sentences). No marketing speak. No exclamation points. Sound like a real person who cares about the hobby.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"F5Bot found a mention of the keyword '{{ $json.keyword }}' on Reddit.\\n\\nPost: {{ $json.title }}\\nSubreddit: {{ $json.subreddit }}\\nAuthor: u/{{ $json.author }}\\nScore: {{ $json.score }} | Comments: {{ $json.numComments }}\\n\\nPost body:\\n{{ $json.postBody || '(no text body — link post or image)' }}\\n\\nURL: {{ $json.redditUrl }}\\n\\n{{ $json.isComment ? 'This is a comment thread — draft a reply to the specific comment.' : 'This is a post — draft a top-level reply.' }} Write 2–4 sentences that add real value to this discussion. Be specific to the content above. Only mention tracking tools or apps if the conversation naturally calls for it.\"\n    }\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "f5b0-0008-4000-8000-000000000008",
+      "name": "Claude API — Draft Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1780,
+        220
+      ],
+      "notes": "Calls Claude API (claude-3-5-haiku for cost efficiency) to draft a genuine Reddit reply in Freya's voice.\nSame system prompt as gmail-reddit-monitor — helpful, never promotional, sounds like a real person.\nAdapts prompt based on isComment flag: comment thread vs top-level post reply.\nAPI key injected via $env.ANTHROPIC_API_KEY from n8n-secrets K8s secret."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst ctxItems = $('Extract — Post Content').all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const ctx = ctxItems[i]?.json || {};\n\n  const claudeResponse = item.json;\n  const draftText = claudeResponse?.content?.[0]?.text\n    || 'Claude draft unavailable — check ANTHROPIC_API_KEY in n8n-secrets.';\n\n  results.push({\n    json: {\n      draftText,\n      emailId: ctx.emailId || '',\n      subject: ctx.subject || '',\n      keyword: ctx.keyword || '',\n      redditUrl: ctx.redditUrl || '',\n      isComment: ctx.isComment || false,\n      title: ctx.title || '',\n      postBody: ctx.postBody || '',\n      author: ctx.author || '',\n      subreddit: ctx.subreddit || '',\n      score: ctx.score || 0,\n      numComments: ctx.numComments || 0\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "f5b0-0009-4000-8000-000000000009",
+      "name": "Merge — Context + Draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        220
+      ],
+      "notes": "Extracts Claude's draft text from the API response and merges it with the full post context from Extract — Post Content, so the Gmail Draft node has everything needed to compose the email."
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "=[F5Bot] {{ $json.keyword }} — {{ $json.title }} ({{ $json.subreddit }})",
+        "emailType": "html",
+        "message": "=<h3>F5Bot Keyword Alert: <strong>{{ $json.keyword }}</strong></h3>\n<p>\n  <strong>Post:</strong> <a href=\"{{ $json.redditUrl }}\">{{ $json.title }}</a><br>\n  <strong>Subreddit:</strong> {{ $json.subreddit }}<br>\n  <strong>Author:</strong> u/{{ $json.author }}<br>\n  <strong>Score:</strong> {{ $json.score }} | <strong>Comments:</strong> {{ $json.numComments }}<br>\n  <strong>Type:</strong> {{ $json.isComment ? 'Comment thread' : 'Post' }}\n</p>\n<hr>\n<h4>Post Content</h4>\n<blockquote style=\"border-left: 3px solid #ccc; padding-left: 12px; color: #555;\">\n  {{ $json.postBody || '(link post or image — no text body)' }}\n</blockquote>\n<hr>\n<h4>Claude Draft Reply</h4>\n<p style=\"background: #f0f8ff; padding: 12px; border-radius: 4px;\">{{ $json.draftText }}</p>\n<hr>\n<p><em>Odin: review the draft above, edit as needed, then post as u/Wide-Pass369. Delete this draft when done.<br>Generated by the F5Bot Monitor n8n workflow (issue #1788).</em></p>",
+        "options": {}
+      },
+      "id": "f5b0-000a-4000-8000-000000000010",
+      "name": "Gmail — Create Draft",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        220
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Eck5j1Xj1x6zyc9A",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "Creates a Gmail draft in freyafenrir@gmail.com with the Reddit post context and Claude's draft reply.\nOne draft per Reddit link found in the F5Bot alert email.\nOdin reviews each draft, edits if needed, then posts manually as u/Wide-Pass369."
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f5b0-000b-4000-8000-000000000011",
+      "name": "No Emails Found",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        420
+      ],
+      "notes": "Reached when no unread F5Bot alert emails are present. Workflow ends cleanly — nothing to do."
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f5b0-000c-4000-8000-000000000012",
+      "name": "No Reddit Links",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        420
+      ],
+      "notes": "Reached when a F5Bot email item has no valid extractable Reddit URLs. Workflow ends cleanly for that item."
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gmail — Fetch F5Bot Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail — Fetch F5Bot Alerts": {
+      "main": [
+        [
+          {
+            "node": "Filter — F5Bot Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter — F5Bot Emails": {
+      "main": [
+        [
+          {
+            "node": "Extract — Reddit Links",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Emails Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract — Reddit Links": {
+      "main": [
+        [
+          {
+            "node": "Filter — Has Links?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter — Has Links?": {
+      "main": [
+        [
+          {
+            "node": "HTTP — Get Reddit Post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Reddit Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP — Get Reddit Post": {
+      "main": [
+        [
+          {
+            "node": "Extract — Post Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract — Post Content": {
+      "main": [
+        [
+          {
+            "node": "Claude API — Draft Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude API — Draft Reply": {
+      "main": [
+        [
+          {
+            "node": "Merge — Context + Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Context + Draft": {
+      "main": [
+        [
+          {
+            "node": "Gmail — Create Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "f5b00001-0000-4000-8000-000000000000",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [
+    {
+      "updatedAt": "2026-03-22T00:00:00.000Z",
+      "createdAt": "2026-03-22T00:00:00.000Z",
+      "id": "tag-marketing",
+      "name": "marketing"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2026-03-22T00:00:00.000Z",
+      "createdAt": "2026-03-22T00:00:00.000Z",
+      "role": "workflow:owner",
+      "workflowId": "gmail-f5bot-monitor",
+      "projectId": "ijvbmfY8ADB2nP8o",
+      "project": {
+        "updatedAt": "2026-03-18T15:43:38.591Z",
+        "createdAt": "2026-03-18T04:35:30.486Z",
+        "id": "ijvbmfY8ADB2nP8o",
+        "name": "Dek Shanaghy <declan@shanaghy.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "fee27c46-c145-43f0-9faf-6b584f2f7c5c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
