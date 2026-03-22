@@ -291,11 +291,12 @@ export default function SettingsPage() {
         </p>
       </header>
 
-      {/* ── Desktop tab bar (hidden on mobile) ── */}
+      {/* ── Tab bar (all viewports, horizontal scroll on mobile) ── */}
       <div
         role="tablist"
         aria-label="Settings tabs"
-        className="hidden md:flex border-b border-border"
+        className="flex border-b border-border overflow-x-auto"
+        style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
       >
         {SETTINGS_TABS.map((tab, index) => {
           const isSelected = activeTab === tab.id;
@@ -303,6 +304,7 @@ export default function SettingsPage() {
             <button
               key={tab.id}
               ref={(el) => { tabRefs.current[index] = el; }}
+              type="button"
               role="tab"
               id={`settings-tab-${tab.id}`}
               aria-selected={isSelected}
@@ -310,36 +312,16 @@ export default function SettingsPage() {
               tabIndex={isSelected ? 0 : -1}
               onClick={() => activateTab(tab.id)}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              className={`karl-bling-tab relative px-5 py-3 text-sm font-heading font-semibold tracking-wide border border-transparent border-b-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+              className={`karl-bling-tab flex items-center px-4 py-3 text-sm font-heading uppercase tracking-wide border-b-[3px] transition-colors whitespace-nowrap shrink-0 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                 isSelected
-                  ? "border-border border-b-2 border-b-foreground -mb-px text-foreground bg-background"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-gold text-gold"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab.label}
             </button>
           );
         })}
-      </div>
-
-      {/* ── Mobile select (visible below md) ── */}
-      <div className="md:hidden pt-4">
-        <label htmlFor="settings-tab-select" className="sr-only">
-          Settings section
-        </label>
-        <select
-          id="settings-tab-select"
-          aria-label="Settings section"
-          value={activeTab}
-          onChange={(e) => activateTab(e.target.value as SettingsTabId)}
-          className="karl-bling-select w-full min-h-[44px] px-3 py-2 text-sm font-heading bg-background border border-border rounded-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {SETTINGS_TABS.map((tab) => (
-            <option key={tab.id} value={tab.id}>
-              {tab.label}
-            </option>
-          ))}
-        </select>
       </div>
 
       {/* ── Tab panels ── */}
