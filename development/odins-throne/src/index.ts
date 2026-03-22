@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { listAgentJobs, deleteAgentJob } from "./k8s.js";
+import { listAgentJobs, deleteAgentJob, findPodForSession, streamPodLogs } from "./k8s.js";
 import { attachWebSocketServer } from "./ws.js";
 
 const app = new Hono();
@@ -25,6 +25,39 @@ app.get("/api/jobs", async (c) => {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.warn("[k8s] Could not list jobs:", message);
     return c.json({ jobs: [], count: 0, error: message });
+  }
+});
+
+// Download full agent session log from K8s pod
+app.get("/api/logs/:sessionId", async (c) => {
+  const sessionId = c.req.param("sessionId");
+  try {
+    const podName = await findPodForSession(sessionId, NAMESPACE);
+    if (!podName) {
+      return c.json({ error: "Pod not found for session" }, 404);
+    }
+    const lines: string[] = [];
+    await new Promise<void>((resolve, reject) => {
+      streamPodLogs(
+        podName,
+        NAMESPACE,
+        (line) => lines.push(line),
+        () => resolve(),
+        (err) => reject(err),
+        { follow: false }
+      );
+    });
+    const content = lines.join("\n");
+    return new Response(content, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${sessionId}.log"`,
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.warn(`[k8s] Could not fetch logs for session ${sessionId}:`, message);
+    return c.json({ error: message }, 500);
   }
 });
 
