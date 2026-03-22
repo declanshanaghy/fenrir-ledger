@@ -21,8 +21,8 @@
     "allowUnusedLabels": false,
     "paths": {
       "@fenrir/logger":      ["./src/log.ts"],
-      "@fenrir/logger-base": ["../frontend/src/lib/logger.ts"],
-      "@fenrir/*":           ["../frontend/src/*"]
+      "@fenrir/logger-base": ["../ledger/src/lib/logger.ts"],
+      "@fenrir/*":           ["../ledger/src/*"]
     },
     "outDir": "dist"
   },

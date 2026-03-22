@@ -9,9 +9,9 @@ const baseDir = new URL(".", import.meta.url);
 
 const aliases = [
   // Order matters: exact matches before prefix matches
-  { prefix: "@fenrir/logger-base", target: "../frontend/src/lib/logger.ts", exact: true },
+  { prefix: "@fenrir/logger-base", target: "../ledger/src/lib/logger.ts", exact: true },
   { prefix: "@fenrir/logger",      target: "./src/log.ts",                  exact: true },
-  { prefix: "@fenrir/",            target: "../frontend/src/" },
+  { prefix: "@fenrir/",            target: "../ledger/src/" },
 ];
 
 export function resolve(specifier, context, nextResolve) {
