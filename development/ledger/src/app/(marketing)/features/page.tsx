@@ -362,7 +362,7 @@ function FeatureImage({ feature }: { feature: FeatureDetail }) {
   );
 }
 
-function FeatureSection({ feature }: { feature: FeatureDetail }) {
+function FeatureSection({ feature, index }: { feature: FeatureDetail; index: number }) {
   const content = (
     <div className="flex flex-col gap-4">
       <div className="flex items-baseline flex-wrap gap-1">
@@ -418,7 +418,7 @@ function FeatureSection({ feature }: { feature: FeatureDetail }) {
     <section
       id={feature.id}
       aria-label={feature.title}
-      className="border-b border-border"
+      className={`border-b border-border${index % 2 === 1 ? " bg-card" : ""}`}
     >
       <div className="max-w-[1100px] mx-auto px-6 py-16 sm:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
@@ -670,13 +670,13 @@ export default function FeaturesPage() {
       <PageHero />
       <SmartImportSafetyCallout />
       <ThrallSectionHeading />
-      {THRALL_FEATURES.map((feature) => (
-        <FeatureSection key={feature.id} feature={feature} />
+      {THRALL_FEATURES.map((feature, i) => (
+        <FeatureSection key={feature.id} feature={feature} index={i} />
       ))}
       <UpgradeHook />
       <TierDivider />
-      {KARL_FEATURES.map((feature) => (
-        <FeatureSection key={feature.id} feature={feature} />
+      {KARL_FEATURES.map((feature, i) => (
+        <FeatureSection key={feature.id} feature={feature} index={THRALL_FEATURES.length + i} />
       ))}
       <DataSafetyTrustSection />
       <FinalCta />
