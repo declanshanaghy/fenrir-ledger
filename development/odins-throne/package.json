@@ -10,7 +10,7 @@
     "dev:ui": "vite",
     "build": "pnpm run build:ui && pnpm run build:api",
     "build:ui": "tsc -b tsconfig.ui.json && vite build",
-    "build:api": "tsc --noEmit",
+    "build:api": "tsc",
     "start": "node dist/index.js",
     "compile": "tsc",
     "test": "vitest run",
