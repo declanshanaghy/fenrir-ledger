@@ -9,7 +9,7 @@ spec:
   type: {{ .Values.service.type }}
   selector:
     {{- include "odin-throne.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: monitor
+    app.kubernetes.io/component: odins-throne
   ports:
     - name: http
       port: {{ .Values.service.port }}
