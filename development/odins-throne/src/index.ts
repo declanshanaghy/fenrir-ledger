@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { listAgentJobs, deleteAgentJob, findPodForSession, streamPodLogs } from "./k8s.js";
 import { attachWebSocketServer } from "./ws.js";
 
@@ -75,9 +76,17 @@ app.delete("/api/jobs/:sessionId", async (c) => {
   }
 });
 
+// ── Static file serving — Vite build output ───────────────────────────────────
+// Serves dist-ui/ as static assets (production build of the React UI).
+// This runs AFTER API routes so API requests are never intercepted.
+app.use("/*", serveStatic({ root: "./dist-ui" }));
+
+// SPA fallback — serve index.html for any unmatched routes
+app.get("/*", serveStatic({ path: "./dist-ui/index.html" }));
+
 // ── Start server with WebSocket support ──────────────────────────────────────
 const server = serve({ fetch: app.fetch, port: PORT }, (info) => {
-  console.log(`[odin-throne] API listening on http://localhost:${info.port}`);
+  console.log(`[odin-throne] Listening on http://localhost:${info.port}`);
 });
 
 attachWebSocketServer(server, NAMESPACE, JOB_LABEL);

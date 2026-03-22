@@ -2,7 +2,7 @@
 # Odin's Throne — Helm Chart Default Values
 #
 # Hono-based real-time agent monitor for Fenrir Ledger.
-# Listens on :3001, health at /healthz, WebSocket upgrades supported.
+# Serves both the React UI (static files) and API/WebSocket on :3001.
 # Override per-environment with values-prod.yaml etc.
 # --------------------------------------------------------------------------
 
@@ -73,26 +73,6 @@ app:
     periodSeconds: 5
     failureThreshold: 12
 
-# -- UI Deployment ---------------------------------------------------------
-ui:
-  replicaCount: 2
-  revisionHistoryLimit: 3
-
-  image:
-    repository: us-central1-docker.pkg.dev/fenrir-ledger-prod/fenrir-images/odin-throne-ui
-    tag: latest
-    pullPolicy: IfNotPresent
-
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "32Mi"
-      ephemeral-storage: "64Mi"
-    limits:
-      cpu: "100m"
-      memory: "64Mi"
-      ephemeral-storage: "128Mi"
-
 # -- oauth2-proxy Sidecar --------------------------------------------------
 oauth2Proxy:
   enabled: true
@@ -114,7 +94,7 @@ oauth2Proxy:
   # oauth2-proxy secrets are created imperatively by the deploy-odin-throne CI step.
   # They are NOT rendered from values.yaml. See secrets.yaml template for details.
 
-# -- Service (API) ---------------------------------------------------------
+# -- Service ---------------------------------------------------------------
 service:
   type: ClusterIP
   port: 80
@@ -131,7 +111,7 @@ ingress:
     networking.gke.io/managed-certificates: "odin-throne-cert"
     kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.global-static-ip-name: "odins-throne-ip"
-    cloud.google.com/backend-config: '{"default":"odin-throne-ui-backend-config"}'
+    cloud.google.com/backend-config: '{"default":"odin-throne-backend-config"}'
 
   backendConfig:
     enabled: true
@@ -141,8 +121,8 @@ ingress:
       healthyThreshold: 1
       unhealthyThreshold: 3
       type: HTTP
-      requestPath: /nginx-health
-      port: 80
+      requestPath: /healthz
+      port: 3001
     timeoutSec: 3600
     connectionDraining:
       drainingTimeoutSec: 15
@@ -158,28 +138,6 @@ ingress:
 rbac:
   enabled: true
   agentsNamespace: fenrir-agents
-
-# -- oauth2-proxy Sidecar (in UI pod) -------------------------------------
-# Fronts the nginx UI container. Credentials created imperatively by CI.
-oauth2Proxy:
-  enabled: true
-  image:
-    repository: quay.io/oauth2-proxy/oauth2-proxy
-    tag: v7.6.0
-    pullPolicy: IfNotPresent
-  port: 4180
-  redirectUrl: "https://odins-throne.fenrirledger.com/oauth2/callback"
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "64Mi"
-      ephemeral-storage: "64Mi"
-    limits:
-      cpu: "200m"
-      memory: "128Mi"
-      ephemeral-storage: "128Mi"
-  # oauth2-proxy secrets are created imperatively by the deploy-odin-throne CI step.
-  # They are NOT rendered from values.yaml. See secrets.yaml template for details.
 
 # -- Secrets ---------------------------------------------------------------
 secrets:

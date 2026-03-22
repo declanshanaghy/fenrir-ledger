@@ -1,8 +1,15 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { resolve } from "path";
 
 export default defineConfig({
   plugins: [react()],
+  root: ".",
+  // Vite looks for index.html at root — already placed there
+  build: {
+    outDir: "dist-ui",
+    emptyOutDir: true,
+  },
   server: {
     port: 3002,
     proxy: {
