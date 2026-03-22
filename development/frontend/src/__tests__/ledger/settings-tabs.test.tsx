@@ -198,24 +198,19 @@ describe("SettingsPage — 3-tab layout (issue #1367)", () => {
     expect(getTab("Settings").getAttribute("aria-selected")).toBe("true");
   });
 
-  // ── Mobile select ──────────────────────────────────────────────────────────
+  // ── Mobile tab bar (horizontal scroll, no <select>) ───────────────────────
 
-  it("mobile select renders with correct options", () => {
+  it("tab bar is always rendered (no mobile-only dropdown)", () => {
     render(<SettingsPage />);
-    const select = screen.getByLabelText(/Settings section/i) as HTMLSelectElement;
-    expect(select).not.toBeNull();
-    expect(select.options).toHaveLength(3);
-    expect(select.options[0].value).toBe("account");
-    expect(select.options[1].value).toBe("household");
-    expect(select.options[2].value).toBe("settings");
+    // Tab bar is always visible — no native <select> on any viewport
+    const tablist = screen.getByRole("tablist");
+    expect(tablist).not.toBeNull();
+    expect(screen.queryByRole("combobox")).toBeNull();
   });
 
-  it("changing mobile select activates the selected tab", () => {
+  it("all three tabs are always present in the tab bar", () => {
     render(<SettingsPage />);
-    const select = screen.getByLabelText(/Settings section/i);
-    fireEvent.change(select, { target: { value: "household" } });
-    expect(getTab("Household").getAttribute("aria-selected")).toBe("true");
-    expect(getPanel("household")?.hasAttribute("hidden")).toBe(false);
+    expect(screen.getAllByRole("tab")).toHaveLength(3);
   });
 
   // ── Panel content ──────────────────────────────────────────────────────────
