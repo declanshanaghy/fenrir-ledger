@@ -17,7 +17,7 @@
         240,
         300
       ],
-      "notes": "Odin kicks this off manually when he wants to check for Reddit replies.\n\nFUTURE: Replace with a Webhook node — set up a Gmail filter (From: noreply@reddit.com, Subject: replied to your comment) that forwards matching emails to the n8n webhook URL. This eliminates manual polling entirely."
+      "notes": "Odin kicks this off manually when he wants to check for Reddit replies.\n\nFUTURE: Replace with a Webhook node — set up a Gmail filter (From: noreply@redditmail.com, Subject: replied to your comment) that forwards matching emails to the n8n webhook URL. This eliminates manual polling entirely."
     },
     {
       "parameters": {
@@ -26,8 +26,8 @@
         "returnAll": false,
         "limit": 50,
         "filters": {
-          "sender": "noreply@reddit.com",
-          "subject": "replied to your comment",
+          "sender": "noreply@redditmail.com",
+          "subject": "replied to your",
           "readStatus": "unread"
         },
         "options": {
@@ -48,7 +48,7 @@
           "name": "Gmail account"
         }
       },
-      "notes": "Reads unread emails from freyafenrir@gmail.com sent by noreply@reddit.com with subject matching 'replied to your comment'.\n\nCredentials are sourced from the n8n-secrets K8s secret (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN). Configure the credential named 'Freya Gmail OAuth2 (freyafenrir@gmail.com)' in the n8n Credentials UI before activating."
+      "notes": "Reads unread emails from freyafenrir@gmail.com sent by noreply@redditmail.com with subject matching 'replied to your comment'.\n\nCredentials are sourced from the n8n-secrets K8s secret (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN). Configure the credential named 'Freya Gmail OAuth2 (freyafenrir@gmail.com)' in the n8n Credentials UI before activating."
     },
     {
       "parameters": {
@@ -61,8 +61,8 @@
           "conditions": [
             {
               "id": "cond-subject-check",
-              "leftValue": "={{ $json.subject }}",
-              "rightValue": "replied to your comment",
+              "leftValue": "={{ $json.Subject || $json.subject }}",
+              "rightValue": "replied to your",
               "operator": {
                 "type": "string",
                 "operation": "contains"
@@ -85,7 +85,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const subject = item.json.subject || '';\n  const body = item.json.text || item.json.snippet || '';\n  const from = item.json.from?.value?.[0]?.address || item.json.from || '';\n  const messageId = item.json.id || '';\n  const date = item.json.date || new Date().toISOString();\n\n  // Extract thread context from subject: '[reddit] username replied to your comment on r/subreddit'\n  const subjectMatch = subject.match(/\\[reddit\\]\\s+(.+?)\\s+replied to your comment/i);\n  const replierName = subjectMatch ? subjectMatch[1] : 'someone';\n\n  // Extract subreddit from subject if present\n  const subredditMatch = subject.match(/\\bon\\s+(r\\/[\\w]+)/i);\n  const subreddit = subredditMatch ? subredditMatch[1] : 'a subreddit';\n\n  // Extract the reply text from the email body\n  // Reddit notification emails contain the reply text before the separator\n  const replyMatch = body.match(/([\\s\\S]*?)(?:---\\s*|View the full comment|\\|\\s*Reply|unsubscribe)/i);\n  const replyText = replyMatch ? replyMatch[1].trim() : body.substring(0, 1000);\n\n  results.push({\n    json: {\n      messageId,\n      date,\n      subject,\n      replierName,\n      subreddit,\n      replyText,\n      rawBody: body\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "const items = $input.all();\nconst results = [];\nconst seenThreads = new Set();\n\nfor (const item of items) {\n  const subject = item.json.Subject || item.json.subject || '';\n  const body = item.json.snippet || item.json.text || '';\n  const messageId = item.json.id || '';\n  const threadId = item.json.threadId || messageId;\n  const date = item.json.internalDate\n    ? new Date(parseInt(item.json.internalDate)).toISOString()\n    : (item.json.date || new Date().toISOString());\n\n  // Extract replier + subreddit from subject:\n  // \"u/USERNAME replied to your post/comment in r/SUBREDDIT\"\n  const subjectMatch = subject.match(/u\\/(\\S+)\\s+replied to your (?:post|comment) in (r\\/\\S+)/i);\n  const replierName = subjectMatch ? subjectMatch[1] : 'someone';\n  const subreddit = subjectMatch ? subjectMatch[2] : 'unknown';\n\n  // Skip bot/AutoModerator/ModTeam replies — no value in drafting follow-ups\n  const botNames = ['automoderator', 'bot', 'moderator', 'modteam'];\n  if (botNames.some(b => replierName.toLowerCase().includes(b))) {\n    continue;\n  }\n\n  // Skip excluded subreddits entirely\n  const excludedSubs = ['r/creditcards'];\n  if (excludedSubs.some(s => subreddit.toLowerCase() === s)) {\n    continue;\n  }\n\n  // Deduplicate by threadId — only process first email per thread\n  if (seenThreads.has(threadId)) {\n    continue;\n  }\n  seenThreads.add(threadId);\n\n  // Reply text is the snippet (already extracted by Gmail API)\n  const replyText = body.substring(0, 1000).trim();\n\n  results.push({\n    json: {\n      messageId,\n      threadId,\n      date,\n      subject,\n      replierName,\n      subreddit,\n      replyText,\n      rawBody: body\n    }\n  });\n}\n\nreturn results;"
       },
       "id": "a1b2c3d4-0004-4000-8000-000000000004",
       "name": "Extract — Thread Context",
@@ -101,14 +101,13 @@
       "parameters": {
         "method": "POST",
         "url": "https://api.anthropic.com/v1/messages",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "x-api-key",
-              "value": "={{ $credentials.anthropicApiKey }}"
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
             },
             {
               "name": "anthropic-version",
@@ -142,13 +141,7 @@
         1120,
         220
       ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "anthropic-api-key",
-          "name": "Anthropic API Key"
-        }
-      },
-      "notes": "Calls the Claude API (claude-3-5-haiku for cost efficiency) to draft a short, brand-voice-aligned follow-up to the Reddit reply.\n\nCredential 'Anthropic API Key' must be configured in n8n with:\n  Header name: x-api-key\n  Value: <FENRIR_ANTHROPIC_API_KEY from n8n-secrets>"
+      "notes": "Calls the Claude API (claude-3-5-haiku for cost efficiency) to draft a short, brand-voice-aligned follow-up to the Reddit reply.\n\nAPI key is injected via $env.ANTHROPIC_API_KEY (sourced from n8n-secrets K8s secret)."
     },
     {
       "parameters": {
