@@ -44,8 +44,8 @@ export function StatusBar({ connStatus, counts, activeTab }: StatusBarProps): Re
   log.debug("StatusBar render", { activeTab });
   const countLabel =
     activeTab === 0
-      ? `${counts.users} user${counts.users !== 1 ? "s" : ""}`
-      : `${counts.households} household${counts.households !== 1 ? "s" : ""}`;
+      ? `${counts.households} household${counts.households !== 1 ? "s" : ""}`
+      : `${counts.users} user${counts.users !== 1 ? "s" : ""}`;
 
   return (
     <Box

@@ -14,7 +14,7 @@ import type { PaletteCommand, CommandContext } from "./commands/registry.js";
 import { getCommands } from "./commands/registry.js";
 import type { ConnStatus, Counts } from "./components/StatusBar.js";
 
-const TUI_TABS = ["Users", "Households"] as const;
+const TUI_TABS = ["Households", "Users"] as const;
 
 // ─── Inner component (needs SelectionProvider in tree) ───────────────────────
 
@@ -192,13 +192,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
     );
   } else if (activeTab === 0) {
     mainContent = (
-      <UsersTab
-        cmdStatus={cmdStatus}
-        onJumpToHousehold={(householdId) => { setJumpHouseholdId(householdId); setActiveTab(1); }}
-      />
-    );
-  } else {
-    mainContent = (
       <HouseholdsTab
         cmdStatus={cmdStatus}
         initialHouseholdId={jumpHouseholdId}
@@ -209,6 +202,13 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
           const cmd = getCommands().find((c) => c.name === "trial-adjust");
           if (cmd) handleTrialInput(cmd);
         }}
+      />
+    );
+  } else {
+    mainContent = (
+      <UsersTab
+        cmdStatus={cmdStatus}
+        onJumpToHousehold={(householdId) => { setJumpHouseholdId(householdId); setActiveTab(0); }}
       />
     );
   }

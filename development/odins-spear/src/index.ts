@@ -5,7 +5,7 @@
  * Design reference: development/odins-spear/odins-spear.html
  *
  * Layout:
- *   TopBar  │ ODIN'S SPEAR ⚡  [Users]  [Households]  │  [/] Command  [^R] Reload  [?] Help
+ *   TopBar  │ ODIN'S SPEAR ⚡  [Households]  [Users]  │  [/] Command  [^R] Reload  [?] Help
  *   Main    │ Left list (34 cols) │ Right detail (flex-grow)
  *   StatusBar│ ● Firestore  ● Stripe    │  <count>
  *

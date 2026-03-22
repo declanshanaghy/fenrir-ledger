@@ -92,7 +92,7 @@ export function HelpOverlay({ activeTab, onClose }: HelpOverlayProps): React.JSX
     onClose();
   });
 
-  const tabLabel = activeTab === 0 ? "Users" : "Households";
+  const tabLabel = activeTab === 0 ? "Households" : "Users";
   const sections = getSectionsForTab(activeTab);
 
   return (
