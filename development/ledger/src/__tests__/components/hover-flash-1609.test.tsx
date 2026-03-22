@@ -11,7 +11,7 @@
  *    so background-color is NOT animated and cannot interpolate through
  *    transparent (which appeared white on bg-background surfaces).
  *
- * monitor-ui JobCard fix is not tested here — no Vitest infrastructure for monitor-ui.
+ * odins-throne-ui JobCard fix is not tested here — no Vitest infrastructure for odins-throne-ui.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";

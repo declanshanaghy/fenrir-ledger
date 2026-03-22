@@ -31,8 +31,8 @@ The `detect-changes` job compares `HEAD~1..HEAD` and outputs boolean flags. All 
 |---|---|
 | `app` | `development/ledger/`, `Dockerfile`, `package*.json` |
 | `k8s-app` | `infrastructure/k8s/app/`, `infrastructure/helm/fenrir-app/` |
-| `monitor` | `development/monitor/` |
-| `monitor-ui` | `development/monitor-ui/` |
+| `monitor` | `development/odins-throne/` |
+| `monitor-ui` | `development/odins-throne-ui/` |
 | `helm-odin` | `infrastructure/helm/odin-throne/` |
 | `infra` | `infrastructure/*.tf`, `infrastructure/firestore/` |
 | `umami` | `infrastructure/helm/umami/` |
@@ -48,12 +48,12 @@ detect-changes (Job 0)
 ├── terraform           (Job 1)  — if: infra changed
 ├── build-and-push      (Job 2)  — if: app or k8s-app changed
 ├── build-and-push-monitor   (Job 2b) — if: monitor changed
-├── build-and-push-monitor-ui (Job 2c) — if: monitor-ui changed
+├── build-and-push-monitor-ui (Job 2c) — if: odins-throne-ui changed
 ├── test-app            (Job 2d) — needs: build-and-push
 ├── deploy-bootstrap    (Job 3a) — always (if not skip_deploy)
 │   ├── deploy-fenrir-app    (Job 3b) — needs: test-app, build-and-push, deploy-bootstrap
 │   ├── deploy-umami         (Job 3c) — needs: deploy-bootstrap, if: umami changed
-│   └── deploy-odin-throne   (Job 3d) — needs: build-monitor, build-monitor-ui, deploy-bootstrap
+│   └── deploy-odin-throne   (Job 3d) — needs: build-odins-throne, build-odins-throne-ui, deploy-bootstrap
 ```
 
 ---

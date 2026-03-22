@@ -15,19 +15,19 @@ graph LR
     classDef background fill:#2C2C2C,stroke:#444,color:#FFF
 
     detect([Detect Changes]) ==> build-app[Build App Image]
-    detect ==> build-monitor[Build Monitor Image]
-    detect ==> build-monitor-ui[Build Monitor UI Image]
+    detect ==> build-odins-throne[Build Monitor Image]
+    detect ==> build-odins-throne-ui[Build Monitor UI Image]
     detect ==> terraform[Terraform]
     detect ==> deploy-umami[Deploy Umami]
 
     build-app ==> test-app[Test App]
     test-app ==> deploy-app[Deploy App]
 
-    build-monitor ==> deploy-odin[Deploy Odin's Throne]
-    build-monitor-ui ==> deploy-odin
+    build-odins-throne ==> deploy-odin[Deploy Odin's Throne]
+    build-odins-throne-ui ==> deploy-odin
 
     class detect background
-    class build-app,build-monitor,build-monitor-ui primary
+    class build-app,build-odins-throne,build-odins-throne-ui primary
     class test-app warning
     class deploy-app,deploy-odin,deploy-umami,terraform healthy
 ```
@@ -46,30 +46,30 @@ graph TD
     diff([git diff HEAD~1 HEAD]) --> app{app?}
     diff --> k8sapp{k8s-app?}
     diff --> monitor{monitor?}
-    diff --> monui{monitor-ui?}
+    diff --> monui{odins-throne-ui?}
     diff --> helmodin{helm-odin?}
     diff --> infra{infra?}
     diff --> umami{umami?}
 
     app -->|"development/ledger/ - Dockerfile - package*.json"| build-app[build-app]
     k8sapp -->|"infrastructure/helm/fenrir-app/"| build-app
-    monitor -->|"development/monitor/"| build-monitor[build-monitor]
-    monui -->|"development/monitor-ui/"| build-monitor-ui[build-monitor-ui]
+    monitor -->|"development/odins-throne/"| build-odins-throne[build-odins-throne]
+    monui -->|"development/odins-throne-ui/"| build-odins-throne-ui[build-odins-throne-ui]
     helmodin -->|"infrastructure/helm/odin-throne/"| deploy-odin[deploy-odin-throne]
     infra -->|"infrastructure/terraform/ - infrastructure/firestore/"| terraform[terraform]
     umami -->|"infrastructure/helm/umami/"| deploy-umami[deploy-umami]
 
     class diff background
     class app,k8sapp,monitor,monui,helmodin,infra,umami primary
-    class build-app,build-monitor,build-monitor-ui,deploy-odin,terraform,deploy-umami healthy
+    class build-app,build-odins-throne,build-odins-throne-ui,deploy-odin,terraform,deploy-umami healthy
 ```
 
 | Output | Paths | Consumer |
 |--------|-------|----------|
 | `app` | `development/ledger/`, `Dockerfile`, `package*.json` | build-app |
 | `k8s-app` | `infrastructure/k8s/app/` | build-app, deploy-app |
-| `monitor` | `development/monitor/` | build-monitor |
-| `monitor-ui` | `development/monitor-ui/` | build-monitor-ui |
+| `monitor` | `development/odins-throne/` | build-odins-throne |
+| `monitor-ui` | `development/odins-throne-ui/` | build-odins-throne-ui |
 | `helm-odin` | `infrastructure/helm/odin-throne/` | deploy-odin-throne |
 | `infra` | `infrastructure/terraform/`, `infrastructure/monitoring/` | terraform |
 | `umami` | `infrastructure/helm/umami/` | deploy-umami |
@@ -168,9 +168,9 @@ graph LR
 | `build-app` | detect-changes | `app == true` OR `k8s-app == true` |
 | `test-app` | build-app | build-app succeeded |
 | `deploy-app` | test-app, build-app, detect-changes | test-app succeeded |
-| `build-monitor` | detect-changes | `monitor == true` |
-| `build-monitor-ui` | detect-changes | `monitor-ui == true` |
-| `deploy-odin-throne` | build-monitor, build-monitor-ui, detect-changes | Any build succeeded OR `helm-odin == true` (no failures) |
+| `build-odins-throne` | detect-changes | `monitor == true` |
+| `build-odins-throne-ui` | detect-changes | `monitor-ui == true` |
+| `deploy-odin-throne` | build-odins-throne, build-odins-throne-ui, detect-changes | Any build succeeded OR `helm-odin == true` (no failures) |
 | `deploy-umami` | detect-changes | `umami == true` |
 
 ### Concurrency
