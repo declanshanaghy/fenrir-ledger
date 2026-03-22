@@ -28,7 +28,7 @@ Manages all local development services for Fenrir Ledger.
 | `app` | — | 9653 (WOLF) | Next.js dev server via `vercel dev` |
 | `stripe` | — | — | Stripe CLI webhook forwarding to app |
 | `odins-throne-api` | `odins-throne` | 3001 | Hono API/WebSocket server (K8s jobs, log streaming) |
-| `odins-throne-ui` | `odins-throne` | 3002 | Vite React UI (Odin's Throne — Hlidskjalf) |
+| `odins-throne-ui` | `odins-throne` | 3002 | Vite React UI dev server (HMR, proxies to Hono on 3001) |
 | `proxy` | — | 8001 | kubectl proxy for GKE cluster access |
 
 **`odins-throne`** is a convenience alias that controls both `odins-throne-api` and `odins-throne-ui` together.
@@ -96,7 +96,7 @@ proxy           8001   not running
 ## Notes
 
 - `odins-throne-api` requires `tsx` (runs `development/odins-throne/` via `tsx watch`)
-- `odins-throne-ui` requires `vite` (runs `development/odins-throne-ui/` Vite dev server with HMR)
+- `odins-throne-ui` requires `vite` (runs `development/odins-throne/` Vite dev server with HMR)
 - `proxy` requires `kubectl` configured for the GKE cluster
 - `stripe` requires Stripe CLI (`brew install stripe/stripe-cli/stripe`)
 - Open http://localhost:3002/ for the UI (Vite proxies API/WS to odins-throne-api on 3001)

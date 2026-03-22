@@ -47,7 +47,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
 - Run: `cd <REPO_ROOT>/development/ledger && npx vitest run src/__tests__/<feature>/`
 - Commit+push tests with implementation.
 - Loki will add E2E tests later — you own Vitest tests.
-- **NEVER write tests for odins-throne-ui (Odin's Throne) or odins-spear.** `development/odins-throne-ui/` and
+- **NEVER write tests for odins-throne (Odin's Throne) or odins-spear.** `development/odins-throne/` and
   `development/odins-spear/` have no test infrastructure that agents should use. Tests are ledger-only.
 
 **Step 4 — Full verify: tsc + build + Vitest (each = separate Bash tool call + separate todo):**

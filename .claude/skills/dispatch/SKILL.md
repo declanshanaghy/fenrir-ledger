@@ -159,9 +159,9 @@ for tsc, build, or Vitest commands. You MUST confirm each step passes before pro
 to the next step or to merge/handoff. Background verify = unverified merge = bug.
 
 NO MONITOR-UI / ODINS-SPEAR TESTS (UNBREAKABLE):
-NEVER write tests for `development/odins-throne-ui/` (Odin's Throne) or `development/odins-spear/`.
+NEVER write tests for `development/odins-throne/` (Odin's Throne) or `development/odins-spear/`.
 These packages have no test infrastructure that agents should use. All tests target
-`development/ledger/` only. For odins-throne-ui or odins-spear issues, validate via tsc + build only.
+`development/ledger/` only. For odins-throne or odins-spear issues, validate via tsc + build only.
 
 STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,

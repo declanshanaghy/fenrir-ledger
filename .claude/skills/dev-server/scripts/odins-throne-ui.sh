@@ -5,7 +5,7 @@ set -euo pipefail
 
 PORT=3002
 REPO_ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
-UI_DIR="$REPO_ROOT/development/odins-throne-ui"
+UI_DIR="$REPO_ROOT/development/odins-throne"
 LOG_DIR="$UI_DIR/logs"
 mkdir -p "$LOG_DIR"
 LOG="${LOG_DIR}/odins-throne-ui.log"
