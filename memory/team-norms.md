@@ -150,6 +150,18 @@ Never do the subagent's work as the orchestrator.
 
 ---
 
+## Odin's Spear: Command Registry + UI Wiring (UNBREAKABLE)
+
+Any issue that changes command execution in Odin's Spear MUST update **both** layers:
+
+1. **Command registry** (`src/commands/*.ts`) — `registerCommand()` with correct `tab`, `requiresContext`, etc.
+2. **UI action wiring** (`src/tabs/*.tsx`, `src/app.tsx`, `src/components/*.tsx`) — key handler, hint text, prop plumbing, `HelpOverlay` shortcuts.
+
+These are separate systems. Updating the registry without moving the UI wiring leaves
+the shortcut appearing in the wrong tab. Agents must verify both sides in every PR.
+
+---
+
 ## No File Structure Trees in Documentation (UNBREAKABLE)
 
 Never include file/directory tree listings in READMEs or architecture docs. They go

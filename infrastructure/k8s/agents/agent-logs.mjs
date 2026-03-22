@@ -37,27 +37,27 @@ import { spawn, execSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { createWriteStream, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
-// -- Colors (ANSI) — Android messenger style --------------------------------
+// -- Colors (ANSI) — Fenrir Nordic War Room ---------------------------------
 const C = {
   reset: "\x1b[0m",
   bold: "\x1b[1m",
   dim: "\x1b[2m",
   italic: "\x1b[3m",
-  // Agent messages = red bubble (right-aligned feel)
-  agent: "\x1b[38;5;203m",       // salmon red
-  agentLabel: "\x1b[38;5;196m",  // bright red for name
-  // Tool messages = green bubble (left-aligned feel)
-  tool: "\x1b[38;5;114m",        // green
-  toolLabel: "\x1b[38;5;40m",    // bright green for name
-  result: "\x1b[38;5;65m",       // muted green for results
-  think: "\x1b[38;5;141m",       // purple
-  system: "\x1b[38;5;243m",      // dim gray
-  error: "\x1b[38;5;196m",       // red
-  header: "\x1b[38;5;220m",      // gold
-  done: "\x1b[38;5;226m",        // yellow
+  // Agent messages = Fenrir gold (the Ledger's signature)
+  agent: "\x1b[38;2;201;146;10m",       // #c9920a fenrir gold
+  agentLabel: "\x1b[38;2;212;165;32m",  // #d4a520 bright karl gold
+  // Tool messages = royal blue (Odin's wisdom)
+  tool: "\x1b[38;2;65;105;225m",        // royal blue
+  toolLabel: "\x1b[38;2;100;149;237m",  // cornflower blue
+  result: "\x1b[38;2;70;90;160m",       // muted steel blue
+  think: "\x1b[38;5;141m",              // purple (Mimir's well)
+  system: "\x1b[38;5;243m",             // dim gray
+  error: "\x1b[38;5;196m",              // red (Muspelheim)
+  header: "\x1b[38;2;212;165;32m",      // #d4a520 karl gold
+  done: "\x1b[38;2;240;192;64m",        // #f0c040 bright gold
 };
 
-// -- Agent display names ----------------------------------------------------
+// -- Agent display names & runic profiles -----------------------------------
 const AGENT_NAMES = {
   firemandecko: "FiremanDecko",
   loki: "Loki",
@@ -65,6 +65,21 @@ const AGENT_NAMES = {
   freya: "Freya",
   heimdall: "Heimdall",
 };
+
+const AGENT_RUNES = {
+  firemandecko: { rune: "\u16A0", title: "Principal Engineer" },  // ᚠ Fehu (wealth/craft)
+  loki:         { rune: "\u16C7", title: "QA Tester" },           // ᛇ Eihwaz (cunning)
+  luna:         { rune: "\u16DA", title: "UX Designer" },         // ᛚ Laguz (water/flow)
+  freya:        { rune: "\u16B7", title: "Product Owner" },       // ᚷ Gebo (gift)
+  heimdall:     { rune: "\u16BB", title: "Security Specialist" }, // ᚻ Hagalaz (guardian)
+};
+
+function agentRunicLabel(agent) {
+  const name = AGENT_NAMES[agent] || agent || "Agent";
+  const profile = AGENT_RUNES[agent];
+  if (!profile) return `\u2726 ${name}`;
+  return `${profile.rune} ${name} \u2014 ${profile.title} ${profile.rune}`;
+}
 
 // -- Parse args --------------------------------------------------------------
 const args = process.argv.slice(2);
@@ -316,7 +331,10 @@ let termWidth = getTermWidth();
 process.stdout.on("resize", () => { termWidth = getTermWidth(); });
 
 // -- Speech bubble renderer -------------------------------------------------
-function bubble(label, textLines, color, labelColor, indent = "") {
+// Runic border characters for Nordic styling
+const RUNE_BORDER = { tl: "\u16A0", tr: "\u16B1", bl: "\u16E0", br: "\u16DE", h: "\u2500", v: "\u2502" };
+
+function bubble(label, textLines, color, labelColor, indent = "", style = "default") {
   const indentLen = indent.length;
   const MAX_W = Math.max(30, termWidth - indentLen - 2);
   // Calculate inner width from longest line
@@ -325,23 +343,48 @@ function bubble(label, textLines, color, labelColor, indent = "") {
   const innerW = Math.min(Math.max(maxTextLen + 2, 20), MAX_W);
 
   const out = [];
-  // Top border with label
-  const labelStr = ` ${label} `;
-  const topPad = Math.max(0, innerW - labelStr.length - 1);
-  out.push(`${indent}${color}╭─${labelColor}${C.bold}${labelStr}${C.reset}${color}${"─".repeat(topPad)}╮${C.reset}`);
 
-  // Content lines
-  for (const line of textLines) {
-    // Word-wrap long lines
-    const wrapped = wrapText(line, innerW - 2);
-    for (const wl of wrapped) {
-      const pad = Math.max(0, innerW - wl.length - 2);
-      out.push(`${indent}${color}│${C.reset} ${color}${wl}${" ".repeat(pad)}${C.reset} ${color}│${C.reset}`);
+  if (style === "agent") {
+    // Fenrir gold runic borders for agent messages
+    const labelStr = ` ${label} `;
+    const topPad = Math.max(0, innerW - labelStr.length - 1);
+    out.push(`${indent}${color}${RUNE_BORDER.tl}${RUNE_BORDER.h}${labelColor}${C.bold}${labelStr}${C.reset}${color}${"─".repeat(topPad)}${RUNE_BORDER.tr}${C.reset}`);
+    for (const line of textLines) {
+      const wrapped = wrapText(line, innerW - 2);
+      for (const wl of wrapped) {
+        const pad = Math.max(0, innerW - wl.length - 2);
+        out.push(`${indent}${color}${RUNE_BORDER.v}${C.reset} ${color}${wl}${" ".repeat(pad)}${C.reset} ${color}${RUNE_BORDER.v}${C.reset}`);
+      }
     }
+    out.push(`${indent}${color}${RUNE_BORDER.bl}${"─".repeat(innerW)}${RUNE_BORDER.br}${C.reset}`);
+  } else if (style === "tool") {
+    // Royal blue runic borders for tool messages
+    const labelStr = ` ${label} `;
+    const topPad = Math.max(0, innerW - labelStr.length - 1);
+    out.push(`${indent}${color}\u2756${RUNE_BORDER.h}${labelColor}${C.bold}${labelStr}${C.reset}${color}${"─".repeat(topPad)}\u2756${C.reset}`);
+    for (const line of textLines) {
+      const wrapped = wrapText(line, innerW - 2);
+      for (const wl of wrapped) {
+        const pad = Math.max(0, innerW - wl.length - 2);
+        out.push(`${indent}${color}\u2551${C.reset} ${color}${wl}${" ".repeat(pad)}${C.reset} ${color}\u2551${C.reset}`);
+      }
+    }
+    out.push(`${indent}${color}\u2756${"─".repeat(innerW)}\u2756${C.reset}`);
+  } else {
+    // Default style (thinking, session complete, etc.)
+    const labelStr = ` ${label} `;
+    const topPad = Math.max(0, innerW - labelStr.length - 1);
+    out.push(`${indent}${color}╭─${labelColor}${C.bold}${labelStr}${C.reset}${color}${"─".repeat(topPad)}╮${C.reset}`);
+    for (const line of textLines) {
+      const wrapped = wrapText(line, innerW - 2);
+      for (const wl of wrapped) {
+        const pad = Math.max(0, innerW - wl.length - 2);
+        out.push(`${indent}${color}│${C.reset} ${color}${wl}${" ".repeat(pad)}${C.reset} ${color}│${C.reset}`);
+      }
+    }
+    out.push(`${indent}${color}╰${"─".repeat(innerW)}╯${C.reset}`);
   }
 
-  // Bottom border
-  out.push(`${indent}${color}╰${"─".repeat(innerW)}╯${C.reset}`);
   return out;
 }
 
@@ -366,15 +409,17 @@ function wrapText(text, maxW) {
 let lastType = "";
 let toolBatch = [];
 let agentDisplayName = "Agent"; // set from streamJob once we know the session ID
+let agentKey = ""; // raw agent key for runic label lookup
 
 function flushToolBatch(lines) {
   if (toolBatch.length === 0) return;
   const bubbleLines = bubble(
-    "🔧 Tools",
+    "\u2726 Bifr\u00F6st \u2014 Tool Invocations \u2726",
     toolBatch,
     C.tool,
     C.toolLabel,
-    "    "  // indented left = tool side
+    "    ",  // indented left = tool side
+    "tool"
   );
   lines.push(...bubbleLines);
   lines.push("");
@@ -402,11 +447,12 @@ function formatLine(obj) {
         if (lastType === "text" || lastType === "tool") lines.push("");
 
         const bubbleLines = bubble(
-          `🤖 ${agentDisplayName}`,
+          agentRunicLabel(agentKey),
           textLines,
           C.agent,
           C.agentLabel,
-          "  "
+          "  ",
+          "agent"
         );
         lines.push(...bubbleLines);
         lines.push("");
@@ -443,7 +489,7 @@ function formatLine(obj) {
     const dur = obj.duration_seconds != null ? `${Math.round(obj.duration_seconds / 60)}m` : "?";
     const turns = obj.num_turns ?? "?";
     lines.push("");
-    const doneLines = bubble("🏁 Session Complete", [
+    const doneLines = bubble(`\u16A0 Ragnar\u00F6k \u2014 Session Complete \u16A0`, [
       `Cost: ${cost}  Duration: ${dur}  Turns: ${turns}`,
     ], C.done, C.done, "  ");
     lines.push(...doneLines);
@@ -646,20 +692,25 @@ function streamLogs(jobName) {
 async function streamJob(jobName) {
   const { issue, step, agent } = parseSessionId(jobName);
 
-  // Set agent display name for bubble labels
+  // Set agent display name and key for runic bubble labels
   agentDisplayName = AGENT_NAMES[agent] || agent || "Agent";
+  agentKey = agent;
 
   // Set tmux pane title for layout detection (stream mode only)
   if (opts.mode === "stream") {
     try { execSync(`tmux select-pane -T 'agent-logs-${issue}'`, { stdio: "ignore" }); } catch {}
   }
 
-  // Header
+  // Header — runic banner
   const modeLabel = opts.mode === "download" ? "download" : "stream";
-  const title = `#${issue} ${agent} (step ${step}) [${modeLabel}]`;
+  const profile = AGENT_RUNES[agent];
+  const rune = profile ? profile.rune : "\u2726";
+  const roleTitle = profile ? profile.title : "Agent";
+  const displayName = AGENT_NAMES[agent] || agent;
+  const title = `${rune} #${issue} ${displayName} \u2014 ${roleTitle} (step ${step}) [${modeLabel}] ${rune}`;
   const padW = Math.max(0, termWidth - title.length - 6);
-  console.log(`${C.header}${C.bold}━━━ ${title} ${"━".repeat(padW)}${C.reset}`);
-  console.log(`${C.dim}job: ${jobName}${C.reset}\n`);
+  console.log(`${C.header}${C.bold}\u2501\u2501\u2501 ${title} ${"\u2501".repeat(padW)}${C.reset}`);
+  console.log(`${C.dim}${rune} job: ${jobName}${C.reset}\n`);
 
   // For download mode, don't follow — just dump existing logs
   if (opts.mode === "download") {
