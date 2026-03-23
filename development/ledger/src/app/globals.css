@@ -128,11 +128,11 @@
   --primary-foreground:   28  15% 7%;
 
   /* ── Secondary / Muted ──────────────────────────────────── */
-  --secondary:            22  8%  20%;    /* #3a3530 — stone border */
+  --secondary:            22 10% 22%;     /* lifted from border identity */
   --secondary-foreground: 40  27% 91%;
 
-  --muted:                20  7%  27%;    /* #4a4540 — emphasized border */
-  --muted-foreground:     30  11% 58%;    /* #a09888 — lighter stone gray */
+  --muted:                25 12% 20%;     /* corrected surface depth hierarchy */
+  --muted-foreground:     30 14% 65%;     /* 7.8:1 AAA on bg */
 
   --accent:               20  7%  27%;
   --accent-foreground:    40  27% 91%;
@@ -142,8 +142,8 @@
   --destructive-foreground: 40 27% 91%;
 
   /* ── Structure ──────────────────────────────────────────── */
-  --border:               22  8%  20%;    /* #3a3530 — stone seam */
-  --input:                20  7%  27%;    /* #4a4540 */
+  --border:               28 22% 40%;     /* lifts to 3.1:1 contrast vs bg */
+  --input:                25 10% 14%;     /* sunken below card for field boundary */
   --ring:                 42  75% 48%;    /* gold focus ring */
 
   /* ── Card Hover (Issue #298) ──────────────────────────── */
@@ -193,6 +193,66 @@
   --realm-ragnarok-dark:  10  60% 48%;   /* #c94020 — ragnarok accent */
   --realm-alfheim:        173 75% 40%;   /* #1a99a5 — teal for opportunity */
   --realm-niflheim:       0   75% 38%;   /* #aa1919 — deep red for overdue */
+}
+
+/* ── Dark Theme: Border Thickness Overrides (issue #1875) ──────────────────
+ *
+ * These selectors are scoped to .dark only — light theme is untouched.
+ * Targeted per-component to avoid regressing focus/state borders.
+ * Color propagates automatically via --border token above.
+ */
+
+/* Cards: 2px */
+.dark .card,
+.dark [data-slot="card"] {
+  border-width: 2px;
+}
+
+/* Dialog/Modal: 2px */
+.dark [role="dialog"] {
+  border: 2px solid hsl(var(--border));
+}
+
+/* Tabs separator: 1.5px bottom */
+.dark [data-radix-tabs-list],
+.dark [role="tablist"] {
+  border-bottom-width: 1.5px;
+}
+
+/* Secondary / outline button borders: 1.5px */
+.dark .btn-outline,
+.dark .btn-secondary,
+.dark button[data-variant="outline"],
+.dark button[data-variant="secondary"] {
+  border-width: 1.5px;
+}
+
+/* Separator: 1.5px */
+.dark [data-radix-separator-root][data-orientation="horizontal"],
+.dark [role="separator"][aria-orientation="horizontal"] {
+  height: 1.5px;
+}
+.dark [data-radix-separator-root][data-orientation="vertical"],
+.dark [role="separator"][aria-orientation="vertical"] {
+  width: 1.5px;
+}
+
+/* Input / Textarea / Select: 1.5px */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark textarea,
+.dark select,
+.dark [data-radix-select-trigger] {
+  border-width: 1.5px;
+}
+
+/* Nav sidebar: 1.5px right border */
+.dark [data-slot="sidebar"] {
+  border-right-width: 1.5px;
+}
+
+/* Footer: 1.5px top border */
+.dark footer {
+  border-top-width: 1.5px;
 }
 
 @layer base {
