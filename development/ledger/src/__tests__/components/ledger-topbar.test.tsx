@@ -156,11 +156,11 @@ describe("LedgerTopBar — Authenticated state", () => {
     expect(anonButton).toBeNull();
   });
 
-  it("does not render the standalone theme toggle when authenticated", () => {
+  it("renders the theme toggle in the header bar when authenticated (Issue #1906)", () => {
     render(<LedgerTopBar />);
-    // The theme toggle should not be separately visible; it lives in the dropdown
-    const toggles = screen.queryAllByRole("button", { name: "Toggle theme" });
-    expect(toggles.length).toBe(0);
+    // Theme toggle is always in the header bar (moved from dropdown — Issue #1906)
+    const toggle = screen.queryByRole("button", { name: "Toggle theme" });
+    expect(toggle).not.toBeNull();
   });
 });
 

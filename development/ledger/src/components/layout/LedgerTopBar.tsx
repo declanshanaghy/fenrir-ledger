@@ -24,10 +24,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
 import { LayoutGrid, Settings, LogOut, User, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { TrialBadge } from "@/components/layout/TrialBadge";
 import { KarlBadge } from "@/components/layout/KarlBadge";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
@@ -227,7 +226,6 @@ interface ProfileDropdownProps {
 function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
   const isKarlOrTrial = useIsKarlOrTrial();
   const isMyCardsActive = pathname === "/ledger";
 
@@ -367,17 +365,6 @@ function ProfileDropdown({ onClose, onSignOut }: ProfileDropdownProps) {
             aria-hidden="true"
           />
         )}
-      </button>
-      {/* Theme row — click anywhere to toggle dark ↔ light */}
-      <button
-        type="button"
-        role="menuitem"
-        onClick={() => setTheme(cycleTheme(theme))}
-        className="flex items-center gap-2 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-[color,border-color] cursor-pointer w-full text-left"
-        style={{ minHeight: 44 }}
-      >
-        <ThemeToggle variant="dropdown-icon" />
-        <span className="text-sm text-muted-foreground font-body">Theme</span>
       </button>
       {/* Sign out */}
       <button
@@ -583,8 +570,8 @@ export function LedgerTopBar() {
         {/* Karl/trial badge — gold for Karl, dimmed+linked for trial (Issue #1779) */}
         {isAuthenticated && <KarlBadge />}
 
-        {/* Theme toggle (icon variant) — hidden when signed in, theme lives in dropdown */}
-        {!isAuthenticated && <ThemeToggle variant="icon" />}
+        {/* Theme toggle (icon variant) — always visible in header bar */}
+        <ThemeToggle variant="icon" />
 
         {/* Stale auth nudge */}
         {!isAuthenticated && showStaleNudge && (
