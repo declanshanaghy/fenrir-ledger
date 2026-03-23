@@ -317,3 +317,48 @@ describe("ensureFreshToken", () => {
     expect(token).toBeNull();
   });
 });
+
+// ─── refreshSession singleton deduplication — issue #1925 ────────────────────
+
+describe("refreshSession singleton deduplication", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("concurrent refreshSession() calls only issue one fetch request", async () => {
+    const sessionModule = await import("@/lib/auth/session");
+    vi.mocked(sessionModule.getSession).mockReturnValue(makeSession({ expires_at: Date.now() - 1000 }));
+
+    const newExp = Math.floor((Date.now() + 3600 * 1000) / 1000);
+
+    let resolveFetch!: (v: Response) => void;
+    const fetchPromise = new Promise<Response>((resolve) => { resolveFetch = resolve; });
+    mockFetch.mockReturnValue(fetchPromise);
+
+    const { refreshSession } = await import("@/lib/auth/refresh-session");
+
+    // Fire three concurrent refresh calls before fetch resolves
+    const p1 = refreshSession();
+    const p2 = refreshSession();
+    const p3 = refreshSession();
+
+    // Resolve the single in-flight fetch
+    resolveFetch({
+      ok: true,
+      json: async () => makeTokenResponse(),
+    } as Response);
+
+    const [r1, r2, r3] = await Promise.all([p1, p2, p3]);
+
+    // Singleton: only one HTTP call despite three callers
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    // All three callers get the same refreshed result
+    expect(r1?.access_token).toBe("ya29.new_access");
+    expect(r2?.access_token).toBe("ya29.new_access");
+    expect(r3?.access_token).toBe("ya29.new_access");
+  });
+});

@@ -214,14 +214,13 @@ export function useCloudSync(): CloudSyncState {
     const session = getSession();
     if (!session?.user?.sub) return;
 
-    // Ensure we have a fresh token before proceeding — refresh silently if stale.
-    const idToken = await ensureFreshToken();
-    if (!idToken) return;
-
     // Resolve actual householdId — for solo users this equals session.user.sub;
     // after joining a shared household it is the new household's ID (#1796).
     const householdId = getEffectiveHouseholdId(session.user.sub);
 
+    // Acquire the sync lock and set status synchronously (optimistic update).
+    // This must happen before any await so the re-entrant guard and UI state
+    // are correct even if ensureFreshToken triggers a network refresh.
     syncInProgressRef.current = true;
     setStatus("syncing");
     setErrorMessage(null);
@@ -324,13 +323,10 @@ export function useCloudSync(): CloudSyncState {
     const session = getSession();
     if (!session?.user?.sub) return;
 
-    // Ensure we have a fresh token before proceeding.
-    const pullToken = await ensureFreshToken();
-    if (!pullToken) return;
-
     // Resolve actual householdId — same rationale as performSync (#1796).
     const householdId = getEffectiveHouseholdId(session.user.sub);
 
+    // Acquire lock synchronously before any awaits.
     syncInProgressRef.current = true;
     setStatus("syncing");
     setErrorMessage(null);
@@ -413,10 +409,6 @@ export function useCloudSync(): CloudSyncState {
     const session = getSession();
     if (!session?.user?.sub) return;
 
-    // Ensure we have a fresh token before migration or pull.
-    const migrationToken = await ensureFreshToken();
-    if (!migrationToken) return;
-
     // Resolve actual householdId — same rationale as performSync (#1796).
     const householdId = getEffectiveHouseholdId(session.user.sub);
 
@@ -426,7 +418,7 @@ export function useCloudSync(): CloudSyncState {
       return;
     }
 
-    // First Karl sign-in: run migration (push+merge — correct for initial sync)
+    // First Karl sign-in: acquire lock synchronously before any awaits.
     syncInProgressRef.current = true;
     setStatus("syncing");
     setErrorMessage(null);
@@ -439,6 +431,13 @@ export function useCloudSync(): CloudSyncState {
     let migrationFailed = false;
 
     try {
+      // Get fresh token — may involve a network refresh if stale.
+      // Done inside the try block so a refresh failure falls through to the catch.
+      const migrationToken = await ensureFreshToken();
+      if (!migrationToken) {
+        throw Object.assign(new Error("Authentication expired."), { code: "auth_error" });
+      }
+
       const result = await runMigration(householdId, migrationToken);
 
       setLastSyncedAt(new Date());
