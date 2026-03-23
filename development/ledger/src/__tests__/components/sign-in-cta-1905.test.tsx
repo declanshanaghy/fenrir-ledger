@@ -118,9 +118,19 @@ describe("Issue #1905 — CompactSignInNudge CTA styling", () => {
     const { LedgerTopBar } = await import("@/components/layout/LedgerTopBar");
     const { container } = render(<LedgerTopBar />);
 
-    // Old class was text-gold/80 — should be gone
-    const goldMuted = container.querySelector("span[class*='text-gold']");
-    expect(goldMuted).toBeNull();
+    // Old nudge text class was text-gold/80 — should be gone.
+    // Note: the logo rune legitimately uses text-gold (aria-hidden), so we
+    // specifically check the nudge container (border-gold/30 bg-gold/5) for
+    // any visible span with a gold text colour.
+    const nudgeContainer = container.querySelector(
+      ".border-gold\\/30.bg-gold\\/5"
+    );
+    expect(nudgeContainer).not.toBeNull();
+    // Within the nudge, no visible span should use text-gold variants
+    const goldSpanInNudge = nudgeContainer?.querySelector(
+      "span:not([aria-hidden='true'])[class*='text-gold']"
+    );
+    expect(goldSpanInNudge).toBeNull();
   });
 
   it("Sign In button has minimum touch target height (32px)", async () => {
