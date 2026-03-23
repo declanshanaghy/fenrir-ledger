@@ -160,11 +160,11 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
         )}
         {replayedFromCache && (
           <span
-            className="ws-badge replayed-cache"
+            className="header-action-btn replayed-cache"
             title="Pod cleaned up — showing cached logs"
             aria-label="Replayed from cache"
           >
-            ᛗ replayed from cache
+            ᛗ Cached
           </span>
         )}
         <CopySessionIdButton sessionId={job.sessionId} />
