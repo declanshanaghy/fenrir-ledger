@@ -212,4 +212,17 @@ describe("ThemeToggle — Issue #1926: no border classes", () => {
     expect(button.style.minWidth).toBe("44px");
     expect(button.style.minHeight).toBe("44px");
   });
+
+  it("icon variant has no border classes in light theme (both themes borderless)", () => {
+    mockThemeState.theme = "light";
+    mockThemeState.resolvedTheme = "light";
+
+    const { container } = render(<ThemeToggle variant="icon" />);
+    const button = container.querySelector("button");
+    expect(button).not.toBeNull();
+    const cls = button!.className;
+    expect(cls).not.toContain("border-border");
+    const tokens = cls.split(/\s+/);
+    expect(tokens).not.toContain("border");
+  });
 });
