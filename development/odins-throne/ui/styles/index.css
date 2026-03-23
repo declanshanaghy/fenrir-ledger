@@ -69,9 +69,9 @@
 /* Derived from globals.css light palette (Lightning Norse / Stone Marble).
  * Applied when <html data-theme="light"> is set by useTheme hook. */
 [data-theme="light"] {
-  --void:              #f7fafc;   /* body bg     — globals.css --background: 210 40% 98% */
-  --forge:             #ffffff;   /* sidebar bg  — globals.css --card: 0 0% 100% */
-  --chain:             #f1f7fa;   /* card hover  — globals.css --input: 210 40% 96% */
+  --void:              #f5f0e8;   /* body bg     — warm beige/cream (hsl 40 30% 95.5%) */
+  --forge:             #faf7f1;   /* sidebar bg  — slightly lighter warm panel surface */
+  --chain:             #ede8dc;   /* card hover  — warm hover/active surface */
   --gold:              #8f6e0e;   /* accent gold — globals.css --primary: 38 80% 28% */
   --gold-bright:       #d97706;   /* bright gold — globals.css --realm-hati: 38 92% 42% */
   --text-saga:         #0f1419;   /* primary txt — globals.css --foreground: 220 40% 8% */
