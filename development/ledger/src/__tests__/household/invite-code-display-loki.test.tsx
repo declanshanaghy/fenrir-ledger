@@ -49,10 +49,10 @@ describe("InviteCodeDisplay — Send Invite link (issue #1793)", () => {
     expect(link).toBeDefined();
   });
 
-  it("href starts with 'mailto:?'  — no recipient pre-filled", () => {
+  it("href starts with 'mailto:your-friend@example.com?' — placeholder recipient pre-filled", () => {
     renderComponent();
     const link = screen.getByRole("link", { name: /send invite via email/i }) as HTMLAnchorElement;
-    expect(link.href).toMatch(/^mailto:\?/);
+    expect(link.href).toMatch(/^mailto:your-friend@example\.com\?/);
   });
 
   it("href encodes the correct subject", () => {

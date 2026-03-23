@@ -49,15 +49,15 @@ describe("pickRandomIntro", () => {
 describe("buildInviteMailtoUrl", () => {
   const code = "ABC123";
 
-  it("starts with mailto:?", () => {
+  it("starts with mailto:your-friend@example.com?", () => {
     const url = buildInviteMailtoUrl(code);
-    expect(url).toMatch(/^mailto:\?/);
+    expect(url).toMatch(/^mailto:your-friend@example\.com\?/);
   });
 
-  it("has no recipient", () => {
+  it("has placeholder recipient your-friend@example.com", () => {
     const url = buildInviteMailtoUrl(code);
-    // mailto:?subject=... means no recipient before the ?
-    expect(url.startsWith("mailto:?")).toBe(true);
+    // mailto:your-friend@example.com?subject=... means placeholder recipient before the ?
+    expect(url.startsWith("mailto:your-friend@example.com?")).toBe(true);
   });
 
   it("encodes the subject correctly", () => {
@@ -69,14 +69,14 @@ describe("buildInviteMailtoUrl", () => {
 
   it("body includes the invite code", () => {
     const url = buildInviteMailtoUrl(code, { random: () => 0 });
-    const params = new URLSearchParams(url.replace("mailto:?", ""));
+    const params = new URLSearchParams(url.replace("mailto:your-friend@example.com?", ""));
     const body = params.get("body") ?? "";
     expect(body).toContain(`Invite code: ${code}`);
   });
 
   it("body includes join instructions", () => {
     const url = buildInviteMailtoUrl(code, { random: () => 0 });
-    const params = new URLSearchParams(url.replace("mailto:?", ""));
+    const params = new URLSearchParams(url.replace("mailto:your-friend@example.com?", ""));
     const body = params.get("body") ?? "";
     expect(body).toContain("fenrirledger.com");
     expect(body).toContain("Settings > Household");
@@ -85,7 +85,7 @@ describe("buildInviteMailtoUrl", () => {
 
   it("body includes a Fenrir intro from the pool", () => {
     const url = buildInviteMailtoUrl(code, { random: () => 0 });
-    const params = new URLSearchParams(url.replace("mailto:?", ""));
+    const params = new URLSearchParams(url.replace("mailto:your-friend@example.com?", ""));
     const body = params.get("body") ?? "";
     expect(INVITE_INTRO_POOL.some((intro) => body.includes(intro))).toBe(true);
   });

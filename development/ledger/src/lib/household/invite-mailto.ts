@@ -41,7 +41,8 @@ export function pickRandomIntro(
  * Subject: "Join my Fenrir Ledger household"
  * Body: random intro + join instructions + invite code
  *
- * No recipient is pre-filled (mailto:?subject=...).
+ * Recipient is pre-filled with a placeholder (your-friend@example.com) so
+ * email clients open correctly — the user replaces it with the real address.
  */
 export function buildInviteMailtoUrl(
   inviteCode: string,
@@ -59,5 +60,5 @@ export function buildInviteMailtoUrl(
 
   const subject = "Join my Fenrir Ledger household";
 
-  return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return `mailto:your-friend@example.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
