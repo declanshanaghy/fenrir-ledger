@@ -24,6 +24,13 @@ import { getSession, setSession } from "./session";
 /** Server-side token proxy. */
 const TOKEN_PROXY_URL = "/api/auth/token";
 
+/**
+ * Singleton in-flight refresh promise.
+ * Prevents concurrent refresh races when multiple requests trigger a refresh simultaneously.
+ * Cleared when the refresh settles (success or failure).
+ */
+let _refreshInFlight: Promise<FenrirSession | null> | null = null;
+
 /** Buffer before expiry to trigger refresh (5 minutes). */
 const REFRESH_BUFFER_MS = 5 * 60 * 1000;
 
@@ -69,11 +76,23 @@ export function isTokenStale(session: FenrirSession | null): boolean {
 
 /**
  * Silently refreshes the session tokens using the stored refresh_token.
+ * Deduplicates concurrent calls — multiple callers racing on a stale token
+ * will all await the same single refresh request rather than issuing many.
  *
  * @returns The refreshed session, or null if refresh failed (no refresh_token,
  *          network error, or Google rejected the refresh).
  */
 export async function refreshSession(): Promise<FenrirSession | null> {
+  // Return the in-flight promise if a refresh is already underway
+  if (_refreshInFlight) return _refreshInFlight;
+
+  _refreshInFlight = _doRefreshSession().finally(() => {
+    _refreshInFlight = null;
+  });
+  return _refreshInFlight;
+}
+
+async function _doRefreshSession(): Promise<FenrirSession | null> {
   const session = getSession();
   if (!session?.refresh_token) {
     return null;

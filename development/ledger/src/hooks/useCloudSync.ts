@@ -40,6 +40,8 @@ import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { getRawAllCards, setAllCards, getEffectiveHouseholdId } from "@/lib/storage";
 import { hasMigrated, runMigration } from "@/lib/sync/migration";
+import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import { authFetch } from "@/lib/auth/auth-fetch";
 import type { FenrirSession } from "@/lib/types";
 import type { Card } from "@/lib/types";
 import {
@@ -210,12 +212,15 @@ export function useCloudSync(): CloudSyncState {
     }
 
     const session = getSession();
-    if (!session?.id_token || !session?.user?.sub) return;
+    if (!session?.user?.sub) return;
+
+    // Ensure we have a fresh token before proceeding — refresh silently if stale.
+    const idToken = await ensureFreshToken();
+    if (!idToken) return;
 
     // Resolve actual householdId — for solo users this equals session.user.sub;
     // after joining a shared household it is the new household's ID (#1796).
     const householdId = getEffectiveHouseholdId(session.user.sub);
-    const idToken = session.id_token;
 
     syncInProgressRef.current = true;
     setStatus("syncing");
@@ -230,17 +235,17 @@ export function useCloudSync(): CloudSyncState {
       const localCards = getRawAllCards(householdId);
       const localActiveCount = localCards.filter((c) => !c.deletedAt).length;
 
-      const response = await fetch("/api/sync/push", {
+      // authFetch ensures fresh token + retries on 401 for mid-flight token expiry
+      const response = await authFetch("/api/sync/push", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({ householdId, cards: localCards }),
       });
 
-      if (!response.ok) {
-        const { code, message } = await parseApiError(response);
+      if (!response || !response.ok) {
+        const { code, message } = response ? await parseApiError(response) : { code: "auth_error", message: "Authentication failed." };
         throw Object.assign(new Error(message), { code });
       }
 
@@ -317,11 +322,14 @@ export function useCloudSync(): CloudSyncState {
     if (syncInProgressRef.current) return;
 
     const session = getSession();
-    if (!session?.id_token || !session?.user?.sub) return;
+    if (!session?.user?.sub) return;
+
+    // Ensure we have a fresh token before proceeding.
+    const pullToken = await ensureFreshToken();
+    if (!pullToken) return;
 
     // Resolve actual householdId — same rationale as performSync (#1796).
     const householdId = getEffectiveHouseholdId(session.user.sub);
-    const idToken = session.id_token;
 
     syncInProgressRef.current = true;
     setStatus("syncing");
@@ -331,17 +339,12 @@ export function useCloudSync(): CloudSyncState {
     setRetryIn(null);
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `/api/sync/pull?householdId=${encodeURIComponent(householdId)}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-          },
-        }
+        { method: "GET" }
       );
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         // Pull failed — stay idle rather than showing an error (non-critical path)
         setStatus("idle");
         return;
@@ -408,11 +411,14 @@ export function useCloudSync(): CloudSyncState {
     if (syncInProgressRef.current) return;
 
     const session = getSession();
-    if (!session?.id_token || !session?.user?.sub) return;
+    if (!session?.user?.sub) return;
+
+    // Ensure we have a fresh token before migration or pull.
+    const migrationToken = await ensureFreshToken();
+    if (!migrationToken) return;
 
     // Resolve actual householdId — same rationale as performSync (#1796).
     const householdId = getEffectiveHouseholdId(session.user.sub);
-    const idToken = session.id_token;
 
     if (hasMigrated()) {
       // Already migrated on a previous sign-in — pull from cloud (no push)
@@ -433,7 +439,7 @@ export function useCloudSync(): CloudSyncState {
     let migrationFailed = false;
 
     try {
-      const result = await runMigration(householdId, idToken);
+      const result = await runMigration(householdId, migrationToken);
 
       setLastSyncedAt(new Date());
       setCardCount(result.cardCount);
