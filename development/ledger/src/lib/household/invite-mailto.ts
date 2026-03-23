@@ -18,7 +18,7 @@ export const INVITE_INTRO_POOL: readonly string[] = [
 
 const JOIN_INSTRUCTIONS = `Here's how to join my household on Fenrir Ledger:
 
-1. Go to fenrirledger.com
+1. Go to https://fenrirledger.com
 2. Sign up or sign in
 3. Go to Settings > Household
 4. Click "Join a Household"
