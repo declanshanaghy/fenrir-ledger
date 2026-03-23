@@ -12,6 +12,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import { buildInviteMailtoUrl } from "@/lib/household/invite-mailto";
 
 interface InviteCodeDisplayProps {
   inviteCode: string;
@@ -59,7 +60,7 @@ export function InviteCodeDisplay({
         Invite Code
       </h3>
 
-      {/* Code + copy — stacks vertically on mobile, row on sm+ */}
+      {/* Code + copy + send invite — stacks vertically on mobile, row on sm+ */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
         <div
           className="flex-1 border border-border px-4 py-2 text-center font-mono font-bold tracking-[0.2em] text-2xl text-foreground"
@@ -75,6 +76,13 @@ export function InviteCodeDisplay({
         >
           {copied ? "Copied!" : "Copy"}
         </button>
+        <a
+          href={buildInviteMailtoUrl(inviteCode)}
+          className="inline-flex items-center justify-center min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 whitespace-nowrap karl-bling-btn"
+          aria-label="Send invite via email"
+        >
+          Send Invite
+        </a>
       </div>
 
       <p className="text-xs text-muted-foreground font-body">
