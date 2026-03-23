@@ -8,7 +8,7 @@
  * Differences from CardTile:
  *   - Removes Credit limit and Annual fee rows.
  *   - Adds Min spend, Spent (with inline progress bar) rows.
- *   - Keeps Bonus deadline and Opened rows.
+ *   - Keeps Bonus deadline row, replaces Opened with Bonus at Stake.
  *   - Progress ring reflects spent / minSpend ratio (not time-based).
  *   - Ring wrapper carries a native title tooltip: remaining spend + human-friendly
  *     time until deadline.
@@ -244,13 +244,17 @@ export function HuntCardTile({ card, lokiLabel }: HuntCardTileProps) {
               </div>
             )}
 
-            {/* Opened date */}
-            <div className="flex justify-between text-muted-foreground">
-              <span>Opened</span>
-              <span className="font-medium text-foreground">
-                {formatDate(card.openDate)}
-              </span>
-            </div>
+            {/* Bonus at stake */}
+            {card.signUpBonus && card.signUpBonus.amount > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Bonus at Stake</span>
+                <span className="font-medium text-primary">
+                  {card.signUpBonus.type === "cashback"
+                    ? formatCurrency(card.signUpBonus.amount)
+                    : `${card.signUpBonus.amount.toLocaleString()} ${card.signUpBonus.type}`}
+                </span>
+              </div>
+            )}
           </CardContent>
         </Card>
       </Link>
