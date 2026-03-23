@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import type { DisplayJob } from "../lib/types";
-import { AGENT_COLORS, AGENT_AVATARS, STATUS_COLORS, STATUS_LABELS } from "../lib/constants";
+import { AGENT_COLORS, AGENT_AVATARS, AGENT_LIGHT_AVATARS, STATUS_COLORS, STATUS_LABELS } from "../lib/constants";
 import { StatusIconSvg } from "./StatusIcon";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 import type { DisplayMode } from "./Sidebar";
 import { downloadLogFile } from "../lib/localStorageLogs";
+import { useTheme } from "../hooks/useTheme";
 
 interface Props {
   job: DisplayJob;
@@ -36,8 +37,10 @@ function formatTimestamp(ts: number | null): string {
 }
 
 export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = false, onTogglePin, onCancelJob, displayMode = "normal", isTerminating = false }: Props) {
+  const { theme } = useTheme();
   const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
-  const avatar = AGENT_AVATARS[job.agentKey ?? ""];
+  const avatarMap = theme === "light" ? AGENT_LIGHT_AVATARS : AGENT_AVATARS;
+  const avatar = avatarMap[job.agentKey ?? ""];
   const sColor = STATUS_COLORS[job.status] || "#606070";
   const sLabel = STATUS_LABELS[job.status] || job.status;
   const pulse = job.status === "running" ? " pulse" : "";
