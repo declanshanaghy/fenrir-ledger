@@ -81,10 +81,6 @@ async function setupWithPreview() {
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
 describe("useJoinHouseholdPage — localStorage migration on join (#1796)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("clears old solo storage after successful join", async () => {
     const result = await setupWithPreview();
 

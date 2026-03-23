@@ -135,7 +135,6 @@ describe("TrialStatusProvider — anonymous users never call ensureFreshToken (#
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "anonymous";
     clearTrialStatusCache();
 
@@ -172,7 +171,6 @@ describe("TrialStatusProvider — authenticated fetch has no X-Trial-Fingerprint
   let capturedHeaders: Record<string, string>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "authenticated";
     capturedHeaders = {};
     clearTrialStatusCache();

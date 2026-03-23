@@ -84,7 +84,6 @@ const memberUserDoc = {
 
 describe("GET /api/household/members", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: OWNER_ID, email: "thor@example.com", name: "Thorvald", picture: "" } });
     mockGetUser.mockResolvedValue(ownerUserDoc);
     mockGetHousehold.mockResolvedValue(baseHousehold);

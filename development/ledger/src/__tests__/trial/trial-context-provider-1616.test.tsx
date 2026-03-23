@@ -59,7 +59,6 @@ describe("TrialStatusProvider — single-fetch per page load (Issue #1616)", () 
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     clearTrialStatusCache();
     fetchSpy = vi
       .spyOn(globalThis, "fetch")
@@ -136,7 +135,6 @@ describe("TrialStatusProvider — clearTrialStatusCache triggers refetch", () =>
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     clearTrialStatusCache();
     fetchSpy = vi
       .spyOn(globalThis, "fetch")
@@ -164,7 +162,6 @@ describe("TrialStatusProvider — periodic refresh", () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     clearTrialStatusCache();
     vi.useFakeTimers();
     fetchSpy = vi
@@ -205,7 +202,6 @@ describe("TrialStatusProvider — error handling (Issue #1616)", () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     clearTrialStatusCache();
   });
 

@@ -188,7 +188,6 @@ function authFail() {
 
 describe("Issue #1627 — /api/trial/status read-only contract", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     // Default: authenticated (most tests need Firestore lookup)
     authOk();
     mockDocRef.get.mockResolvedValue(missingSnap);
@@ -278,7 +277,6 @@ describe("Issue #1637 — handleConfirmImport does NOT call /api/trial/init", ()
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     capturedOnConfirmImport = null;
     localStorage.clear();
     mockSearchParamsGet.mockReturnValue(null);
@@ -351,7 +349,6 @@ describe("Issue #1627/#1637 — AuthCallbackPage does NOT call /api/trial/init o
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     sessionStorage.clear();
 
     fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(

@@ -61,8 +61,6 @@ beforeEach(() => {
   mockEntitlement = { ...KARL_ACTIVE_ENTITLEMENT };
   mockIsOwner = null;
   mockToken = "tok_test";
-  vi.clearAllMocks();
-
   global.fetch = vi.fn((url: RequestInfo | URL) => {
     if (String(url).includes("/api/household/members")) {
       if (mockToken === null) {

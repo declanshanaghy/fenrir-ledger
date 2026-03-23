@@ -18,7 +18,6 @@ import { isAdmin } from "@/lib/admin/auth";
 
 describe("isAdmin", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     delete process.env.ADMIN_EMAILS;
   });
 

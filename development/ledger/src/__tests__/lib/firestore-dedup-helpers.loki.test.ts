@@ -36,7 +36,6 @@ import { isEventProcessed, markEventProcessed, _resetFirestoreForTests } from "@
 
 describe("isEventProcessed", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     _resetFirestoreForTests();
     mockDoc.mockReturnValue({ get: mockDocGet, set: mockDocSet });
   });
@@ -68,7 +67,6 @@ describe("isEventProcessed", () => {
 
 describe("markEventProcessed", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     _resetFirestoreForTests();
     mockDoc.mockReturnValue({ get: mockDocGet, set: mockDocSet });
     mockDocSet.mockResolvedValue(undefined);

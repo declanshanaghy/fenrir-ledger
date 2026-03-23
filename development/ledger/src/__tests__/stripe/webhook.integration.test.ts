@@ -68,7 +68,6 @@ describe("Stripe Webhook Integration", () => {
   const mockCancelAt = Math.floor(Date.now() / 1000) + 15 * 24 * 60 * 60; // 15 days from now
 
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_test_secret");
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2024-01-15T10:00:00Z"));

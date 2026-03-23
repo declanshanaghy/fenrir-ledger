@@ -57,7 +57,6 @@ vi.mock("@/lib/storage", () => ({
 
 describe("EditCardPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthHouseholdId = "household-abc";
     mockAuthStatus = "authenticated";
     mockFoundCard = null;

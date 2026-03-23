@@ -83,11 +83,6 @@ beforeEach(() => {
   // Auth + tier pass by default
   mockRequireAuthz.mockResolvedValue({ ok: true, user: MOCK_USER, firestoreUser: MOCK_FIRESTORE_USER });
 });
-
-afterEach(() => {
-  vi.clearAllMocks();
-});
-
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("/api/sheets/import — Auth & tier gating", () => {

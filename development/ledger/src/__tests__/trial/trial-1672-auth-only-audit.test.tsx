@@ -125,7 +125,6 @@ import { shouldShowExpiryModal } from "@/components/trial/TrialExpiryModal";
 
 describe("TrialBadge — hidden for anonymous users (#1672 AC1)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     setAnonymous();
   });
 
@@ -191,7 +190,6 @@ describe("Trial modal gate — anonymous users blocked (#1672 AC2)", () => {
 
 describe("TrialSettingsSection — sign-in CTA for anonymous users (#1672 AC3, AC4)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     setAnonymous();
   });
 
@@ -242,7 +240,6 @@ describe("TrialSettingsSection — sign-in CTA for anonymous users (#1672 AC3, A
 
 describe("useIsKarlOrTrial — false for anonymous users (#1672 AC5)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     setAnonymous();
   });
 

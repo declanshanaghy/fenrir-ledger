@@ -107,7 +107,6 @@ function makeSubscription(): Stripe.Subscription {
 
 describe("Webhook dedup: Firestore event ID propagation", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockIsEventProcessed.mockResolvedValue(false);
     mockMarkEventProcessed.mockResolvedValue(undefined);
     mockSetStripeEntitlement.mockResolvedValue(undefined);

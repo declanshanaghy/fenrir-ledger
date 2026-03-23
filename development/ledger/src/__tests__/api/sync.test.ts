@@ -234,7 +234,6 @@ describe("PUT /api/sync — request validation", () => {
 
 describe("PUT /api/sync — last-write-wins logic", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     authSuccess();
     karlEntitlement();
     userExists();
@@ -354,7 +353,6 @@ describe("PUT /api/sync — last-write-wins logic", () => {
 
 describe("PUT /api/sync — 403 when user not in Firestore", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     authSuccess();
     karlEntitlement();
   });
@@ -382,7 +380,6 @@ describe("PUT /api/sync — 403 when user not in Firestore", () => {
 
 describe("PUT /api/sync — large batch (500+ cards)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     authSuccess();
     karlEntitlement();
     userExists();
@@ -424,7 +421,6 @@ describe("PUT /api/sync — large batch (500+ cards)", () => {
 
 describe("PUT /api/sync — empty card array (edge case)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     authSuccess();
     karlEntitlement();
     userExists();
@@ -450,7 +446,6 @@ describe("PUT /api/sync — empty card array (edge case)", () => {
 
 describe("GET /api/sync — response shape", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     authSuccess();
     karlEntitlement();
     userExists();

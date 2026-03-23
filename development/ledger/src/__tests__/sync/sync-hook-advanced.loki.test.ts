@@ -122,10 +122,6 @@ describe("useCloudSync — initial state (Thrall/idle)", () => {
     global.fetch = vi.fn();
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("cardCount is null before any sync", () => {
     const { result } = renderHook(() => useCloudSync());
     expect(result.current.cardCount).toBeNull();
@@ -162,7 +158,6 @@ describe("useCloudSync — syncNow() is a no-op when offline", () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
     // Restore onLine
     Object.defineProperty(navigator, "onLine", { value: true, configurable: true });
   });
@@ -200,7 +195,6 @@ describe("useCloudSync — auto-retry fires after 120s error timeout", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.clearAllMocks();
   });
 
   it("Issue #1239: no auto-retry after error — status stays error after 120s", async () => {
@@ -263,7 +257,6 @@ describe("useCloudSync — fenrir:cards-changed ignored when offline", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.clearAllMocks();
     Object.defineProperty(navigator, "onLine", { value: true, configurable: true });
   });
 
@@ -320,7 +313,6 @@ describe("useCloudSync — multiple fenrir:cards-changed events debounce to one 
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.clearAllMocks();
   });
 
   it("rapid cards-changed events collapse to a single PUT after debounce", async () => {
@@ -368,10 +360,6 @@ describe("useCloudSync — sync success sets lastSyncedAt and cardCount", () => 
     localStorage.removeItem("fenrir:migrated"); // prevent cross-test pollution (#1239)
     setupKarl();
     try { localStorage.setItem("fenrir:first-sync-shown", "true"); } catch { /* ignore */ }
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
   });
 
   it("lastSyncedAt is set to a Date after successful sync", async () => {

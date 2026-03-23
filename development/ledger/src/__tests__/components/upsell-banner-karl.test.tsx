@@ -44,7 +44,6 @@ function renderBanner() {
 describe("UpsellBanner (Karl upsell) — structure", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
   });
 
   it("renders with role=region and aria-label", () => {
@@ -178,7 +177,6 @@ describe("UpsellBanner (Karl upsell) — layout separation", () => {
 describe("UpsellBanner (Karl upsell) — dismiss behavior", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
   });
 
   it("clicking dismiss hides the banner", () => {
@@ -217,7 +215,6 @@ describe("UpsellBanner (Karl upsell) — dismiss behavior", () => {
 describe("UpsellBanner (Karl upsell) — CTA interaction", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
   });
 
   it("clicking CTA calls subscribeStripe", () => {

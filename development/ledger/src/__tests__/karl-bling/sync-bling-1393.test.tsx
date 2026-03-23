@@ -79,7 +79,6 @@ function setKarl() {
 
 describe("SyncSettingsSection — karl-bling-card class (Issue #1393)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockCloudSync.status = "idle";
     mockCloudSync.lastSyncedAt = null;
     mockCloudSync.cardCount = null;

@@ -118,7 +118,6 @@ const FIVE_CARD_PREVIEW: PreviewFixture = {
 
 describe("JoinHouseholdPage confirm step — 0-card user", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockPush.mockClear();
   });
 
@@ -159,7 +158,6 @@ describe("JoinHouseholdPage confirm step — 0-card user", () => {
 
 describe("JoinHouseholdPage confirm step — N-card user", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockPush.mockClear();
   });
 
@@ -186,7 +184,6 @@ describe("JoinHouseholdPage confirm step — N-card user", () => {
 
 describe("JoinHouseholdPage success screen", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockPush.mockClear();
   });
 

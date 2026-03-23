@@ -55,7 +55,6 @@ function getPanel(id: string): HTMLElement | null {
 describe("SettingsPage — 3-tab layout (issue #1367)", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
     window.location.hash = "";
   });
 

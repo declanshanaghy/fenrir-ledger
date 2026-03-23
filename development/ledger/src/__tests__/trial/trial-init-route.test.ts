@@ -113,7 +113,6 @@ function authFail() {
 
 describe("POST /api/trial/init", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     authOk();
     mockEnsureSoloHousehold.mockResolvedValue({ created: false });
     mockDocRef.get.mockResolvedValue(missingSnap);

@@ -101,7 +101,6 @@ function makeFakeStripeDoc(
 
 describe("entitlement-store", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockSetStripeSubscription.mockResolvedValue(undefined);
     mockDeleteStripeSubscription.mockResolvedValue(undefined);
     mockSetUserStripeCustomerId.mockResolvedValue(undefined);

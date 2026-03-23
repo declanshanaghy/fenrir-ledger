@@ -92,10 +92,6 @@ function setupAuth(user: VerifiedUser = THRALL_USER) {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("authz checkKarlOrTrial — issue #1635 no-auto-init contract", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   // ═══════════════════════════════════════════════════════════════════════
   // Core #1635 requirement: getTrial called with user.sub
   // ═══════════════════════════════════════════════════════════════════════

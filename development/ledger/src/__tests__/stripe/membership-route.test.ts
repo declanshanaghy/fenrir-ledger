@@ -62,7 +62,6 @@ describe('GET /api/stripe/membership', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: { sub: mockGoogleSub, email: 'test@example.com', name: 'Test User', picture: 'https://example.com/picture.jpg' },

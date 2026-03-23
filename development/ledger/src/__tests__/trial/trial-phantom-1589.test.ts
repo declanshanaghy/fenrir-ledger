@@ -131,7 +131,6 @@ function authFail() {
 
 describe("POST /api/trial/status — issue #1589 fixes", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     // Default: unauthenticated (route returns "none" gracefully)
     authFail();
     mockDocRef.get.mockResolvedValue(missingSnap);
@@ -209,7 +208,6 @@ describe("useTrialStatus — cache version invalidation (issue #1589)", () => {
   let localStorageMock: Record<string, string>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     clearTrialStatusCache();
 
     // Mock localStorage

@@ -98,7 +98,6 @@ function authzFail(status: number, error: string) {
 // ── Setup ─────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mockGetAllFirestoreCards.mockResolvedValue([]);
 });
 

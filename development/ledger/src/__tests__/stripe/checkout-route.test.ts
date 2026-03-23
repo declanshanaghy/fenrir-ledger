@@ -131,7 +131,6 @@ function makeSubscription(overrides: Record<string, unknown> = {}) {
 
 describe("POST /api/stripe/checkout", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     process.env.STRIPE_PRICE_ID = "price_test123";
     process.env.APP_BASE_URL = "https://fenrir-ledger.example.com";
   });

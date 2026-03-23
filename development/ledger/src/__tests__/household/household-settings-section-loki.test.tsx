@@ -75,10 +75,6 @@ function mockFetchUnauthorized() {
 // ── Tests: unauthenticated ─────────────────────────────────────────────────────
 
 describe("HouseholdSettingsSection — unauthenticated state (issue #1346)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("renders locked card when ensureFreshToken returns null (no session)", async () => {
     mockEnsureFreshToken.mockResolvedValue(null);
 
@@ -171,10 +167,6 @@ describe("HouseholdSettingsSection — unauthenticated state (issue #1346)", () 
 // ── Tests: authenticated ───────────────────────────────────────────────────────
 
 describe("HouseholdSettingsSection — authenticated state (regression, issue #1346)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("renders full UI (not locked) when authenticated with solo household", async () => {
     mockEnsureFreshToken.mockResolvedValue("valid-token");
     mockFetchSuccess(soloHouseholdData);
@@ -214,7 +206,6 @@ describe("HouseholdSettingsSection — authenticated state (regression, issue #1
 
 describe("HouseholdSettingsSection — solo Karl owner (issue #1780)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockEnsureFreshToken.mockResolvedValue("valid-token");
   });
 

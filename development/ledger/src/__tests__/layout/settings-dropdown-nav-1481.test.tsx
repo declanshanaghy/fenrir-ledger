@@ -327,7 +327,6 @@ describe("Issue #1617 — ProfileDropdown same-page tab navigation", () => {
 describe("Issue #1481 — SettingsPage responds to hashchange events", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
     window.location.hash = "";
   });
 

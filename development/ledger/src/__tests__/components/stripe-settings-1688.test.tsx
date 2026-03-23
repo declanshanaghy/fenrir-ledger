@@ -57,7 +57,6 @@ function renderStripeSettings() {
 describe("StripeSettings", () => {
   beforeEach(() => {
     mockEntitlement = { ...BASE_ENTITLEMENT };
-    vi.clearAllMocks();
   });
 
   // ── Loading state ────────────────────────────────────────────────────────

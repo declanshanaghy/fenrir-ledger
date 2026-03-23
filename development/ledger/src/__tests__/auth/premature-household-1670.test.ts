@@ -41,7 +41,6 @@ const localStorageMock = {
 
 describe("Issue #1670/#1671 — no premature household creation", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     Object.keys(localStorageStore).forEach((k) => delete localStorageStore[k]);
     Object.defineProperty(globalThis, "localStorage", {
       value: localStorageMock,

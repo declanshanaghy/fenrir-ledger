@@ -75,7 +75,6 @@ const missingSnap = { exists: false, data: () => null };
 
 describe("getTrial", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockDocRef.get.mockResolvedValue(missingSnap);
   });
 
@@ -136,7 +135,6 @@ describe("getTrial", () => {
 
 describe("initTrial", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockDocRef.get.mockResolvedValue(missingSnap);
     mockDocRef.set.mockResolvedValue(undefined);
   });
@@ -218,7 +216,6 @@ describe("initTrial", () => {
 
 describe("markTrialConverted", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockDocRef.get.mockResolvedValue(missingSnap);
     mockDocRef.update.mockResolvedValue(undefined);
   });

@@ -85,7 +85,6 @@ function authzKarlSuccess(householdId = "hh-test") {
 // ── Setup ─────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mockSetCards.mockResolvedValue(undefined);
   mockGetAllFirestoreCards.mockResolvedValue([]);
 });

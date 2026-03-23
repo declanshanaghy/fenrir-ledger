@@ -78,10 +78,6 @@ function makeRequest(): NextRequest {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("authz userId contract — issue #1630", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("calls getUser with user.sub (Google OAuth sub) — not any other identifier", async () => {
     vi.mocked(requireAuth).mockReturnValue(
       Promise.resolve({ ok: true as const, user: VERIFIED_USER }),

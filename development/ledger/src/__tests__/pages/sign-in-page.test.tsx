@@ -47,7 +47,6 @@ vi.mock("@/lib/auth/pkce", () => ({
 
 describe("SignInPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockSessionValid = false;
     mockCards = [];
     sessionStorage.clear();

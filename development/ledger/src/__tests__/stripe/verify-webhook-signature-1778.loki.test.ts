@@ -59,7 +59,6 @@ describe("verifyWebhookSignature (issue #1778)", () => {
 
   afterEach(() => {
     delete process.env[ENV_KEY];
-    vi.clearAllMocks();
   });
 
   it("returns null when STRIPE_WEBHOOK_SECRET is not set", () => {

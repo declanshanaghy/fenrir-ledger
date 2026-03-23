@@ -146,7 +146,6 @@ describe("computeTrialStatus — expiresAt as single source of truth (Issue #172
 
 describe("initTrial — TRIAL_DURATION_DAYS only used when creating a new record (Issue #1729)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockDocRef.get.mockResolvedValue(missingSnap);
     mockDocRef.set.mockResolvedValue(undefined);
   });
@@ -184,7 +183,6 @@ describe("useTrialStatus hook — expiresAt propagated from API response (Issue 
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     clearTrialStatusCache();
   });
 

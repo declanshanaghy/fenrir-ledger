@@ -94,7 +94,6 @@ function authFail() {
 
 describe("POST /api/trial/convert", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     authOk();
     mockDocRef.get.mockResolvedValue(activeTrialSnap());
     mockDocRef.update.mockResolvedValue(undefined);

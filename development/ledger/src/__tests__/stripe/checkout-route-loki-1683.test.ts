@@ -160,7 +160,6 @@ function makeSubscription(overrides: Record<string, unknown> = {}) {
 
 describe("POST /api/stripe/checkout — Loki QA (issue #1683)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     process.env.STRIPE_PRICE_ID = "price_loki_test";
     process.env.APP_BASE_URL = "https://fenrir-ledger.test";
     mockRateLimit.mockReturnValue({ success: true });

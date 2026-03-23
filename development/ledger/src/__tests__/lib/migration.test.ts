@@ -108,7 +108,6 @@ function makeErrorResponse(status: number, error: string, description: string): 
 describe("hasMigrated / markMigrated", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
   });
 
   it("returns false when flag is absent", () => {
@@ -132,7 +131,6 @@ describe("hasMigrated / markMigrated", () => {
 describe("runMigration — already migrated guard", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
   });
 
   it("returns ran=false without calling fetch when already migrated", async () => {
@@ -151,7 +149,6 @@ describe("runMigration — already migrated guard", () => {
 describe("runMigration — download direction", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
   });
 
   it("direction=download when local is empty and cloud has cards", async () => {
@@ -186,7 +183,6 @@ describe("runMigration — download direction", () => {
 describe("runMigration — upload direction", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
   });
 
   it("direction=upload when local has cards and cloud returns same count", async () => {
@@ -233,7 +229,6 @@ describe("runMigration — upload direction", () => {
 describe("runMigration — merge direction", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
   });
 
   it("direction=merge when local has cards and cloud returns more cards (merge added cloud-only cards)", async () => {
@@ -264,7 +259,6 @@ describe("runMigration — merge direction", () => {
 describe("runMigration — empty direction", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
   });
 
   it("direction=empty when both local and cloud are empty", async () => {
@@ -284,7 +278,6 @@ describe("runMigration — empty direction", () => {
 describe("runMigration — API error handling", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
   });
 
   it("throws and does NOT set migration flag when API returns non-OK", async () => {
@@ -337,7 +330,6 @@ describe("runMigration — API error handling", () => {
 describe("runMigration — idempotency", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
   });
 
   it("second call returns ran=false without fetching", async () => {

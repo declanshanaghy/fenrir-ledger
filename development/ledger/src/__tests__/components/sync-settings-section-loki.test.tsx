@@ -71,7 +71,6 @@ describe("SyncSettingsSection — error block: no errorMessage", () => {
     mockCloudSync.status = "error";
     mockCloudSync.errorMessage = null;
     mockCloudSync.errorCode = null;
-    vi.clearAllMocks();
   });
 
   it("shows fallback 'Could not reach Yggdrasil' copy when no errorMessage", () => {
@@ -96,7 +95,6 @@ describe("SyncSettingsSection — error block: with errorCode", () => {
     mockCloudSync.errorCode = "deadline-exceeded";
     mockCloudSync.errorTimestamp = null;
     mockCloudSync.retryIn = null;
-    vi.clearAllMocks();
   });
 
   it("shows 'Last sync failed' title when errorCode present", () => {
@@ -122,7 +120,6 @@ describe("SyncSettingsSection — error block: retryIn countdown", () => {
     mockCloudSync.errorMessage = "Network error";
     mockCloudSync.errorCode = null;
     mockCloudSync.errorTimestamp = null;
-    vi.clearAllMocks();
   });
 
   it("shows singular 'second' when retryIn is 1", () => {
@@ -162,7 +159,6 @@ describe("SyncSettingsSection — card count visibility", () => {
     resetToKarl();
     mockCloudSync.lastSyncedAt = new Date();
     mockCloudSync.cardCount = 12;
-    vi.clearAllMocks();
   });
 
   it("hides card count in error state even when cardCount is set", () => {
@@ -193,7 +189,6 @@ describe("SyncSettingsSection — last synced label", () => {
     resetToKarl();
     mockCloudSync.lastSyncedAt = new Date();
     mockCloudSync.cardCount = 5;
-    vi.clearAllMocks();
   });
 
   it("shows 'Last successful sync:' in error state", () => {
@@ -224,7 +219,6 @@ describe("SyncSettingsSection — Karl: idle state", () => {
   beforeEach(() => {
     resetToKarl();
     mockCloudSync.status = "idle";
-    vi.clearAllMocks();
   });
 
   it("renders enabled Sync Now button in idle state", () => {

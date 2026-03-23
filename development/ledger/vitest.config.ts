@@ -7,7 +7,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
     pool: 'threads',
-    maxWorkers: 4,
+    maxWorkers: process.env.CI ? 4 : 8,
     testTimeout: 10000,
     hookTimeout: 5000,
     reporters: ['default', 'html'],

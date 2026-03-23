@@ -27,7 +27,6 @@ const mockTrack = vi.mocked(track);
 describe("useGleipnirFragment3", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
   });
 
   it("starts with open=false", () => {

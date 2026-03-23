@@ -46,7 +46,6 @@ function makeRequest(body: unknown): NextRequest {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mockSetCards.mockResolvedValue(undefined);
   mockGetAllFirestoreCards.mockResolvedValue([]);
 });

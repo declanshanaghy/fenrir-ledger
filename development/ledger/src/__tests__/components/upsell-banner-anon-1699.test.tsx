@@ -37,7 +37,6 @@ vi.mock("@/hooks/useAuth", () => ({
 describe("UpsellBanner — anonymous user (issue #1699)", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
     mockAuthStatus = "anonymous";
   });
 
@@ -83,7 +82,6 @@ describe("UpsellBanner — anonymous user (issue #1699)", () => {
 describe("UpsellBanner — signed-in Thrall user (issue #1699 regression)", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
     mockAuthStatus = "authenticated";
   });
 

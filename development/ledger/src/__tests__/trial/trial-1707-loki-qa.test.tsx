@@ -122,7 +122,6 @@ describe("Issue #1707/#1722 Loki QA — auth callback trial init moved server-si
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     sessionStorage.clear();
 
     locationReplaceMock = vi.fn();

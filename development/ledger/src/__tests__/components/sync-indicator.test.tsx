@@ -68,10 +68,6 @@ function setKarl(status: typeof mockCloudSync.status = "idle") {
 // ── aria-label per state ───────────────────────────────────────────────────────
 
 describe("SyncIndicator — aria-label per state", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("Thrall/idle: aria-label is 'Background sync'", () => {
     setThrall();
     render(<SyncIndicator />);
@@ -113,10 +109,6 @@ describe("SyncIndicator — aria-label per state", () => {
 // ── Ping ring presence ─────────────────────────────────────────────────────────
 
 describe("SyncIndicator — ping ring", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("ping ring present in syncing state for Karl", () => {
     setKarl("syncing");
     const { container } = render(<SyncIndicator />);
@@ -159,10 +151,6 @@ describe("SyncIndicator — ping ring", () => {
 // ── Gleipnir Fragment 1 fires on ALL states ────────────────────────────────────
 
 describe("SyncIndicator — Gleipnir Fragment 1 fires on ALL states", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("Fragment 1 trigger fires: Thrall/idle dot clicked", () => {
     setThrall();
     render(<SyncIndicator />);
@@ -203,10 +191,6 @@ describe("SyncIndicator — Gleipnir Fragment 1 fires on ALL states", () => {
 // ── SR live region ─────────────────────────────────────────────────────────────
 
 describe("SyncIndicator — SR live region", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("SR live region is empty for Thrall/idle", () => {
     setThrall();
     const { container } = render(<SyncIndicator />);
@@ -262,7 +246,6 @@ describe("SyncIndicator — SR live region", () => {
 
 describe("SyncIndicator — Thrall local fenrir:sync event", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.useFakeTimers();
   });
 
@@ -307,10 +290,6 @@ describe("SyncIndicator — Thrall local fenrir:sync event", () => {
 // ── Dot CSS classes ────────────────────────────────────────────────────────────
 
 describe("SyncIndicator — dot CSS state classes", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("error state: dot has bg-destructive class", () => {
     setKarl("error");
     const { container } = render(<SyncIndicator />);

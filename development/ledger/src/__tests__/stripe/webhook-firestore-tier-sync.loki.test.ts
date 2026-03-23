@@ -119,7 +119,6 @@ function stubWebhookEvent(type: string, data: object): void {
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  vi.clearAllMocks();
   vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_loki_test");
   mockSetStripeEntitlement.mockResolvedValue(undefined);
   mockSetAnonymousStripeEntitlement.mockResolvedValue(undefined);

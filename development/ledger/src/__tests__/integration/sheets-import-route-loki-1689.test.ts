@@ -76,10 +76,6 @@ beforeEach(async () => {
   POST = mod.POST;
 });
 
-afterEach(() => {
-  vi.clearAllMocks();
-});
-
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 
 describe("/api/sheets/import — Rate limiting", () => {

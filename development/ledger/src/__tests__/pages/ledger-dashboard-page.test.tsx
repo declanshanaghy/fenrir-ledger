@@ -131,7 +131,6 @@ vi.mock("@/components/layout/SignInNudge", () => ({
 
 describe("DashboardPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockHouseholdId = "anon-household-id";
     mockStatus = "authenticated";
     sessionStorage.clear();

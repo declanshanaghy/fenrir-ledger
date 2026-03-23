@@ -127,7 +127,6 @@ async function renderMemberView() {
 
 describe("HouseholdSettingsSection — Leave Household (issue #1798)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockEnsureFreshToken.mockResolvedValue("token-abc");
     mockGetSession.mockReturnValue({ user: { sub: MEMBER_USER_ID } });
     // Default: member view, leave succeeds

@@ -87,7 +87,6 @@ function makePushResponse(cards: Card[]): Response {
 describe("hasMigrated — SSR guard", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
     localStorageThrows = false;
   });
 
@@ -110,7 +109,6 @@ describe("hasMigrated — SSR guard", () => {
 describe("markMigrated — localStorage full (QuotaExceededError)", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
     localStorageThrows = false;
   });
 
@@ -138,7 +136,6 @@ describe("markMigrated — localStorage full (QuotaExceededError)", () => {
 describe("runMigration — direction inference edge cases", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
     localStorageThrows = false;
   });
 
@@ -172,7 +169,6 @@ describe("runMigration — direction inference edge cases", () => {
 describe("runMigration — Authorization header", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
     localStorageThrows = false;
   });
 
@@ -197,7 +193,6 @@ describe("runMigration — Authorization header", () => {
 describe("runMigration — generic error message fallback", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
     localStorageThrows = false;
   });
 
@@ -238,7 +233,6 @@ describe("runMigration — generic error message fallback", () => {
 describe("runMigration — tombstones in push payload", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.clearAllMocks();
     localStorageThrows = false;
   });
 

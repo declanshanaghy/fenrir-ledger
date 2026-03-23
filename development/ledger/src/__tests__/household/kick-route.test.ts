@@ -63,7 +63,6 @@ const newSoloHousehold = {
 
 describe("POST /api/household/kick", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockRequireAuth.mockResolvedValue(makeAuthOk());
     mockKickMemberTransaction.mockResolvedValue({ newHousehold: newSoloHousehold });
   });

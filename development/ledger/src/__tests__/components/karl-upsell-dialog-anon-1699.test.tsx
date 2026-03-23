@@ -113,7 +113,6 @@ const baseProps = {
 
 describe("KarlUpsellDialog — anonymous user (issue #1699)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "anonymous";
     mockSubscribeStripe.mockResolvedValue(undefined);
   });
@@ -161,7 +160,6 @@ describe("KarlUpsellDialog — anonymous user (issue #1699)", () => {
 
 describe("KarlUpsellDialog — Thrall user (issue #1699 regression)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "authenticated";
     mockSubscribeStripe.mockResolvedValue(undefined);
   });
