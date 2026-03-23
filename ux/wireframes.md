@@ -11,6 +11,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Theme — Vellum Norse Tan/Parchment Light Mode (Issue #1833)
+
+| File | Description |
+|------|-------------|
+| [wireframes/theme/tan-light-mode-palette.html](wireframes/theme/tan-light-mode-palette.html) | Complete Vellum Norse color palette: 20 CSS custom property swatches with HSL values and hex approximations, WCAG AA contrast table for all text/background combinations, UI sample elements (cards, buttons, inputs, sidebar, Odin's Throne tool surfaces, Karl-bling gold on parchment), ready-to-copy CSS var tables for both Ledger globals.css and Odin's Throne index.css. Supersedes #1825 and #1826. |
+| [wireframes/theme/tan-light-mode-interaction-spec.md](wireframes/theme/tan-light-mode-interaction-spec.md) | Interaction spec: palette design rationale (aged Norse vellum), color application rules (warm-tones-only enforcement, surface depth hierarchy, gold accent behavior), hover/focus/active state definitions, typography on parchment, component specs (card, button, input, sidebar), Odin's Throne variable mapping table (replaces cool-blue tokens), accessibility summary, acceptance criteria traceability, files for FiremanDecko. |
+
+---
+
 ## About Modal v2 — Easter Eggs, Compressed Layout, Profile Icons (Issue #1806)
 
 | File | Description |

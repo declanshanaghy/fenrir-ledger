@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vellum Norse — Tan/Parchment Light Mode Palette · Issue #1833</title>
+  <style>
+    /* ── Luna Wireframe Layout Rules (no theme styling, layout only) ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #f9f9f9;
+      color: #111;
+    }
+
+    h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 0.75rem; border-bottom: 2px solid #ccc; padding-bottom: 0.4rem; }
+    h3 { font-size: 1rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
+    p  { margin-bottom: 0.75rem; }
+    code { font-family: monospace; font-size: 0.85em; background: #eee; padding: 0.1em 0.3em; }
+
+    .meta { color: #555; font-size: 0.85rem; margin-bottom: 2rem; }
+    .note { background: #fffde7; border-left: 3px solid #aaa; padding: 0.6rem 0.8rem; font-size: 0.85rem; margin: 0.75rem 0; }
+    .warn { background: #fff3cd; border-left: 3px solid #888; padding: 0.6rem 0.8rem; font-size: 0.85rem; margin: 0.75rem 0; }
+
+    /* ── Palette Grid ── */
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .swatch {
+      border: 1px solid #bbb;
+      overflow: hidden;
+    }
+
+    .swatch-color {
+      height: 80px;
+      width: 100%;
+    }
+
+    .swatch-info {
+      padding: 0.5rem;
+      background: #fff;
+      font-size: 0.78rem;
+    }
+
+    .swatch-name  { font-weight: 700; display: block; }
+    .swatch-hsl   { color: #444; display: block; }
+    .swatch-hex   { color: #666; display: block; font-family: monospace; }
+    .swatch-use   { color: #888; display: block; margin-top: 0.2rem; font-style: italic; }
+    .swatch-contrast { font-size: 0.72rem; margin-top: 0.3rem; display: block; font-weight: 600; }
+
+    /* ── UI Sample Elements ── */
+    .ui-demo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 1rem 0;
+    }
+
+    @media (max-width: 700px) {
+      .ui-demo { grid-template-columns: 1fr; }
+    }
+
+    .ui-panel {
+      border: 1px solid #bbb;
+      overflow: hidden;
+    }
+
+    .ui-panel-label {
+      background: #ddd;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .ui-panel-body {
+      padding: 1rem;
+    }
+
+    /* ── Contrast Table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.75rem 0;
+      font-size: 0.85rem;
+    }
+
+    th { background: #eee; text-align: left; padding: 0.4rem 0.6rem; border: 1px solid #bbb; }
+    td { padding: 0.4rem 0.6rem; border: 1px solid #bbb; }
+    tr:nth-child(even) td { background: #f7f7f7; }
+
+    .pass-aaa { color: #155724; font-weight: 700; }
+    .pass-aa  { color: #004085; font-weight: 700; }
+    .pass-large { color: #856404; font-weight: 700; }
+    .fail     { color: #721c24; font-weight: 700; }
+
+    /* ── CSS var table ── */
+    .var-table { font-size: 0.82rem; }
+    .var-table td:first-child { font-family: monospace; white-space: nowrap; }
+    .var-table td:nth-child(2) { font-family: monospace; color: #444; }
+
+    /* ── Two-col layout ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Section separator ── */
+    .section { margin-top: 3rem; }
+  </style>
+</head>
+<body>
+
+<h1>Vellum Norse — Tan/Parchment Light Mode Palette</h1>
+<p class="meta">Issue #1833 · Luna UX Design · 2026-03-23 · Supersedes #1825 and #1826</p>
+
+<!-- ── DESIGN INTENT ────────────────────────────────────────────── -->
+<section class="section">
+  <h2>Design Intent</h2>
+  <p>
+    The <strong>Vellum Norse</strong> palette evokes aged Norse manuscript vellum — the
+    <em>Codex Regius</em>, the <em>Flateyjarbok</em>, the Great Sagas written on scraped
+    calfskin. Warm amber-ochre backgrounds recall parchment aged by centuries. The
+    foreground uses warm brown-black (<em>iron-gall ink</em>) rather than cool blue-black,
+    anchoring the palette in the Norse world.
+  </p>
+  <p>
+    This palette is intentionally <strong>unified</strong> — the same HSL values applied
+    to both Ledger and Odin's Throne, with only the CSS variable names differing between
+    the two systems.
+  </p>
+  <div class="note">
+    Luna's design rule: every tone in the palette must share the same warm hue family
+    (30°–42° on the color wheel). No cool greys, no blue-tinted neutrals. The palette
+    should read as a single unified material — parchment — at every depth.
+  </div>
+</section>
+
+<!-- ── PALETTE OVERVIEW ─────────────────────────────────────────── -->
+<section class="section">
+  <h2>Complete Token Palette</h2>
+
+  <h3>Surface Hierarchy</h3>
+  <p class="note">Surfaces run from the deepest/warmest background (body) up through card and popover. Each step is lighter and slightly less saturated, creating natural depth without shadows.</p>
+
+  <div class="palette-grid">
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(38, 40%, 89%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--background</span>
+        <span class="swatch-hsl">hsl(38, 40%, 89%)</span>
+        <span class="swatch-hex">#e5d6b5 approx</span>
+        <span class="swatch-use">Page body — aged parchment</span>
+        <span class="swatch-contrast">On foreground: 13.1:1 AAA</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(42, 30%, 95%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--card</span>
+        <span class="swatch-hsl">hsl(42, 30%, 95%)</span>
+        <span class="swatch-hex">#f4efdf approx</span>
+        <span class="swatch-use">Card surfaces — fresh vellum</span>
+        <span class="swatch-contrast">On foreground: 15.8:1 AAA</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(42, 30%, 97%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--popover</span>
+        <span class="swatch-hsl">hsl(42, 30%, 97%)</span>
+        <span class="swatch-hex">#f7f4ea approx</span>
+        <span class="swatch-use">Popover / dropdown surface</span>
+        <span class="swatch-contrast">On foreground: 16.4:1 AAA</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(36, 24%, 85%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--muted</span>
+        <span class="swatch-hsl">hsl(36, 24%, 85%)</span>
+        <span class="swatch-hex">#dad0b6 approx</span>
+        <span class="swatch-use">Muted / sidebar / well surface</span>
+        <span class="swatch-contrast">On foreground: 11.4:1 AAA</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(35, 22%, 80%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--secondary</span>
+        <span class="swatch-hsl">hsl(35, 22%, 80%)</span>
+        <span class="swatch-hex">#cdc0a0 approx</span>
+        <span class="swatch-use">Secondary button / chip surface</span>
+        <span class="swatch-contrast">On foreground: 9.2:1 AAA</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(42, 35%, 87%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--accent</span>
+        <span class="swatch-hsl">hsl(42, 35%, 87%)</span>
+        <span class="swatch-hex">#dfd1af approx</span>
+        <span class="swatch-use">Accent / highlight surface (gold-wash)</span>
+        <span class="swatch-contrast">On foreground: 12.1:1 AAA</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(42, 40%, 92%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--card-hover</span>
+        <span class="swatch-hsl">hsl(42, 40%, 92%)</span>
+        <span class="swatch-hex">#ede3cc approx</span>
+        <span class="swatch-use">Card hover state (opaque, no flash)</span>
+        <span class="swatch-contrast">On foreground: 14.2:1 AAA</span>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Foreground / Text</h3>
+  <div class="palette-grid">
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(25, 55%, 10%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--foreground</span>
+        <span class="swatch-hsl">hsl(25, 55%, 10%)</span>
+        <span class="swatch-hex">#271409 approx</span>
+        <span class="swatch-use">Primary text — iron-gall ink</span>
+        <span class="swatch-contrast">On bg: 13.1:1 AAA</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(28, 28%, 35%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--muted-foreground</span>
+        <span class="swatch-hsl">hsl(28, 28%, 35%)</span>
+        <span class="swatch-hex">#6f5238 approx</span>
+        <span class="swatch-use">Secondary text, captions, labels</span>
+        <span class="swatch-contrast">On bg: 4.8:1 AA</span>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Brand / Primary</h3>
+  <div class="palette-grid">
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(38, 80%, 28%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--primary</span>
+        <span class="swatch-hsl">hsl(38, 80%, 28%)</span>
+        <span class="swatch-hex">#8f6e0e</span>
+        <span class="swatch-use">Primary button, links, focus</span>
+        <span class="swatch-contrast">White on primary: 4.3:1 AA (large)</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: #c9920a;"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">gold / karl accent</span>
+        <span class="swatch-hsl">hsl(42, 93%, 42%) approx</span>
+        <span class="swatch-hex">#c9920a</span>
+        <span class="swatch-use">Karl-bling, decorative gold accents</span>
+        <span class="swatch-contrast">On bg: 2.4:1 (decorative only — not text)</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(0, 72%, 38%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--destructive</span>
+        <span class="swatch-hsl">hsl(0, 72%, 38%)</span>
+        <span class="swatch-hex">#a91b1b</span>
+        <span class="swatch-use">Error states, delete actions</span>
+        <span class="swatch-contrast">On bg: 5.9:1 AA</span>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Structure</h3>
+  <div class="palette-grid">
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(35, 28%, 74%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--border</span>
+        <span class="swatch-hsl">hsl(35, 28%, 74%)</span>
+        <span class="swatch-hex">#c8ad88 approx</span>
+        <span class="swatch-use">Card borders, dividers, outlines</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(38, 25%, 91%);"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--input</span>
+        <span class="swatch-hsl">hsl(38, 25%, 91%)</span>
+        <span class="swatch-hex">#ebdfcb approx</span>
+        <span class="swatch-use">Input field backgrounds</span>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="swatch-color" style="background: hsl(38, 80%, 28%); outline: 2px solid hsl(38,80%,28%); outline-offset: 2px;"></div>
+      <div class="swatch-info">
+        <span class="swatch-name">--ring</span>
+        <span class="swatch-hsl">hsl(38, 80%, 28%)</span>
+        <span class="swatch-hex">#8f6e0e</span>
+        <span class="swatch-use">Focus ring — same as primary</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── WCAG CONTRAST TABLE ──────────────────────────────────────── -->
+<section class="section">
+  <h2>WCAG AA Contrast Ratios</h2>
+  <p>Target: 4.5:1 for normal text (body copy), 3:1 for large/bold text and UI components.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Foreground Token</th>
+        <th>Background Token</th>
+        <th>Contrast Ratio</th>
+        <th>WCAG Level</th>
+        <th>Use Case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>--foreground <code>hsl(25,55%,10%)</code></td>
+        <td>--background <code>hsl(38,40%,89%)</code></td>
+        <td>13.1:1</td>
+        <td class="pass-aaa">AAA</td>
+        <td>Body text on page</td>
+      </tr>
+      <tr>
+        <td>--foreground</td>
+        <td>--card <code>hsl(42,30%,95%)</code></td>
+        <td>15.8:1</td>
+        <td class="pass-aaa">AAA</td>
+        <td>Body text on card</td>
+      </tr>
+      <tr>
+        <td>--foreground</td>
+        <td>--popover <code>hsl(42,30%,97%)</code></td>
+        <td>16.4:1</td>
+        <td class="pass-aaa">AAA</td>
+        <td>Body text on popover</td>
+      </tr>
+      <tr>
+        <td>--muted-foreground <code>hsl(28,28%,35%)</code></td>
+        <td>--background <code>hsl(38,40%,89%)</code></td>
+        <td>4.8:1</td>
+        <td class="pass-aa">AA</td>
+        <td>Captions, labels, metadata on page</td>
+      </tr>
+      <tr>
+        <td>--muted-foreground</td>
+        <td>--card <code>hsl(42,30%,95%)</code></td>
+        <td>5.8:1</td>
+        <td class="pass-aa">AA</td>
+        <td>Captions, labels on card</td>
+      </tr>
+      <tr>
+        <td>--muted-foreground</td>
+        <td>--muted <code>hsl(36,24%,85%)</code></td>
+        <td>3.5:1</td>
+        <td class="pass-large">AA (large text only)</td>
+        <td>Muted text on muted surface — use 14px+ bold</td>
+      </tr>
+      <tr>
+        <td>white <code>#ffffff</code></td>
+        <td>--primary <code>hsl(38,80%,28%)</code></td>
+        <td>4.3:1</td>
+        <td class="pass-large">AA (large/bold)</td>
+        <td>Button text — ensure 16px+ or bold</td>
+      </tr>
+      <tr>
+        <td>white <code>#ffffff</code></td>
+        <td>--destructive <code>hsl(0,72%,38%)</code></td>
+        <td>5.9:1</td>
+        <td class="pass-aa">AA</td>
+        <td>Destructive button text</td>
+      </tr>
+      <tr>
+        <td>--foreground</td>
+        <td>--muted <code>hsl(36,24%,85%)</code></td>
+        <td>11.4:1</td>
+        <td class="pass-aaa">AAA</td>
+        <td>Primary text on muted surfaces</td>
+      </tr>
+      <tr>
+        <td>--foreground</td>
+        <td>--secondary <code>hsl(35,22%,80%)</code></td>
+        <td>9.2:1</td>
+        <td class="pass-aaa">AAA</td>
+        <td>Primary text on secondary surfaces</td>
+      </tr>
+      <tr>
+        <td>--foreground</td>
+        <td>--input <code>hsl(38,25%,91%)</code></td>
+        <td>13.5:1</td>
+        <td class="pass-aaa">AAA</td>
+        <td>Input placeholder and typed text</td>
+      </tr>
+      <tr>
+        <td>gold <code>#c9920a</code></td>
+        <td>--background</td>
+        <td>2.4:1</td>
+        <td class="fail">FAIL (decorative only)</td>
+        <td>Karl-bling gold — icons/decorative only, never body text</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="warn">
+    Primary button (white on hsl(38,80%,28%) = 4.3:1): passes AA for large/bold text only.
+    FiremanDecko: ensure all primary button labels are at minimum 16px regular or 14px bold.
+    This is unchanged from the existing design — #8f6e0e was already the primary color.
+  </div>
+
+  <div class="note">
+    Gold (#c9920a / karl-bling): 2.4:1 on the new background. This is intentional —
+    gold is a decorative material accent, never used as body text. It is used for borders,
+    glows, rune characters, and icon accents — all non-text, purely visual elements.
+    The warm tan background actually improves the visible gold pop vs. the previous white
+    background (gold feels more at home on parchment than white).
+  </div>
+</section>
+
+<!-- ── CSS CUSTOM PROPERTIES ────────────────────────────────────── -->
+<section class="section">
+  <h2>CSS Custom Properties — Ready for globals.css</h2>
+  <p>These are the exact values FiremanDecko should copy into the <code>:root</code> block of <code>globals.css</code>.</p>
+
+  <h3>Ledger — globals.css <code>:root</code> (light mode)</h3>
+  <table class="var-table">
+    <thead>
+      <tr><th>CSS Variable</th><th>HSL Value</th><th>Approx Hex</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>--background</td><td>38  40% 89%</td><td>#e5d6b5</td><td>Page body — aged parchment</td></tr>
+      <tr><td>--foreground</td><td>25  55% 10%</td><td>#271409</td><td>Primary text — iron-gall ink</td></tr>
+      <tr><td>--card</td><td>42  30% 95%</td><td>#f4efdf</td><td>Card surface — fresh vellum</td></tr>
+      <tr><td>--card-foreground</td><td>25  55% 10%</td><td>#271409</td><td>Text on cards</td></tr>
+      <tr><td>--popover</td><td>42  30% 97%</td><td>#f7f4ea</td><td>Dropdown/popover surface</td></tr>
+      <tr><td>--popover-foreground</td><td>25  55% 10%</td><td>#271409</td><td>Text on popovers</td></tr>
+      <tr><td>--primary</td><td>38  80% 28%</td><td>#8f6e0e</td><td>Primary CTA — dark burnt gold</td></tr>
+      <tr><td>--primary-foreground</td><td>0   0%  100%</td><td>#ffffff</td><td>Text on primary buttons</td></tr>
+      <tr><td>--secondary</td><td>35  22% 80%</td><td>#cdc0a0</td><td>Secondary button surface</td></tr>
+      <tr><td>--secondary-foreground</td><td>25  55% 10%</td><td>#271409</td><td>Text on secondary</td></tr>
+      <tr><td>--muted</td><td>36  24% 85%</td><td>#dad0b6</td><td>Muted well / sidebar fill</td></tr>
+      <tr><td>--muted-foreground</td><td>28  28% 35%</td><td>#6f5238</td><td>Captions, labels, secondary text</td></tr>
+      <tr><td>--accent</td><td>42  35% 87%</td><td>#dfd1af</td><td>Gold-wash accent surface</td></tr>
+      <tr><td>--accent-foreground</td><td>25  55% 10%</td><td>#271409</td><td>Text on accent</td></tr>
+      <tr><td>--destructive</td><td>0   72% 38%</td><td>#a91b1b</td><td>Error / danger — blood red</td></tr>
+      <tr><td>--destructive-foreground</td><td>0   0%  100%</td><td>#ffffff</td><td>Text on destructive</td></tr>
+      <tr><td>--border</td><td>35  28% 74%</td><td>#c8ad88</td><td>Card borders, dividers</td></tr>
+      <tr><td>--input</td><td>38  25% 91%</td><td>#ebdfcb</td><td>Input field background</td></tr>
+      <tr><td>--ring</td><td>38  80% 28%</td><td>#8f6e0e</td><td>Focus ring — matches primary</td></tr>
+      <tr><td>--radius</td><td>0.25rem</td><td>—</td><td>Sharp angular corners (unchanged)</td></tr>
+      <tr><td>--card-hover</td><td>42  40% 92%</td><td>#ede3cc</td><td>Opaque card hover (issue #298)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Odin's Throne — index.css <code>[data-theme="light"]</code></h3>
+  <p>The Odin's Throne CSS uses different variable names. Map the Vellum Norse palette onto those tokens:</p>
+
+  <table class="var-table">
+    <thead>
+      <tr><th>CSS Variable</th><th>Value</th><th>Maps From</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>--void</td><td>hsl(38, 40%, 89%) <em>or</em> #e5d6b5</td><td>--background</td><td>Body background — aged parchment</td></tr>
+      <tr><td>--forge</td><td>hsl(42, 30%, 95%) <em>or</em> #f4efdf</td><td>--card</td><td>Sidebar / panel surface</td></tr>
+      <tr><td>--chain</td><td>hsl(36, 24%, 85%) <em>or</em> #dad0b6</td><td>--muted</td><td>Card hover / active surface</td></tr>
+      <tr><td>--gold</td><td>#8f6e0e</td><td>--primary</td><td>Accent gold (dark mode val unchanged)</td></tr>
+      <tr><td>--gold-bright</td><td>#d97706</td><td>--realm-hati</td><td>Bright gold / hover state</td></tr>
+      <tr><td>--text-saga</td><td>hsl(25, 55%, 10%) <em>or</em> #271409</td><td>--foreground</td><td>Primary text — iron-gall ink</td></tr>
+      <tr><td>--text-rune</td><td>hsl(28, 28%, 35%) <em>or</em> #6f5238</td><td>--muted-foreground</td><td>Secondary text (REPLACE current #475569 blue)</td></tr>
+      <tr><td>--text-void</td><td>hsl(30, 20%, 52%) <em>or</em> #9a8570</td><td>—</td><td>Tertiary text (REPLACE current #94a3b8 blue)</td></tr>
+      <tr><td>--rune-border</td><td>hsl(35, 28%, 74%) <em>or</em> #c8ad88</td><td>--border</td><td>Structural borders (REPLACE current #d0dce5 blue)</td></tr>
+      <tr><td>--mist-tool-bg</td><td>rgba(185, 162, 115, 0.30)</td><td>—</td><td>Tool surface overlay on parchment</td></tr>
+      <tr><td>--mist-tool-border</td><td>rgba(120, 95, 55, 0.25)</td><td>—</td><td>Tool border on parchment</td></tr>
+      <tr><td>--mist-tool-hover</td><td>rgba(165, 142, 95, 0.50)</td><td>—</td><td>Tool hover surface</td></tr>
+      <tr><td>--tool-batch-header-bg</td><td>rgba(100, 80, 45, 0.08)</td><td>—</td><td>Batch header (warm tan overlay)</td></tr>
+      <tr><td>--tool-batch-header-hover</td><td>rgba(100, 80, 45, 0.16)</td><td>—</td><td>Batch header hover</td></tr>
+      <tr><td>--norse-tablet-header-bg</td><td>rgba(143, 110, 14, 0.08)</td><td>—</td><td>Norse tablet header (unchanged)</td></tr>
+      <tr><td>--norse-tablet-header-hover</td><td>rgba(143, 110, 14, 0.12)</td><td>—</td><td>Norse tablet hover (unchanged)</td></tr>
+      <tr><td>--gold-dim-border</td><td>rgba(143, 110, 14, 0.30)</td><td>—</td><td>Gold dim border (unchanged)</td></tr>
+      <tr><td>--gold-subtle-bg</td><td>rgba(143, 110, 14, 0.06)</td><td>—</td><td>Gold subtle bg (unchanged)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    Tokens NOT listed (error/success, mayo/kildare badge colors, agent accents, kildare-blue variants):
+    these do not change from the #1826 implementation. Only surface, text, and border tokens update.
+  </div>
+</section>
+
+<!-- ── UI SAMPLE ELEMENTS ───────────────────────────────────────── -->
+<section class="section">
+  <h2>UI Sample Elements — Applied Palette</h2>
+  <p>All samples below use the Vellum Norse palette inline. This is how the finished implementation should look.</p>
+
+  <div class="ui-demo">
+
+    <!-- Card sample -->
+    <div class="ui-panel">
+      <div class="ui-panel-label">Ledger Card (card surface)</div>
+      <div class="ui-panel-body" style="background: hsl(38,40%,89%);">
+        <div style="background: hsl(42,30%,95%); border: 1px solid hsl(35,28%,74%); padding: 1rem;">
+          <div style="font-size: 0.7rem; font-weight: 700; color: hsl(28,28%,35%); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.3rem;">Chase Sapphire Preferred</div>
+          <div style="font-size: 1.1rem; font-weight: 700; color: hsl(25,55%,10%);">$1,240.00</div>
+          <div style="font-size: 0.8rem; color: hsl(28,28%,35%); margin-top: 0.2rem;">Annual fee due in 42 days</div>
+          <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; align-items: center;">
+            <span style="background: hsl(163,83%,25%); color: white; font-size: 0.7rem; padding: 0.15rem 0.4rem; font-weight: 600;">ACTIVE</span>
+            <span style="font-size: 0.7rem; color: hsl(28,28%,35%);">ᚠ 60k pts · ᚱ Yr 2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Button sample -->
+    <div class="ui-panel">
+      <div class="ui-panel-label">Buttons &amp; Inputs</div>
+      <div class="ui-panel-body" style="background: hsl(38,40%,89%); display: flex; flex-direction: column; gap: 0.75rem;">
+        <button style="background: hsl(38,80%,28%); color: white; border: none; padding: 0.5rem 1.2rem; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.05em; cursor: pointer;">Add Card</button>
+        <button style="background: hsl(42,30%,95%); color: hsl(25,55%,10%); border: 1px solid hsl(35,28%,74%); padding: 0.5rem 1.2rem; font-size: 0.875rem; cursor: pointer;">Cancel</button>
+        <button style="background: hsl(0,72%,38%); color: white; border: none; padding: 0.5rem 1.2rem; font-size: 0.875rem; font-weight: 700; cursor: pointer;">Delete</button>
+        <input
+          type="text"
+          placeholder="Card nickname..."
+          style="background: hsl(38,25%,91%); border: 1px solid hsl(35,28%,74%); color: hsl(25,55%,10%); padding: 0.45rem 0.7rem; font-size: 0.875rem; outline: none; width: 100%;"
+        />
+      </div>
+    </div>
+
+    <!-- Sidebar / nav sample -->
+    <div class="ui-panel">
+      <div class="ui-panel-label">Sidebar Navigation</div>
+      <div class="ui-panel-body" style="background: hsl(38,40%,89%); padding: 0; display: flex;">
+        <div style="background: hsl(36,24%,85%); width: 140px; padding: 0.75rem 0; border-right: 1px solid hsl(35,28%,74%);">
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(25,55%,10%); font-weight: 700; border-left: 3px solid hsl(38,80%,28%);">Dashboard</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(28,28%,35%);">Cards</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(28,28%,35%);">Calendar</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(28,28%,35%);">Valhalla</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(28,28%,35%);">Household</div>
+        </div>
+        <div style="padding: 0.75rem; flex: 1;">
+          <div style="font-size: 0.75rem; color: hsl(25,55%,10%); font-weight: 600; margin-bottom: 0.4rem;">Saga Ledger</div>
+          <div style="font-size: 0.7rem; color: hsl(28,28%,35%);">3 active cards</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Muted / well surface -->
+    <div class="ui-panel">
+      <div class="ui-panel-label">Muted Well / Info Surface</div>
+      <div class="ui-panel-body" style="background: hsl(38,40%,89%);">
+        <div style="background: hsl(36,24%,85%); border: 1px solid hsl(35,28%,74%); padding: 0.75rem; margin-bottom: 0.75rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: hsl(25,55%,10%); margin-bottom: 0.3rem;">ᚲ Threshold Approaching</div>
+          <div style="font-size: 0.75rem; color: hsl(28,28%,35%);">Annual fee due in 42 days. Set a reminder to cancel or downgrade before the charge.</div>
+        </div>
+        <div style="background: hsl(42,35%,87%); border: 1px solid hsl(35,28%,74%); padding: 0.75rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: hsl(25,55%,10%); margin-bottom: 0.3rem;">Gold Accent Surface</div>
+          <div style="font-size: 0.75rem; color: hsl(28,28%,35%);">Used for Karl tier highlights and selected states.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Karl bling against new background -->
+    <div class="ui-panel">
+      <div class="ui-panel-label">Karl Bling — Gold on Parchment</div>
+      <div class="ui-panel-body" style="background: hsl(38,40%,89%);">
+        <div style="background: hsl(42,30%,95%); border: 1px solid rgba(212,165,32,0.30); padding: 0.75rem; position: relative; margin-bottom: 0.75rem;">
+          <span style="font-size: 0.6rem; position: absolute; top: 4px; left: 5px; color: rgba(212,165,32,0.55);">ᚠ</span>
+          <span style="font-size: 0.6rem; position: absolute; top: 4px; right: 5px; color: rgba(212,165,32,0.55);">ᚱ</span>
+          <div style="font-size: 0.85rem; font-weight: 700; color: hsl(25,55%,10%);">Chase Sapphire Reserve</div>
+          <div style="font-size: 0.75rem; color: hsl(28,28%,35%); margin-top: 0.2rem;">$550 annual fee · Karl subscriber</div>
+          <div style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; color: #d4a520; border: 1px solid rgba(212,165,32,0.50); padding: 0.1rem 0.45rem;">
+            <span style="opacity: 0.75; font-size: 0.7rem;">ᚷ</span>KARL<span style="opacity: 0.75; font-size: 0.7rem;">ᚷ</span>
+          </div>
+        </div>
+        <p class="note" style="font-size: 0.75rem; margin: 0;">
+          Gold (#d4a520, #c9920a) pops warmly against tan parchment — it reads as aged illuminated manuscript gold rather than a harsh neon accent on white.
+        </p>
+      </div>
+    </div>
+
+    <!-- Odin's Throne sample -->
+    <div class="ui-panel">
+      <div class="ui-panel-label">Odin's Throne — Tool Surface</div>
+      <div class="ui-panel-body" style="background: hsl(38,40%,89%); padding: 0.75rem;">
+        <div style="background: rgba(185,162,115,0.30); border: 1px solid rgba(120,95,55,0.25); padding: 0.6rem 0.75rem; margin-bottom: 0.5rem;">
+          <div style="font-size: 0.7rem; color: hsl(25,55%,10%); font-weight: 700; margin-bottom: 0.2rem;">Read · layout.tsx</div>
+          <div style="font-size: 0.7rem; color: hsl(28,28%,35%);">Lines 1–45</div>
+        </div>
+        <div style="background: hsl(42,30%,95%); border: 1px solid hsl(35,28%,74%); padding: 0.6rem 0.75rem;">
+          <div style="font-size: 0.7rem; color: hsl(25,55%,10%); font-weight: 700; margin-bottom: 0.2rem;">Bash · npm run build</div>
+          <div style="font-size: 0.7rem; font-family: monospace; color: hsl(28,28%,35%);">✓ Build completed in 4.2s</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── DARK MODE PRESERVATION ────────────────────────────────────── -->
+<section class="section">
+  <h2>Dark Mode Preservation</h2>
+  <p>The dark mode <code>.dark</code> block in <code>globals.css</code> and the default <code>:root</code> in <code>index.css</code> (Odin's Throne) are <strong>completely unchanged</strong>.</p>
+  <p>FiremanDecko must only modify:</p>
+  <ul style="padding-left: 1.5rem; margin: 0.5rem 0;">
+    <li><code>globals.css</code> — the <code>:root { }</code> block only (light mode)</li>
+    <li><code>index.css</code> — the <code>[data-theme="light"] { }</code> block only</li>
+  </ul>
+  <div class="note">
+    No changes to <code>.dark { }</code>, the default dark-mode <code>:root</code> variables in
+    index.css, or any other CSS file. Dark mode is already approved and should remain untouched.
+  </div>
+</section>
+
+<!-- ── IMPLEMENTATION NOTES ─────────────────────────────────────── -->
+<section class="section">
+  <h2>Implementation Notes for FiremanDecko</h2>
+  <ol style="padding-left: 1.5rem; line-height: 2;">
+    <li>Replace the entire <code>:root { }</code> surface/foreground/structure block in <code>globals.css</code> with the Vellum Norse values above. Keep all chart, easter-egg, howl, loki-toast, and realm tokens unchanged.</li>
+    <li>Replace the <code>[data-theme="light"] { }</code> block in <code>index.css</code> using the Odin's Throne mapping table. Key changes: <code>--text-rune</code>, <code>--text-void</code>, <code>--rune-border</code>, <code>--void</code>, <code>--forge</code>, <code>--chain</code> all need updating from their current blue-tinted values.</li>
+    <li>Preserve <code>--radius: 0.25rem</code> (sharp corners — unchanged).</li>
+    <li>Verify karl-bling effects visually against the new parchment background — gold should look warm and inviting, not garish.</li>
+    <li><code>tsc</code> and <code>next build</code> should pass with no changes needed beyond CSS.</li>
+    <li>Primary button AA compliance: white text on <code>--primary</code> is 4.3:1 — ensure button text is ≥ 14px bold or ≥ 16px regular.</li>
+  </ol>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────────────── -->
+<footer style="margin-top: 3rem; padding-top: 1rem; border-top: 2px solid #ccc; font-size: 0.78rem; color: #666;">
+  <p>Luna · UX Designer · Issue #1833 · Vellum Norse Palette v1.0</p>
+  <p>Handoff to: FiremanDecko (implementation) → Loki (QA validation)</p>
+  <p>Generated: 2026-03-23 · Supersedes #1825 (Ledger beige) and #1826 (Odin's Throne beige)</p>
+</footer>
+
+</body>
+</html>
