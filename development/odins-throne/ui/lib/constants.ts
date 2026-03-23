@@ -137,6 +137,16 @@ export const STATUS_COLORS: Record<Job["status"], string> = {
   cached: "#c9920a",   // gold — pinned in Odin's memory
 };
 
+/** Darker variants of STATUS_COLORS for light mode — WCAG AA ≥3:1 on parchment bg */
+export const STATUS_COLORS_LIGHT: Record<Job["status"], string> = {
+  running:   "#0e7490",  // dark cyan    — matches --teal-asgard family
+  succeeded: "#16a34a",  // dark green   — same as --success-strong light
+  failed:    "#dc2626",  // dark red     — same as --error-strong light
+  pending:   "#b45309",  // dark amber
+  purged:    "#57534e",  // warm dark gray
+  cached:    "#8f6e0e",  // dark gold    — same as --gold light
+};
+
 export const STATUS_LABELS: Record<Job["status"], string> = {
   running: "running",
   succeeded: "succeeded",

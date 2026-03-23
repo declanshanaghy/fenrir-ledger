@@ -82,7 +82,7 @@ import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscription";
 import { DecreeBlock, isDecreeBlock } from "./DecreeBlock";
-import { AGENT_AVATARS, AGENT_LIGHT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
+import { AGENT_AVATARS, AGENT_LIGHT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_COLORS_LIGHT, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
 import { StatusIconSvg } from "./StatusIcon";
 import { downloadLogFile } from "../lib/localStorageLogs";
 import { useTheme } from "../hooks/useTheme";
@@ -101,6 +101,8 @@ interface SessionHeaderProps {
 function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, replayedFromCache = false, onCancelJob }: SessionHeaderProps) {
   const displayTitle = resolveSessionTitle(job);
   const [confirmingUnpin, setConfirmingUnpin] = useState(false);
+  const { theme } = useTheme();
+  const statusColorMap = theme === "light" ? STATUS_COLORS_LIGHT : STATUS_COLORS;
 
   // Reset confirmation state when pin state changes externally
   useEffect(() => {
@@ -151,7 +153,7 @@ function SessionHeader({ job, isPinned = false, onTogglePin, showPin = true, rep
         ) : (
           <span
             className={`job-status-icon-btn${job.status === "running" ? " pulse" : ""}`}
-            style={{ color: STATUS_COLORS[job.status] }}
+            style={{ color: statusColorMap[job.status] }}
             title={`Job status: ${STATUS_LABELS[job.status]}`}
             aria-label={`Job status: ${STATUS_LABELS[job.status]}`}
           >

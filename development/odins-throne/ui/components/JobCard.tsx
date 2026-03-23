@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { DisplayJob } from "../lib/types";
-import { AGENT_COLORS, AGENT_AVATARS, AGENT_LIGHT_AVATARS, STATUS_COLORS, STATUS_LABELS } from "../lib/constants";
+import { AGENT_COLORS, AGENT_AVATARS, AGENT_LIGHT_AVATARS, STATUS_COLORS, STATUS_COLORS_LIGHT, STATUS_LABELS } from "../lib/constants";
 import { StatusIconSvg } from "./StatusIcon";
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 import type { DisplayMode } from "./Sidebar";
@@ -41,7 +41,8 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
   const agentColor = AGENT_COLORS[job.agentKey ?? ""] || "#c9920a";
   const avatarMap = theme === "light" ? AGENT_LIGHT_AVATARS : AGENT_AVATARS;
   const avatar = avatarMap[job.agentKey ?? ""];
-  const sColor = STATUS_COLORS[job.status] || "#606070";
+  const statusColorMap = theme === "light" ? STATUS_COLORS_LIGHT : STATUS_COLORS;
+  const sColor = statusColorMap[job.status] || (theme === "light" ? "#57534e" : "#606070");
   const sLabel = STATUS_LABELS[job.status] || job.status;
   const pulse = job.status === "running" ? " pulse" : "";
   const displayTitle = resolveSessionTitle(job);
