@@ -15,32 +15,7 @@ import {
   mergeCardsWithStats,
   effectiveTimestamp,
 } from "@/lib/sync/sync-engine";
-import type { Card } from "@/lib/types";
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-let _seq = 0;
-
-function makeCard(overrides: Partial<Card> = {}): Card {
-  _seq++;
-  return {
-    id: `card-${_seq}`,
-    householdId: "hh-test",
-    issuerId: "chase",
-    cardName: `Card ${_seq}`,
-    openDate: "2025-01-01T00:00:00.000Z",
-    creditLimit: 500000,
-    annualFee: 9500,
-    annualFeeDate: "2026-01-01T00:00:00.000Z",
-    promoPeriodMonths: 0,
-    signUpBonus: null,
-    status: "active",
-    notes: "",
-    createdAt: "2025-01-01T00:00:00.000Z",
-    updatedAt: "2025-01-01T00:00:00.000Z",
-    ...overrides,
-  };
-}
+import { makeCard } from "@/__tests__/fixtures/cards";
 
 // ── effectiveTimestamp ─────────────────────────────────────────────────────
 

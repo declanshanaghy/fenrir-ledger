@@ -18,8 +18,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Card } from "@/lib/types";
 import { NextRequest } from "next/server";
+import { makeCard } from "@/__tests__/fixtures/cards";
 
 // ── Mocks: authz (both routes use requireAuthz after fix) ────────────────────
 
@@ -46,26 +46,6 @@ import { GET as pullGET } from "@/app/api/sync/pull/route";
 import { POST as pushPOST } from "@/app/api/sync/push/route";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
-
-function makeCard(overrides: Partial<Card> = {}): Card {
-  return {
-    id: "card-1",
-    householdId: "victim-household",
-    issuerId: "amex",
-    cardName: "Victim Gold Card",
-    openDate: "2025-01-01T00:00:00.000Z",
-    creditLimit: 1000000,
-    annualFee: 25000,
-    annualFeeDate: "",
-    promoPeriodMonths: 0,
-    signUpBonus: null,
-    status: "active",
-    notes: "secret note",
-    createdAt: "2025-01-01T00:00:00.000Z",
-    updatedAt: "2025-01-01T00:00:00.000Z",
-    ...overrides,
-  };
-}
 
 beforeEach(() => {
   mockGetAllFirestoreCards.mockResolvedValue([]);

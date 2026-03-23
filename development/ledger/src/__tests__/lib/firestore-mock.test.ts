@@ -28,63 +28,15 @@ import {
   type SyncPushResponse,
   type SyncPullResponse,
 } from "@/lib/firebase/firestore-mock";
-import type { Card } from "@/lib/types";
-import type { FirestoreUser, FirestoreHousehold } from "@/lib/firebase/firestore-types";
+import { makeCard } from "@/__tests__/fixtures/cards";
+import { makeUser } from "@/__tests__/fixtures/users";
+import { makeHousehold } from "@/__tests__/fixtures/households";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
-const TEST_HOUSEHOLD = "hh-test-001";
-
-function makeCard(overrides: Partial<Card> = {}): Card {
-  const now = new Date().toISOString();
-  return {
-    id: "card-001",
-    householdId: TEST_HOUSEHOLD,
-    issuerId: "chase",
-    cardName: "Test Card",
-    openDate: "2024-01-01",
-    creditLimit: 500000,
-    annualFee: 9500,
-    annualFeeDate: "2025-01-01",
-    promoPeriodMonths: 0,
-    signUpBonus: null,
-    status: "active",
-    notes: "",
-    createdAt: now,
-    updatedAt: now,
-    ...overrides,
-  };
-}
-
-function makeUser(overrides: Partial<FirestoreUser> = {}): FirestoreUser {
-  const now = new Date().toISOString();
-  return {
-    userId: "user-001",
-    email: "test@example.com",
-    displayName: "Test User",
-    householdId: TEST_HOUSEHOLD,
-    role: "owner",
-    createdAt: now,
-    updatedAt: now,
-    ...overrides,
-  };
-}
-
-function makeHousehold(overrides: Partial<FirestoreHousehold> = {}): FirestoreHousehold {
-  const now = new Date().toISOString();
-  return {
-    id: TEST_HOUSEHOLD,
-    name: "Test Household",
-    ownerId: "user-001",
-    memberIds: ["user-001"],
-    inviteCode: "ABCDEF",
-    inviteCodeExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    tier: "free",
-    createdAt: now,
-    updatedAt: now,
-    ...overrides,
-  };
-}
+// "hh-test" matches the shared fixture defaults so makeCard/makeUser/makeHousehold
+// all reference the same household without explicit overrides.
+const TEST_HOUSEHOLD = "hh-test";
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
