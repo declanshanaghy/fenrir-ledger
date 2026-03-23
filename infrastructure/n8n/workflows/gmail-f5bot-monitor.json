@@ -86,7 +86,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const emailId = item.json.id || '';\n  const subject = item.json.Subject || item.json.subject || '';\n\n  // Extract keyword from: \"F5Bot found something: <keyword>\"\n  const keywordMatch = subject.match(/F5Bot found something:\\s*(.+)/i);\n  const keyword = keywordMatch ? keywordMatch[1].trim() : 'unknown';\n\n  // Get body text from multiple possible fields\n  let bodyText = '';\n  if (item.json.payload) {\n    const getParts = (part) => {\n      if (!part) return [];\n      const out = [];\n      if (part.body && part.body.data) {\n        out.push({ mimeType: part.mimeType || '', data: part.body.data });\n      }\n      if (part.parts) {\n        for (const p of part.parts) out.push(...getParts(p));\n      }\n      return out;\n    };\n    const parts = getParts(item.json.payload);\n    const htmlPart = parts.find(p => p.mimeType === 'text/html')\n      || parts.find(p => p.mimeType === 'text/plain')\n      || parts[0];\n    if (htmlPart && htmlPart.data) {\n      try {\n        bodyText = Buffer.from(htmlPart.data, 'base64url').toString('utf-8');\n      } catch (e) {\n        bodyText = Buffer.from(htmlPart.data, 'base64').toString('utf-8');\n      }\n    }\n  }\n\n  // Fallback to simplified body fields (when simple: false with mailparser)\n  if (!bodyText) {\n    bodyText = item.json.html || item.json.textAsHtml || item.json.text || item.json.snippet || '';\n  }\n\n  const seen = new Set();\n\n  // F5Bot wraps Reddit links as redirect URLs:\n  //   href='https://f5bot.com/url?u=https%3A%2F%2Fwww.reddit.com%2Fr%2F...&i=...&h=...'\n  // Extract the u= parameter and URL-decode it to get the real Reddit URL\n  const f5botRegex = /f5bot\\.com\\/url\\?u=(https?%3A%2F%2F(?:www\\.)?reddit\\.com%2Fr%2F[^&\"'<>\\s]+)/gi;\n  let match;\n  while ((match = f5botRegex.exec(bodyText)) !== null) {\n    let url;\n    try {\n      url = decodeURIComponent(match[1]);\n    } catch (e) {\n      continue; // skip malformed URLs\n    }\n\n    // Clean: strip query params, fragments, trailing slashes\n    const cleanUrl = url.split('?')[0].split('#')[0].replace(/\\/+$/, '');\n    const normalKey = cleanUrl.toLowerCase();\n    if (seen.has(normalKey)) continue;\n    seen.add(normalKey);\n\n    // Detect comment vs post: /r/sub/comments/id/slug/comment_id = 6+ segments\n    // Also handle /r/sub/comments/id/c/comment_id format\n    const pathParts = cleanUrl\n      .replace(/https?:\\/\\/(?:www\\.)?reddit\\.com/, '')\n      .split('/')\n      .filter(Boolean);\n    const isComment = pathParts.length >= 5 && (pathParts[3] === 'c' || pathParts.length >= 6);\n\n    results.push({\n      json: {\n        emailId,\n        subject,\n        keyword,\n        redditUrl: cleanUrl,\n        isComment\n      }\n    });\n  }\n\n  // Fallback: also check for raw reddit.com URLs (in case F5Bot changes format)\n  const rawRegex = /https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[A-Za-z0-9_]+\\/comments\\/[A-Za-z0-9_]+(?:\\/[^\\s\"'<>)\\]&]*)*/g;\n  const rawUrls = bodyText.match(rawRegex) || [];\n  for (let url of rawUrls) {\n    url = url.replace(/&amp;/g, '&').replace(/&#47;/g, '/').replace(/[,.)\\]]+$/, '');\n    const cleanUrl = url.split('?')[0].split('#')[0].replace(/\\/+$/, '');\n    const normalKey = cleanUrl.toLowerCase();\n    if (seen.has(normalKey)) continue;\n    seen.add(normalKey);\n\n    const pathParts = cleanUrl\n      .replace(/https?:\\/\\/(?:www\\.)?reddit\\.com/, '')\n      .split('/')\n      .filter(Boolean);\n    const isComment = pathParts.length >= 5 && (pathParts[3] === 'c' || pathParts.length >= 6);\n\n    results.push({\n      json: {\n        emailId,\n        subject,\n        keyword,\n        redditUrl: cleanUrl,\n        isComment\n      }\n    });\n  }\n}\n\nreturn results;\n"
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const emailId = item.json.id || '';\n  const subject = item.json.Subject || item.json.subject || '';\n\n  const keywordMatch = subject.match(/F5Bot found something:\\s*(.+)/i);\n  const keyword = keywordMatch ? keywordMatch[1].trim() : 'unknown';\n\n  let bodyText = '';\n  if (item.json.payload) {\n    const getParts = (part) => {\n      if (!part) return [];\n      const out = [];\n      if (part.body && part.body.data) {\n        out.push({ mimeType: part.mimeType || '', data: part.body.data });\n      }\n      if (part.parts) {\n        for (const p of part.parts) out.push(...getParts(p));\n      }\n      return out;\n    };\n    const parts = getParts(item.json.payload);\n    const htmlPart = parts.find(p => p.mimeType === 'text/html')\n      || parts.find(p => p.mimeType === 'text/plain')\n      || parts[0];\n    if (htmlPart && htmlPart.data) {\n      try {\n        bodyText = Buffer.from(htmlPart.data, 'base64url').toString('utf-8');\n      } catch (e) {\n        bodyText = Buffer.from(htmlPart.data, 'base64').toString('utf-8');\n      }\n    }\n  }\n  if (!bodyText) {\n    bodyText = item.json.html || item.json.textAsHtml || item.json.text || item.json.snippet || '';\n  }\n\n  const seen = new Set();\n\n  // F5Bot HTML structure per mention:\n  //   <p style='margin-left:10px'>\n  //     Reddit Posts (/r/SUBREDDIT/): <a href='https://f5bot.com/url?u=ENCODED_URL'>POST TITLE</a> by USERNAME<br>\n  //     <span style='...'>SNIPPET with <strong>keyword</strong> highlighted</span>\n  //   </p>\n  //\n  // Parse each <p> block to extract: subreddit, URL, title, author, snippet, type (Posts vs Comments)\n\n  const blockRegex = /Reddit\\s+(Posts|Comments)\\s+\\(\\/r\\/([^/]+)\\/\\):\\s*<a\\s+href='[^']*f5bot\\.com\\/url\\?u=([^&']+)[^']*'>([^<]+)<\\/a>\\s*by\\s+(\\S+)\\s*<br>\\s*\\n?\\s*<span[^>]*>([\\s\\S]*?)<\\/span>/gi;\n\n  let match;\n  while ((match = blockRegex.exec(bodyText)) !== null) {\n    const type = match[1].toLowerCase();  // \"posts\" or \"comments\"\n    const subreddit = 'r/' + match[2];\n    let redditUrl;\n    try {\n      redditUrl = decodeURIComponent(match[3]);\n    } catch (e) {\n      continue;\n    }\n    const postTitle = match[4].trim();\n    const author = match[5].trim();\n    const rawSnippet = match[6]\n      .replace(/<strong>/gi, '')\n      .replace(/<\\/strong>/gi, '')\n      .replace(/<[^>]+>/g, '')\n      .trim();\n\n    const cleanUrl = redditUrl.split('?')[0].split('#')[0].replace(/\\/+$/, '');\n    const normalKey = cleanUrl.toLowerCase();\n    if (seen.has(normalKey)) continue;\n    seen.add(normalKey);\n\n    const isComment = type === 'comments';\n\n    results.push({\n      json: {\n        emailId,\n        subject,\n        keyword,\n        redditUrl: cleanUrl,\n        isComment,\n        subreddit,\n        postTitle,\n        author,\n        snippet: rawSnippet.substring(0, 1500)\n      }\n    });\n  }\n\n  // Fallback: if HTML parsing found nothing, try extracting from plain text\n  if (results.length === 0) {\n    const textBody = item.json.text || item.json.snippet || '';\n    const textRegex = /Reddit\\s+(Posts|Comments)\\s+\\(\\/r\\/([^/]+)\\/\\):\\s*'([^']+)'\\s+by\\s+(\\S+)\\s*\\n\\s*(https?:\\/\\/f5bot\\.com\\/url\\?u=(\\S+))/gi;\n    let tm;\n    while ((tm = textRegex.exec(textBody)) !== null) {\n      const type = tm[1].toLowerCase();\n      const subreddit = 'r/' + tm[2];\n      const postTitle = tm[3].trim();\n      const author = tm[4].trim();\n      let redditUrl;\n      try {\n        redditUrl = decodeURIComponent(tm[6].split('&')[0]);\n      } catch (e) {\n        continue;\n      }\n      const cleanUrl = redditUrl.split('?')[0].split('#')[0].replace(/\\/+$/, '');\n      const normalKey = cleanUrl.toLowerCase();\n      if (seen.has(normalKey)) continue;\n      seen.add(normalKey);\n\n      results.push({\n        json: {\n          emailId,\n          subject,\n          keyword,\n          redditUrl: cleanUrl,\n          isComment: type === 'comments',\n          subreddit,\n          postTitle,\n          author,\n          snippet: ''\n        }\n      });\n    }\n  }\n}\n\nreturn results;\n"
       },
       "id": "f5b0-0004-4000-8000-000000000004",
       "name": "Extract — Reddit Links",
@@ -133,53 +133,6 @@
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "={{ $json.redditUrl }}.json",
-        "authentication": "none",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "User-Agent",
-              "value": "fenrir-ledger:f5bot-monitor:v1.0 (by /u/Wide-Pass369)"
-            }
-          ]
-        },
-        "options": {
-          "splitIntoItems": false,
-          "response": {
-            "response": {
-              "fullResponse": false
-            }
-          }
-        }
-      },
-      "id": "f5b0-0006-4000-8000-000000000006",
-      "name": "HTTP — Get Reddit Post",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1340,
-        220
-      ],
-      "notes": "Fetches the Reddit post JSON via the undocumented .json API endpoint.\nUser-Agent header is required — Reddit returns 429 for anonymous requests without it.\nsplitIntoItems: false prevents n8n from splitting the [post_listing, comments_listing] array into separate output items.\nReddit rate-limits anonymous requests to ~10/min — fine for manual trigger with small batches."
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst linkItems = $('Extract — Reddit Links').all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  // Index-match context from Extract — Reddit Links (fan-out preserves order)\n  const ctx = linkItems[i]?.json || {};\n\n  let postData = {};\n  try {\n    const body = item.json;\n    if (Array.isArray(body)) {\n      // Reddit .json returns [post_listing, comments_listing]\n      postData = body[0]?.data?.children?.[0]?.data || {};\n    } else if (body?.data?.children) {\n      // Fallback if n8n partially parsed the response\n      postData = body.data.children[0]?.data || {};\n    }\n  } catch (e) {\n    postData = {};\n  }\n\n  const subreddit = postData.subreddit_name_prefixed\n    || (postData.subreddit ? 'r/' + postData.subreddit : ctx.subreddit || 'r/unknown');\n\n  results.push({\n    json: {\n      emailId: ctx.emailId || '',\n      subject: ctx.subject || '',\n      keyword: ctx.keyword || 'unknown',\n      redditUrl: ctx.redditUrl || '',\n      isComment: ctx.isComment || false,\n      title: postData.title || 'Untitled Post',\n      postBody: (postData.selftext || '').substring(0, 800).trim(),\n      author: postData.author || 'unknown',\n      subreddit,\n      score: postData.score || 0,\n      numComments: postData.num_comments || 0\n    }\n  });\n}\n\nreturn results;"
-      },
-      "id": "f5b0-0007-4000-8000-000000000007",
-      "name": "Extract — Post Content",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1560,
-        220
-      ],
-      "notes": "Parses the Reddit JSON API response ([post_listing, comments_listing]) to extract post title, body, author, subreddit, score, and comment count.\nIndex-matches with Extract — Reddit Links output to restore the original email context (emailId, keyword, redditUrl, isComment)."
-    },
-    {
-      "parameters": {
         "method": "POST",
         "url": "https://api.anthropic.com/v1/messages",
         "authentication": "none",
@@ -205,7 +158,7 @@
           "parameters": []
         },
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"claude-3-5-haiku-20241022\",\n  \"max_tokens\": 512,\n  \"system\": \"You are Freya, a helpful member of personal finance communities who uses Fenrir Ledger to track credit card annual fees and bonus milestones. Your tone is friendly, knowledgeable, and never promotional. You give real value first — specific advice, honest opinions, genuine engagement. You never say 'Fenrir Ledger' unless directly asked. You write short Reddit comments (2–4 sentences). No marketing speak. No exclamation points. Sound like a real person who cares about the hobby.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"F5Bot found a mention of the keyword '{{ $json.keyword }}' on Reddit.\\n\\nPost: {{ $json.title }}\\nSubreddit: {{ $json.subreddit }}\\nAuthor: u/{{ $json.author }}\\nScore: {{ $json.score }} | Comments: {{ $json.numComments }}\\n\\nPost body:\\n{{ $json.postBody || '(no text body — link post or image)' }}\\n\\nURL: {{ $json.redditUrl }}\\n\\n{{ $json.isComment ? 'This is a comment thread — draft a reply to the specific comment.' : 'This is a post — draft a top-level reply.' }} Write 2–4 sentences that add real value to this discussion. Be specific to the content above. Only mention tracking tools or apps if the conversation naturally calls for it.\"\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-haiku-20241022\",\n  \"max_tokens\": 512,\n  \"system\": \"You are Freya, a helpful member of personal finance communities who uses Fenrir Ledger to track credit card annual fees and bonus milestones. Your tone is friendly, knowledgeable, and never promotional. You give real value first — specific advice, honest opinions, genuine engagement. You never say 'Fenrir Ledger' unless directly asked. You write short Reddit comments (2–4 sentences). No marketing speak. No exclamation points. Sound like a real person who cares about the hobby.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"F5Bot found a mention of the keyword '{{ $json.keyword }}' on {{ $json.subreddit }}.\n\nPost: {{ $json.postTitle }}\nAuthor: u/{{ $json.author }}\n\nContent:\n{{ $json.snippet || '(no snippet available)' }}\n\nURL: {{ $json.redditUrl }}\n\n{{ $json.isComment ? 'This is a comment — draft a reply to the specific comment.' : 'This is a post — draft a top-level reply.' }} Write 2–4 sentences that add real value to this discussion. Be specific to the content above. Only mention tracking tools or apps if the conversation naturally calls for it.\"\n    }\n  ]\n}",
         "options": {
           "response": {
             "response": {
@@ -226,7 +179,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst ctxItems = $('Extract — Post Content').all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const ctx = ctxItems[i]?.json || {};\n\n  const claudeResponse = item.json;\n  const draftText = claudeResponse?.content?.[0]?.text\n    || 'Claude draft unavailable — check ANTHROPIC_API_KEY in n8n-secrets.';\n\n  results.push({\n    json: {\n      draftText,\n      emailId: ctx.emailId || '',\n      subject: ctx.subject || '',\n      keyword: ctx.keyword || '',\n      redditUrl: ctx.redditUrl || '',\n      isComment: ctx.isComment || false,\n      title: ctx.title || '',\n      postBody: ctx.postBody || '',\n      author: ctx.author || '',\n      subreddit: ctx.subreddit || '',\n      score: ctx.score || 0,\n      numComments: ctx.numComments || 0\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "const items = .all();\nconst contextItems = .all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const claudeResponse = items[i].json;\n  const draftText = claudeResponse?.content?.[0]?.text || 'Claude draft unavailable.';\n  const ctx = contextItems[i]?.json || contextItems[0]?.json || {};\n\n  results.push({\n    json: {\n      draftText,\n      emailId: ctx.emailId || '',\n      keyword: ctx.keyword || '',\n      redditUrl: ctx.redditUrl || '',\n      isComment: ctx.isComment || false,\n      subreddit: ctx.subreddit || '',\n      postTitle: ctx.postTitle || '',\n      author: ctx.author || '',\n      snippet: ctx.snippet || ''\n    }\n  });\n}\n\nreturn results;"
       },
       "id": "f5b0-0009-4000-8000-000000000009",
       "name": "Merge — Context + Draft",
@@ -242,9 +195,9 @@
       "parameters": {
         "resource": "draft",
         "operation": "create",
-        "subject": "=[F5Bot] {{ $json.keyword }} — {{ $json.title }} ({{ $json.subreddit }})",
+        "subject": "=F5Bot: {{ $json.keyword }} — {{ $json.subreddit }} ({{ $json.postTitle }})",
         "emailType": "html",
-        "message": "=<h3>F5Bot Keyword Alert: <strong>{{ $json.keyword }}</strong></h3>\n<p>\n  <strong>Post:</strong> <a href=\"{{ $json.redditUrl }}\">{{ $json.title }}</a><br>\n  <strong>Subreddit:</strong> {{ $json.subreddit }}<br>\n  <strong>Author:</strong> u/{{ $json.author }}<br>\n  <strong>Score:</strong> {{ $json.score }} | <strong>Comments:</strong> {{ $json.numComments }}<br>\n  <strong>Type:</strong> {{ $json.isComment ? 'Comment thread' : 'Post' }}\n</p>\n<hr>\n<h4>Post Content</h4>\n<blockquote style=\"border-left: 3px solid #ccc; padding-left: 12px; color: #555;\">\n  {{ $json.postBody || '(link post or image — no text body)' }}\n</blockquote>\n<hr>\n<h4>Claude Draft Reply</h4>\n<p style=\"background: #f0f8ff; padding: 12px; border-radius: 4px;\">{{ $json.draftText }}</p>\n<hr>\n<p><em>Odin: review the draft above, edit as needed, then post as u/Wide-Pass369. Delete this draft when done.<br>Generated by the F5Bot Monitor n8n workflow (issue #1788).</em></p>",
+        "message": "=<h3>F5Bot Keyword Alert: <strong>{{ $json.keyword }}</strong></h3>\n<p>\n  <strong>Post:</strong> <a href=\"{{ $json.redditUrl }}\">{{ $json.postTitle }}</a><br>\n  <strong>Subreddit:</strong> {{ $json.subreddit }}<br>\n  <strong>Author:</strong> u/{{ $json.author }}<br>\n  <strong>Type:</strong> {{ $json.isComment ? \"Comment thread\" : \"Post\" }}\n</p>\n<hr>\n<h4>Content Snippet</h4>\n<blockquote style=\"border-left: 3px solid #ccc; padding-left: 12px; color: #555;\">\n  {{ $json.snippet || \"(no snippet available)\" }}\n</blockquote>\n<hr>\n<h4>Claude Draft Reply</h4>\n<p style=\"background: #f0f8ff; padding: 12px; border-radius: 4px;\">{{ $json.draftText }}</p>\n<hr>\n<p><em>Odin: review the draft above, edit as needed, then post as u/Wide-Pass369. Delete this draft when done.<br>Generated by the F5Bot Monitor n8n workflow.</em></p>",
         "options": {}
       },
       "id": "f5b0-000a-4000-8000-000000000010",
@@ -375,7 +328,7 @@
       "main": [
         [
           {
-            "node": "HTTP — Get Reddit Post",
+            "node": "Claude API — Draft Reply",
             "type": "main",
             "index": 0
           }
@@ -383,28 +336,6 @@
         [
           {
             "node": "No Reddit Links",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP — Get Reddit Post": {
-      "main": [
-        [
-          {
-            "node": "Extract — Post Content",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract — Post Content": {
-      "main": [
-        [
-          {
-            "node": "Claude API — Draft Reply",
             "type": "main",
             "index": 0
           }
