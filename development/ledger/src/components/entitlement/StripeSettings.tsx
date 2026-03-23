@@ -20,10 +20,11 @@
  * @module entitlement/StripeSettings
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useEntitlement } from "@/hooks/useEntitlement";
+import { ensureFreshToken } from "@/lib/auth/refresh-session";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -72,6 +73,43 @@ function deriveSubscriptionState(
   const isCanceled = isStripeLinked && tier === "karl" && !isActive;
   if (isCanceled) return "canceled";
   return "thrall";
+}
+
+// ---------------------------------------------------------------------------
+// Household role hook
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetches the current user's household role.
+ * Returns null while loading or when unauthenticated.
+ * Used to gate the "Manage Subscription" button for non-owner members.
+ *
+ * Issue #1795
+ */
+function useHouseholdRole(): { isOwner: boolean | null } {
+  const [isOwner, setIsOwner] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetch_() {
+      const token = await ensureFreshToken();
+      if (!token || cancelled) return;
+      try {
+        const res = await fetch("/api/household/members", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok || cancelled) return;
+        const json = (await res.json()) as { isOwner: boolean };
+        if (!cancelled) setIsOwner(json.isOwner);
+      } catch {
+        // Network error — leave isOwner as null (safe default: show button)
+      }
+    }
+    fetch_();
+    return () => { cancelled = true; };
+  }, []);
+
+  return { isOwner };
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +287,8 @@ interface ManageActionProps {
   isAnyLoading: boolean;
   isManaging: boolean;
   handleManage: () => Promise<void>;
+  /** null while loading or unauthenticated; false for household members */
+  isOwner: boolean | null;
 }
 
 /**
@@ -309,7 +349,9 @@ function KarlActivePanel({
   isAnyLoading,
   isManaging,
   handleManage,
+  isOwner,
 }: { formattedPeriodEnd: string | null } & ManageActionProps) {
+  const isMember = isOwner === false;
   return (
     <>
       <p
@@ -328,17 +370,23 @@ function KarlActivePanel({
 
       <div className="border-t border-border" />
 
-      <div className="flex flex-row flex-wrap gap-3">
-        <Button
-          onClick={handleManage}
-          disabled={isAnyLoading}
-          isLoading={isManaging}
-          loadingText="Redirecting..."
-          className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold karl-bling-btn"
-        >
-          Manage Subscription
-        </Button>
-      </div>
+      {isMember ? (
+        <p className="text-sm text-muted-foreground font-body">
+          Contact your household owner to manage the subscription.
+        </p>
+      ) : (
+        <div className="flex flex-row flex-wrap gap-3">
+          <Button
+            onClick={handleManage}
+            disabled={isAnyLoading}
+            isLoading={isManaging}
+            loadingText="Redirecting..."
+            className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold karl-bling-btn"
+          >
+            Manage Subscription
+          </Button>
+        </div>
+      )}
     </>
   );
 }
@@ -411,8 +459,10 @@ function CanceledPanel({
   isManaging,
   handleSubscribe,
   handleManage,
+  isOwner,
 }: { formattedPeriodEnd: string | null } & SubscribeActionProps &
   ManageActionProps) {
+  const isMember = isOwner === false;
   return (
     <>
       <p
@@ -437,27 +487,33 @@ function CanceledPanel({
 
       <div className="border-t border-border" />
 
-      <div className="flex flex-row flex-wrap gap-3">
-        <Button
-          onClick={handleSubscribe}
-          disabled={isAnyLoading}
-          isLoading={isSubscribing}
-          loadingText="Redirecting..."
-          className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold karl-bling-btn"
-        >
-          Resubscribe
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleManage}
-          disabled={isAnyLoading}
-          isLoading={isManaging}
-          loadingText="Redirecting..."
-          className="min-h-[44px] w-full sm:w-auto font-heading text-[13px]"
-        >
-          Manage Subscription
-        </Button>
-      </div>
+      {isMember ? (
+        <p className="text-sm text-muted-foreground font-body">
+          Contact your household owner to manage the subscription.
+        </p>
+      ) : (
+        <div className="flex flex-row flex-wrap gap-3">
+          <Button
+            onClick={handleSubscribe}
+            disabled={isAnyLoading}
+            isLoading={isSubscribing}
+            loadingText="Redirecting..."
+            className="min-h-[44px] w-full sm:w-auto font-heading font-bold bg-gold text-primary-foreground border-2 border-gold karl-bling-btn"
+          >
+            Resubscribe
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleManage}
+            disabled={isAnyLoading}
+            isLoading={isManaging}
+            loadingText="Redirecting..."
+            className="min-h-[44px] w-full sm:w-auto font-heading text-[13px]"
+          >
+            Manage Subscription
+          </Button>
+        </div>
+      )}
     </>
   );
 }
@@ -484,6 +540,8 @@ export function StripeSettings() {
     handleSubscribe,
     handleManage,
   } = useStripeSettings();
+
+  const { isOwner } = useHouseholdRole();
 
   if (isLoading && !isLinked) {
     return <StripeSettingsSkeleton />;
@@ -523,6 +581,7 @@ export function StripeSettings() {
             isAnyLoading={isAnyLoading}
             isManaging={isManaging}
             handleManage={handleManage}
+            isOwner={isOwner}
           />
         )}
 
@@ -542,6 +601,7 @@ export function StripeSettings() {
             isManaging={isManaging}
             handleSubscribe={handleSubscribe}
             handleManage={handleManage}
+            isOwner={isOwner}
           />
         )}
       </section>
