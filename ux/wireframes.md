@@ -1,5 +1,13 @@
 # Wireframes: Fenrir Ledger
 
+## Timer Icon on Card Views — Hunt, Howl, Valhalla, All Tabs (Issue #1850)
+
+| File | Description |
+|------|-------------|
+| [wireframes/cards/timer-icon-cards.html](wireframes/cards/timer-icon-cards.html) | Timer ring (TimerRing) wireframe: 8 sections — (1) icon anatomy: spend ring + timer ring side-by-side, clock face glyph inside, tooltip spec, stacked alternative; (2) Hunt tab card — dual rings (spend + timer), urgency states (healthy/urgent), min spend progress bar; (3) Howl tab card — timer ring only with urgency coloring (teal/amber/red by days remaining), optional bonus-closing warning row, action row; (4) Valhalla tab card — both rings at 50% opacity/realm-stone, ✓/✗ bonus state on spend ring, fully filled timer showing hold duration; (5) All tab — mixed card styles, each card rendered in its home tab style via Hunt/Howl/Valhalla tile delegation; (6) responsive breakpoints (375px/600px/1024px+); (7) WCAG 2.1 AA accessibility spec (role=img, aria-label, color-independence via countdown text, reduced-motion); (8) FiremanDecko handoff: TimerRing component spec (props, fill ratio, color token map), modified/new tiles (HuntCardTile, HowlCardTile, ValhallaCardTile), All tab delegation strategy. |
+
+---
+
 Wireframes are standalone HTML5 documents. They use only structural layout — no colors, no custom fonts, no shadows, no decorative borders. Theme styling is defined in `theme-system.md` and applied separately by the engineer. If the theme changes, the wireframes remain valid.
 
 **Convention:**

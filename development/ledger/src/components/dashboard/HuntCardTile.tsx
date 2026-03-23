@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/card";
 import { StatusBadge } from "./StatusBadge";
 import { StatusRing } from "./StatusRing";
+import { TimerRing } from "./TimerRing";
 import type { Card as CreditCard } from "@/lib/types";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/card-utils";
 import { getIssuerBadgeChar, getIssuerMeta } from "@/lib/issuer-utils";
@@ -138,17 +139,29 @@ export function HuntCardTile({ card, lokiLabel }: HuntCardTileProps) {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                {/* Ring wrapper — title tooltip for remaining spend + deadline time */}
-                <div
-                  title={tooltipText}
-                  aria-label={`${card.cardName}: ${percentComplete}% of min spend complete. ${tooltipText}`}
-                >
-                  <StatusRing
-                    status={card.status}
-                    daysRemaining={ringDaysRemaining}
-                    totalDays={ringTotalDays}
-                    initials={ringBadgeChar}
-                  />
+                {/* Ring pair — spend ring (left) + timer ring (right), 4px gap */}
+                <div className="flex items-center gap-1 shrink-0">
+                  {/* Spend ring: filled by amountSpent / spendRequired */}
+                  <div
+                    title={tooltipText}
+                    aria-label={`${card.cardName}: ${percentComplete}% of min spend complete. ${tooltipText}`}
+                  >
+                    <StatusRing
+                      status={card.status}
+                      daysRemaining={ringDaysRemaining}
+                      totalDays={ringTotalDays}
+                      initials={ringBadgeChar}
+                    />
+                  </div>
+                  {/* Timer ring: filled by elapsed time from openDate to bonusDeadline */}
+                  {card.signUpBonus?.deadline && (
+                    <TimerRing
+                      openDate={card.openDate}
+                      deadlineDate={card.signUpBonus.deadline}
+                      tab="hunt"
+                      cardName={card.cardName}
+                    />
+                  )}
                 </div>
                 <div className="min-w-0">
                   <CardDescription

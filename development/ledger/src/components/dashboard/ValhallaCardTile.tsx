@@ -4,6 +4,7 @@
  * ValhallaCardTile — Valhalla-tab specific card tile for closed/graduated cards.
  *
  * Issue #1808 — Valhalla tab: show rewards reaped context instead of generic credit limit data.
+ * Issue #1850 — timer icon on card views across all tabs.
  *
  * Differences from CardTile:
  *   - Removes Credit limit row.
@@ -13,8 +14,10 @@
  *   - Annual fee paid shows "$0 (no fee)" when zero.
  *   - Time held shown in months from openDate to closedAt.
  *   - Closed date shown as "Mon YYYY" format.
+ *   - Both rings shown at 50% opacity (spend ring ✓/✗ + timer ring at closedAt ratio).
  *
  * Wireframe: ux/wireframes/cards/valhalla-tab-cards.html
+ * Spec: ux/wireframes/cards/timer-icon-cards.html — Section 4
  */
 
 import Link from "next/link";
@@ -28,9 +31,11 @@ import {
 } from "@/components/ui/card";
 import { StatusBadge } from "./StatusBadge";
 import { StatusRing } from "./StatusRing";
+import { TimerRing } from "./TimerRing";
+import { daysBetween } from "./TimerRing";
 import type { Card as CreditCard } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/card-utils";
-import { getIssuerBadgeChar, getIssuerMeta } from "@/lib/issuer-utils";
+import { getIssuerMeta } from "@/lib/issuer-utils";
 import { IssuerLogo } from "@/components/shared/IssuerLogo";
 
 // ── Pure helpers (exported for unit tests) ─────────────────────────────────────
@@ -113,6 +118,31 @@ export function formatTimeHeld(months: number): string {
   return `${years} yr ${rem} mo`;
 }
 
+/**
+ * Formats a sign-up bonus reward as a human-readable string.
+ *
+ * - points:   "60,000 pts"
+ * - miles:    "60,000 mi"
+ * - cashback: "$600" (amount in cents)
+ */
+export function formatBonusReward(
+  type: "points" | "miles" | "cashback",
+  amount: number,
+): string {
+  if (type === "cashback") return formatCurrency(amount);
+  const formatted = amount.toLocaleString();
+  return type === "miles" ? `${formatted} mi` : `${formatted} pts`;
+}
+
+/**
+ * Computes how many days the card was held (openDate → closedAt).
+ * Falls back to today if closedAt is absent.
+ */
+export function computeTimeHeld(openDateIso: string, closedAtIso?: string): number {
+  const reference = closedAtIso ?? new Date().toISOString();
+  return Math.max(0, daysBetween(openDateIso, reference));
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface ValhallaCardTileProps {
@@ -127,7 +157,6 @@ interface ValhallaCardTileProps {
 export function ValhallaCardTile({ card, lokiLabel }: ValhallaCardTileProps) {
   const reducedMotion = useReducedMotion() ?? false;
 
-  const ringBadgeChar = getIssuerBadgeChar(card.issuerId);
   const issuerMeta = getIssuerMeta(card.issuerId);
 
   const bonusLabel = getValhallaSignupBonusLabel(card);
@@ -136,6 +165,23 @@ export function ValhallaCardTile({ card, lokiLabel }: ValhallaCardTileProps) {
   const timeHeldMonths = getTimeHeldMonths(card.openDate, card.closedAt);
   const timeHeldLabel = formatTimeHeld(timeHeldMonths);
   const closedDateLabel = formatMonthYear(card.closedAt) || formatDate(card.openDate);
+
+  // Spend ring ratio: full (1.0) if bonus earned, actual ratio otherwise
+  const spendRequired = card.signUpBonus?.spendRequirement ?? 0;
+  const amountSpent = card.amountSpent ?? 0;
+  const ringDaysRemaining = bonusEarned ? spendRequired : amountSpent;
+  const ringTotalDays = spendRequired > 0 ? spendRequired : 1;
+
+  // Initials inside spend ring: ✓ if earned, ✗ if not, — if no bonus
+  const ringInitials = card.signUpBonus
+    ? bonusEarned
+      ? "✓"
+      : "✗"
+    : "—";
+
+  // Deadline for timer ring: bonusDeadline if available, else annualFeeDate, else openDate
+  const timerDeadline =
+    card.signUpBonus?.deadline || card.annualFeeDate || card.openDate;
 
   return (
     <motion.div
@@ -160,13 +206,39 @@ export function ValhallaCardTile({ card, lokiLabel }: ValhallaCardTileProps) {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                <StatusRing
-                  status={card.status}
-                  daysRemaining={0}
-                  totalDays={365}
-                  initials={ringBadgeChar}
-                  cardName={card.cardName}
-                />
+                {/* Ring pair — both at 50% opacity, side-by-side */}
+                <div
+                  className="flex items-center gap-1 shrink-0"
+                  style={{ opacity: 0.5 }}
+                >
+                  {/* Spend ring: shows final spend state (✓ or ✗) */}
+                  {card.signUpBonus ? (
+                    <div
+                      title={
+                        bonusEarned
+                          ? "Bonus earned"
+                          : `Bonus not earned — ${Math.round((amountSpent / Math.max(spendRequired, 1)) * 100)}% of spend reached`
+                      }
+                    >
+                      <StatusRing
+                        status={card.status}
+                        daysRemaining={ringDaysRemaining}
+                        totalDays={ringTotalDays}
+                        initials={ringInitials}
+                      />
+                    </div>
+                  ) : null}
+
+                  {/* Timer ring: filled to closedAt/deadline ratio */}
+                  <TimerRing
+                    openDate={card.openDate}
+                    deadlineDate={timerDeadline}
+                    tab="valhalla"
+                    closedAt={card.closedAt}
+                    cardName={card.cardName}
+                  />
+                </div>
+
                 <div className="min-w-0">
                   <CardDescription
                     className="text-sm uppercase tracking-wide mb-1"
