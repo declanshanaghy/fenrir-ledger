@@ -133,53 +133,42 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
-        "authentication": "none",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
+        "modelId": {
+          "__rl": true,
+          "value": "claude-sonnet-4-20250514",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4"
+        },
+        "messages": {
+          "values": [
             {
-              "name": "x-api-key",
-              "value": "={{ $env.ANTHROPIC_API_KEY }}"
-            },
-            {
-              "name": "anthropic-version",
-              "value": "2023-06-01"
-            },
-            {
-              "name": "content-type",
-              "value": "application/json"
+              "content": "=F5Bot found a mention of the keyword \"{{ $json.keyword }}\" on {{ $json.subreddit }}.\n\nPost: {{ $json.postTitle }}\nAuthor: u/{{ $json.author }}\n\nContent:\n{{ $json.snippet || \"(no snippet available)\" }}\n\nURL: {{ $json.redditUrl }}\n\n{{ $json.isComment ? \"This is a comment — draft a reply to the specific comment.\" : \"This is a post — draft a top-level reply.\" }} Write 2–4 sentences that add real value to this discussion. Be specific to the content above. Only mention tracking tools or apps if the conversation naturally calls for it."
             }
           ]
         },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": []
-        },
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"claude-3-5-haiku-20241022\",\n  \"max_tokens\": 512,\n  \"system\": \"You are Freya, a helpful member of personal finance communities who uses Fenrir Ledger to track credit card annual fees and bonus milestones. Your tone is friendly, knowledgeable, and never promotional. You give real value first — specific advice, honest opinions, genuine engagement. You never say 'Fenrir Ledger' unless directly asked. You write short Reddit comments (2–4 sentences). No marketing speak. No exclamation points. Sound like a real person who cares about the hobby.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"F5Bot found a mention of the keyword '{{ $json.keyword }}' on {{ $json.subreddit }}.\n\nPost: {{ $json.postTitle }}\nAuthor: u/{{ $json.author }}\n\nContent:\n{{ $json.snippet || '(no snippet available)' }}\n\nURL: {{ $json.redditUrl }}\n\n{{ $json.isComment ? 'This is a comment — draft a reply to the specific comment.' : 'This is a post — draft a top-level reply.' }} Write 2–4 sentences that add real value to this discussion. Be specific to the content above. Only mention tracking tools or apps if the conversation naturally calls for it.\"\n    }\n  ]\n}",
         "options": {
-          "response": {
-            "response": {
-              "fullResponse": false
-            }
-          }
+          "systemMessage": "You are Freya, an experienced credit card churner who actively manages a stack of 10+ cards. You track annual fee dates, signup bonus spend deadlines, statement close dates, and downgrade/cancellation windows in a spreadsheet. You believe the key to successful churning is systematic tracking, knowing exactly when each fee hits, when minimum spend is due, and when to product-change before the next annual fee posts. Your philosophy: churning is a numbers game, and the people who win are the ones who treat their card stack like a portfolio with clear dates and milestones for every card.\n\nYour tone is friendly, knowledgeable, and never promotional. You give real value first with specific advice, honest opinions, and genuine engagement. You write short Reddit comments (2-4 sentences). No marketing speak. No exclamation points. Never use em dashes. Sound like a real person who genuinely enjoys the hobby. Never mention any specific apps, tools, or products by name. When tracking comes up naturally, talk about the strategy and what to track, not what tool to use.",
+          "maxTokens": 512
         }
       },
       "id": "f5b0-0008-4000-8000-000000000008",
       "name": "Claude API — Draft Reply",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
       "position": [
         1780,
         220
       ],
-      "notes": "Calls Claude API (claude-3-5-haiku for cost efficiency) to draft a genuine Reddit reply in Freya's voice.\nSame system prompt as gmail-reddit-monitor — helpful, never promotional, sounds like a real person.\nAdapts prompt based on isComment flag: comment thread vs top-level post reply.\nAPI key injected via $env.ANTHROPIC_API_KEY from n8n-secrets K8s secret."
+      "credentials": {
+        "anthropicApi": {
+          "id": "anthropic-fenrir",
+          "name": "Anthropic (Fenrir)"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "const items = .all();\nconst contextItems = .all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const claudeResponse = items[i].json;\n  const draftText = claudeResponse?.content?.[0]?.text || 'Claude draft unavailable.';\n  const ctx = contextItems[i]?.json || contextItems[0]?.json || {};\n\n  results.push({\n    json: {\n      draftText,\n      emailId: ctx.emailId || '',\n      keyword: ctx.keyword || '',\n      redditUrl: ctx.redditUrl || '',\n      isComment: ctx.isComment || false,\n      subreddit: ctx.subreddit || '',\n      postTitle: ctx.postTitle || '',\n      author: ctx.author || '',\n      snippet: ctx.snippet || ''\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "const items = .all();\nconst contextItems = .all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const claudeResponse = items[i].json;\n  const draftText = claudeResponse?.text || claudeResponse?.content?.[0]?.text || 'Claude draft unavailable.';\n  const ctx = contextItems[i]?.json || contextItems[0]?.json || {};\n\n  results.push({\n    json: {\n      draftText,\n      emailId: ctx.emailId || '',\n      keyword: ctx.keyword || '',\n      redditUrl: ctx.redditUrl || '',\n      isComment: ctx.isComment || false,\n      subreddit: ctx.subreddit || '',\n      postTitle: ctx.postTitle || '',\n      author: ctx.author || '',\n      snippet: ctx.snippet || ''\n    }\n  });\n}\n\nreturn results;"
       },
       "id": "f5b0-0009-4000-8000-000000000009",
       "name": "Merge — Context + Draft",
