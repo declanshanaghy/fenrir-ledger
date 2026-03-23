@@ -884,3 +884,284 @@
   line-height: 1.6;
   color: var(--c-fg);
 }
+
+.chronicle-page .agent-verdict-text pre {
+  white-space: pre-wrap;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPONENT 6: AGENT REPORT LAYOUT
+   (.agent-report-header, .agent-turns-section, .agent-report-footer,
+    .changes-summary, .decree-complete)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Agent Report Header ── */
+
+.chronicle-page .agent-report-header {
+  margin-bottom: 32px;
+}
+
+.chronicle-page .agent-report-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.chronicle-page .agent-report-avatar-row .agent-profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--c-gold);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.chronicle-page .agent-report-avatar-row .agent-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chronicle-page .agent-report-title {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--c-fg);
+}
+
+/* ── Turns Section ── */
+
+.chronicle-page .agent-turns-section {
+  margin: 32px 0;
+}
+
+/* ── Changes Summary ── */
+
+.chronicle-page .changes-summary {
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  padding: 16px 20px;
+  margin: 20px 0;
+}
+
+.chronicle-page .changes-summary h2 {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--c-gold);
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.chronicle-page .changes-summary h3 {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--c-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 8px;
+}
+
+.chronicle-page .changes-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .chronicle-page .changes-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chronicle-page .changes-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chronicle-page .changes-summary li {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--c-fg);
+  padding: 2px 0;
+}
+
+.chronicle-page .changes-summary li .icon {
+  color: var(--c-teal);
+  margin-right: 6px;
+  font-weight: 700;
+}
+
+.chronicle-page .file-mod .icon { color: var(--c-amber) !important; }
+
+.chronicle-page .commit-item {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--c-fg);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.chronicle-page .commit-item:last-child { border-bottom: none; }
+
+/* ── Decree Complete ── */
+
+.chronicle-page .decree-complete {
+  border: 2px solid var(--c-teal);
+  padding: 20px 24px;
+  margin: 20px 0;
+}
+
+.chronicle-page .decree-complete-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.chronicle-page .decree-complete-runes {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  color: var(--c-teal);
+  margin-bottom: 4px;
+}
+
+.chronicle-page .decree-complete-verdict {
+  font-family: var(--font-cinzel-decorative), 'Cinzel Decorative', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.chronicle-page .decree-complete-body {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--c-fg);
+}
+
+.chronicle-page .decree-field {
+  margin: 4px 0;
+}
+
+.chronicle-page .decree-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--c-fg-muted);
+  text-transform: uppercase;
+}
+
+.chronicle-page .decree-summary {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.chronicle-page .decree-summary li {
+  font-size: 0.82rem;
+  margin: 4px 0;
+}
+
+.chronicle-page .decree-check {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.chronicle-page .decree-check:last-child { border-bottom: none; }
+
+.chronicle-page .decree-check-name { color: var(--c-fg-muted); }
+.chronicle-page .decree-check-result { font-weight: 700; }
+
+.chronicle-page .decree-seal-line {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-border);
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.7rem;
+  color: var(--c-fg-muted);
+}
+
+.chronicle-page .decree-signoff {
+  text-align: center;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: var(--c-fg-muted);
+  margin-top: 8px;
+}
+
+.chronicle-page .decree-complete-footer {
+  text-align: center;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  color: var(--c-teal);
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-border);
+}
+
+/* ── Agent Report Footer ── */
+
+.chronicle-page .agent-report-footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-border);
+  text-align: center;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.68rem;
+  color: var(--c-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* ── Entrypoint (sandbox forging) ── */
+
+.chronicle-page .entrypoint {
+  margin: 20px 0;
+}
+
+.chronicle-page .entrypoint summary {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--c-gold);
+  cursor: pointer;
+  list-style: none;
+}
+
+.chronicle-page .entrypoint summary::-webkit-details-marker { display: none; }
+
+.chronicle-page .entrypoint summary::before {
+  content: '\25B6 ';
+  font-size: 0.6rem;
+  color: var(--c-fg-muted);
+  transition: transform 0.15s ease;
+}
+
+.chronicle-page .entrypoint[open] summary::before {
+  content: '\25BC ';
+}
+
+.chronicle-page .entrypoint pre {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--c-fg-muted);
+  white-space: pre-wrap;
+  padding: 12px;
+  margin: 8px 0 0;
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+}

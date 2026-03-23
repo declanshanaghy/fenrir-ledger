@@ -467,11 +467,11 @@ function esc(s) {
 
 function toolBadgeClass(name) {
   const n = name.toLowerCase();
-  if (n === "bash") return "bash";
-  if (n === "read" || n === "grep" || n === "glob") return "read";
-  if (n === "edit" || n === "multiedit") return "edit";
-  if (n === "write") return "write";
-  if (n === "todowrite" || n === "todoupdate") return "todo";
+  if (n === "bash") return "badge-bash";
+  if (n === "read" || n === "grep" || n === "glob") return "badge-read";
+  if (n === "edit" || n === "multiedit") return "badge-edit";
+  if (n === "write") return "badge-write";
+  if (n === "todowrite" || n === "todoupdate") return "badge-todo";
   return "";
 }
 
@@ -690,14 +690,14 @@ const mdxExcerpt = `Agent execution report — ${agentName} on Issue #${issueNum
 // Tool block renderer — plain HTML for MDX
 // ---------------------------------------------------------------------------
 function renderToolBlock(tool) {
-  return `<details class="tool-block${tool.is_error ? " has-error" : ""}">
-<summary class="tool-block-header">
-<span class="tool-name">${esc(tool.name)}</span>
-<span class="tool-input-preview">${toolInputPreview(tool)}</span>
+  return `<details class="agent-tool-block">
+<summary>
+<span class="agent-tool-name">${esc(tool.name)}</span>
+<span class="agent-tool-preview">${toolInputPreview(tool)}</span>
 </summary>
-<div class="tool-block-body">
-<pre class="tool-input">${esc(renderToolInput(tool))}</pre>
-<pre class="tool-output${tool.is_error ? " error" : ""}">${esc(renderToolOutput(tool))}</pre>
+<div class="agent-tool-body">
+<pre class="agent-tool-input">${esc(renderToolInput(tool))}</pre>
+<pre class="${tool.is_error ? "agent-tool-error" : "agent-tool-output"}">${esc(renderToolOutput(tool))}</pre>
 </div>
 </details>
 `;
@@ -732,28 +732,25 @@ while (mi < turns.length) {
       ? `#${turnNums[0]}`
       : `#${turnNums[0]}&ndash;${turnNums[turnNums.length - 1]}`;
     const toolBadges = mergedTools
-      .map(t => `<span class="tool-badge ${toolBadgeClass(t.name)}">${esc(t.name)}</span>`)
+      .map(t => `<span class="agent-tool-badge ${toolBadgeClass(t.name)}">${esc(t.name)}</span>`)
       .join(" ");
 
     turnsMarkup += `
-<div class="turn${hasError ? " has-error" : ""}">
 <div class="turn-agent-profile">
-<img class="turn-agent-avatar" src="${agentAvatarPath}" alt="${esc(agentName)}" loading="lazy">
-<span class="turn-agent-title">${agentTitle}</span>
+<div class="agent-profile-avatar"><img src="${agentAvatarPath}" alt="${esc(agentName)}" loading="lazy"></div>
+<span class="agent-profile-name">${agentTitle}</span>
 </div>
-<details class="turn-box">
-<summary class="turn-header">
-<span class="turn-num">${numLabel}</span>
-<span class="turn-summary">${mergedTools.length} tool calls</span>
-<span class="turn-tools">${toolBadges}</span>
-<span class="chevron">&#9654;</span>
+<details class="agent-turn${hasError ? " agent-turn-error" : ""}">
+<summary>
+<span class="agent-turn-num">${numLabel}</span>
+<span class="agent-turn-summary">${mergedTools.length} tool calls</span>
+<span class="agent-turn-badges">${toolBadges}</span>
 </summary>
-<div class="turn-body">
-<div class="toolbox">
+<div class="agent-turn-body">
+<div class="agent-toolbox">
 ${mergedTools.map(t => renderToolBlock(t)).join("")}</div>
 </div>
 </details>
-</div>
 `;
     continue;
   }
@@ -764,38 +761,35 @@ ${mergedTools.map(t => renderToolBlock(t)).join("")}</div>
     ? esc(turn.texts[0].slice(0, 120))
     : turn.tools.map(t => esc(t.name)).join(", ");
   const toolBadges = turn.tools
-    .map(t => `<span class="tool-badge ${toolBadgeClass(t.name)}">${esc(t.name)}</span>`)
+    .map(t => `<span class="agent-tool-badge ${toolBadgeClass(t.name)}">${esc(t.name)}</span>`)
     .join(" ");
 
   turnsMarkup += `
-<div class="turn${hasError ? " has-error" : ""}">
 <div class="turn-agent-profile">
-<img class="turn-agent-avatar" src="${agentAvatarPath}" alt="${esc(agentName)}" loading="lazy">
-<span class="turn-agent-title">${agentTitle}</span>
+<div class="agent-profile-avatar"><img src="${agentAvatarPath}" alt="${esc(agentName)}" loading="lazy"></div>
+<span class="agent-profile-name">${agentTitle}</span>
 </div>
-<details class="turn-box">
-<summary class="turn-header">
-<span class="turn-num">#${mi + 1}</span>
-<span class="turn-summary">${summary}</span>
-<span class="turn-tools">${toolBadges}</span>
-<span class="chevron">&#9654;</span>
+<details class="agent-turn${hasError ? " agent-turn-error" : ""}">
+<summary>
+<span class="agent-turn-num">#${mi + 1}</span>
+<span class="agent-turn-summary">${summary}</span>
+<span class="agent-turn-badges">${toolBadges}</span>
 </summary>
-<div class="turn-body">
+<div class="agent-turn-body">
 `;
 
   for (const thinking of turn.thinking) {
-    turnsMarkup += `<div class="thinking">${esc(thinking.slice(0, 1000))}</div>\n`;
+    turnsMarkup += `<div class="agent-thinking">${esc(thinking.slice(0, 1000))}</div>\n`;
   }
   for (const text of turn.texts) {
-    turnsMarkup += `<div class="text-block">${esc(text)}</div>\n`;
+    turnsMarkup += `<div class="agent-text-block">${esc(text)}</div>\n`;
   }
   if (turn.tools.length > 0) {
-    turnsMarkup += `<div class="toolbox">\n${turn.tools.map(t => renderToolBlock(t)).join("")}</div>\n`;
+    turnsMarkup += `<div class="agent-toolbox">\n${turn.tools.map(t => renderToolBlock(t)).join("")}</div>\n`;
   }
 
   turnsMarkup += `</div>
 </details>
-</div>
 `;
 
   mi++;
@@ -838,9 +832,9 @@ ${commits.map(c => `<div class="commit-item"><span class="msg">${esc(c)}</span><
 let verdictMarkup = "";
 if (verdict) {
   verdictMarkup = `
-<div class="verdict ${verdict.pass ? "pass" : "fail"}">
-<h2>&#5839; ${verdict.pass ? "PASS" : "FAIL"} &mdash; QA Verdict</h2>
-<pre>${esc(verdict.text)}</pre>
+<div class="agent-verdict ${verdict.pass ? "verdict-pass" : "verdict-fail"}">
+<div class="agent-verdict-label">ᛏ ${verdict.pass ? "PASS" : "FAIL"} — QA Verdict</div>
+<div class="agent-verdict-text"><pre>${esc(verdict.text)}</pre></div>
 </div>`;
 }
 
@@ -886,7 +880,7 @@ ${dChecks}
 
 const callbackMarkup = `
 <div class="agent-callback">
-<div class="callback-runes">${esc(agentCallback.runes)}</div>
+<div class="callback-rune-row">${esc(agentCallback.runes)}</div>
 <div class="callback-declaration">Odin All-Father &mdash; Your Will Is Done</div>
 <div class="callback-quote">&ldquo;${esc(agentCallback.quote)}&rdquo;</div>
 <div class="callback-blood-seal">&#5765; ${esc(agentCallback.signoff)} &middot; ${agentTitle} &middot; Issue #${esc(issueNum)} &#5765;</div>
@@ -897,7 +891,7 @@ ${decreeCompleteMarkup}`;
 const mdx = `---
 title: "${mdxTitle.replace(/"/g, '\\"')}"
 date: "${dateStr}"
-rune: "&#5810;"
+rune: "ᚲ"
 excerpt: "${mdxExcerpt.replace(/"/g, '\\"')}"
 slug: "${mdxSlug}"
 category: "agent"
@@ -905,46 +899,27 @@ category: "agent"
 
 <div class="chronicle-page">
 
-<div class="report">
-
-<div class="report-header">
-<div class="odin-header">
-<img class="odin-avatar" src="${agentAvatarPath}" alt="${esc(agentName)}" loading="lazy">
-<div class="odin-title">
-<h1>&#5810; ${esc(agentName)} &mdash; Issue #${esc(issueNum)} (Step ${esc(stepNum)})</h1>
+<div class="agent-report-header">
+<div class="agent-report-avatar-row">
+<div class="agent-profile-avatar"><img src="${agentAvatarPath}" alt="${esc(agentName)}" loading="lazy"></div>
+<div class="agent-report-title">ᚲ ${esc(agentName)} — Issue #${esc(issueNum)} (Step ${esc(stepNum)})</div>
 </div>
-</div>
-<div class="meta">
-<span><span class="label">Session:</span> ${esc(meta.session || "unknown")}</span>
-<span><span class="label">Branch:</span> ${esc(meta.branch || "unknown")}</span>
-<span><span class="label">Model:</span> ${esc(meta.model || "unknown")}</span>
+<div class="session-meta">
+<span>Session: <span class="val">${esc(meta.session || "unknown")}</span></span>
+<span>Branch: <span class="val">${esc(meta.branch || "unknown")}</span></span>
+<span>Model: <span class="val">${esc(meta.model || "unknown")}</span></span>
 </div>
 </div>
 
-<div class="stats-grid">
-<div class="stats-card">
-<div class="stats-card-label">&#5765; Session</div>
-<div class="stats-row">
-<div class="stat"><span class="num">${turns.length}</span><span class="lbl">turns</span></div>
-<div class="stat"><span class="num">${totalTools}</span><span class="lbl">tools</span></div>
-<div class="stat"><span class="num" style="color: ${errors ? 'var(--fire-muspel)' : 'var(--teal-asgard)'}">${errors}</span><span class="lbl">errors</span></div>
-</div>
-</div>
-<div class="stats-card">
-<div class="stats-card-label">&#5846; Git</div>
-<div class="stats-row">
-<div class="stat"><span class="num">${commits.length}</span><span class="lbl">commits</span></div>
-<div class="stat"><span class="num">${pushCount}</span><span class="lbl">pushes</span></div>
-</div>
-</div>
-<div class="stats-card">
-<div class="stats-card-label">&#5792; Tokens</div>
-<div class="stats-row">
-<div class="stat"><span class="num sm">${fmtNum(totalInputTokens)}</span><span class="lbl">in</span></div>
-<div class="stat"><span class="num sm">${fmtNum(totalOutputTokens)}</span><span class="lbl">out</span></div>
-<div class="stat"><span class="num sm">${fmtNum(totalCacheRead)}</span><span class="lbl">cache</span></div>
-</div>
-</div>
+<div class="stat-grid">
+<div class="stat-card"><div class="stat-label">Turns</div><div class="stat-val">${turns.length}</div></div>
+<div class="stat-card"><div class="stat-label">Tools</div><div class="stat-val">${totalTools}</div></div>
+<div class="stat-card"><div class="stat-label">Errors</div><div class="stat-val${errors ? ' stat-fire' : ' stat-teal'}">${errors}</div></div>
+<div class="stat-card"><div class="stat-label">Commits</div><div class="stat-val">${commits.length}</div></div>
+<div class="stat-card"><div class="stat-label">Pushes</div><div class="stat-val">${pushCount}</div></div>
+<div class="stat-card"><div class="stat-label">Tokens In</div><div class="stat-val">${fmtNum(totalInputTokens)}</div></div>
+<div class="stat-card"><div class="stat-label">Tokens Out</div><div class="stat-val">${fmtNum(totalOutputTokens)}</div></div>
+<div class="stat-card"><div class="stat-label">Cache</div><div class="stat-val">${fmtNum(totalCacheRead)}</div></div>
 </div>
 
 ${changesMarkup}
@@ -953,17 +928,14 @@ ${commitsMarkup}
 ${decreeMarkup}
 
 <div class="agent-turns-section">
-<div class="agent-turns-title">Execution Turns</div>
 ${turnsMarkup}
 </div>
 
 ${verdictMarkup}
 ${callbackMarkup}
 
-<div class="report-footer">
-&#5792; Fenrir Ledger &mdash; Agent Report &mdash; Generated ${new Date().toISOString().slice(0, 19)}Z
-</div>
-
+<div class="agent-report-footer">
+ᚠ Fenrir Ledger — Agent Report — Generated ${new Date().toISOString().slice(0, 19)}Z
 </div>
 
 </div>
