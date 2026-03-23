@@ -334,7 +334,7 @@ export default function SettingsPage() {
         hidden={activeTab !== "account"}
         className="pt-6"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           <StripeSettings />
           <TrialSettingsSection />
         </div>
@@ -348,7 +348,7 @@ export default function SettingsPage() {
         hidden={activeTab !== "household"}
         className="pt-6"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           <HouseholdSettingsSection />
           <SyncSettingsSection />
         </div>
