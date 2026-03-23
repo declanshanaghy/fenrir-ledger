@@ -68,26 +68,26 @@
     --chart-5:              220 60% 35%;    /* deep ice blue */
 
     /* ── Easter Egg Modal ──────────────────────────────────── */
-    --egg-bg:               230 20% 12%;   /* #1a1c25 — deep indigo */
-    --egg-bg-body:          230 18% 10%;   /* #13151f — slightly lighter */
-    --egg-border:           230 25% 20%;   /* #2a2d45 — muted indigo seam */
-    --egg-title:            42  90% 55%;   /* #f0b429 — bright gold */
-    --egg-text:             40  27% 91%;   /* #e8e4d4 — parchment text */
-    --egg-text-muted:       30  6%  50%;   /* #8a8578 — stone muted */
-    --egg-accent:           42  75% 40%;   /* #c9920a — gold accent */
-    --egg-btn-bg:           42  75% 40%;   /* #c9920a — gold button */
-    --egg-btn-text:         230 40% 5%;    /* #07070d — near-black */
-    --egg-btn-hover:        42  90% 55%;   /* #f0b429 — bright gold hover */
+    --egg-bg:               42  30% 93%;   /* #ede3cc — warm vellum surface */
+    --egg-bg-body:          42  30% 96%;   /* #f4efdf — fresh vellum body */
+    --egg-border:           35  28% 74%;   /* #c8ad88 — warm tan seam */
+    --egg-title:            38  80% 28%;   /* #8f6e0e — dark burnt gold */
+    --egg-text:             25  55% 10%;   /* #271409 — iron-gall ink */
+    --egg-text-muted:       28  28% 35%;   /* #6f5238 — warm brown */
+    --egg-accent:           38  80% 28%;   /* #8f6e0e — dark burnt gold */
+    --egg-btn-bg:           38  80% 28%;   /* #8f6e0e — dark burnt gold button */
+    --egg-btn-text:         0   0%  100%;  /* pure white on gold */
+    --egg-btn-hover:        38  85% 35%;   /* #a67d12 — lighter gold hover */
 
     /* ── Konami Howl ───────────────────────────────────────── */
-    --howl-wolf-fill:       42  75% 40%;   /* #c9920a — wolf gold */
-    --howl-eye-fill:        230 40% 5%;    /* #07070d — void cutouts */
-    --howl-pulse-bg:        0   100% 12%;  /* #3d0000 — deep red flash */
-    --howl-band-bg:         240 30% 4%;    /* rgba(7,7,13,0.96) */
-    --howl-band-border:     10  60% 48%;   /* #c94020 — blood red */
-    --howl-band-text:       10  60% 48%;   /* #c94020 */
-    --howl-wolf-bg:         240 30% 4%;    /* rgba(7,7,13,0.92) */
-    --howl-wolf-border:     42  75% 40%;   /* #c9920a — gold border */
+    --howl-wolf-fill:       38  80% 28%;   /* #8f6e0e — dark burnt gold wolf */
+    --howl-eye-fill:        25  55% 10%;   /* #271409 — iron-gall eye cutouts */
+    --howl-pulse-bg:        38  40% 89%;   /* #e5d6b5 — parchment flash */
+    --howl-band-bg:         42  30% 95%;   /* #f4efdf — vellum band bg */
+    --howl-band-border:     38  80% 28%;   /* #8f6e0e — gold band border */
+    --howl-band-text:       25  55% 10%;   /* #271409 — iron-gall band text */
+    --howl-wolf-bg:         42  30% 93%;   /* #ede3cc — warm vellum wolf bg */
+    --howl-wolf-border:     38  80% 28%;   /* #8f6e0e — gold wolf border */
 
     /* ── Loki Toast ────────────────────────────────────────── */
     --loki-toast-bg:        28  15% 7%;    /* #12100e */
