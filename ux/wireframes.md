@@ -11,6 +11,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Cards — Valhalla + Howl Tab Contextual Card Details (Issue #1808)
+
+| File | Description |
+|------|-------------|
+| [wireframes/cards/valhalla-tab-cards.html](wireframes/cards/valhalla-tab-cards.html) | Valhalla tab card row redesign: 7 sections — (A) tab bar with Valhalla active, (B) summary bar showing total rewards reaped (aggregate points/miles/cashback, fees paid, avg time held, net reward value), (C) before/after card row comparison (credit limit removed, 4-column detail grid added: sign-up bonus earned, annual fee paid, time held, closed date), (D) full desktop card list (4 cards: points, miles, cashback, no-bonus-earned), (E) empty state "Valhalla Awaits", (F) mobile 375px layout (summary stacked, 2-col detail grid), (G) accessibility + implementation notes (data fields, sort default, summary dismiss localStorage key, var(--stone-hel) left border token). |
+| [wireframes/cards/howl-tab-cards.html](wireframes/cards/howl-tab-cards.html) | The Howl tab card row redesign: 8 sections — (A) tab bar with Howl active (badge border reflects highest urgency), (B) urgency color system (red &lt;30 days, amber 30–60 days — tokens, labels, reduced-motion rules), (C) summary bar (cards needing action, nearest deadline, approaching fees total, bonus spend remaining — red/amber accent on first stat), (D) before/after comparison (credit limit removed, 3-col detail grid: annual fee+date, bonus deadline, remaining spend; action row added; urgency badge replaces status badge), (E) full desktop card list (4 cards: fee-only red, bonus-deadline red with spend progress bar, fee-only amber, fee+bonus combined amber), (F) empty state "The Howl is Silent", (G) mobile 375px layout (3-stat summary stacked, 2-col detail grid, stacked CTAs), (H) accessibility + implementation notes (urgency computation, snooze localStorage spec, shared SpendProgressBar with Hunt tab, relationship to Howl Panel sidebar). |
+
+---
+
 ## Theme — Vellum Norse Tan/Parchment Light Mode (Issue #1833)
 
 | File | Description |

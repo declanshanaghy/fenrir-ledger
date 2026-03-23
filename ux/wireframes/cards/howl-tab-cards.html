@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: The Howl Tab — Contextual Card Details (Issue #1808)</title>
+  <style>
+    /* ── Wireframe layout rules ONLY — no theme styling ──────────────────── */
+    /* No colors, no backgrounds, no border-radius, no box-shadow, no fonts   */
+    /* beyond sans-serif. Permitted: flex/grid, border, width/height,         */
+    /* padding/margin, font-size/weight.                                       */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 48px; }
+
+    /* ── Section headers ─────────────────────────────────────────────────── */
+    .section { display: flex; flex-direction: column; gap: 16px; }
+    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid; padding-bottom: 4px; }
+    .section-desc { font-size: 12px; font-style: italic; }
+
+    /* ── Note annotation style ────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; border-left: 2px solid; padding: 4px 8px; margin-top: 6px; }
+    .note strong { font-style: normal; }
+
+    /* ── Tab bar ─────────────────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      background: none;
+      min-height: 44px;
+    }
+    .tab-btn.active { border-bottom: 3px solid; }
+    .tab-icon { font-size: 15px; line-height: 1; }
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      font-family: monospace;
+      border: 1px solid;
+      padding: 1px 6px;
+      min-width: 20px;
+    }
+    /* Howl tab badge: when count > 0, badge border gets urgency color in impl.
+       Red border if any card < 30 days, amber if all remaining >= 30 days. */
+    .tab-badge.howl-urgent { border: 2px solid; }
+
+    /* ── Summary bar ──────────────────────────────────────────────────────── */
+    .summary-bar {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      border: 1px solid;
+      border-top: none;
+    }
+    .summary-stat {
+      flex: 1;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-right: 1px solid;
+    }
+    .summary-stat:last-child { border-right: none; }
+    .summary-stat-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; }
+    .summary-stat-value { font-size: 18px; font-weight: bold; }
+    .summary-stat-sub { font-size: 11px; }
+
+    /* Urgency summary stat: "nearest deadline" stat gets urgency styling in impl.
+       border-left: 3px solid var(--urgency-red|amber) for visual anchoring */
+    .summary-stat.urgent-red { border-left: 3px solid; padding-left: 13px; }
+    .summary-stat.urgent-amber { border-left: 3px solid; padding-left: 13px; }
+
+    /* ── Card list ────────────────────────────────────────────────────────── */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Howl card row ────────────────────────────────────────────────────── */
+    /*
+     * CHANGE FROM EXISTING HOWL PANEL (chrome/howl-panel.html):
+     * That is a NOTIFICATION PANEL — a slide-in sidebar/drawer.
+     * This is the DASHBOARD TAB VIEW — full-width card rows in the main content area,
+     * consistent with Active and Valhalla tab card layouts.
+     * Credit limit field is REMOVED (per issue #1808 spec).
+     */
+    .card-row {
+      border: 1px solid;
+      padding: 14px 16px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      position: relative;
+    }
+
+    /* Urgency left border — the PRIMARY visual differentiator for Howl cards.
+       Red (<30 days): border-left: 4px solid var(--urgency-red)
+       Amber (<60 days): border-left: 4px solid var(--urgency-amber)
+       Wireframe: thicker left border to represent urgency weight */
+    .card-row.urgent-red   { border-left: 4px solid; }
+    .card-row.urgent-amber { border-left: 4px solid; border-left-style: dashed; }
+    /* Note: dashed = amber in wireframe only; impl uses solid amber border */
+
+    .card-row-body { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+    .card-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .card-name-row { display: flex; align-items: center; gap: 8px; }
+    .issuer-badge {
+      width: 28px; height: 28px; border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: bold; flex-shrink: 0;
+    }
+    .card-name { font-size: 14px; font-weight: bold; }
+    .card-issuer-meta { font-size: 12px; }
+
+    /* Urgency badge: replaces generic status badge for Howl cards */
+    .urgency-badge {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 2px solid;
+      padding: 2px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    /* urgency-badge.red — border+text: var(--urgency-red). Label: "X DAYS" or "DUE SOON" */
+    /* urgency-badge.amber — border+text: var(--urgency-amber). Label: "X DAYS" */
+
+    /* ── Contextual details: Howl-specific fields ────────────────────────── */
+    /*
+     * NEW IN #1808:
+     * Shows: Annual fee + due date | Bonus deadline + remaining spend | Action needed
+     * Removed: Credit limit
+     *
+     * Layout: 3 columns on desktop. The "Action needed" column spans or wraps.
+     */
+    .card-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px 12px;
+      padding-top: 8px;
+      border-top: 1px solid;
+    }
+    .detail-item { display: flex; flex-direction: column; gap: 2px; }
+    .detail-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+    .detail-value { font-size: 13px; font-weight: 500; }
+
+    /* Urgency coloring for field values in impl:
+       .detail-value.urgent-red — color: var(--urgency-red)
+       .detail-value.urgent-amber — color: var(--urgency-amber) */
+    .detail-value.urgent-red { font-weight: bold; }
+    .detail-value.urgent-amber { font-weight: bold; }
+
+    /* Action needed: full-width row below the 3-col grid */
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 6px;
+    }
+    .action-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; }
+    .action-text { font-size: 13px; flex: 1; }
+
+    /* ── Progress bar for remaining spend ────────────────────────────────── */
+    /*
+     * Bonus spend progress: same pattern as Hunt tab min-spend progress bar.
+     * Shows visually how close the user is to meeting the minimum spend for bonus.
+     */
+    .spend-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-top: 4px;
+    }
+    .progress-track {
+      height: 6px;
+      border: 1px solid;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      border-right: 1px solid;
+      /* width set inline per card */
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+    }
+
+    /* ── Card actions ─────────────────────────────────────────────────────── */
+    .card-row-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; align-items: flex-end; }
+    button {
+      border: 1px solid; padding: 6px 12px; cursor: pointer;
+      background: none; font-size: 12px; font-family: inherit;
+      min-height: 36px; white-space: nowrap;
+    }
+    .btn-primary { border-width: 2px; font-weight: bold; }
+
+    /* ── Empty state ──────────────────────────────────────────────────────── */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      padding: 48px 24px; border: 1px dashed; text-align: center;
+    }
+    .empty-rune { font-size: 40px; line-height: 1; }
+    .empty-heading { font-size: 16px; font-weight: bold; }
+    .empty-sub { font-size: 13px; }
+
+    /* ── Mobile viewport: 375px ────────────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Comparison: Before / After ─────────────────────────────────────── */
+    .compare-row { display: flex; gap: 32px; flex-wrap: wrap; }
+    .compare-col { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 10px; }
+    .compare-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em; padding-bottom: 4px; border-bottom: 1px dashed;
+    }
+
+    /* ── Urgency legend ────────────────────────────────────────────────────── */
+    .legend { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .legend-swatch { width: 16px; height: 16px; border: 2px solid; flex-shrink: 0; }
+    .legend-swatch.red { border-left: 6px solid; }
+    .legend-swatch.amber { border-left: 6px solid; border-left-style: dashed; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION A — Context: Tab bar showing The Howl as active tab          -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-a">
+    <div class="section-title" id="sec-a">A — Tab Bar: The Howl Active State (Desktop)</div>
+    <p class="section-desc">The Howl tab selected. Badge count reflects total cards with upcoming fees or expiring promos. Badge border reflects highest urgency level present.</p>
+
+    <nav class="tab-bar" aria-label="Dashboard tabs" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true">
+        <span class="tab-icon" aria-hidden="true">ᚲ</span>
+        THE HOWL
+        <!-- Badge: 2px border = urgency present. Color: red in impl when any < 30 days -->
+        <span class="tab-badge howl-urgent" aria-label="2 cards need attention">2</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">ᚠ</span>
+        ACTIVE
+        <span class="tab-badge">7</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">ᚱ</span>
+        HUNT
+        <span class="tab-badge">3</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">ᛏ</span>
+        VALHALLA
+        <span class="tab-badge">4</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">ᛞ</span>
+        TRASH
+        <span class="tab-badge">1</span>
+      </button>
+    </nav>
+
+    <p class="note"><strong>Tab badge urgency:</strong> When Howl has cards &lt;30 days: badge border becomes var(--urgency-red). When all cards 30–60 days: badge border becomes var(--urgency-amber). When no Howl cards: badge shows 0 at reduced opacity (same as other tabs). This is the ONLY place color signals urgency in the tab bar — no animation on the tab itself at this breakpoint.</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION B — Urgency Legend                                           -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-b">
+    <div class="section-title" id="sec-b">B — Urgency Color System</div>
+    <p class="section-desc">Two urgency tiers. Applied to: card row left-border, urgency badge, date/deadline field values, summary bar "nearest deadline" stat.</p>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch red" aria-hidden="true"></div>
+        <span><strong>RED (critical):</strong> &lt;30 days until annual fee or bonus deadline. Token: var(--urgency-red). Label: "X DAYS" or "DUE SOON" (≤7 days).</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch amber" aria-hidden="true"></div>
+        <span><strong>AMBER (warning):</strong> 30–60 days until annual fee or bonus deadline. Token: var(--urgency-amber). Label: "X DAYS".</span>
+      </div>
+    </div>
+
+    <p class="note"><strong>Urgency is computed from the sooner of:</strong> annualFeeDate OR bonusDeadline. If a card has both, the earlier date drives the urgency level. Implementation: compute daysUntilSoonest(card) → urgencyLevel. Do not rely on color alone — the date/days value is always shown in text alongside the color cue.</p>
+    <p class="note"><strong>Reduced motion:</strong> No pulsing animation on urgency indicators when prefers-reduced-motion: reduce. Static color only.</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION C — Summary Bar: Cards Needing Action                       -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-c">
+    <div class="section-title" id="sec-c">C — Summary Bar: Action Required Overview</div>
+    <p class="section-desc">Appears immediately below tab bar, above card list. Shows aggregate urgency stats. Dismissible (localStorage key: "howl-summary-dismissed"). Re-shows when new Howl cards appear.</p>
+
+    <!-- Populated state: 2 critical, 1 warning -->
+    <div>
+      <p class="section-desc" style="margin-bottom: 8px;">Populated state (3 cards in Howl: 2 red, 1 amber):</p>
+      <div role="region" aria-label="The Howl summary — action required">
+        <div class="summary-bar">
+          <div class="summary-stat urgent-red">
+            <!-- Left accent border: urgency-red in impl, since highest urgency is red -->
+            <span class="summary-stat-label">Cards Needing Action</span>
+            <span class="summary-stat-value">3</span>
+            <span class="summary-stat-sub">2 critical · 1 warning</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-label">Nearest Deadline</span>
+            <span class="summary-stat-value">18 days</span>
+            <!-- "18 days" rendered in urgency-red in impl -->
+            <span class="summary-stat-sub">Amex Gold annual fee — Apr 10</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-label">Approaching Fees Total</span>
+            <span class="summary-stat-value">$840</span>
+            <span class="summary-stat-sub">across 2 cards · next 60 days</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-label">Bonus Spend Remaining</span>
+            <span class="summary-stat-value">$1,200</span>
+            <span class="summary-stat-sub">across 1 active bonus deadline</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Amber-only state -->
+    <div>
+      <p class="section-desc" style="margin-bottom: 8px;">Amber-only state (no red urgency, bar accent is amber):</p>
+      <div role="region" aria-label="The Howl summary — action required">
+        <div class="summary-bar">
+          <div class="summary-stat urgent-amber">
+            <span class="summary-stat-label">Cards Needing Action</span>
+            <span class="summary-stat-value">2</span>
+            <span class="summary-stat-sub">0 critical · 2 warning</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-label">Nearest Deadline</span>
+            <span class="summary-stat-value">34 days</span>
+            <span class="summary-stat-sub">Chase Sapphire annual fee — Apr 26</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-label">Approaching Fees Total</span>
+            <span class="summary-stat-value">$190</span>
+            <span class="summary-stat-sub">across 2 cards · next 60 days</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-label">Bonus Spend Remaining</span>
+            <span class="summary-stat-value">—</span>
+            <span class="summary-stat-sub">No active bonus deadlines</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note"><strong>Summary bar accent:</strong> Left border of first stat uses urgency-red when any card is &lt;30 days, urgency-amber when all cards are 30–60 days. Nearest Deadline value uses same urgency color. Implementation: compute maxUrgency across all Howl cards to drive summary bar accent.</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION D — Before/After: Card Row Comparison                       -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-d">
+    <div class="section-title" id="sec-d">D — Card Row: Before vs After (Contextual Details Change)</div>
+    <p class="section-desc">Shows what changes. Credit limit REMOVED. Annual fee+date, bonus deadline+remaining spend, action needed ADDED.</p>
+
+    <div class="compare-row">
+
+      <!-- BEFORE -->
+      <div class="compare-col">
+        <div class="compare-label">BEFORE (existing — generic metadata, no urgency context)</div>
+        <article class="card-row" aria-label="Amex Gold — BEFORE">
+          <div class="card-row-body">
+            <div class="card-row-header">
+              <div class="card-name-row">
+                <div class="issuer-badge" aria-hidden="true">A</div>
+                <div>
+                  <div class="card-name">AMEX GOLD</div>
+                  <div class="card-issuer-meta">American Express · Opened Mar 2025</div>
+                </div>
+              </div>
+              <!-- Generic status badge — no urgency differentiation -->
+              <span style="font-size: 11px; border: 1px solid; padding: 2px 8px; white-space: nowrap;">ACTIVE</span>
+            </div>
+            <!-- OLD: Credit limit shown — irrelevant for Howl context -->
+            <div style="font-size: 12px; padding-top: 8px; border-top: 1px solid;">
+              Credit limit: $10,000 &nbsp;·&nbsp; Annual fee: $250 &nbsp;·&nbsp; Due: Apr 10
+            </div>
+          </div>
+        </article>
+        <p class="note"><strong>Problem:</strong> Credit limit shown — meaningless in this context (user isn't choosing to spend, they're deciding whether to keep the card). No urgency signaling. Due date buried in a single meta line with no visual weight. No action guidance.</p>
+      </div>
+
+      <!-- AFTER -->
+      <div class="compare-col">
+        <div class="compare-label">AFTER (issue #1808 — contextual Howl details + urgency)</div>
+        <article class="card-row urgent-red" aria-label="Amex Gold — AFTER — 18 days until annual fee">
+          <div class="card-row-body">
+            <div class="card-row-header">
+              <div class="card-name-row">
+                <div class="issuer-badge" aria-hidden="true">A</div>
+                <div>
+                  <div class="card-name">AMEX GOLD</div>
+                  <div class="card-issuer-meta">American Express · Points</div>
+                </div>
+              </div>
+              <!-- Urgency badge replaces generic status badge -->
+              <span class="urgency-badge" aria-label="18 days until action required">18 DAYS</span>
+            </div>
+            <!-- NEW: 3-col contextual detail grid -->
+            <div class="card-details" role="list">
+              <div class="detail-item" role="listitem">
+                <span class="detail-label">Annual Fee</span>
+                <span class="detail-value urgent-red">$250 — Apr 10</span>
+                <!-- urgency-red in impl: < 30 days -->
+              </div>
+              <div class="detail-item" role="listitem">
+                <span class="detail-label">Bonus Deadline</span>
+                <span class="detail-value">—</span>
+                <!-- No active bonus deadline for this card -->
+              </div>
+              <div class="detail-item" role="listitem">
+                <span class="detail-label">Remaining Spend</span>
+                <span class="detail-value">—</span>
+              </div>
+            </div>
+            <!-- Action row -->
+            <div class="action-row">
+              <span class="action-label">Action:</span>
+              <span class="action-text">Decide: keep, downgrade, or close before Apr 10 to avoid $250 fee</span>
+            </div>
+          </div>
+          <div class="card-row-actions">
+            <button class="btn-primary" aria-label="Take action on Amex Gold">Act now</button>
+            <button aria-label="Snooze Amex Gold alert">Snooze</button>
+          </div>
+        </article>
+        <p class="note"><strong>Changes:</strong> Red left border (4px solid urgency-red). Urgency badge "18 DAYS" in place of status. Annual fee + date in urgency-red. Action row provides plain-English guidance. "Act now" CTA prominent. Snooze available. Credit limit gone.</p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION E — Full Howl Tab: Desktop Card List (All Card Types)       -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-e">
+    <div class="section-title" id="sec-e">E — Full Howl Tab: Desktop (740px+) — All Card Variants</div>
+    <p class="section-desc">Complete tab panel. 4 cards covering: fee-only red, fee-only amber, bonus-deadline-only red, and fee+bonus combined. Cards sorted by urgency (most critical first).</p>
+
+    <!-- Tab bar -->
+    <nav class="tab-bar" aria-label="Dashboard tabs" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true"><span class="tab-icon" aria-hidden="true">ᚲ</span> THE HOWL <span class="tab-badge howl-urgent">4</span></button>
+      <button class="tab-btn" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">ᚠ</span> ACTIVE <span class="tab-badge">7</span></button>
+      <button class="tab-btn" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">ᚱ</span> HUNT <span class="tab-badge">3</span></button>
+      <button class="tab-btn" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">ᛏ</span> VALHALLA <span class="tab-badge">4</span></button>
+      <button class="tab-btn" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">ᛞ</span> TRASH <span class="tab-badge">1</span></button>
+    </nav>
+
+    <!-- Summary bar -->
+    <div role="region" aria-label="The Howl summary">
+      <div class="summary-bar">
+        <div class="summary-stat urgent-red">
+          <span class="summary-stat-label">Cards Needing Action</span>
+          <span class="summary-stat-value">4</span>
+          <span class="summary-stat-sub">2 critical · 2 warning</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-label">Nearest Deadline</span>
+          <span class="summary-stat-value">12 days</span>
+          <span class="summary-stat-sub">Amex Gold annual fee — Apr 4</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-label">Approaching Fees Total</span>
+          <span class="summary-stat-value">$1,090</span>
+          <span class="summary-stat-sub">across 3 cards · next 60 days</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-label">Bonus Spend Remaining</span>
+          <span class="summary-stat-value">$2,450</span>
+          <span class="summary-stat-sub">across 2 active bonus deadlines</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card list: sorted by urgency (soonest deadline first) -->
+    <div class="card-list" role="list" aria-label="Cards in The Howl — sorted by urgency">
+
+      <!-- Card 1: Fee only, RED (<30 days) — 12 days -->
+      <article class="card-row urgent-red" role="listitem" aria-label="American Express Gold — 12 days until annual fee">
+        <div class="card-row-body">
+          <div class="card-row-header">
+            <div class="card-name-row">
+              <div class="issuer-badge" aria-hidden="true">A</div>
+              <div>
+                <div class="card-name">AMERICAN EXPRESS GOLD</div>
+                <div class="card-issuer-meta">American Express · Points</div>
+              </div>
+            </div>
+            <span class="urgency-badge" aria-label="12 days until action required">12 DAYS</span>
+          </div>
+          <div class="card-details" role="list">
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Annual Fee</span>
+              <span class="detail-value urgent-red">$250 — Apr 4, 2026</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Bonus Deadline</span>
+              <span class="detail-value">— (no active bonus)</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Remaining Spend</span>
+              <span class="detail-value">—</span>
+            </div>
+          </div>
+          <div class="action-row">
+            <span class="action-label">Action:</span>
+            <span class="action-text">Decide: keep, product change to Amex Green ($150), or close before Apr 4</span>
+          </div>
+        </div>
+        <div class="card-row-actions">
+          <button class="btn-primary" aria-label="Take action on American Express Gold">Act now</button>
+          <button aria-label="Snooze American Express Gold alert">Snooze</button>
+        </div>
+      </article>
+
+      <!-- Card 2: Bonus deadline RED + remaining spend progress (<30 days) — 21 days -->
+      <article class="card-row urgent-red" role="listitem" aria-label="Chase Ink Business Cash — 21 days until bonus deadline">
+        <div class="card-row-body">
+          <div class="card-row-header">
+            <div class="card-name-row">
+              <div class="issuer-badge" aria-hidden="true">C</div>
+              <div>
+                <div class="card-name">CHASE INK BUSINESS CASH</div>
+                <div class="card-issuer-meta">Chase · Cashback</div>
+              </div>
+            </div>
+            <span class="urgency-badge" aria-label="21 days until bonus deadline">21 DAYS</span>
+          </div>
+          <div class="card-details" role="list">
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Annual Fee</span>
+              <span class="detail-value">$0 (no fee)</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Bonus Deadline</span>
+              <span class="detail-value urgent-red">Apr 13, 2026</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Remaining Spend</span>
+              <span class="detail-value urgent-red">$1,450 to go</span>
+            </div>
+          </div>
+          <!-- Spend progress bar: 42% complete toward $2,500 minimum -->
+          <div class="spend-progress" role="group" aria-label="Bonus spend progress">
+            <div class="progress-track" aria-hidden="true">
+              <div class="progress-fill" style="width: 42%;"></div>
+            </div>
+            <div class="progress-labels">
+              <span>$1,050 spent</span>
+              <span>$2,500 goal</span>
+            </div>
+            <p class="note" style="margin-top: 4px;">Progress bar: same component as Hunt tab. Fill width = (spent / goal) × 100%. urgency-red fill when &lt;30 days remaining.</p>
+          </div>
+          <div class="action-row">
+            <span class="action-label">Action:</span>
+            <span class="action-text">Spend $1,450 more by Apr 13 to earn $750 cashback bonus — 21 days left</span>
+          </div>
+        </div>
+        <div class="card-row-actions">
+          <button class="btn-primary" aria-label="View spending tips for Chase Ink Business Cash">View tips</button>
+          <button aria-label="Snooze Chase Ink Business Cash alert">Snooze</button>
+        </div>
+      </article>
+
+      <!-- Card 3: Fee only, AMBER (30–60 days) — 38 days -->
+      <article class="card-row urgent-amber" role="listitem" aria-label="Chase Sapphire Reserve — 38 days until annual fee">
+        <div class="card-row-body">
+          <div class="card-row-header">
+            <div class="card-name-row">
+              <div class="issuer-badge" aria-hidden="true">C</div>
+              <div>
+                <div class="card-name">CHASE SAPPHIRE RESERVE</div>
+                <div class="card-issuer-meta">Chase · Points</div>
+              </div>
+            </div>
+            <span class="urgency-badge" aria-label="38 days until action required">38 DAYS</span>
+          </div>
+          <div class="card-details" role="list">
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Annual Fee</span>
+              <span class="detail-value urgent-amber">$550 — Apr 30, 2026</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Bonus Deadline</span>
+              <span class="detail-value">— (no active bonus)</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Remaining Spend</span>
+              <span class="detail-value">—</span>
+            </div>
+          </div>
+          <div class="action-row">
+            <span class="action-label">Action:</span>
+            <span class="action-text">Evaluate travel credits + perks against $550 fee — deadline Apr 30</span>
+          </div>
+        </div>
+        <div class="card-row-actions">
+          <button class="btn-primary" aria-label="Take action on Chase Sapphire Reserve">Act now</button>
+          <button aria-label="Snooze Chase Sapphire Reserve alert">Snooze</button>
+        </div>
+      </article>
+
+      <!-- Card 4: Bonus deadline AMBER + fee AMBER (combined) — 45 days to bonus, 55 days to fee -->
+      <article class="card-row urgent-amber" role="listitem" aria-label="Capital One Venture X — 45 days until bonus deadline">
+        <div class="card-row-body">
+          <div class="card-row-header">
+            <div class="card-name-row">
+              <div class="issuer-badge" aria-hidden="true">V</div>
+              <div>
+                <div class="card-name">CAPITAL ONE VENTURE X</div>
+                <div class="card-issuer-meta">Capital One · Miles</div>
+              </div>
+            </div>
+            <!-- Urgency badge shows soonest deadline = 45 days (bonus deadline) -->
+            <span class="urgency-badge" aria-label="45 days until bonus deadline">45 DAYS</span>
+          </div>
+          <div class="card-details" role="list">
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Annual Fee</span>
+              <!-- Fee is 55 days: also amber but less urgent than bonus -->
+              <span class="detail-value urgent-amber">$395 — May 17, 2026</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Bonus Deadline</span>
+              <!-- Sooner of the two: 45 days -->
+              <span class="detail-value urgent-amber">May 7, 2026</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Remaining Spend</span>
+              <span class="detail-value urgent-amber">$1,000 to go</span>
+            </div>
+          </div>
+          <!-- Spend progress bar: 83% complete toward $6,000 minimum -->
+          <div class="spend-progress" role="group" aria-label="Bonus spend progress">
+            <div class="progress-track" aria-hidden="true">
+              <div class="progress-fill" style="width: 83%;"></div>
+            </div>
+            <div class="progress-labels">
+              <span>$5,000 spent</span>
+              <span>$6,000 goal</span>
+            </div>
+          </div>
+          <div class="action-row">
+            <span class="action-label">Action:</span>
+            <span class="action-text">Spend $1,000 more by May 7 to earn 75,000 bonus miles · fee due May 17</span>
+          </div>
+        </div>
+        <div class="card-row-actions">
+          <button class="btn-primary" aria-label="View spending tips for Capital One Venture X">View tips</button>
+          <button aria-label="Snooze Capital One Venture X alert">Snooze</button>
+        </div>
+      </article>
+
+    </div><!-- /.card-list -->
+
+    <p class="note"><strong>Sort order:</strong> Cards sorted by daysUntilSoonest(card) ascending — most critical first. Ties: fee deadline before bonus deadline. Future enhancement: user-configurable sort (out of scope for #1808).</p>
+    <p class="note"><strong>Snooze behavior:</strong> Snoozing removes card from Howl tab for 7 days (configurable). Snoozed cards return automatically and cannot be snoozed past the deadline date. Snooze count shown in snooze button tooltip after first snooze: "Snooze (snoozed 1x)".</p>
+    <p class="note"><strong>Karl bling:</strong> Rune corner accents appear on Howl cards for Karl/trial tier at full opacity (card is still active — these are urgent, not archived). See karl-card-bling.html. Urgency pulsing on rune corners only when prefers-reduced-motion is not set.</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION F — Empty State                                              -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-f">
+    <div class="section-title" id="sec-f">F — Empty State (No Cards Needing Action)</div>
+    <p class="section-desc">Shown when no cards have fees or bonus deadlines within 60 days. Summary bar hidden. Tab badge shows 0 at reduced opacity.</p>
+
+    <section class="empty-state" aria-label="The Howl empty state">
+      <div class="empty-rune" aria-hidden="true">ᚲ</div>
+      <div class="empty-heading">The Howl is Silent</div>
+      <p class="empty-sub">No annual fees or bonus deadlines approaching. All is well for now.</p>
+    </section>
+
+    <p class="note"><strong>Rune ᚲ (Kenaz)</strong> — controlled fire, torch, knowledge. Already established as The Howl's icon. "The Howl is Silent" = positive empty state, mirrors Norse tone.</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION G — Mobile 375px Layout                                      -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-g">
+    <div class="section-title" id="sec-g">G — Mobile 375px Layout</div>
+    <p class="section-desc">Summary bar stacks (3 key stats, least-important removed on mobile). Card detail grid collapses to 2-column. Action row wraps. CTA buttons stack.</p>
+
+    <div class="mobile-frame" role="region" aria-label="Mobile 375px wireframe">
+
+      <!-- Tab bar: scrollable -->
+      <nav style="display: flex; overflow-x: auto; border-bottom: 1px solid;" aria-label="Dashboard tabs" role="tablist">
+        <button class="tab-btn active" role="tab" aria-selected="true" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᚲ</span> HOWL <span class="tab-badge howl-urgent">4</span></button>
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᚠ</span> ACTIVE</button>
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᚱ</span> HUNT</button>
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᛏ</span> VALHALLA</button>
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᛞ</span> TRASH</button>
+      </nav>
+
+      <!-- Summary bar: stacked on mobile (3 stats, "Bonus Spend Remaining" hidden) -->
+      <div style="border-bottom: 1px solid;" role="region" aria-label="The Howl summary">
+        <div style="padding: 10px 14px; border-bottom: 1px solid; border-left: 3px solid;">
+          <div class="summary-stat-label">Cards Needing Action</div>
+          <div class="summary-stat-value" style="font-size: 16px;">4 <span style="font-size: 12px; font-weight: normal;">(2 critical · 2 warning)</span></div>
+        </div>
+        <div style="padding: 10px 14px; border-bottom: 1px solid;">
+          <div class="summary-stat-label">Nearest Deadline</div>
+          <div class="summary-stat-value" style="font-size: 16px;">12 days</div>
+          <div class="summary-stat-sub">Amex Gold — Apr 4</div>
+        </div>
+        <div style="padding: 10px 14px;">
+          <div class="summary-stat-label">Approaching Fees Total</div>
+          <div class="summary-stat-value" style="font-size: 16px;">$1,090</div>
+        </div>
+      </div>
+
+      <!-- Single card row on mobile -->
+      <div style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+        <article aria-label="American Express Gold — 12 days" style="border: 1px solid; border-left: 4px solid; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="issuer-badge" aria-hidden="true">A</div>
+              <div>
+                <div class="card-name" style="font-size: 13px;">AMEX GOLD</div>
+                <div class="card-issuer-meta">American Express · Points</div>
+              </div>
+            </div>
+            <span class="urgency-badge" style="font-size: 10px;">12 DAYS</span>
+          </div>
+          <!-- 2-col on mobile -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding-top: 8px; border-top: 1px solid;">
+            <div class="detail-item">
+              <span class="detail-label">Annual Fee</span>
+              <span class="detail-value urgent-red">$250 — Apr 4</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Bonus Deadline</span>
+              <span class="detail-value">—</span>
+            </div>
+          </div>
+          <!-- Action text on mobile: truncated to one line with expand option -->
+          <div style="font-size: 12px; padding-top: 4px; border-top: 1px solid;">
+            <strong style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Action:</strong>
+            Decide: keep, downgrade, or close before Apr 4
+          </div>
+          <!-- Buttons stack on mobile -->
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button class="btn-primary" style="font-size: 11px; padding: 5px 12px;">Act now</button>
+            <button style="font-size: 11px; padding: 5px 10px;">Snooze</button>
+          </div>
+        </article>
+
+        <p class="note">Remaining cards follow same 2-col detail grid pattern. On 375px, "Remaining Spend" detail only shown if card has active bonus deadline.</p>
+      </div>
+
+    </div><!-- /.mobile-frame -->
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION H — Accessibility & Implementation Notes                     -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-h">
+    <div class="section-title" id="sec-h">H — Accessibility &amp; Implementation Notes for FiremanDecko</div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; font-size: 13px;">
+
+      <div>
+        <strong style="display: block; margin-bottom: 8px;">Accessibility (WCAG 2.1 AA)</strong>
+        <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <li>Tab panel: role="tabpanel", aria-labelledby pointing to Howl tab button</li>
+          <li>Urgency color: NEVER used alone. Date/days text always present alongside color. Urgency badge includes "X days until action required" as aria-label</li>
+          <li>Card row left-border urgency: decorative (aria-hidden). Card's aria-label includes urgency info: "X days until [fee|deadline]"</li>
+          <li>Progress bar: role="progressbar", aria-valuenow=(spent), aria-valuemin=0, aria-valuemax=(goal), aria-label="Bonus spend progress for [card name]"</li>
+          <li>"Act now" / "View tips" buttons: aria-label includes card name</li>
+          <li>Snooze button: aria-label="Snooze [card name] alert". After snooze: aria-label updates to "Snooze [card name] alert (snoozed Nx)"</li>
+          <li>Summary bar: role="region", aria-label="The Howl summary — action required"</li>
+          <li>Empty state: aria-label="The Howl empty state". Rune aria-hidden="true"</li>
+          <li>Color-only urgency violations: urgency-red and urgency-amber MUST pass 4.5:1 contrast ratio on card background. Engineer to verify with theme tokens.</li>
+        </ul>
+      </div>
+
+      <div>
+        <strong style="display: block; margin-bottom: 8px;">Component / Data Notes</strong>
+        <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <li>Data fields needed per card: annualFeeAmount (number|null), annualFeeDate (Date|null), bonusDeadline (Date|null), bonusMinSpend (number|null), bonusSpentSoFar (number|null), actionText (string)</li>
+          <li>annualFeeAmount = 0 or null → render "$0 (no fee)" in Annual Fee field</li>
+          <li>bonusDeadline = null → render "— (no active bonus)" in Bonus Deadline field, hide progress bar</li>
+          <li>urgencyLevel per card: Math.min(daysUntil(annualFeeDate), daysUntil(bonusDeadline)) → &lt;30 = red, 30–60 = amber</li>
+          <li>Cards with urgencyLevel &gt; 60 days should NOT appear in Howl tab</li>
+          <li>Sort: ascending daysUntilSoonest. Cards re-sorted on each render (days change daily)</li>
+          <li>Summary bar: max urgency across all cards drives accent color. Nearest deadline = min(daysUntilSoonest)</li>
+          <li>Snooze: localStorage key per card "howl-snooze-[cardId]" = ISO timestamp. Auto-expires when snoozed date passes. Cannot snooze past annualFeeDate − 3 days</li>
+          <li>actionText: engineer may auto-generate or store per-card. Suggest auto-generation from fee/deadline data for MVP.</li>
+          <li>Relevant component: HowlTab.tsx within DashboardTabs. Shared SpendProgressBar component with Hunt tab.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <p class="note"><strong>Relationship to Howl Panel (chrome/howl-panel.html):</strong> The Howl Panel is a NOTIFICATION SIDEBAR triggered by urgent cards. This wireframe is the DASHBOARD TAB VIEW — full-width content area, consistent with other tabs. Both surfaces should show the same cards but with different layout density. The panel is a quick alert; the tab is the full management surface. FiremanDecko: confirm whether both share a data layer or if HowlTab is the canonical source.</p>
+  </section>
+
+</div><!-- /.page -->
+
+</body>
+</html>

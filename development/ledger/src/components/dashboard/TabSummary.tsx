@@ -63,23 +63,67 @@ function allSummary(cards: Card[]): React.ReactNode[] {
 }
 
 /**
- * VALHALLA tab: "{closed} closed, {graduated} graduated -- chains broken, plunder secured"
+ * VALHALLA tab: aggregate rewards reaped across all closed cards.
+ *
+ * Format: "{count} retired · {pts} pts · ${cashback} cashback · ${fees} fees paid"
+ * Issue #1808 — show total rewards reaped instead of generic closed/graduated counts.
  */
 function valhallaSummary(cards: Card[]): React.ReactNode[] {
-  const closed = cards.filter((c) => c.status === "closed").length;
-  const graduated = cards.filter((c) => c.status === "graduated").length;
+  const totalPoints = cards.reduce((sum, c) => {
+    if (c.signUpBonus?.met && c.signUpBonus.type !== "cashback") {
+      return sum + c.signUpBonus.amount;
+    }
+    return sum;
+  }, 0);
 
-  const segments: string[] = [];
-  if (closed > 0) segments.push(`${closed} closed`);
-  if (graduated > 0) segments.push(`${graduated} graduated`);
+  const totalCashback = cards.reduce((sum, c) => {
+    if (c.signUpBonus?.met && c.signUpBonus.type === "cashback") {
+      return sum + c.signUpBonus.amount;
+    }
+    return sum;
+  }, 0);
+
+  const totalFeesPaid = cards.reduce((sum, c) => sum + c.annualFee, 0);
 
   const parts: React.ReactNode[] = [];
   parts.push(
-    <span key="counts" className="font-bold">
-      {segments.join(", ")}
+    <span key="count" className="font-bold">
+      {cards.length} retired card{cards.length !== 1 ? "s" : ""}
     </span>
   );
-  parts.push(" \u2014 chains broken, plunder secured");
+
+  if (totalPoints > 0) {
+    parts.push(" · ");
+    parts.push(
+      <span key="pts" className="font-bold">
+        {totalPoints.toLocaleString()} pts
+      </span>
+      );
+    parts.push(" reaped");
+  }
+
+  if (totalCashback > 0) {
+    parts.push(" · ");
+    parts.push(
+      <span key="cash" className="font-bold">
+        {formatCurrency(totalCashback)}
+      </span>
+    );
+    parts.push(" cashback");
+  }
+
+  if (totalFeesPaid > 0) {
+    parts.push(" · ");
+    parts.push(
+      <span key="fees" className="font-bold">
+        {formatCurrency(totalFeesPaid)}
+      </span>
+    );
+    parts.push("/yr fees");
+  } else {
+    parts.push(" — chains broken, plunder secured");
+  }
+
   return parts;
 }
 
@@ -154,52 +198,94 @@ function huntSummary(cards: Card[]): React.ReactNode[] {
 }
 
 /**
- * THE HOWL tab: "{fee} with fee due, {promo} promo expiring, {overdue} overdue"
- * Segments with zero count are omitted.
+ * THE HOWL tab: cards needing action count, nearest deadline, approaching fees.
+ *
+ * Format: "{critical} critical · {warning} warning · nearest: {card} in {N}d · ${fees} fees approaching"
+ * Issue #1808 — show actionable urgency context: count breakdown, nearest deadline, fees total.
  */
 function howlSummary(cards: Card[]): React.ReactNode[] {
-  const fee = cards.filter((c) => c.status === "fee_approaching").length;
-  const promo = cards.filter((c) => c.status === "promo_expiring").length;
-  const overdue = cards.filter((c) => c.status === "overdue").length;
+  const critical = cards.filter((c) => {
+    const days = c.annualFeeDate && c.annualFee > 0
+      ? daysUntil(c.annualFeeDate)
+      : c.signUpBonus?.deadline
+        ? daysUntil(c.signUpBonus.deadline)
+        : Infinity;
+    return days <= 30;
+  }).length;
 
-  const segments: React.ReactNode[] = [];
-  if (fee > 0) {
-    segments.push(
-      <span key="fee">
-        <span className="font-bold">
-          {fee} card{fee !== 1 ? "s" : ""}
-        </span>{" "}
-        with fee due
-      </span>
-    );
-  }
-  if (promo > 0) {
-    segments.push(
-      <span key="promo">
-        <span className="font-bold">
-          {promo} card{promo !== 1 ? "s" : ""}
-        </span>{" "}
-        with promo expiring
-      </span>
-    );
-  }
-  if (overdue > 0) {
-    segments.push(
-      <span key="overdue">
-        <span className="font-bold">
-          {overdue}
-        </span>{" "}
-        overdue
-      </span>
-    );
+  const warning = cards.length - critical;
+
+  const totalApproachingFees = cards.reduce((sum, c) => {
+    if (
+      (c.status === "fee_approaching" || c.status === "overdue") &&
+      c.annualFee > 0
+    ) {
+      return sum + c.annualFee;
+    }
+    return sum;
+  }, 0);
+
+  // Find nearest deadline card
+  let nearestDays = Infinity;
+  let nearestCard: Card | null = null;
+  for (const c of cards) {
+    const feeDays =
+      c.annualFeeDate && c.annualFee > 0 ? daysUntil(c.annualFeeDate) : Infinity;
+    const bonusDays =
+      c.signUpBonus?.deadline ? daysUntil(c.signUpBonus.deadline) : Infinity;
+    const d = Math.min(feeDays, bonusDays);
+    if (d < nearestDays) {
+      nearestDays = d;
+      nearestCard = c;
+    }
   }
 
-  // Join with ", "
   const parts: React.ReactNode[] = [];
-  segments.forEach((seg, i) => {
-    if (i > 0) parts.push(", ");
-    parts.push(seg);
-  });
+  parts.push(
+    <span key="count" className="font-bold">
+      {cards.length} card{cards.length !== 1 ? "s" : ""}
+    </span>
+  );
+  parts.push(" need action");
+
+  if (critical > 0) {
+    parts.push(": ");
+    parts.push(
+      <span key="critical" className="font-bold text-[hsl(var(--realm-muspel))]">
+        {critical} critical
+      </span>
+    );
+    if (warning > 0) {
+      parts.push(", ");
+      parts.push(
+        <span key="warning" className="font-bold text-[hsl(var(--realm-hati))]">
+          {warning} warning
+        </span>
+      );
+    }
+  }
+
+  if (nearestCard && nearestDays !== Infinity) {
+    const dLabel = nearestDays <= 0 ? "overdue" : `${nearestDays}d`;
+    parts.push(" · nearest: ");
+    parts.push(
+      <span key="nearest" className="font-bold">
+        {nearestCard.cardName}
+      </span>
+    );
+    parts.push(` in ${dLabel}`);
+  }
+
+  if (totalApproachingFees > 0) {
+    parts.push(" · ");
+    parts.push(
+      <span key="fees" className="font-bold">
+        {formatCurrency(totalApproachingFees)}
+      </span>
+    );
+    parts.push(" in fees approaching");
+  }
+
   return parts;
 }
 

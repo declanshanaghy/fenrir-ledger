@@ -37,6 +37,8 @@
 import { restoreCard, expungeCard, expungeAllCards } from "@/lib/storage";
 import { CardTile } from "./CardTile";
 import { HuntCardTile } from "./HuntCardTile";
+import { ValhallaCardTile } from "./ValhallaCardTile";
+import { HowlCardTile } from "./HowlCardTile";
 import { EmptyState } from "./EmptyState";
 import { AnonEmptyState } from "./AnonEmptyState";
 import { AnimatedCardGrid } from "./AnimatedCardGrid";
@@ -44,8 +46,6 @@ import { TabHeader } from "./TabHeader";
 import { TabSummary } from "./TabSummary";
 import type { Card } from "@/lib/types";
 import type { DashboardTab } from "@/lib/constants";
-import { daysUntil } from "@/lib/card-utils";
-import { cn } from "@/lib/utils";
 import { useRagnarok } from "@/contexts/RagnarokContext";
 import { THRALL_CARD_LIMIT } from "@/lib/trial-utils";
 import {
@@ -88,107 +88,6 @@ function isActiveCard(card: Card): boolean {
 /** Returns true if this card belongs in The Valhalla tab. */
 function isValhallaCard(card: Card): boolean {
   return card.status === "closed" || card.status === "graduated";
-}
-
-// ─── Urgency bar for Howl tab cards ───────────────────────────────────────────
-
-interface UrgencyBarProps {
-  card: Card;
-}
-
-/**
- * UrgencyBar — displayed above card header inside The Howl tab.
- * Shows: urgency dot + status label + days remaining (or "N days past" for overdue).
- * Dot pulses for overdue cards; static for fee_approaching and promo_expiring.
- * Spec: ux/wireframes/app/dashboard-tabs.html — .card-urgency-bar
- */
-function UrgencyBar({ card }: UrgencyBarProps) {
-  const isFee = card.status === "fee_approaching" || card.status === "overdue";
-  const deadlineDate = isFee
-    ? card.annualFeeDate
-    : (card.signUpBonus?.deadline ?? "");
-  const days = daysUntil(deadlineDate);
-
-  // Dot color follows realm token spec from HowlPanel.tsx
-  const dotColorClass =
-    days <= 0
-      ? "bg-[hsl(var(--realm-ragnarok))]" // overdue
-      : days <= 30
-        ? "bg-[hsl(var(--realm-muspel))]" // critical
-        : "bg-[hsl(var(--realm-hati))]"; // approaching
-
-  // Pulse animation only for overdue (days <= 0)
-  // Disabled via @media prefers-reduced-motion in globals.css
-  const pulseClass = days <= 0 ? "animate-muspel-pulse" : "";
-
-  // Status label
-  let statusLabel: string;
-  if (card.status === "overdue") {
-    statusLabel = "OVERDUE";
-  } else if (card.status === "fee_approaching") {
-    statusLabel = "FEE APPROACHING";
-  } else {
-    statusLabel = "PROMO EXPIRING";
-  }
-
-  // Days label
-  let daysLabel: string;
-  if (days <= 0) {
-    daysLabel = `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} past`;
-  } else if (days === 1) {
-    daysLabel = "1 day";
-  } else {
-    daysLabel = `${days} days`;
-  }
-
-  return (
-    <div
-      className="flex items-center gap-2 px-3.5 py-1.5 border-b border-border"
-      data-testid="urgency-bar"
-    >
-      <span
-        className={cn(
-          "h-2 w-2 rounded-full shrink-0",
-          dotColorClass,
-          pulseClass,
-        )}
-        aria-hidden="true"
-      />
-      <span className="text-xs font-heading uppercase tracking-wide text-muted-foreground flex-1">
-        {statusLabel}
-      </span>
-      <span
-        className={cn(
-          "text-xs font-mono font-semibold",
-          days <= 30
-            ? "text-[hsl(var(--realm-muspel))]"
-            : "text-[hsl(var(--realm-hati))]",
-        )}
-      >
-        {daysLabel}
-      </span>
-    </div>
-  );
-}
-
-// ─── Howl card wrapper ────────────────────────────────────────────────────────
-
-interface HowlCardProps {
-  card: Card;
-  lokiLabel?: string | undefined;
-}
-
-/**
- * HowlCard — renders a CardTile with an urgency bar above it.
- * Used in The Howl tab and the All tab (for howl-status cards).
- */
-function HowlCard({ card, lokiLabel }: HowlCardProps) {
-  return (
-    <div className="flex flex-col">
-      <UrgencyBar card={card} />
-      <CardTile card={card} lokiLabel={lokiLabel} />
-    </div>
-  );
 }
 
 // ─── Empty states ──────────────────────────────────────────────────────────────
@@ -425,7 +324,7 @@ export function Dashboard({
             <AnimatedCardGrid
               cards={displayHowlCards}
               renderCard={(card) => (
-                <HowlCard
+                <HowlCardTile
                   card={card}
                   lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
                 />
@@ -522,7 +421,7 @@ export function Dashboard({
             <AnimatedCardGrid
               cards={displayValhallaCards}
               renderCard={(card) => (
-                <CardTile
+                <ValhallaCardTile
                   card={card}
                   lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
                 />
@@ -551,7 +450,15 @@ export function Dashboard({
               renderCard={(card) => {
                 if (isHowlCard(card)) {
                   return (
-                    <HowlCard
+                    <HowlCardTile
+                      card={card}
+                      lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
+                    />
+                  );
+                }
+                if (isValhallaCard(card)) {
+                  return (
+                    <ValhallaCardTile
                       card={card}
                       lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
                     />
