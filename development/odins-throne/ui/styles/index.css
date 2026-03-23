@@ -75,9 +75,9 @@
   --gold:              #8f6e0e;   /* accent gold — globals.css --primary: 38 80% 28% */
   --gold-bright:       #d97706;   /* bright gold — globals.css --realm-hati: 38 92% 42% */
   --text-saga:         hsl(25, 55%, 10%);   /* primary txt — iron-gall ink */
-  --text-rune:         hsl(28, 28%, 35%);   /* sec. text   — warm brown */
-  --text-void:         hsl(30, 20%, 52%);   /* tertiary    — warm muted tan */
-  --rune-border:       hsl(35, 28%, 74%);   /* borders     — warm tan border */
+  --text-rune:         hsl(27, 35%, 28%);   /* sec. text   — warm dark brown (Issue #1874) */
+  --text-void:         hsl(30, 28%, 38%);   /* tertiary    — warm tan-brown (Issue #1874) */
+  --rune-border:       hsl(33, 36%, 48%);   /* borders     — warm brown, visible on parchment (Issue #1874) */
   --teal-asgard:       #077558;   /* status teal — globals.css --realm-asgard: 163 83% 25% */
   --mayo-red:          #CF2734;   /* unchanged — readable on white */
   --mayo-green:        #005a00;   /* darkened for white bg */

@@ -114,7 +114,7 @@ export function LedgerShell({ children }: LedgerShellProps) {
           className: "font-body",
           style: {
             background: "hsl(var(--card))",
-            border: "1px solid hsl(var(--border))",
+            border: "1.5px solid hsl(var(--border))",
             color: "hsl(var(--foreground))",
           },
         }}

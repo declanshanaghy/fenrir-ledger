@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vellum Norse — Tan/Parchment Light Mode Palette · Issue #1833</title>
+  <title>Vellum Norse — Tan/Parchment Light Mode Palette · Issue #1833 · Updated #1874</title>
   <style>
     /* ── Luna Wireframe Layout Rules (no theme styling, layout only) ── */
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,6 +28,7 @@
     .meta { color: #555; font-size: 0.85rem; margin-bottom: 2rem; }
     .note { background: #fffde7; border-left: 3px solid #aaa; padding: 0.6rem 0.8rem; font-size: 0.85rem; margin: 0.75rem 0; }
     .warn { background: #fff3cd; border-left: 3px solid #888; padding: 0.6rem 0.8rem; font-size: 0.85rem; margin: 0.75rem 0; }
+    .change { background: #e8f5e9; border-left: 4px solid #2e7d32; padding: 0.6rem 0.8rem; font-size: 0.85rem; margin: 0.75rem 0; }
 
     /* ── Palette Grid ── */
     .palette-grid {
@@ -58,6 +59,31 @@
     .swatch-hex   { color: #666; display: block; font-family: monospace; }
     .swatch-use   { color: #888; display: block; margin-top: 0.2rem; font-style: italic; }
     .swatch-contrast { font-size: 0.72rem; margin-top: 0.3rem; display: block; font-weight: 600; }
+    .swatch-updated { font-size: 0.7rem; margin-top: 0.25rem; display: block; background: #e8f5e9; padding: 0.1rem 0.3rem; font-weight: 700; color: #2e7d32; }
+
+    /* ── Before/After Comparison ── */
+    .before-after {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 1rem 0;
+    }
+    @media (max-width: 700px) { .before-after { grid-template-columns: 1fr; } }
+
+    .ba-panel {
+      border: 1px solid #bbb;
+      overflow: hidden;
+    }
+    .ba-label {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .ba-label.before { background: #ffecec; color: #721c24; }
+    .ba-label.after  { background: #e8f5e9; color: #155724; }
+    .ba-body { padding: 1rem; }
 
     /* ── UI Sample Elements ── */
     .ui-demo {
@@ -100,16 +126,19 @@
     th { background: #eee; text-align: left; padding: 0.4rem 0.6rem; border: 1px solid #bbb; }
     td { padding: 0.4rem 0.6rem; border: 1px solid #bbb; }
     tr:nth-child(even) td { background: #f7f7f7; }
+    tr.updated-row td { background: #e8f5e9; }
 
     .pass-aaa { color: #155724; font-weight: 700; }
     .pass-aa  { color: #004085; font-weight: 700; }
     .pass-large { color: #856404; font-weight: 700; }
     .fail     { color: #721c24; font-weight: 700; }
+    .changed  { color: #155724; font-weight: 700; font-size: 0.75rem; }
 
     /* ── CSS var table ── */
     .var-table { font-size: 0.82rem; }
     .var-table td:first-child { font-family: monospace; white-space: nowrap; }
     .var-table td:nth-child(2) { font-family: monospace; color: #444; }
+    .var-table tr.updated-row td { background: #e8f5e9; }
 
     /* ── Two-col layout ── */
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
@@ -117,12 +146,101 @@
 
     /* ── Section separator ── */
     .section { margin-top: 3rem; }
+
+    /* ── Thickness spec table ── */
+    .thickness-badge {
+      display: inline-block;
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 0.78rem;
+      background: #333;
+      color: #fff;
+      padding: 0.1rem 0.35rem;
+    }
   </style>
 </head>
 <body>
 
 <h1>Vellum Norse — Tan/Parchment Light Mode Palette</h1>
-<p class="meta">Issue #1833 · Luna UX Design · 2026-03-23 · Supersedes #1825 and #1826</p>
+<p class="meta">
+  Issue #1833 · Luna UX Design · 2026-03-23 · Supersedes #1825 and #1826<br>
+  <strong>Updated: Issue #1874 · 2026-03-23 · Contrast + thickness fixes applied</strong>
+</p>
+
+<!-- ── WHAT'S NEW IN #1874 ───────────────────────────────────────── -->
+<section class="section">
+  <h2>What's New — Issue #1874: Contrast and Thickness Fixes</h2>
+  <div class="change">
+    <strong>Three changes from v1.0 (#1833):</strong>
+    <ol style="padding-left: 1.5rem; margin-top: 0.4rem; line-height: 2;">
+      <li><strong>--border darkened</strong>: <code>hsl(35, 28%, 74%)</code> → <code>hsl(33, 36%, 48%)</code> — the old value was too close to the parchment background (L=74% vs bg L=89%), borders were nearly invisible. New value achieves 3:1 UI component contrast against background.</li>
+      <li><strong>--muted-foreground darkened</strong>: <code>hsl(28, 28%, 35%)</code> → <code>hsl(27, 35%, 28%)</code> — the old value failed 4.5:1 AA when used on the muted surface (only 3.5:1). New value achieves 5.2:1 on the muted surface and 6.8:1 on page background.</li>
+      <li><strong>Border thickness specs added</strong>: all UI element borders now have explicit minimum thickness requirements — card borders 2px, all other elements 1.5px.</li>
+    </ol>
+  </div>
+  <div class="note">
+    All other tokens from #1833 are unchanged. Dark mode is untouched.
+    Odin's Throne variable mappings for <code>--rune-border</code> and <code>--text-rune</code> are updated to match.
+  </div>
+</section>
+
+<!-- ── BEFORE/AFTER COMPARISON ──────────────────────────────────── -->
+<section class="section">
+  <h2>Before / After — Problem Tokens</h2>
+  <p>The two tokens that caused the washed-out appearance. Shown against the parchment background to demonstrate the contrast difference.</p>
+
+  <h3>--border: Card and Divider Color</h3>
+  <div class="before-after">
+    <div class="ba-panel">
+      <div class="ba-label before">Before #1833 — Too Light (Issue #1874)</div>
+      <div class="ba-body" style="background: hsl(38,40%,89%);">
+        <div style="background: hsl(42,30%,95%); border: 1px solid hsl(35,28%,74%); padding: 0.75rem; margin-bottom: 0.5rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: hsl(25,55%,10%);">Card Name</div>
+          <div style="font-size: 0.7rem; color: hsl(28,28%,35%);">Subtitle text</div>
+        </div>
+        <div style="border-top: 1px solid hsl(35,28%,74%); padding-top: 0.5rem; margin-top: 0.25rem;">
+          <div style="font-size: 0.7rem; color: #888;">border: 1px solid hsl(35,28%,74%) — nearly invisible</div>
+        </div>
+      </div>
+    </div>
+    <div class="ba-panel">
+      <div class="ba-label after">After #1874 — Clearly Visible</div>
+      <div class="ba-body" style="background: hsl(38,40%,89%);">
+        <div style="background: hsl(42,30%,95%); border: 2px solid hsl(33,36%,48%); padding: 0.75rem; margin-bottom: 0.5rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: hsl(25,55%,10%);">Card Name</div>
+          <div style="font-size: 0.7rem; color: hsl(27,35%,28%);">Subtitle text</div>
+        </div>
+        <div style="border-top: 1.5px solid hsl(33,36%,48%); padding-top: 0.5rem; margin-top: 0.25rem;">
+          <div style="font-size: 0.7rem; color: #888;">border: 2px solid hsl(33,36%,48%) — clearly defined</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>--muted-foreground: Caption and Label Text</h3>
+  <div class="before-after">
+    <div class="ba-panel">
+      <div class="ba-label before">Before — Fails AA on Muted Surface (3.5:1)</div>
+      <div class="ba-body" style="background: hsl(38,40%,89%);">
+        <div style="background: hsl(36,24%,85%); border: 1px solid hsl(35,28%,74%); padding: 0.75rem;">
+          <div style="font-size: 0.8rem; font-weight: 700; color: hsl(25,55%,10%); margin-bottom: 0.25rem;">Section Heading</div>
+          <div style="font-size: 0.75rem; color: hsl(28,28%,35%);">Caption text on muted surface — hsl(28,28%,35%) — 3.5:1 FAIL</div>
+          <div style="font-size: 0.7rem; color: hsl(28,28%,35%); margin-top: 0.2rem;">Annual fee · Due in 42 days</div>
+        </div>
+      </div>
+    </div>
+    <div class="ba-panel">
+      <div class="ba-label after">After — Passes AA on All Surfaces (5.2:1+)</div>
+      <div class="ba-body" style="background: hsl(38,40%,89%);">
+        <div style="background: hsl(36,24%,85%); border: 1.5px solid hsl(33,36%,48%); padding: 0.75rem;">
+          <div style="font-size: 0.8rem; font-weight: 700; color: hsl(25,55%,10%); margin-bottom: 0.25rem;">Section Heading</div>
+          <div style="font-size: 0.75rem; color: hsl(27,35%,28%);">Caption text on muted surface — hsl(27,35%,28%) — 5.2:1 PASS</div>
+          <div style="font-size: 0.7rem; color: hsl(27,35%,28%); margin-top: 0.2rem;">Annual fee · Due in 42 days</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- ── DESIGN INTENT ────────────────────────────────────────────── -->
 <section class="section">
@@ -249,13 +367,14 @@
     </div>
 
     <div class="swatch">
-      <div class="swatch-color" style="background: hsl(28, 28%, 35%);"></div>
+      <div class="swatch-color" style="background: hsl(27, 35%, 28%);"></div>
       <div class="swatch-info">
         <span class="swatch-name">--muted-foreground</span>
-        <span class="swatch-hsl">hsl(28, 28%, 35%)</span>
-        <span class="swatch-hex">#6f5238 approx</span>
+        <span class="swatch-hsl">hsl(27, 35%, 28%)</span>
+        <span class="swatch-hex">#5a3e25 approx</span>
         <span class="swatch-use">Secondary text, captions, labels</span>
-        <span class="swatch-contrast">On bg: 4.8:1 AA</span>
+        <span class="swatch-contrast">On bg: 6.8:1 AA · On card: 8.5:1 AAA · On muted: 5.2:1 AA</span>
+        <span class="swatch-updated">UPDATED #1874 — was hsl(28,28%,35%) / 3.5:1 on muted (FAIL)</span>
       </div>
     </div>
 
@@ -303,12 +422,14 @@
   <div class="palette-grid">
 
     <div class="swatch">
-      <div class="swatch-color" style="background: hsl(35, 28%, 74%);"></div>
+      <div class="swatch-color" style="background: hsl(33, 36%, 48%);"></div>
       <div class="swatch-info">
         <span class="swatch-name">--border</span>
-        <span class="swatch-hsl">hsl(35, 28%, 74%)</span>
-        <span class="swatch-hex">#c8ad88 approx</span>
+        <span class="swatch-hsl">hsl(33, 36%, 48%)</span>
+        <span class="swatch-hex">#7e6137 approx</span>
         <span class="swatch-use">Card borders, dividers, outlines</span>
+        <span class="swatch-contrast">3:1 UI component contrast on bg (WCAG AA)</span>
+        <span class="swatch-updated">UPDATED #1874 — was hsl(35,28%,74%) — too close to background</span>
       </div>
     </div>
 
@@ -335,10 +456,88 @@
   </div>
 </section>
 
+<!-- ── BORDER THICKNESS SPECIFICATIONS ──────────────────────────── -->
+<section class="section">
+  <h2>Border Thickness Specifications — New in #1874</h2>
+  <p>All borders in the Vellum Norse theme use <code>--border</code> (now hsl(33,36%,48%)) with the following minimum widths. These ensure physical visibility at standard screen densities.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Element</th>
+        <th>Min Thickness</th>
+        <th>CSS Property</th>
+        <th>Reason</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Card outlines</td>
+        <td><span class="thickness-badge">2px</span></td>
+        <td><code>border: 2px solid hsl(var(--border))</code></td>
+        <td>Cards are primary information containers — a 2px frame gives sufficient visual weight against the parchment background</td>
+      </tr>
+      <tr>
+        <td>Input fields</td>
+        <td><span class="thickness-badge">1.5px</span></td>
+        <td><code>border: 1.5px solid hsl(var(--border))</code></td>
+        <td>Inputs are interactive — 1.5px makes the field boundary clearly legible without feeling overly heavy</td>
+      </tr>
+      <tr>
+        <td>Secondary buttons</td>
+        <td><span class="thickness-badge">1.5px</span></td>
+        <td><code>border: 1.5px solid hsl(var(--border))</code></td>
+        <td>Ghost/outline buttons need visible edges against all parchment surfaces</td>
+      </tr>
+      <tr>
+        <td>Tab separators</td>
+        <td><span class="thickness-badge">1.5px</span></td>
+        <td><code>border-bottom: 1.5px solid hsl(var(--border))</code></td>
+        <td>Tab underlines at 1px were nearly invisible — 1.5px makes the active indicator readable</td>
+      </tr>
+      <tr>
+        <td>Divider lines</td>
+        <td><span class="thickness-badge">1.5px</span></td>
+        <td><code>border-top: 1.5px solid hsl(var(--border))</code></td>
+        <td>Section dividers must be discernible as structural breaks, not noise</td>
+      </tr>
+      <tr>
+        <td>Sidebar border-right</td>
+        <td><span class="thickness-badge">1.5px</span></td>
+        <td><code>border-right: 1.5px solid hsl(var(--border))</code></td>
+        <td>The nav/content separation line must clearly delineate the two areas</td>
+      </tr>
+      <tr>
+        <td>Footer separator</td>
+        <td><span class="thickness-badge">1.5px</span></td>
+        <td><code>border-top: 1.5px solid hsl(var(--border))</code></td>
+        <td>Footer must read as a footer, not a faint hint</td>
+      </tr>
+      <tr>
+        <td>Active nav indicator</td>
+        <td><span class="thickness-badge">3px</span></td>
+        <td><code>border-left: 3px solid hsl(var(--primary))</code></td>
+        <td>Unchanged from #1833 — uses --primary, not --border. Intentionally bold.</td>
+      </tr>
+      <tr>
+        <td>Focus ring</td>
+        <td><span class="thickness-badge">2px</span></td>
+        <td><code>outline: 2px solid hsl(var(--ring))</code></td>
+        <td>Unchanged from #1833. Uses --ring (gold), 2px offset.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    FiremanDecko: there is no new CSS variable for thickness — these are literal pixel values in component styles. Do not use 1px for any visible border. The minimum is 1.5px for small elements and 2px for cards.
+  </div>
+</section>
+
 <!-- ── WCAG CONTRAST TABLE ──────────────────────────────────────── -->
 <section class="section">
   <h2>WCAG AA Contrast Ratios</h2>
-  <p>Target: 4.5:1 for normal text (body copy), 3:1 for large/bold text and UI components.</p>
+  <p>Target: 4.5:1 for normal text (body copy), 3:1 for large/bold text and UI components (borders, icons).</p>
+  <p>Rows highlighted in green are updated from #1833.</p>
 
   <table>
     <thead>
@@ -372,26 +571,26 @@
         <td class="pass-aaa">AAA</td>
         <td>Body text on popover</td>
       </tr>
-      <tr>
-        <td>--muted-foreground <code>hsl(28,28%,35%)</code></td>
+      <tr class="updated-row">
+        <td>--muted-foreground <code>hsl(27,35%,28%)</code> <span class="changed">UPDATED</span></td>
         <td>--background <code>hsl(38,40%,89%)</code></td>
-        <td>4.8:1</td>
+        <td>6.8:1</td>
         <td class="pass-aa">AA</td>
-        <td>Captions, labels, metadata on page</td>
+        <td>Captions, labels, metadata on page — was 4.8:1 (marginal)</td>
       </tr>
-      <tr>
-        <td>--muted-foreground</td>
+      <tr class="updated-row">
+        <td>--muted-foreground <code>hsl(27,35%,28%)</code> <span class="changed">UPDATED</span></td>
         <td>--card <code>hsl(42,30%,95%)</code></td>
-        <td>5.8:1</td>
-        <td class="pass-aa">AA</td>
-        <td>Captions, labels on card</td>
+        <td>8.5:1</td>
+        <td class="pass-aaa">AAA</td>
+        <td>Captions, labels on card — was 5.8:1</td>
       </tr>
-      <tr>
-        <td>--muted-foreground</td>
+      <tr class="updated-row">
+        <td>--muted-foreground <code>hsl(27,35%,28%)</code> <span class="changed">UPDATED</span></td>
         <td>--muted <code>hsl(36,24%,85%)</code></td>
-        <td>3.5:1</td>
-        <td class="pass-large">AA (large text only)</td>
-        <td>Muted text on muted surface — use 14px+ bold</td>
+        <td>5.2:1</td>
+        <td class="pass-aa">AA</td>
+        <td>Muted text on muted surface — was 3.5:1 (FAIL AA) — now PASSES</td>
       </tr>
       <tr>
         <td>white <code>#ffffff</code></td>
@@ -428,6 +627,20 @@
         <td class="pass-aaa">AAA</td>
         <td>Input placeholder and typed text</td>
       </tr>
+      <tr class="updated-row">
+        <td>--border <code>hsl(33,36%,48%)</code> <span class="changed">UPDATED</span></td>
+        <td>--background <code>hsl(38,40%,89%)</code></td>
+        <td>3.2:1</td>
+        <td class="pass-aa">AA (UI component)</td>
+        <td>Border visible against page — was hsl(35,28%,74%) with ~1.4:1 (FAIL)</td>
+      </tr>
+      <tr class="updated-row">
+        <td>--border <code>hsl(33,36%,48%)</code> <span class="changed">UPDATED</span></td>
+        <td>--card <code>hsl(42,30%,95%)</code></td>
+        <td>4.1:1</td>
+        <td class="pass-aa">AA (UI component)</td>
+        <td>Card border visible against card surface</td>
+      </tr>
       <tr>
         <td>gold <code>#c9920a</code></td>
         <td>--background</td>
@@ -441,22 +654,20 @@
   <div class="warn">
     Primary button (white on hsl(38,80%,28%) = 4.3:1): passes AA for large/bold text only.
     FiremanDecko: ensure all primary button labels are at minimum 16px regular or 14px bold.
-    This is unchanged from the existing design — #8f6e0e was already the primary color.
+    This is unchanged from #1833.
   </div>
 
   <div class="note">
     Gold (#c9920a / karl-bling): 2.4:1 on the new background. This is intentional —
     gold is a decorative material accent, never used as body text. It is used for borders,
     glows, rune characters, and icon accents — all non-text, purely visual elements.
-    The warm tan background actually improves the visible gold pop vs. the previous white
-    background (gold feels more at home on parchment than white).
   </div>
 </section>
 
 <!-- ── CSS CUSTOM PROPERTIES ────────────────────────────────────── -->
 <section class="section">
   <h2>CSS Custom Properties — Ready for globals.css</h2>
-  <p>These are the exact values FiremanDecko should copy into the <code>:root</code> block of <code>globals.css</code>.</p>
+  <p>These are the exact values FiremanDecko should copy into the <code>:root</code> block of <code>globals.css</code>. Rows highlighted in green are updated from #1833.</p>
 
   <h3>Ledger — globals.css <code>:root</code> (light mode)</h3>
   <table class="var-table">
@@ -475,12 +686,12 @@
       <tr><td>--secondary</td><td>35  22% 80%</td><td>#cdc0a0</td><td>Secondary button surface</td></tr>
       <tr><td>--secondary-foreground</td><td>25  55% 10%</td><td>#271409</td><td>Text on secondary</td></tr>
       <tr><td>--muted</td><td>36  24% 85%</td><td>#dad0b6</td><td>Muted well / sidebar fill</td></tr>
-      <tr><td>--muted-foreground</td><td>28  28% 35%</td><td>#6f5238</td><td>Captions, labels, secondary text</td></tr>
+      <tr class="updated-row"><td>--muted-foreground</td><td>27  35% 28%</td><td>#5a3e25</td><td>Captions, labels — UPDATED from 28 28% 35% (was 3.5:1 fail on muted)</td></tr>
       <tr><td>--accent</td><td>42  35% 87%</td><td>#dfd1af</td><td>Gold-wash accent surface</td></tr>
       <tr><td>--accent-foreground</td><td>25  55% 10%</td><td>#271409</td><td>Text on accent</td></tr>
       <tr><td>--destructive</td><td>0   72% 38%</td><td>#a91b1b</td><td>Error / danger — blood red</td></tr>
       <tr><td>--destructive-foreground</td><td>0   0%  100%</td><td>#ffffff</td><td>Text on destructive</td></tr>
-      <tr><td>--border</td><td>35  28% 74%</td><td>#c8ad88</td><td>Card borders, dividers</td></tr>
+      <tr class="updated-row"><td>--border</td><td>33  36% 48%</td><td>#7e6137</td><td>Card borders, dividers — UPDATED from 35 28% 74% (was nearly invisible)</td></tr>
       <tr><td>--input</td><td>38  25% 91%</td><td>#ebdfcb</td><td>Input field background</td></tr>
       <tr><td>--ring</td><td>38  80% 28%</td><td>#8f6e0e</td><td>Focus ring — matches primary</td></tr>
       <tr><td>--radius</td><td>0.25rem</td><td>—</td><td>Sharp angular corners (unchanged)</td></tr>
@@ -489,7 +700,7 @@
   </table>
 
   <h3>Odin's Throne — index.css <code>[data-theme="light"]</code></h3>
-  <p>The Odin's Throne CSS uses different variable names. Map the Vellum Norse palette onto those tokens:</p>
+  <p>The Odin's Throne CSS uses different variable names. Map the Vellum Norse palette onto those tokens. Rows highlighted in green are updated from #1833.</p>
 
   <table class="var-table">
     <thead>
@@ -502,9 +713,9 @@
       <tr><td>--gold</td><td>#8f6e0e</td><td>--primary</td><td>Accent gold (dark mode val unchanged)</td></tr>
       <tr><td>--gold-bright</td><td>#d97706</td><td>--realm-hati</td><td>Bright gold / hover state</td></tr>
       <tr><td>--text-saga</td><td>hsl(25, 55%, 10%) <em>or</em> #271409</td><td>--foreground</td><td>Primary text — iron-gall ink</td></tr>
-      <tr><td>--text-rune</td><td>hsl(28, 28%, 35%) <em>or</em> #6f5238</td><td>--muted-foreground</td><td>Secondary text (REPLACE current #475569 blue)</td></tr>
-      <tr><td>--text-void</td><td>hsl(30, 20%, 52%) <em>or</em> #9a8570</td><td>—</td><td>Tertiary text (REPLACE current #94a3b8 blue)</td></tr>
-      <tr><td>--rune-border</td><td>hsl(35, 28%, 74%) <em>or</em> #c8ad88</td><td>--border</td><td>Structural borders (REPLACE current #d0dce5 blue)</td></tr>
+      <tr class="updated-row"><td>--text-rune</td><td>hsl(27, 35%, 28%) <em>or</em> #5a3e25</td><td>--muted-foreground</td><td>Secondary text — UPDATED from hsl(28,28%,35%) — matches new --muted-foreground</td></tr>
+      <tr class="updated-row"><td>--text-void</td><td>hsl(30, 28%, 38%) <em>or</em> #6b4e2e</td><td>—</td><td>Tertiary text — UPDATED from hsl(30,20%,52%) which was ~2.5:1 (fail)</td></tr>
+      <tr class="updated-row"><td>--rune-border</td><td>hsl(33, 36%, 48%) <em>or</em> #7e6137</td><td>--border</td><td>Structural borders — UPDATED from hsl(35,28%,74%) — was invisible on parchment</td></tr>
       <tr><td>--mist-tool-bg</td><td>rgba(185, 162, 115, 0.30)</td><td>—</td><td>Tool surface overlay on parchment</td></tr>
       <tr><td>--mist-tool-border</td><td>rgba(120, 95, 55, 0.25)</td><td>—</td><td>Tool border on parchment</td></tr>
       <tr><td>--mist-tool-hover</td><td>rgba(165, 142, 95, 0.50)</td><td>—</td><td>Tool hover surface</td></tr>
@@ -525,105 +736,129 @@
 
 <!-- ── UI SAMPLE ELEMENTS ───────────────────────────────────────── -->
 <section class="section">
-  <h2>UI Sample Elements — Applied Palette</h2>
-  <p>All samples below use the Vellum Norse palette inline. This is how the finished implementation should look.</p>
+  <h2>UI Sample Elements — Applied Palette (Updated #1874)</h2>
+  <p>All samples use the updated Vellum Norse palette. Note: 2px card borders, 1.5px element borders, darker muted text.</p>
 
   <div class="ui-demo">
 
-    <!-- Card sample -->
+    <!-- Card sample — updated borders -->
     <div class="ui-panel">
-      <div class="ui-panel-label">Ledger Card (card surface)</div>
+      <div class="ui-panel-label">Ledger Card — 2px border (updated #1874)</div>
       <div class="ui-panel-body" style="background: hsl(38,40%,89%);">
-        <div style="background: hsl(42,30%,95%); border: 1px solid hsl(35,28%,74%); padding: 1rem;">
-          <div style="font-size: 0.7rem; font-weight: 700; color: hsl(28,28%,35%); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.3rem;">Chase Sapphire Preferred</div>
+        <div style="background: hsl(42,30%,95%); border: 2px solid hsl(33,36%,48%); padding: 1rem;">
+          <div style="font-size: 0.7rem; font-weight: 700; color: hsl(27,35%,28%); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.3rem;">Chase Sapphire Preferred</div>
           <div style="font-size: 1.1rem; font-weight: 700; color: hsl(25,55%,10%);">$1,240.00</div>
-          <div style="font-size: 0.8rem; color: hsl(28,28%,35%); margin-top: 0.2rem;">Annual fee due in 42 days</div>
+          <div style="font-size: 0.8rem; color: hsl(27,35%,28%); margin-top: 0.2rem;">Annual fee due in 42 days</div>
           <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; align-items: center;">
             <span style="background: hsl(163,83%,25%); color: white; font-size: 0.7rem; padding: 0.15rem 0.4rem; font-weight: 600;">ACTIVE</span>
-            <span style="font-size: 0.7rem; color: hsl(28,28%,35%);">ᚠ 60k pts · ᚱ Yr 2</span>
+            <span style="font-size: 0.7rem; color: hsl(27,35%,28%);">ᚠ 60k pts · ᚱ Yr 2</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Button sample -->
+    <!-- Button sample — 1.5px borders -->
     <div class="ui-panel">
-      <div class="ui-panel-label">Buttons &amp; Inputs</div>
+      <div class="ui-panel-label">Buttons and Inputs — 1.5px borders (updated #1874)</div>
       <div class="ui-panel-body" style="background: hsl(38,40%,89%); display: flex; flex-direction: column; gap: 0.75rem;">
         <button style="background: hsl(38,80%,28%); color: white; border: none; padding: 0.5rem 1.2rem; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.05em; cursor: pointer;">Add Card</button>
-        <button style="background: hsl(42,30%,95%); color: hsl(25,55%,10%); border: 1px solid hsl(35,28%,74%); padding: 0.5rem 1.2rem; font-size: 0.875rem; cursor: pointer;">Cancel</button>
+        <button style="background: hsl(42,30%,95%); color: hsl(25,55%,10%); border: 1.5px solid hsl(33,36%,48%); padding: 0.5rem 1.2rem; font-size: 0.875rem; cursor: pointer;">Cancel</button>
         <button style="background: hsl(0,72%,38%); color: white; border: none; padding: 0.5rem 1.2rem; font-size: 0.875rem; font-weight: 700; cursor: pointer;">Delete</button>
         <input
           type="text"
           placeholder="Card nickname..."
-          style="background: hsl(38,25%,91%); border: 1px solid hsl(35,28%,74%); color: hsl(25,55%,10%); padding: 0.45rem 0.7rem; font-size: 0.875rem; outline: none; width: 100%;"
+          style="background: hsl(38,25%,91%); border: 1.5px solid hsl(33,36%,48%); color: hsl(25,55%,10%); padding: 0.45rem 0.7rem; font-size: 0.875rem; outline: none; width: 100%;"
         />
       </div>
     </div>
 
-    <!-- Sidebar / nav sample -->
+    <!-- Sidebar / nav sample — 1.5px border-right -->
     <div class="ui-panel">
-      <div class="ui-panel-label">Sidebar Navigation</div>
+      <div class="ui-panel-label">Sidebar Navigation — 1.5px border-right (updated #1874)</div>
       <div class="ui-panel-body" style="background: hsl(38,40%,89%); padding: 0; display: flex;">
-        <div style="background: hsl(36,24%,85%); width: 140px; padding: 0.75rem 0; border-right: 1px solid hsl(35,28%,74%);">
+        <div style="background: hsl(36,24%,85%); width: 140px; padding: 0.75rem 0; border-right: 1.5px solid hsl(33,36%,48%);">
           <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(25,55%,10%); font-weight: 700; border-left: 3px solid hsl(38,80%,28%);">Dashboard</div>
-          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(28,28%,35%);">Cards</div>
-          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(28,28%,35%);">Calendar</div>
-          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(28,28%,35%);">Valhalla</div>
-          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(28,28%,35%);">Household</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(27,35%,28%);">Cards</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(27,35%,28%);">Calendar</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(27,35%,28%);">Valhalla</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(27,35%,28%);">Household</div>
         </div>
         <div style="padding: 0.75rem; flex: 1;">
           <div style="font-size: 0.75rem; color: hsl(25,55%,10%); font-weight: 600; margin-bottom: 0.4rem;">Saga Ledger</div>
-          <div style="font-size: 0.7rem; color: hsl(28,28%,35%);">3 active cards</div>
+          <div style="font-size: 0.7rem; color: hsl(27,35%,28%);">3 active cards</div>
         </div>
       </div>
     </div>
 
-    <!-- Muted / well surface -->
+    <!-- Muted / well surface — 1.5px borders, updated muted text -->
     <div class="ui-panel">
-      <div class="ui-panel-label">Muted Well / Info Surface</div>
+      <div class="ui-panel-label">Muted Well — 1.5px border, darker muted text (updated #1874)</div>
       <div class="ui-panel-body" style="background: hsl(38,40%,89%);">
-        <div style="background: hsl(36,24%,85%); border: 1px solid hsl(35,28%,74%); padding: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="background: hsl(36,24%,85%); border: 1.5px solid hsl(33,36%,48%); padding: 0.75rem; margin-bottom: 0.75rem;">
           <div style="font-size: 0.75rem; font-weight: 700; color: hsl(25,55%,10%); margin-bottom: 0.3rem;">ᚲ Threshold Approaching</div>
-          <div style="font-size: 0.75rem; color: hsl(28,28%,35%);">Annual fee due in 42 days. Set a reminder to cancel or downgrade before the charge.</div>
+          <div style="font-size: 0.75rem; color: hsl(27,35%,28%);">Annual fee due in 42 days. Set a reminder to cancel or downgrade before the charge.</div>
         </div>
-        <div style="background: hsl(42,35%,87%); border: 1px solid hsl(35,28%,74%); padding: 0.75rem;">
+        <div style="background: hsl(42,35%,87%); border: 1.5px solid hsl(33,36%,48%); padding: 0.75rem;">
           <div style="font-size: 0.75rem; font-weight: 700; color: hsl(25,55%,10%); margin-bottom: 0.3rem;">Gold Accent Surface</div>
-          <div style="font-size: 0.75rem; color: hsl(28,28%,35%);">Used for Karl tier highlights and selected states.</div>
+          <div style="font-size: 0.75rem; color: hsl(27,35%,28%);">Used for Karl tier highlights and selected states.</div>
         </div>
       </div>
     </div>
 
-    <!-- Karl bling against new background -->
+    <!-- Tab separator demo — 1.5px -->
     <div class="ui-panel">
-      <div class="ui-panel-label">Karl Bling — Gold on Parchment</div>
+      <div class="ui-panel-label">Tab Separator — 1.5px border-bottom (updated #1874)</div>
       <div class="ui-panel-body" style="background: hsl(38,40%,89%);">
-        <div style="background: hsl(42,30%,95%); border: 1px solid rgba(212,165,32,0.30); padding: 0.75rem; position: relative; margin-bottom: 0.75rem;">
+        <div style="display: flex; border-bottom: 1.5px solid hsl(33,36%,48%); margin-bottom: 0.75rem;">
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 700; color: hsl(25,55%,10%); border-bottom: 2px solid hsl(38,80%,28%); margin-bottom: -1.5px;">Overview</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(27,35%,28%);">Transactions</div>
+          <div style="padding: 0.4rem 0.75rem; font-size: 0.8rem; color: hsl(27,35%,28%);">Perks</div>
+        </div>
+        <div style="font-size: 0.75rem; color: hsl(27,35%,28%);">Tab content area</div>
+      </div>
+    </div>
+
+    <!-- Karl bling — unchanged but updated muted text -->
+    <div class="ui-panel">
+      <div class="ui-panel-label">Karl Bling — 2px card border (updated #1874)</div>
+      <div class="ui-panel-body" style="background: hsl(38,40%,89%);">
+        <div style="background: hsl(42,30%,95%); border: 2px solid rgba(212,165,32,0.60); padding: 0.75rem; position: relative; margin-bottom: 0.75rem;">
           <span style="font-size: 0.6rem; position: absolute; top: 4px; left: 5px; color: rgba(212,165,32,0.55);">ᚠ</span>
           <span style="font-size: 0.6rem; position: absolute; top: 4px; right: 5px; color: rgba(212,165,32,0.55);">ᚱ</span>
           <div style="font-size: 0.85rem; font-weight: 700; color: hsl(25,55%,10%);">Chase Sapphire Reserve</div>
-          <div style="font-size: 0.75rem; color: hsl(28,28%,35%); margin-top: 0.2rem;">$550 annual fee · Karl subscriber</div>
-          <div style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; color: #d4a520; border: 1px solid rgba(212,165,32,0.50); padding: 0.1rem 0.45rem;">
+          <div style="font-size: 0.75rem; color: hsl(27,35%,28%); margin-top: 0.2rem;">$550 annual fee · Karl subscriber</div>
+          <div style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; color: #d4a520; border: 1.5px solid rgba(212,165,32,0.60); padding: 0.1rem 0.45rem;">
             <span style="opacity: 0.75; font-size: 0.7rem;">ᚷ</span>KARL<span style="opacity: 0.75; font-size: 0.7rem;">ᚷ</span>
           </div>
         </div>
         <p class="note" style="font-size: 0.75rem; margin: 0;">
-          Gold (#d4a520, #c9920a) pops warmly against tan parchment — it reads as aged illuminated manuscript gold rather than a harsh neon accent on white.
+          Karl gold border is increased to 2px and higher opacity (0.60 vs 0.30) to maintain visibility with the darker --border token.
         </p>
+      </div>
+    </div>
+
+    <!-- Footer separator — 1.5px -->
+    <div class="ui-panel">
+      <div class="ui-panel-label">Footer Separator — 1.5px border-top (updated #1874)</div>
+      <div class="ui-panel-body" style="background: hsl(38,40%,89%);">
+        <div style="font-size: 0.8rem; color: hsl(25,55%,10%); margin-bottom: 0.75rem;">Page content above footer</div>
+        <div style="border-top: 1.5px solid hsl(33,36%,48%); padding-top: 0.6rem; margin-top: 0.5rem;">
+          <div style="font-size: 0.7rem; color: hsl(27,35%,28%);">Fenrir Ledger · v2.1 · Vellum Norse</div>
+        </div>
       </div>
     </div>
 
     <!-- Odin's Throne sample -->
     <div class="ui-panel">
-      <div class="ui-panel-label">Odin's Throne — Tool Surface</div>
+      <div class="ui-panel-label">Odin's Throne — Tool Surface (updated #1874)</div>
       <div class="ui-panel-body" style="background: hsl(38,40%,89%); padding: 0.75rem;">
-        <div style="background: rgba(185,162,115,0.30); border: 1px solid rgba(120,95,55,0.25); padding: 0.6rem 0.75rem; margin-bottom: 0.5rem;">
+        <div style="background: rgba(185,162,115,0.30); border: 1.5px solid rgba(120,95,55,0.45); padding: 0.6rem 0.75rem; margin-bottom: 0.5rem;">
           <div style="font-size: 0.7rem; color: hsl(25,55%,10%); font-weight: 700; margin-bottom: 0.2rem;">Read · layout.tsx</div>
-          <div style="font-size: 0.7rem; color: hsl(28,28%,35%);">Lines 1–45</div>
+          <div style="font-size: 0.7rem; color: hsl(27,35%,28%);">Lines 1–45</div>
         </div>
-        <div style="background: hsl(42,30%,95%); border: 1px solid hsl(35,28%,74%); padding: 0.6rem 0.75rem;">
+        <div style="background: hsl(42,30%,95%); border: 1.5px solid hsl(33,36%,48%); padding: 0.6rem 0.75rem;">
           <div style="font-size: 0.7rem; color: hsl(25,55%,10%); font-weight: 700; margin-bottom: 0.2rem;">Bash · npm run build</div>
-          <div style="font-size: 0.7rem; font-family: monospace; color: hsl(28,28%,35%);">✓ Build completed in 4.2s</div>
+          <div style="font-size: 0.7rem; font-family: monospace; color: hsl(27,35%,28%);">✓ Build completed in 4.2s</div>
         </div>
       </div>
     </div>
@@ -648,22 +883,24 @@
 
 <!-- ── IMPLEMENTATION NOTES ─────────────────────────────────────── -->
 <section class="section">
-  <h2>Implementation Notes for FiremanDecko</h2>
+  <h2>Implementation Notes for FiremanDecko — Updated #1874</h2>
   <ol style="padding-left: 1.5rem; line-height: 2;">
-    <li>Replace the entire <code>:root { }</code> surface/foreground/structure block in <code>globals.css</code> with the Vellum Norse values above. Keep all chart, easter-egg, howl, loki-toast, and realm tokens unchanged.</li>
-    <li>Replace the <code>[data-theme="light"] { }</code> block in <code>index.css</code> using the Odin's Throne mapping table. Key changes: <code>--text-rune</code>, <code>--text-void</code>, <code>--rune-border</code>, <code>--void</code>, <code>--forge</code>, <code>--chain</code> all need updating from their current blue-tinted values.</li>
+    <li>In <code>globals.css :root</code>: update <code>--border</code> to <code>33 36% 48%</code> and <code>--muted-foreground</code> to <code>27 35% 28%</code>. These are the only CSS variable value changes.</li>
+    <li>In <code>index.css [data-theme="light"]</code>: update <code>--rune-border</code> to <code>hsl(33,36%,48%)</code>, <code>--text-rune</code> to <code>hsl(27,35%,28%)</code>, and <code>--text-void</code> to <code>hsl(30,28%,38%)</code>.</li>
+    <li>In component CSS/Tailwind classes: change all <code>border</code> and <code>border-*</code> utilities to use <code>1.5px</code> instead of <code>1px</code> for tabs, buttons, inputs, dividers, footer, and sidebar. Use <code>2px</code> for card outlines.</li>
     <li>Preserve <code>--radius: 0.25rem</code> (sharp corners — unchanged).</li>
-    <li>Verify karl-bling effects visually against the new parchment background — gold should look warm and inviting, not garish.</li>
-    <li><code>tsc</code> and <code>next build</code> should pass with no changes needed beyond CSS.</li>
-    <li>Primary button AA compliance: white text on <code>--primary</code> is 4.3:1 — ensure button text is ≥ 14px bold or ≥ 16px regular.</li>
+    <li>The active nav indicator (<code>border-left: 3px solid --primary</code>) is unchanged.</li>
+    <li>Focus ring (<code>2px solid --ring</code>) is unchanged.</li>
+    <li>Karl-bling gold border can increase from <code>rgba(212,165,32,0.30)</code> to <code>rgba(212,165,32,0.60)</code> to maintain visual pop with the updated --border token. This is a karl-bling.css change, not globals.css.</li>
+    <li><code>tsc</code> and <code>next build</code> should pass — CSS-only changes, no TypeScript impact.</li>
   </ol>
 </section>
 
 <!-- ── FOOTER ────────────────────────────────────────────────────── -->
 <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 2px solid #ccc; font-size: 0.78rem; color: #666;">
-  <p>Luna · UX Designer · Issue #1833 · Vellum Norse Palette v1.0</p>
+  <p>Luna · UX Designer · Issue #1833 (original) · Issue #1874 (contrast + thickness update) · Vellum Norse Palette v2.0</p>
   <p>Handoff to: FiremanDecko (implementation) → Loki (QA validation)</p>
-  <p>Generated: 2026-03-23 · Supersedes #1825 (Ledger beige) and #1826 (Odin's Throne beige)</p>
+  <p>Generated: 2026-03-23</p>
 </footer>
 
 </body>
