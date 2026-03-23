@@ -14,6 +14,7 @@ import { STORAGE_KEY_PREFIX } from "@/lib/constants";
 import {
   getEffectiveHouseholdId,
   setStoredHouseholdId,
+  clearStoredHouseholdId,
   clearHouseholdLocalStorage,
   setAllCards,
   initializeHousehold,
@@ -85,6 +86,44 @@ describe("setStoredHouseholdId", () => {
     setStoredHouseholdId("old-value");
     setStoredHouseholdId(HH_JOINED);
     expect(localStorage.getItem(EFFECTIVE_KEY)).toBe(HH_JOINED);
+  });
+});
+
+describe("clearStoredHouseholdId (#1910)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("removes fenrir:householdId from localStorage", () => {
+    setStoredHouseholdId(HH_JOINED);
+    expect(localStorage.getItem(EFFECTIVE_KEY)).toBe(HH_JOINED);
+
+    clearStoredHouseholdId();
+
+    expect(localStorage.getItem(EFFECTIVE_KEY)).toBeNull();
+  });
+
+  it("after clear, getEffectiveHouseholdId returns the fallback sub", () => {
+    setStoredHouseholdId(HH_JOINED);
+    clearStoredHouseholdId();
+    expect(getEffectiveHouseholdId(HH_SOLO)).toBe(HH_SOLO);
+  });
+
+  it("is a no-op when no household is stored", () => {
+    expect(() => clearStoredHouseholdId()).not.toThrow();
+    expect(localStorage.getItem(EFFECTIVE_KEY)).toBeNull();
+  });
+
+  it("two-user device: second user sees their own household after first user signs out", () => {
+    // User1 joins a household
+    setStoredHouseholdId("owner-hh-id");
+    expect(getEffectiveHouseholdId("user1-sub")).toBe("owner-hh-id");
+
+    // User1 signs out → clearStoredHouseholdId is called
+    clearStoredHouseholdId();
+
+    // User2 logs in as a solo user — must NOT inherit user1's joined household
+    expect(getEffectiveHouseholdId("user2-sub")).toBe("user2-sub");
   });
 });
 
