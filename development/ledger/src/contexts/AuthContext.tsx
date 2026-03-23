@@ -41,6 +41,7 @@ import {
 import { getSession, clearSession, isSessionValid } from "@/lib/auth/session";
 import { clearEntitlementCache } from "@/lib/entitlement/cache";
 import { refreshSession } from "@/lib/auth/refresh-session";
+import { getEffectiveHouseholdId, clearStoredHouseholdId } from "@/lib/storage";
 import { ANON_HOUSEHOLD_ID } from "@/lib/constants";
 import type { FenrirSession } from "@/lib/types";
 
@@ -104,10 +105,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const stored = getSession();
 
       if (stored && isSessionValid()) {
-        // Authenticated: use session sub as householdId
+        // Authenticated: resolve effective household ID — may be a joined household
         setSession(stored);
         setStatus("authenticated");
-        setHouseholdId(stored.user.sub);
+        setHouseholdId(getEffectiveHouseholdId(stored.user.sub));
       } else if (stored?.refresh_token) {
         // Session expired but we have a refresh token — attempt to refresh
         try {
@@ -116,7 +117,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             // Successfully refreshed the session
             setSession(refreshed);
             setStatus("authenticated");
-            setHouseholdId(refreshed.user.sub);
+            setHouseholdId(getEffectiveHouseholdId(refreshed.user.sub));
             return;
           }
         } catch (err) {
@@ -157,6 +158,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Clear entitlement cache on sign-out — the user's subscription link
     // is associated with their Google identity, not the anonymous identity.
     clearEntitlementCache();
+    // Clear stored effective household ID so the next user on this device
+    // doesn't inherit a previous user's joined household.
+    clearStoredHouseholdId();
     // Return to anonymous state — householdId = null (Issue #1671).
     // Anonymous cards remain under the "anon" key.
     setSession(null);

@@ -288,6 +288,15 @@ export function setStoredHouseholdId(householdId: string): void {
 }
 
 /**
+ * Removes the stored effective household ID from localStorage.
+ * Call on sign-out so the next user on this device starts with a clean state.
+ */
+export function clearStoredHouseholdId(): void {
+  if (!isBrowser()) return;
+  localStorage.removeItem(EFFECTIVE_HOUSEHOLD_ID_KEY);
+}
+
+/**
  * Removes the cards and household keys for a given household ID from localStorage.
  * Call with the OLD household ID after a successful join to prevent stale solo
  * data lingering under the previous key.
