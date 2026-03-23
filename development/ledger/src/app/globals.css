@@ -24,7 +24,7 @@
     --background:           38  40% 89%;    /* #e5d6b5 — aged parchment */
     --foreground:           25  55% 10%;    /* #271409 — iron-gall ink */
 
-    --card:                 42  30% 95%;    /* #f4efdf — fresh vellum card */
+    --card:                 38  30% 83%;    /* #cebd9c — shadowed parchment, darker than bg */
     --card-foreground:      25  55% 10%;
 
     --popover:              42  30% 97%;    /* #f7f4ea — popover surface */
@@ -49,7 +49,7 @@
     --destructive-foreground: 0  0% 100%;
 
     /* ── Structure ──────────────────────────────────────────── */
-    --border:               35  28% 74%;    /* #c8ad88 — warm tan border */
+    --border:               28  40% 32%;    /* #724630 — dark warm brown, clearly visible */
     --input:                38  25% 91%;    /* #ebdfcb — parchment input */
     --ring:                 38  80% 28%;    /* dark burnt gold focus ring */
     --radius:               0.25rem;        /* sharp, angular — not pill */
@@ -58,7 +58,7 @@
     /* Opaque equivalents of semi-transparent hover overlays.
      * Avoids flash from transitioning opaque → transparent colors.
      * Vellum Norse: gold-wash on card surface ≈ #ede3cc */
-    --card-hover:           42  40% 92%;    /* #ede3cc — opaque card hover */
+    --card-hover:           38  32% 87%;    /* #dccfb2 — opaque card hover, lighter than card */
 
     /* ── Charts (thunder palette for white backgrounds) ───────── */
     --chart-1:              38  80% 28%;    /* dark burnt gold */
