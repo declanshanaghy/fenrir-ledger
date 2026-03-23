@@ -44,6 +44,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Theme — Single Toggle Button for Theme Selector (Issue #1927)
+
+| File | Description |
+|------|-------------|
+| [wireframes/theme/theme-toggle-single-btn.html](wireframes/theme/theme-toggle-single-btn.html) | Theme toggle single button redesign: 10 sections — (A) before/after comparison: two-button radiogroup with borders vs single borderless `<button>`; (B) states: dark-mode-active (sun icon), light-mode-active (moon icon), hover, SSR placeholder; (C) 44×44px touch target spec; (D) desktop navbar placement in right-cluster alongside CTA; (E) mobile overlay placement with "Theme:" label; (F) DOM structure before/after with exact class changes; (G) accessibility spec table (aria-label, role, keyboard, focus, touch target); (H) component variant strategy (inline changed, icon/dropdown-icon unchanged); (I) acceptance criteria traceability; (J) FiremanDecko implementation notes (files, key logic, non-goals). |
+| [wireframes/theme/theme-toggle-single-btn-interaction-spec.md](wireframes/theme/theme-toggle-single-btn-interaction-spec.md) | Interaction spec: problem (two-button radiogroup, bordered container), solution (single cycling button, icon = next state), interaction flow diagram (dark→click→light, light→click→dark), component states table, removed structure (radiogroup/radio/THEME_OPTIONS map), retained structure (cycleTheme/isDark/useTheme), accessibility notes (dynamic aria-label, no aria-pressed, no role override, focus ring, 44px target), files changed, out-of-scope list. |
+
+---
+
 ## Theme — Void Norse Dark Theme Contrast Fix (Issue #1875)
 
 | File | Description |

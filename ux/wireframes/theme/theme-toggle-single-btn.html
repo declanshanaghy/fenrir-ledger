@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Theme Toggle — Single Button (Issue #1927)</title>
+  <style>
+    /* ── Layout-only CSS (no colors, backgrounds, or font-family overrides) ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; }
+
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    h2 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; border-bottom: 1px solid; padding-bottom: 4px; }
+    h3 { font-size: 14px; font-weight: 600; margin: 16px 0 6px; }
+
+    p.note {
+      font-size: 12px;
+      font-style: italic;
+      margin: 6px 0;
+      padding: 6px 8px;
+      border-left: 2px solid;
+    }
+    p.label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .annotation { font-size: 11px; margin-top: 4px; }
+
+    /* ── Comparison grid ── */
+    .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 16px 0; }
+    .comparison-col { border: 1px solid; padding: 16px; }
+    .comparison-col.before { }
+    .comparison-col.after  { }
+
+    /* ── Demo surface (simulates the navbar strip) ── */
+    .navbar-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid;
+      padding: 0 24px;
+      height: 48px;
+      margin: 12px 0;
+    }
+    .navbar-logo { font-weight: 700; font-size: 13px; letter-spacing: 0.1em; }
+    .navbar-right { display: flex; align-items: center; gap: 16px; }
+    .navbar-cta {
+      border: 1px solid;
+      padding: 4px 16px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* ── Before: two-button radiogroup ── */
+    .toggle-before {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid;
+      overflow: hidden;
+    }
+    .toggle-before button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 36px;
+      border: none;
+      border-right: 1px solid;
+      cursor: pointer;
+      background: none;
+      padding: 0 10px;
+      font-size: 13px;
+    }
+    .toggle-before button:last-child { border-right: none; }
+    .toggle-before button[aria-checked="true"] { font-weight: 700; }
+
+    /* ── After: single toggle button ── */
+    .toggle-after {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      font-size: 13px;
+    }
+
+    /* ── States grid ── */
+    .states { display: flex; gap: 24px; flex-wrap: wrap; margin: 12px 0; }
+    .state-box {
+      border: 1px solid;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-width: 120px;
+    }
+    .state-box .state-label { font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .state-box .icon-slot {
+      width: 44px;
+      height: 44px;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .state-box .aria-label { font-size: 10px; font-style: italic; }
+
+    /* ── Touch target diagram ── */
+    .touch-target-demo {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      margin: 12px 0;
+      flex-wrap: wrap;
+    }
+    .touch-target-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .touch-ring {
+      width: 44px;
+      height: 44px;
+      border: 1px dashed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    /* ── Mobile overlay preview ── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      margin: 12px 0;
+    }
+    .mobile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 48px;
+      border-bottom: 1px solid;
+    }
+    .mobile-overlay-content { padding: 20px 16px; }
+    .mobile-overlay-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid;
+    }
+    .mobile-theme-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* ── Spec table ── */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
+    th, td { border: 1px solid; padding: 6px 8px; text-align: left; }
+    th { font-weight: 700; }
+    code { font-family: monospace; font-size: 11px; background: none; }
+
+    /* ── Acceptance criteria checklist ── */
+    .ac-list { list-style: none; padding: 0; margin: 8px 0; }
+    .ac-list li {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 3px 0;
+      font-size: 12px;
+      border-bottom: 1px dotted;
+    }
+    .ac-list li:last-child { border-bottom: none; }
+    .ac-box { width: 14px; height: 14px; border: 1px solid; display: inline-block; flex-shrink: 0; }
+
+    /* ── HTML diff block ── */
+    pre { font-family: monospace; font-size: 11px; border: 1px solid; padding: 10px; overflow-x: auto; line-height: 1.5; }
+    .del { text-decoration: line-through; font-weight: normal; }
+    .add { font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <h1>Theme Toggle — Single Button</h1>
+  <p>Issue #1927 &nbsp;|&nbsp; Wireframe v1.0 &nbsp;|&nbsp; 2026-03-23</p>
+  <p class="note">This wireframe shows structure and interaction only — no colors, no brand fonts, no shadows. Theme styling is applied separately by the engineer.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>A. Before / After Comparison</h2>
+
+  <div class="comparison">
+
+    <div class="comparison-col before">
+      <p class="label">Before — two-button radiogroup</p>
+      <div class="toggle-before" role="radiogroup" aria-label="Theme">
+        <button type="button" role="radio" aria-checked="false" aria-label="Light">
+          ☀ Light
+        </button>
+        <button type="button" role="radio" aria-checked="true" aria-label="Dark">
+          ☾ Dark
+        </button>
+      </div>
+      <p class="annotation">Outer container: <code>border border-border</code><br/>
+      Each button: <code>border-r border-border</code><br/>
+      Two separate click targets, two icons always visible</p>
+    </div>
+
+    <div class="comparison-col after">
+      <p class="label">After — single toggle button</p>
+      <button
+        type="button"
+        class="toggle-after"
+        aria-label="Switch to light mode"
+        title="Switch to light mode"
+      >
+        ☀
+      </button>
+      <p class="annotation">No container wrapper, no borders<br/>
+      Single <code>&lt;button&gt;</code> element<br/>
+      Icon shown = <strong>opposite</strong> of current theme<br/>
+      (sun icon when dark mode active → click to go light)</p>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>B. States</h2>
+
+  <p class="note">The button icon represents the theme you will switch TO — not the current theme. This is the standard toggle pattern used by shadcn/ui and most modern sites.</p>
+
+  <div class="states">
+
+    <div class="state-box">
+      <span class="state-label">Dark Mode Active</span>
+      <div class="icon-slot">☀</div>
+      <span class="annotation">Shows SUN icon</span>
+      <span class="aria-label">aria-label="Switch to light mode"</span>
+    </div>
+
+    <div class="state-box">
+      <span class="state-label">Light Mode Active</span>
+      <div class="icon-slot">☾</div>
+      <span class="annotation">Shows MOON icon</span>
+      <span class="aria-label">aria-label="Switch to dark mode"</span>
+    </div>
+
+    <div class="state-box">
+      <span class="state-label">Hover</span>
+      <div class="icon-slot" style="border-style: solid;">☀</div>
+      <span class="annotation">No border added<br/>Icon color change only<br/>(engineer: text-gold)</span>
+    </div>
+
+    <div class="state-box">
+      <span class="state-label">SSR Placeholder</span>
+      <div class="icon-slot" style="opacity: 0.3;">?</div>
+      <span class="annotation">44×44px empty slot<br/>aria-hidden="true"<br/>prevents layout shift</span>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>C. Touch Target Spec</h2>
+
+  <p>Minimum touch target: <strong>44×44 px</strong> (WCAG 2.5.5 Level AAA target; 44px is also the iOS HIG minimum).</p>
+
+  <div class="touch-target-demo">
+    <div class="touch-target-box">
+      <div class="touch-ring">☀</div>
+      <span class="annotation">44px × 44px<br/>desktop</span>
+    </div>
+    <div class="touch-target-box">
+      <div class="touch-ring">☀</div>
+      <span class="annotation">44px × 44px<br/>mobile overlay</span>
+    </div>
+  </div>
+
+  <p class="note">The button must set <code>style={{ minWidth: 44, minHeight: 44 }}</code> — same pattern as the existing icon variant in ThemeToggle.tsx. No CSS-only solution to avoid touch target regression on older iOS.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>D. Desktop Navbar — Placement</h2>
+
+  <p>The single toggle button replaces the inline radiogroup in the desktop navbar right cluster.</p>
+
+  <div class="navbar-strip">
+    <span class="navbar-logo">ᛟ FENRIR LEDGER</span>
+    <nav style="display: flex; gap: 24px; font-size: 13px;">
+      <span>Features</span>
+      <span>Prose Edda</span>
+      <span>About</span>
+      <span>Pricing</span>
+    </nav>
+    <div class="navbar-right">
+      <!-- Single toggle button — no surrounding border container -->
+      <button type="button" class="toggle-after" aria-label="Switch to light mode">☀</button>
+      <div class="navbar-cta">Open the Ledger →</div>
+    </div>
+  </div>
+
+  <p class="annotation">The toggle sits directly in the <code>flex items-center gap-4</code> row alongside the CTA. No wrapper <code>&lt;div&gt;</code> needed — the <code>&lt;button&gt;</code> is the full element.</p>
+  <p class="note">The existing <code>ThemeToggle variant="inline"</code> call in MarketingNavbar.tsx (line 111) changes behavior. The engineer may choose to repurpose the "inline" variant OR rename it to match the new single-button behavior. See interaction spec for guidance.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>E. Mobile Overlay — Placement</h2>
+
+  <p>The mobile overlay currently shows a "Theme:" label with the inline radiogroup. Replace with the same single toggle button.</p>
+
+  <div class="mobile-frame">
+    <div class="mobile-header">
+      <span style="font-weight: 700; font-size: 12px;">ᛟ FENRIR LEDGER</span>
+      <button type="button" style="width: 44px; height: 44px; border: 1px solid; background: none; cursor: pointer;" aria-label="Close navigation menu">✕</button>
+    </div>
+    <div class="mobile-overlay-content">
+      <div class="mobile-overlay-row"><span>Features</span></div>
+      <div class="mobile-overlay-row"><span>Prose Edda</span></div>
+      <div class="mobile-overlay-row"><span>About</span></div>
+      <div class="mobile-overlay-row"><span>Pricing</span></div>
+
+      <div style="margin-top: 20px; border: 1px solid; padding: 12px; text-align: center; font-size: 13px; font-weight: 600;">
+        Open the Ledger →
+      </div>
+
+      <!-- Theme row in mobile overlay -->
+      <div class="mobile-theme-row">
+        <span style="font-size: 13px;">Theme:</span>
+        <button type="button" class="toggle-after" aria-label="Switch to light mode">☀</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="annotation">Mobile overlay: MarketingNavbar.tsx line 233 — same <code>&lt;ThemeToggle variant="inline" /&gt;</code> call. Both usages update automatically when the component changes.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>F. DOM Structure — Before / After</h2>
+
+  <h3>Before (remove)</h3>
+  <pre><span class="del">&lt;div
+  role="radiogroup"
+  aria-label="Theme"
+  class="inline-flex items-center rounded-sm border border-border overflow-hidden"
+&gt;
+  &lt;button role="radio" aria-checked={isActive} aria-label="Light"
+    class="... border-r border-border ..."
+    style={{ minWidth: 44, minHeight: 36 }}&gt;
+    &lt;Sun className="h-4 w-4" /&gt;
+  &lt;/button&gt;
+  &lt;button role="radio" aria-checked={isActive} aria-label="Dark"
+    class="... border-r border-border last:border-r-0 ..."
+    style={{ minWidth: 44, minHeight: 36 }}&gt;
+    &lt;Moon className="h-4 w-4" /&gt;
+  &lt;/button&gt;
+&lt;/div&gt;</span></pre>
+
+  <h3>After (add)</h3>
+  <pre><span class="add">&lt;button
+  type="button"
+  onClick={() =&gt; setTheme(cycleTheme(resolvedTheme ?? theme))}
+  class="flex items-center justify-center text-muted-foreground hover:text-gold transition-colors"
+  style={{ minWidth: 44, minHeight: 44 }}
+  aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+&gt;
+  {isDark ? &lt;Sun className="h-4 w-4" /&gt; : &lt;Moon className="h-4 w-4" /&gt;}
+&lt;/button&gt;</span></pre>
+
+  <p class="note">The THEME_OPTIONS array and ARIA role="radiogroup" structure are fully removed. The component returns a single <code>&lt;button&gt;</code>. No wrapper div, no border classes, no <code>role="radio"</code>.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>G. Accessibility Spec</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Attribute</th>
+        <th>Dark mode active (isDark = true)</th>
+        <th>Light mode active (isDark = false)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>aria-label</code></td>
+        <td>"Switch to light mode"</td>
+        <td>"Switch to dark mode"</td>
+      </tr>
+      <tr>
+        <td>Icon shown</td>
+        <td>Sun (☀) — indicates action</td>
+        <td>Moon (☾) — indicates action</td>
+      </tr>
+      <tr>
+        <td><code>type</code></td>
+        <td colspan="2">"button" (prevents form submission)</td>
+      </tr>
+      <tr>
+        <td>role</td>
+        <td colspan="2">implicit "button" (no override needed)</td>
+      </tr>
+      <tr>
+        <td>Keyboard</td>
+        <td colspan="2">Enter / Space activates toggle (native button behavior)</td>
+      </tr>
+      <tr>
+        <td>Focus visible</td>
+        <td colspan="2">Browser default focus ring; no suppression</td>
+      </tr>
+      <tr>
+        <td>Touch target</td>
+        <td colspan="2">44×44px minimum</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="note">The dynamic aria-label is critical for screen reader users — it must describe the action, not the current state. "Switch to light mode" communicates what clicking will do, consistent with WCAG 2.4.6 (Headings and Labels).</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>H. Component Variant Strategy</h2>
+
+  <p>ThemeToggle.tsx currently has three variants: <code>"inline"</code>, <code>"icon"</code>, <code>"dropdown-icon"</code>.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Variant</th>
+        <th>Current behavior</th>
+        <th>Change?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>"inline"</code></td>
+        <td>Two-button radiogroup with borders</td>
+        <td><strong>YES</strong> — replace with single toggle button (this issue)</td>
+      </tr>
+      <tr>
+        <td><code>"icon"</code></td>
+        <td>Single toggle button WITH a border (border border-border)</td>
+        <td><strong>OPTIONAL</strong> — can remove border to match new style; engineer's call</td>
+      </tr>
+      <tr>
+        <td><code>"dropdown-icon"</code></td>
+        <td>Display-only icon for menu row (no click)</td>
+        <td>No change</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="note">The <code>"inline"</code> variant is the only required change. The engineer may simplify by merging <code>"inline"</code> and <code>"icon"</code> into a single no-border toggle button, but that is out of scope for #1927 unless it simplifies the implementation.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>I. Acceptance Criteria Traceability</h2>
+
+  <ul class="ac-list">
+    <li><span class="ac-box"></span>Single <code>&lt;button&gt;</code> replaces <code>div[role=radiogroup]</code> with two buttons — shown in sections A, F</li>
+    <li><span class="ac-box"></span>Icon swaps: sun when dark mode active, moon when light mode active — shown in sections B, F</li>
+    <li><span class="ac-box"></span>No <code>border</code>, <code>border-r</code>, or <code>border-border</code> classes on toggle or container — shown in sections A, F</li>
+    <li><span class="ac-box"></span>Click toggles between light and dark themes — shown in sections B, F (cycleTheme call)</li>
+    <li><span class="ac-box"></span>aria-label reflects action, not current state — shown in sections B, G</li>
+    <li><span class="ac-box"></span>Minimum 44×44px touch target — shown in sections C, F</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <h2>J. Implementation Notes for FiremanDecko</h2>
+
+  <p><strong>Files to change:</strong></p>
+  <ul style="margin: 8px 0 8px 20px; font-size: 13px; line-height: 1.8;">
+    <li><code>development/ledger/src/components/layout/ThemeToggle.tsx</code> — replace the "inline" variant return block (lines 129–159)</li>
+    <li>No changes needed to <code>MarketingNavbar.tsx</code> — it already calls <code>&lt;ThemeToggle variant="inline" /&gt;</code></li>
+  </ul>
+
+  <p><strong>Key logic:</strong></p>
+  <ul style="margin: 8px 0 8px 20px; font-size: 13px; line-height: 1.8;">
+    <li>Use existing <code>isDark</code> computed variable (line 94 of ThemeToggle.tsx)</li>
+    <li>Use existing <code>cycleTheme()</code> helper for the onClick handler</li>
+    <li>Remove <code>THEME_OPTIONS</code> map iteration — not needed for a single button</li>
+    <li>The SSR placeholder for "inline" variant is currently 36px tall, 88px wide — update to 44×44px square to match new single button</li>
+  </ul>
+
+  <p><strong>Non-goals (do not change):</strong></p>
+  <ul style="margin: 8px 0 8px 20px; font-size: 13px; line-height: 1.8;">
+    <li>The "icon" and "dropdown-icon" variants</li>
+    <li>LedgerTopBar usage of the theme toggle (if any)</li>
+    <li>The <code>cycleTheme()</code> function or <code>useTheme</code> logic</li>
+    <li>Mobile overlay layout in MarketingNavbar.tsx (the "Theme:" label can remain)</li>
+  </ul>
+
+</body>
+</html>
