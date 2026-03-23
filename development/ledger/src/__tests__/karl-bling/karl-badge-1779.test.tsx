@@ -82,14 +82,15 @@ describe("KarlBadge — karl tier", () => {
     expect(badge).toHaveTextContent("KARL");
   });
 
-  it("has two aria-hidden runic accent spans (ᚷ Gebo)", () => {
+  it("has two aria-hidden runic accent spans (ᚠ Fehu left, ᛟ Othala right)", () => {
     const { container } = render(<KarlBadge />);
     const runes = container.querySelectorAll(".karl-badge-rune");
     expect(runes).toHaveLength(2);
     runes.forEach((rune) => {
       expect(rune).toHaveAttribute("aria-hidden", "true");
-      expect(rune).toHaveTextContent("ᚷ");
     });
+    expect(runes[0]).toHaveTextContent("ᚠ");
+    expect(runes[1]).toHaveTextContent("ᛟ");
   });
 
   it("does not render an anchor element", () => {

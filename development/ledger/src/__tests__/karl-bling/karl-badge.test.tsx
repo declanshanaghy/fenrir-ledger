@@ -4,7 +4,7 @@
  * Verifies that:
  *   - The badge element is rendered in the DOM with correct class + aria attributes
  *   - Badge contains "KARL" text
- *   - Elder Futhark runic accents (ᚷ) are present and aria-hidden
+ *   - Elder Futhark runic accents (ᚠ Fehu left, ᛟ Othala right) are present and aria-hidden
  *   - CSS class `karl-bling-badge` is always applied (CSS controls show/hide)
  *   - Nav tab active class `karl-bling-nav-active` is applied to active tabs
  *
@@ -29,9 +29,9 @@ function KarlBadge() {
       aria-label="Karl subscriber"
       role="img"
     >
-      <span className="karl-badge-rune" aria-hidden="true">ᚷ</span>
+      <span className="karl-badge-rune" aria-hidden="true">ᚠ</span>
       KARL
-      <span className="karl-badge-rune" aria-hidden="true">ᚷ</span>
+      <span className="karl-badge-rune" aria-hidden="true">ᛟ</span>
     </span>
   );
 }
@@ -64,17 +64,16 @@ describe("KarlBadge — DOM structure", () => {
     expect(runes).toHaveLength(2);
     runes.forEach((rune) => {
       expect(rune.getAttribute("aria-hidden")).toBe("true");
-      expect(rune.textContent).toBe("ᚷ");
     });
   });
 
-  it("runic accents are Elder Futhark Gebo rune (ᚷ)", () => {
+  it("left rune is ᚠ Fehu (U+16A0) and right rune is ᛟ Othala (U+16DF)", () => {
     const { container } = render(<KarlBadge />);
     const runes = container.querySelectorAll(".karl-badge-rune");
-    // ᚷ is U+16B7 Runic Letter Gebo Gyfu G — Elder Futhark
-    runes.forEach((rune) => {
-      expect(rune.textContent).toBe("\u16B7");
-    });
+    // ᚠ is U+16A0 Runic Letter Fehu Feoh Fe F — wealth/prosperity
+    expect(runes[0].textContent).toBe("\u16A0");
+    // ᛟ is U+16DF Runic Letter Othalan Ethel O — heritage/nobility
+    expect(runes[1].textContent).toBe("\u16DF");
   });
 });
 
