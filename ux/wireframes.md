@@ -19,6 +19,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Chrome — Karl Badge Bling (Issue #1928)
+
+| File | Description |
+|------|-------------|
+| [wireframes/chrome/karl-badge-bling.html](wireframes/chrome/karl-badge-bling.html) | Karl badge bling redesign: 9 sections — (A) rune selection rationale (ᚠ Fehu left for wealth/prosperity, ᛟ Othala right for heritage/nobility — visually distinct open-fork vs closed-diamond geometry); (B) before/after badge anatomy comparison (both runes were ᚷ Gebo, now distinct pair; padding 0.1rem→0.25rem vertical; rune font-size 0.7→0.85rem); (C) hover state specs for all three tiers (Karl: gold glow box-shadow + bright border-color on :hover; Trial: existing opacity lift unchanged; Thrall: hidden); (D) desktop header context mock (badge in right cluster, 26px height fits within 48px bar); (E) mobile 375px context (rem units scale naturally, touch target note for trial link); (F) CSS change spec table for karl-bling.css (padding, font-size, new :hover rule, reduced-motion addition); (G) TSX change spec for KarlBadge.tsx (BadgeInner before/after, aria-hidden preservation); (H) WCAG 2.1 AA accessibility checklist (decorative runes, accessible names, hover glow not conveying information, focus ring, Unicode codepoint compatibility); (I) FiremanDecko handoff notes (files, no new classes, gold glow value, tests to update). |
+
+---
+
 ## Chrome — Unified Header (Issue #1853)
 
 | File | Description |

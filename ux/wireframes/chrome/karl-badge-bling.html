@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe — Karl Badge Bling (Issue #1928)</title>
+  <style>
+    /* ── Layout-only CSS — no colors, no fonts, no shadows ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; padding: 2rem; max-width: 960px; }
+    h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.25rem; }
+    h2 { font-size: 1rem; font-weight: 700; margin: 2rem 0 0.75rem; border-bottom: 1px solid; padding-bottom: 0.25rem; }
+    h3 { font-size: 0.875rem; font-weight: 700; margin: 1.25rem 0 0.5rem; }
+    p, li { font-size: 0.875rem; line-height: 1.5; }
+    ul { padding-left: 1.5rem; margin-bottom: 0.5rem; }
+    .note { font-size: 0.75rem; font-style: italic; border-left: 3px solid; padding-left: 0.5rem; margin: 0.5rem 0; }
+    .section { margin-bottom: 3rem; }
+    .row { display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start; margin: 1rem 0; }
+    .col { flex: 1; min-width: 200px; }
+    .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 0.35rem; }
+    .annotation { font-size: 0.75rem; margin-top: 0.35rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.8rem; }
+    th, td { border: 1px solid; padding: 0.4rem 0.6rem; text-align: left; }
+    th { font-weight: 700; }
+
+    /* ── Badge mock-ups — layout only ── */
+    .badge-frame {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      border: 1px solid;
+      padding: 0.1rem 0.45rem;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    .badge-frame--tall {
+      /* Issue #1928: taller proportions */
+      padding: 0.25rem 0.55rem;
+      font-size: 0.65rem;
+      line-height: 1.4;
+    }
+    .badge-rune {
+      font-size: 0.75rem;
+      line-height: 1;
+    }
+    .badge-rune--tall {
+      /* Issue #1928: slightly larger runes to match taller badge */
+      font-size: 0.85rem;
+      line-height: 1;
+    }
+
+    /* ── Header mock shell ── */
+    .header-shell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 48px;
+      border: 1px solid;
+      padding: 0 1rem;
+      margin: 1rem 0;
+      font-size: 0.8rem;
+    }
+    .header-left { display: flex; align-items: center; gap: 0.75rem; }
+    .header-right { display: flex; align-items: center; gap: 0.75rem; }
+    .logo-stub { border: 1px solid; width: 80px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+    .avatar-stub { border: 1px solid; width: 28px; height: 28px; border-radius: 50%; }
+
+    /* ── Hover state spec box ── */
+    .state-box {
+      border: 1px solid;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+    }
+    .state-box__label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; }
+
+    /* ── Mobile viewport frame ── */
+    .mobile-frame {
+      border: 2px solid;
+      width: 375px;
+      max-width: 100%;
+    }
+    .mobile-frame__bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 48px;
+      border-bottom: 1px solid;
+      padding: 0 0.75rem;
+    }
+
+    /* ── Before/After comparison ── */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 1rem 0;
+    }
+    .compare-box {
+      border: 1px solid;
+      padding: 1rem;
+    }
+    .compare-box__title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.25rem;
+      border-bottom: 1px solid;
+    }
+    .badge-demo { display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+
+  <h1>Karl Badge Bling — Issue #1928</h1>
+  <p class="note">Wireframe: layout + structure only. No colors, no theme styling. CSS tokens and visual polish are FiremanDecko's domain.</p>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- SECTION A: RUNE SELECTION                                    -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>A — Rune Selection</h2>
+    <p>Issue #1928 requires <strong>different</strong> runes on left vs right. Both currently use ᚷ (Gebo). The new pair must be visually distinct and thematically appropriate for a paid-tier indicator.</p>
+
+    <h3>Chosen Pair</h3>
+    <table>
+      <thead>
+        <tr><th>Position</th><th>Rune</th><th>Name</th><th>Meaning</th><th>Visual shape</th><th>Rationale</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Left</td>
+          <td style="font-size:1.1rem">ᚠ</td>
+          <td>Fehu</td>
+          <td>Wealth / prosperity</td>
+          <td>F-like fork shape — open upward branches</td>
+          <td>Already used as a wealth marker in .karl-bling-btn::before (consistent with existing Karl rune grammar). Directly evokes the paid-tier concept.</td>
+        </tr>
+        <tr>
+          <td>Right</td>
+          <td style="font-size:1.1rem">ᛟ</td>
+          <td>Othala</td>
+          <td>Heritage / ancestral home / nobility</td>
+          <td>Diamond-over-base — closed, grounded shape</td>
+          <td>Used in the Fenrir logo (ᛟ). Strong visual contrast to Fehu (open vs closed geometry). Evokes lineage and belonging — fitting for a subscriber identity badge.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">Rune grammar note: The existing css uses ᚠ Fehu (btn::before) and ᚱ Raidho (btn::after) for buttons — the badge uses a different pair to feel distinct. ᚷ Gebo (current badge rune) is retired from the badge slot.</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- SECTION B: BADGE ANATOMY — BEFORE vs AFTER                   -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>B — Badge Anatomy: Before vs After</h2>
+
+    <div class="compare-grid">
+      <div class="compare-box">
+        <div class="compare-box__title">Before (current)</div>
+        <p class="label">KarlBadge.tsx — BadgeInner</p>
+        <div class="badge-demo">
+          <div class="badge-frame">
+            <span class="badge-rune">ᚷ</span>
+            KARL
+            <span class="badge-rune">ᚷ</span>
+          </div>
+        </div>
+        <ul>
+          <li>Both runes: ᚷ Gebo (identical)</li>
+          <li>Padding: 0.1rem 0.45rem</li>
+          <li>Rune font-size: 0.7rem</li>
+          <li>No hover effect</li>
+          <li>Badge height: ~18px at default root font</li>
+        </ul>
+      </div>
+
+      <div class="compare-box">
+        <div class="compare-box__title">After (issue #1928)</div>
+        <p class="label">KarlBadge.tsx — BadgeInner (updated)</p>
+        <div class="badge-demo">
+          <div class="badge-frame badge-frame--tall">
+            <span class="badge-rune badge-rune--tall">ᚠ</span>
+            KARL
+            <span class="badge-rune badge-rune--tall">ᛟ</span>
+          </div>
+        </div>
+        <ul>
+          <li>Left rune: ᚠ Fehu (wealth) — open fork</li>
+          <li>Right rune: ᛟ Othala (nobility) — closed diamond</li>
+          <li>Padding: 0.25rem 0.55rem (taller vertical)</li>
+          <li>Rune font-size: 0.85rem (larger for prominence)</li>
+          <li>Gold glow on hover (Karl tier only)</li>
+          <li>Badge height: ~26px — more vertical presence</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="note">Structural change in BadgeInner: replace both ᚷ with ᚠ (left) and ᛟ (right). aria-hidden="true" is preserved on both rune spans — decorative only.</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- SECTION C: HOVER STATES                                       -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>C — Hover States</h2>
+    <p>Three distinct hover behaviors depending on tier. Only Karl tier gets the gold glow. Trial gets a subtle opacity lift (existing behavior, unchanged). Thrall badge is hidden.</p>
+
+    <div class="row">
+      <div class="col">
+        <div class="state-box">
+          <div class="state-box__label">Karl — Resting</div>
+          <div class="badge-frame badge-frame--tall">
+            <span class="badge-rune badge-rune--tall">ᚠ</span>
+            KARL
+            <span class="badge-rune badge-rune--tall">ᛟ</span>
+          </div>
+          <p class="annotation">Existing karl-badge-pulse animation. Static gold border. No cursor interaction (role="img", not interactive).</p>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="state-box">
+          <div class="state-box__label">Karl — Hover (NEW)</div>
+          <div class="badge-frame badge-frame--tall" style="border-width: 2px;">
+            <span class="badge-rune badge-rune--tall">ᚠ</span>
+            KARL
+            <span class="badge-rune badge-rune--tall">ᛟ</span>
+          </div>
+          <p class="annotation">
+            Added to [data-tier="karl"] .karl-bling-badge:hover:<br>
+            — box-shadow: 0 0 12px rgba(201,146,10,0.5), 0 0 4px rgba(201,146,10,0.7)<br>
+            — border-color brightens to --karl-gold<br>
+            — transition: box-shadow 180ms ease-out, border-color 180ms ease-out<br>
+            — Note: Karl badge is a &lt;span role="img"&gt; — hover is purely decorative (no action). The cursor does not change to pointer.
+          </p>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="state-box">
+          <div class="state-box__label">Trial — Hover (unchanged)</div>
+          <div class="badge-frame badge-frame--tall" style="opacity: 0.85;">
+            <span class="badge-rune badge-rune--tall">ᚠ</span>
+            KARL
+            <span class="badge-rune badge-rune--tall">ᛟ</span>
+          </div>
+          <p class="annotation">Existing trial hover behavior retained: opacity lifts from 0.60 → 0.85, border-color lightens. No glow — trial users see only the structural change (taller badge, new runes), not the premium glow effect.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">Reduced motion: Add .karl-bling-badge:hover rule to the existing @media (prefers-reduced-motion: reduce) block — suppress transition, keep static border brightening.</p>
+    <p class="note">Touch devices (@media hover: none): hover glow does not apply — already covered by existing touch device block in karl-bling.css.</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- SECTION D: HEADER CONTEXT — DESKTOP                          -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>D — Header Context: Desktop (1024px+)</h2>
+    <p>The badge lives in the header right cluster. It sits between the theme toggle and the avatar/profile area. The taller proportions must not exceed the header's 48px height.</p>
+
+    <div class="header-shell">
+      <div class="header-left">
+        <div class="logo-stub">ᛟ FENRIR</div>
+        <nav style="display:flex; gap:0.75rem; font-size:0.75rem; align-items:center;">
+          <span>My Cards</span>
+          <span>Pricing</span>
+        </nav>
+      </div>
+      <div class="header-right">
+        <!-- Theme toggle stub -->
+        <span style="border:1px solid; padding:0.2rem 0.4rem; font-size:0.7rem;">☀</span>
+        <!-- Karl badge — after -->
+        <div class="badge-frame badge-frame--tall">
+          <span class="badge-rune badge-rune--tall">ᚠ</span>
+          KARL
+          <span class="badge-rune badge-rune--tall">ᛟ</span>
+        </div>
+        <!-- Avatar -->
+        <div class="avatar-stub"></div>
+      </div>
+    </div>
+
+    <p class="annotation">Badge height at 26px sits well within the 48px header bar. Vertical rhythm is comfortable — the badge does not compete with the wordmark or avatar.</p>
+    <p class="note">FiremanDecko: the taller padding is achieved entirely via CSS changes to [data-tier="karl"] .karl-bling-badge in karl-bling.css. KarlBadge.tsx only changes the rune characters inside BadgeInner.</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- SECTION E: MOBILE CONTEXT (375px)                            -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>E — Mobile Context (375px)</h2>
+    <p>No structural change on mobile. The badge uses rem units and scales naturally. Touch target is not required (non-interactive for Karl tier). Trial badge links to /pricing — min touch target 44×44px is already satisfied by the surrounding &lt;Link&gt; element padding.</p>
+
+    <div class="mobile-frame">
+      <div class="mobile-frame__bar">
+        <div style="font-size:0.75rem; font-weight:700;">ᛟ FENRIR</div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <!-- Karl badge — compact at mobile -->
+          <div class="badge-frame badge-frame--tall" style="font-size:0.6rem;">
+            <span class="badge-rune badge-rune--tall" style="font-size:0.75rem;">ᚠ</span>
+            KARL
+            <span class="badge-rune badge-rune--tall" style="font-size:0.75rem;">ᛟ</span>
+          </div>
+          <div class="avatar-stub" style="width:24px;height:24px;"></div>
+          <!-- Hamburger stub -->
+          <span style="border:1px solid; padding:0.2rem 0.3rem; font-size:0.7rem;">≡</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="annotation">At 375px, the badge remains legible. The two distinct rune shapes (open fork ᚠ vs closed diamond ᛟ) remain visually different even at small size.</p>
+    <p class="note">Below 375px: the existing @media (max-width: 375px) block in karl-bling.css already shrinks .karl-rune-corner. Add a parallel rule to shrink .karl-badge-rune font-size to 0.75rem if needed — but test first, as the badge text "KARL" is short and unlikely to overflow.</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- SECTION F: CSS CHANGE SPEC                                    -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>F — CSS Change Spec (karl-bling.css)</h2>
+    <p>Summary of changes required in <code>development/ledger/src/app/karl-bling.css</code>.</p>
+
+    <table>
+      <thead>
+        <tr><th>Selector</th><th>Property</th><th>Current value</th><th>New value</th><th>Rationale</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>[data-tier="karl"] .karl-bling-badge</td>
+          <td>padding</td>
+          <td>0.1rem 0.45rem</td>
+          <td>0.25rem 0.55rem</td>
+          <td>Taller vertical presence (#1928)</td>
+        </tr>
+        <tr>
+          <td>[data-tier="karl"] .karl-bling-badge</td>
+          <td>transition (add)</td>
+          <td>—</td>
+          <td>box-shadow 180ms ease-out, border-color 180ms ease-out</td>
+          <td>Smooth hover glow entry</td>
+        </tr>
+        <tr>
+          <td>[data-tier="karl"] .karl-bling-badge:hover (NEW)</td>
+          <td>box-shadow</td>
+          <td>—</td>
+          <td>0 0 12px rgba(201,146,10,0.5), 0 0 4px rgba(201,146,10,0.7)</td>
+          <td>Gold glow on hover (#1928)</td>
+        </tr>
+        <tr>
+          <td>[data-tier="karl"] .karl-bling-badge:hover (NEW)</td>
+          <td>border-color</td>
+          <td>—</td>
+          <td>var(--karl-gold)</td>
+          <td>Bright border reinforces glow</td>
+        </tr>
+        <tr>
+          <td>[data-tier="trial"] .karl-bling-badge</td>
+          <td>padding</td>
+          <td>0.1rem 0.45rem</td>
+          <td>0.25rem 0.55rem</td>
+          <td>Match taller proportions (structural parity)</td>
+        </tr>
+        <tr>
+          <td>[data-tier="karl"] .karl-bling-badge .karl-badge-rune<br>[data-tier="trial"] .karl-bling-badge .karl-badge-rune</td>
+          <td>font-size</td>
+          <td>0.7rem</td>
+          <td>0.85rem</td>
+          <td>Larger runes to match taller badge</td>
+        </tr>
+        <tr>
+          <td>@media (prefers-reduced-motion: reduce) — badge block</td>
+          <td>transition (add)</td>
+          <td>animation: none</td>
+          <td>animation: none; transition: none</td>
+          <td>Suppress hover transition for reduced motion users</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- SECTION G: TSX CHANGE SPEC                                    -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>G — TSX Change Spec (KarlBadge.tsx)</h2>
+    <p>Minimal change in <code>development/ledger/src/components/layout/KarlBadge.tsx</code>. Only the rune characters inside <code>BadgeInner</code> change.</p>
+
+    <h3>BadgeInner — before</h3>
+    <pre style="border:1px solid; padding:0.75rem; font-size:0.8rem; overflow-x:auto;">&lt;span className="karl-badge-rune" aria-hidden="true"&gt;ᚷ&lt;/span&gt;
+KARL
+&lt;span className="karl-badge-rune" aria-hidden="true"&gt;ᚷ&lt;/span&gt;</pre>
+
+    <h3>BadgeInner — after</h3>
+    <pre style="border:1px solid; padding:0.75rem; font-size:0.8rem; overflow-x:auto;">&lt;span className="karl-badge-rune" aria-hidden="true"&gt;ᚠ&lt;/span&gt;
+KARL
+&lt;span className="karl-badge-rune" aria-hidden="true"&gt;ᛟ&lt;/span&gt;</pre>
+
+    <p class="note">aria-hidden="true" is preserved on both rune spans — runes are decorative, not announced by screen readers. The badge text "KARL" is the accessible label via aria-label on the parent span/Link.</p>
+    <p class="note">No other changes to KarlBadge.tsx. The component comment referencing ᚷ Gebo should be updated to reflect the new rune pair.</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- SECTION H: ACCESSIBILITY CHECKLIST                            -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>H — Accessibility Checklist (WCAG 2.1 AA)</h2>
+    <table>
+      <thead>
+        <tr><th>Criterion</th><th>Requirement</th><th>How met</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Decorative runes</td>
+          <td>Must not be announced by screen readers</td>
+          <td>aria-hidden="true" preserved on both rune spans</td>
+        </tr>
+        <tr>
+          <td>Karl badge accessible name</td>
+          <td>Role + label must convey meaning</td>
+          <td>aria-label="Karl subscriber" on &lt;span role="img"&gt; — unchanged</td>
+        </tr>
+        <tr>
+          <td>Trial badge accessible name</td>
+          <td>Interactive link must have descriptive label</td>
+          <td>aria-label="Karl trial — upgrade to Karl" on &lt;Link&gt; — unchanged</td>
+        </tr>
+        <tr>
+          <td>Hover glow (Karl)</td>
+          <td>Must not convey information via color alone</td>
+          <td>Glow is purely decorative — no new information is added. Badge meaning is unchanged.</td>
+        </tr>
+        <tr>
+          <td>Reduced motion</td>
+          <td>Animations suppressible</td>
+          <td>Add transition: none to reduced-motion block for .karl-bling-badge:hover</td>
+        </tr>
+        <tr>
+          <td>Touch target (Trial link)</td>
+          <td>Min 44×44px (WCAG 2.5.5)</td>
+          <td>Taller padding increases touch area. Verify at 375px that the link hit area meets 44px height — the &lt;Link&gt; element should have min-height: 44px applied if needed.</td>
+        </tr>
+        <tr>
+          <td>Focus visible (Trial link)</td>
+          <td>Focus ring must be visible</td>
+          <td>No change — focus styles are inherited from global ring treatment. Verify focus ring is not obscured by the glow box-shadow.</td>
+        </tr>
+        <tr>
+          <td>New rune characters</td>
+          <td>Must render in system fonts</td>
+          <td>ᚠ (U+16A0) and ᛟ (U+16DF) are Elder Futhark codepoints present in common system serif fonts. Verify rendering in Chrome/Safari/Firefox.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- SECTION I: FIREMAN DECKO HANDOFF NOTES                        -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>I — FiremanDecko Implementation Notes</h2>
+    <ul>
+      <li><strong>Files changed:</strong> <code>KarlBadge.tsx</code> (rune characters only) + <code>karl-bling.css</code> (padding, font-size, hover rule)</li>
+      <li><strong>No new classes needed:</strong> All changes are to existing selectors. The :hover rule for .karl-bling-badge is new but uses existing CSS custom properties.</li>
+      <li><strong>Gold glow value:</strong> Issue #1928 suggests <code>hover:shadow-[0_0_12px_rgba(201,146,10,0.5)]</code> — use this as the primary shadow, optionally adding a tighter inner glow: <code>0 0 4px rgba(201,146,10,0.7)</code>. Tweak opacity to match the visual weight of the existing karl-badge-pulse animation.</li>
+      <li><strong>Taller badge:</strong> Achieved via padding change (0.1rem → 0.25rem vertical). Do not use min-height — let the content drive height naturally.</li>
+      <li><strong>Rune font-size:</strong> Increase <code>.karl-badge-rune</code> from 0.7rem to 0.85rem. This applies to both Karl and trial tiers (structural parity).</li>
+      <li><strong>Component comment:</strong> Update the JSDoc comment in KarlBadge.tsx from "Runic accents (ᚷ Gebo)" to "Runic accents (ᚠ Fehu left, ᛟ Othala right)".</li>
+      <li><strong>Tests to update:</strong> Check <code>__tests__/karl-bling/karl-badge.test.tsx</code> — any test asserting the ᚷ character will need updating to ᚠ and ᛟ respectively.</li>
+      <li><strong>Light and dark themes:</strong> The CSS cascade uses CSS custom properties (--karl-gold, --karl-shadow-*) that are already theme-aware. No theme-specific overrides needed.</li>
+    </ul>
+  </div>
+
+</body>
+</html>
