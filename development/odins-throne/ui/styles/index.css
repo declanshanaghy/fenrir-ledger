@@ -1212,6 +1212,32 @@ body {
   white-space: pre-wrap;
   word-break: break-all;
 }
+.decree-body-fence {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  border: 1px solid var(--gold-dim-border);
+  padding: 0.5rem 0.75rem;
+  margin: 0.4rem 0;
+  border-radius: 4px;
+  background: rgba(7, 7, 13, 0.7);
+  color: var(--text-rune);
+  white-space: pre;
+  overflow-x: auto;
+  word-break: normal;
+}
+.decree-body-fence > code {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+[data-theme="light"] .decree-body-fence {
+  background: rgba(240, 235, 220, 0.7);
+  color: var(--text-primary);
+}
 .decree-body-link {
   color: var(--gold);
   text-decoration: underline;
