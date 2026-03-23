@@ -27,6 +27,13 @@ vi.mock("@/contexts/RagnarokContext", async () => (await import("../mocks/hook-m
 vi.mock("@/hooks/useAuth", async () => (await import("../mocks/hook-mocks")).authMockAuthenticatedHh1);
 vi.mock("@/lib/trial-utils", async () => (await import("../mocks/storage-mocks")).trialUtilsMockLimit);
 vi.mock("@/components/dashboard/CardTile", async () => (await import("../mocks/component-mocks")).cardTileMock);
+vi.mock("@/components/dashboard/ValhallaCardTile", async () => {
+  const React = await import("react");
+  return {
+    ValhallaCardTile: ({ card }: { card: { cardName: string } }) =>
+      React.createElement("div", { "data-testid": `card-tile-${card.cardName}` }, card.cardName),
+  };
+});
 vi.mock("@/components/dashboard/EmptyState", async () => (await import("../mocks/component-mocks")).emptyStateMock);
 vi.mock("@/components/dashboard/AnimatedCardGrid", async () => (await import("../mocks/component-mocks")).animatedCardGridMock);
 vi.mock("@/components/entitlement/KarlUpsellDialog", async () => (await import("../mocks/component-mocks")).karlUpsellDialogMock);
