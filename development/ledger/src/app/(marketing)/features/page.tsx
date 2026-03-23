@@ -55,6 +55,8 @@ interface FeatureDetail {
   image: string;
   /** Wikipedia URL for the Norse character */
   wikiUrl: string;
+  /** The Norse/mythology term within the atmospheric quote to hyperlink */
+  wikiTerm: string;
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -75,11 +77,12 @@ const THRALL_FEATURES: FeatureDetail[] = [
       "Set minimum spend thresholds and bonus deadlines",
       "Edit or remove cards anytime",
     ],
-    atmospheric: "Every saga begins with a single rune carved into stone.",
+    atmospheric: "Every saga begins with a single rune. Fenrir's began in stone.",
     tier: "thrall",
     reverse: false,
     image: "fenrir",
     wikiUrl: "https://en.wikipedia.org/wiki/Fenrir",
+    wikiTerm: "Fenrir",
   },
   {
     id: "the-dashboard",
@@ -101,6 +104,7 @@ const THRALL_FEATURES: FeatureDetail[] = [
     reverse: true,
     image: "huginn-muninn",
     wikiUrl: "https://en.wikipedia.org/wiki/Huginn_and_Muninn",
+    wikiTerm: "ravens",
   },
   {
     id: "card-notes",
@@ -122,6 +126,7 @@ const THRALL_FEATURES: FeatureDetail[] = [
     reverse: false,
     image: "mimir",
     wikiUrl: "https://en.wikipedia.org/wiki/M%C3%ADmir",
+    wikiTerm: "Mimir",
   },
 ];
 
@@ -142,11 +147,12 @@ const KARL_FEATURES: FeatureDetail[] = [
       "Preview step: review all mapped cards before importing",
       "Unrecognized fields flagged for manual review",
     ],
-    atmospheric: "The runes reveal what the untrained eye cannot see.",
+    atmospheric: "Mimir saw what others could not. The runes reveal what the untrained eye cannot see.",
     tier: "karl",
     reverse: false,
     image: "mimir",
     wikiUrl: "https://en.wikipedia.org/wiki/M%C3%ADmir",
+    wikiTerm: "Mimir",
   },
   {
     id: "annual-fee-tracking",
@@ -168,6 +174,7 @@ const KARL_FEATURES: FeatureDetail[] = [
     reverse: true,
     image: "skoll",
     wikiUrl: "https://en.wikipedia.org/wiki/Sk%C3%B6ll",
+    wikiTerm: "Sköll",
   },
   {
     id: "signup-bonus-tracking",
@@ -189,6 +196,7 @@ const KARL_FEATURES: FeatureDetail[] = [
     reverse: false,
     image: "hati",
     wikiUrl: "https://en.wikipedia.org/wiki/Hati_Hr%C3%B3%C3%B0vitnisson",
+    wikiTerm: "Hati",
   },
   {
     id: "the-howl",
@@ -206,11 +214,12 @@ const KARL_FEATURES: FeatureDetail[] = [
       "Sortable by urgency (days remaining)",
       "Accessible from dashboard and as collapsible side panel",
     ],
-    atmospheric: "The wolf does not howl when everything is calm.",
+    atmospheric: "Garmr does not howl when everything is calm.",
     tier: "karl",
     reverse: true,
     image: "garmr",
     wikiUrl: "https://en.wikipedia.org/wiki/Garmr",
+    wikiTerm: "Garmr",
   },
   {
     id: "velocity-management",
@@ -228,11 +237,12 @@ const KARL_FEATURES: FeatureDetail[] = [
       "Issuer-specific rule summaries with plain-English explanations",
       "Shows current count and remaining slots per issuer",
     ],
-    atmospheric: "Know the rules of the hall before you enter it.",
+    atmospheric: "The Norns know the rules. Know them too, before you enter the hall.",
     tier: "karl",
     reverse: false,
     image: "norns",
     wikiUrl: "https://en.wikipedia.org/wiki/Norns",
+    wikiTerm: "Norns",
   },
   {
     id: "valhalla",
@@ -249,11 +259,12 @@ const KARL_FEATURES: FeatureDetail[] = [
       "Sign-up bonus earned vs. spent tracking",
       "Lifetime value summary per card",
     ],
-    atmospheric: "The hall of the honored dead. Only Karl may enter.",
+    atmospheric: "Valhalla holds the honored dead. Only Karl may enter.",
     tier: "karl",
     reverse: true,
     image: "valhalla",
     wikiUrl: "https://en.wikipedia.org/wiki/Valhalla",
+    wikiTerm: "Valhalla",
   },
   {
     id: "cloud-sync",
@@ -270,11 +281,12 @@ const KARL_FEATURES: FeatureDetail[] = [
       "No manual export / import required between devices",
       "Offline changes sync on reconnect",
     ],
-    atmospheric: "The wolf who roams far keeps his saga close.",
+    atmospheric: "Huginn and Muninn roam far. The wolf who follows keeps his saga close.",
     tier: "karl",
     reverse: false,
     image: "huginn-muninn",
     wikiUrl: "https://en.wikipedia.org/wiki/Huginn_and_Muninn",
+    wikiTerm: "Huginn and Muninn",
   },
   {
     id: "multi-household",
@@ -291,11 +303,12 @@ const KARL_FEATURES: FeatureDetail[] = [
       "Velocity rules tracked separately per household",
       "Combined Howl view across all households",
     ],
-    atmospheric: "One wolf may guard many dens.",
+    atmospheric: "Fenrir guards many dens. One wolf, many territories.",
     tier: "karl",
     reverse: true,
     image: "fenrir",
     wikiUrl: "https://en.wikipedia.org/wiki/Fenrir",
+    wikiTerm: "Fenrir",
   },
   {
     id: "data-export",
@@ -312,13 +325,47 @@ const KARL_FEATURES: FeatureDetail[] = [
       "Fields: card name, issuer, open date, fee date, bonus status, notes",
       "Instant download — no email required",
     ],
-    atmospheric: "Carry the runes beyond these walls.",
+    atmospheric: "Týr gave freely what was bound. Carry the runes beyond these walls.",
     tier: "karl",
     reverse: false,
     image: "tyr",
     wikiUrl: "https://en.wikipedia.org/wiki/T%C3%BDr",
+    wikiTerm: "Týr",
   },
 ];
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/**
+ * Renders atmospheric quote text with the first occurrence of `term` wrapped in
+ * an external link to `url`. Falls back to plain text if the term isn't found.
+ */
+function AtmosphericWithLink({
+  text,
+  term,
+  url,
+}: {
+  text: string;
+  term: string;
+  url: string;
+}) {
+  const idx = text.indexOf(term);
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline decoration-muted-foreground/40 underline-offset-2 hover:text-foreground transition-colors"
+      >
+        {term}
+      </a>
+      {text.slice(idx + term.length)}
+    </>
+  );
+}
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -375,14 +422,7 @@ function FeatureSection({ feature, index }: { feature: FeatureDetail; index: num
         {feature.eyebrow}
       </p>
       <h2 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-wide text-foreground leading-tight">
-        <a
-          href={feature.wikiUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline decoration-primary/40 underline-offset-4 hover:decoration-primary transition-colors"
-        >
-          {feature.title}
-        </a>
+        {feature.title}
       </h2>
       <p className="font-body text-base italic font-semibold text-foreground/90 leading-relaxed">
         {feature.benefit}
@@ -407,7 +447,13 @@ function FeatureSection({ feature, index }: { feature: FeatureDetail; index: num
         ))}
       </ul>
       <blockquote className="mt-2 pl-4 border-l-2 border-border font-body text-sm italic text-muted-foreground/80 leading-relaxed">
-        &ldquo;{feature.atmospheric}&rdquo;
+        &ldquo;
+        <AtmosphericWithLink
+          text={feature.atmospheric}
+          term={feature.wikiTerm}
+          url={feature.wikiUrl}
+        />
+        &rdquo;
       </blockquote>
     </div>
   );
