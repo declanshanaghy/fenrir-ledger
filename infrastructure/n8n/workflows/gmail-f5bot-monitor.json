@@ -168,7 +168,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = .all();\nconst contextItems = .all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const claudeResponse = items[i].json;\n  const draftText = claudeResponse?.text || claudeResponse?.content?.[0]?.text || 'Claude draft unavailable.';\n  const ctx = contextItems[i]?.json || contextItems[0]?.json || {};\n\n  results.push({\n    json: {\n      draftText,\n      emailId: ctx.emailId || '',\n      keyword: ctx.keyword || '',\n      redditUrl: ctx.redditUrl || '',\n      isComment: ctx.isComment || false,\n      subreddit: ctx.subreddit || '',\n      postTitle: ctx.postTitle || '',\n      author: ctx.author || '',\n      snippet: ctx.snippet || ''\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "const items = $input.all();\nconst contextItems = $('Extract — Reddit Links').all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const claudeResponse = items[i].json;\n  const draftText = claudeResponse?.content?.[0]?.text || claudeResponse?.text || 'Claude draft unavailable.';\n  const ctx = contextItems[i]?.json || contextItems[0]?.json || {};\n\n  results.push({\n    json: {\n      draftText,\n      emailId: ctx.emailId || '',\n      keyword: ctx.keyword || '',\n      redditUrl: ctx.redditUrl || '',\n      isComment: ctx.isComment || false,\n      subreddit: ctx.subreddit || '',\n      postTitle: ctx.postTitle || '',\n      author: ctx.author || '',\n      snippet: ctx.snippet || ''\n    }\n  });\n}\n\nreturn results;\n"
       },
       "id": "f5b0-0009-4000-8000-000000000009",
       "name": "Merge — Context + Draft",
