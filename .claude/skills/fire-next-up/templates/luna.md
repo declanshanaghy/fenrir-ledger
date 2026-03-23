@@ -52,9 +52,13 @@ gh issue comment <NUMBER> --body "## Luna → FiremanDecko Handoff
 
 Ready for implementation."
 
-**Step 6 — Chain continuation:**
-If wireframes are committed, PR is open, and handoff comment is posted:
+**Step 6 — CHAIN CONTINUATION (MANDATORY — DO NOT SKIP):**
+⚠️ THIS STEP IS NOT OPTIONAL. Your session is NOT complete until this runs.
+⚠️ If you stop after Step 5 without running Step 6, FiremanDecko never gets dispatched and the issue stalls.
+
+If wireframes are committed, PR is open, and handoff comment is posted, you MUST run:
   /fire-next-up --resume #<NUMBER>
+
 This dispatches FiremanDecko (Step 2) on the same branch to implement the design.
 If anything failed or is incomplete: do NOT run this step — stop and leave for manual triage.
 
