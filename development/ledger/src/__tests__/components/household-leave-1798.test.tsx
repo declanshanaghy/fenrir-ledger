@@ -7,7 +7,7 @@
  *   - On success: clears card cache, redirects to /ledger
  *   - On API error: shows error message, stays on page
  *   - Cancel dismisses the confirm dialog without leaving
- *   - Loading state disables confirm + cancel buttons
+ *   - Unauthenticated state shows locked view
  *
  * Issue #1798 — Re-create solo household when member leaves a household
  */
@@ -38,7 +38,6 @@ vi.mock("@/lib/storage", () => ({
   setAllCards: (...args: unknown[]) => mockSetAllCards(...args),
 }));
 
-// Global fetch mock
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
@@ -82,66 +81,44 @@ const OWNER_HOUSEHOLD_DATA = {
   ownerId: OWNER_USER_ID,
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Fetch helpers ──────────────────────────────────────────────────────────────
 
-function setupMembersApiSuccess(data = MEMBER_HOUSEHOLD_DATA) {
+/** Configure mockFetch to handle members endpoint with optional leave endpoint override */
+function setupFetch({
+  membersData = MEMBER_HOUSEHOLD_DATA,
+  leaveOk = true,
+  leaveStatus = 200,
+  leaveBody = { success: true, newHouseholdId: MEMBER_USER_ID },
+}: {
+  membersData?: typeof MEMBER_HOUSEHOLD_DATA;
+  leaveOk?: boolean;
+  leaveStatus?: number;
+  leaveBody?: Record<string, unknown>;
+} = {}) {
   mockFetch.mockImplementation((url: string) => {
     if (String(url).includes("/api/household/members")) {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve(data),
-      });
-    }
-    return Promise.reject(new Error("unexpected fetch: " + url));
-  });
-}
-
-function setupLeaveApiSuccess(newHouseholdId = MEMBER_USER_ID) {
-  mockFetch.mockImplementation((url: string) => {
-    if (String(url).includes("/api/household/members")) {
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(MEMBER_HOUSEHOLD_DATA),
+        json: () => Promise.resolve(membersData),
       });
     }
     if (String(url).includes("/api/household/leave")) {
       return Promise.resolve({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ success: true, newHouseholdId }),
+        ok: leaveOk,
+        status: leaveStatus,
+        json: () => Promise.resolve(leaveBody),
       });
     }
     return Promise.reject(new Error("unexpected fetch: " + url));
   });
 }
 
-function setupLeaveApiError(errorDesc = "Household owners cannot leave.") {
-  mockFetch.mockImplementation((url: string) => {
-    if (String(url).includes("/api/household/members")) {
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(MEMBER_HOUSEHOLD_DATA),
-      });
-    }
-    if (String(url).includes("/api/household/leave")) {
-      return Promise.resolve({
-        ok: false,
-        status: 403,
-        json: () => Promise.resolve({ error: "forbidden", error_description: errorDesc }),
-      });
-    }
-    return Promise.reject(new Error("unexpected fetch: " + url));
-  });
-}
+// ── Render helpers ─────────────────────────────────────────────────────────────
 
+/** Render the section and wait until the Leave Household button is visible */
 async function renderMemberView() {
-  setupMembersApiSuccess();
   const utils = render(<HouseholdSettingsSection />);
-  await waitFor(() => expect(screen.queryByRole("region", { name: /household/i })).not.toBeNull());
-  // Wait for data load — Leave Household button should appear
   await waitFor(() => screen.getByRole("button", { name: /leave.*household/i }));
   return utils;
 }
@@ -153,6 +130,8 @@ describe("HouseholdSettingsSection — Leave Household (issue #1798)", () => {
     vi.clearAllMocks();
     mockEnsureFreshToken.mockResolvedValue("token-abc");
     mockGetSession.mockReturnValue({ user: { sub: MEMBER_USER_ID } });
+    // Default: member view, leave succeeds
+    setupFetch();
   });
 
   // ── Visibility ──────────────────────────────────────────────────────────────
@@ -163,11 +142,9 @@ describe("HouseholdSettingsSection — Leave Household (issue #1798)", () => {
   });
 
   it("does NOT show Leave Household button for owners", async () => {
-    setupMembersApiSuccess(OWNER_HOUSEHOLD_DATA);
+    setupFetch({ membersData: OWNER_HOUSEHOLD_DATA });
     render(<HouseholdSettingsSection />);
-    // Wait for load to complete
-    await waitFor(() => expect(screen.queryByText("Household")).not.toBeNull());
-    // Give it a tick for the data to render
+    await waitFor(() => screen.getByText("Household"));
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
     expect(screen.queryByRole("button", { name: /leave.*household/i })).toBeNull();
   });
@@ -180,8 +157,8 @@ describe("HouseholdSettingsSection — Leave Household (issue #1798)", () => {
       fireEvent.click(screen.getByRole("button", { name: /leave.*household/i }));
     });
     expect(screen.getByRole("alertdialog", { name: /confirm leaving household/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /confirm leave/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /cancel.*leaving/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /confirm leaving/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /cancel leaving/i })).toBeDefined();
   });
 
   it("hides confirmation dialog when Cancel is clicked", async () => {
@@ -190,23 +167,21 @@ describe("HouseholdSettingsSection — Leave Household (issue #1798)", () => {
       fireEvent.click(screen.getByRole("button", { name: /leave.*household/i }));
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /cancel.*leaving/i }));
+      fireEvent.click(screen.getByRole("button", { name: /cancel leaving/i }));
     });
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    // Original button should be visible again
     expect(screen.getByRole("button", { name: /leave.*household/i })).toBeDefined();
   });
 
   // ── Successful leave ─────────────────────────────────────────────────────────
 
   it("calls POST /api/household/leave with confirm:true on Confirm Leave", async () => {
-    setupLeaveApiSuccess();
     await renderMemberView();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /leave.*household/i }));
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /confirm leave/i }));
+      fireEvent.click(screen.getByRole("button", { name: /confirm leaving/i }));
     });
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/ledger"));
 
@@ -219,26 +194,24 @@ describe("HouseholdSettingsSection — Leave Household (issue #1798)", () => {
   });
 
   it("clears card cache with empty array on successful leave", async () => {
-    setupLeaveApiSuccess(MEMBER_USER_ID);
     await renderMemberView();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /leave.*household/i }));
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /confirm leave/i }));
+      fireEvent.click(screen.getByRole("button", { name: /confirm leaving/i }));
     });
     await waitFor(() => expect(mockPush).toHaveBeenCalled());
     expect(mockSetAllCards).toHaveBeenCalledWith(MEMBER_USER_ID, []);
   });
 
   it("redirects to /ledger after successful leave", async () => {
-    setupLeaveApiSuccess();
     await renderMemberView();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /leave.*household/i }));
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /confirm leave/i }));
+      fireEvent.click(screen.getByRole("button", { name: /confirm leaving/i }));
     });
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/ledger"));
   });
@@ -246,44 +219,60 @@ describe("HouseholdSettingsSection — Leave Household (issue #1798)", () => {
   // ── Error handling ───────────────────────────────────────────────────────────
 
   it("shows error message when leave API returns error", async () => {
-    setupLeaveApiError("Household owners cannot leave.");
+    setupFetch({
+      leaveOk: false,
+      leaveStatus: 403,
+      leaveBody: {
+        error: "forbidden",
+        error_description: "Household owners cannot leave.",
+      },
+    });
     await renderMemberView();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /leave.*household/i }));
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /confirm leave/i }));
+      fireEvent.click(screen.getByRole("button", { name: /confirm leaving/i }));
     });
-    await waitFor(() =>
-      expect(screen.getByRole("alert")).toBeDefined()
-    );
+    await waitFor(() => screen.getByRole("alert"));
     expect(screen.getByRole("alert").textContent).toContain("Household owners cannot leave.");
-    // Should NOT redirect
     expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("stays on confirm dialog (does not close) when API error occurs", async () => {
-    setupLeaveApiError();
+    setupFetch({
+      leaveOk: false,
+      leaveStatus: 403,
+      leaveBody: { error: "forbidden", error_description: "Not a member." },
+    });
     await renderMemberView();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /leave.*household/i }));
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /confirm leave/i }));
+      fireEvent.click(screen.getByRole("button", { name: /confirm leaving/i }));
     });
     await waitFor(() => screen.getByRole("alert"));
-    // Dialog should still be visible
     expect(screen.getByRole("alertdialog", { name: /confirm leaving household/i })).toBeDefined();
   });
 
-  it("shows auth error and does not redirect when token is missing", async () => {
-    mockEnsureFreshToken.mockResolvedValue(null);
+  it("shows auth error and does not redirect when token is missing on leave", async () => {
+    // Members API is called on mount — token valid then
+    // But when Confirm Leave is clicked, token is null
+    let callCount = 0;
+    mockEnsureFreshToken.mockImplementation(() => {
+      callCount++;
+      // First call (members fetch on mount): return valid token
+      // Second call (leave POST on confirm): return null
+      return Promise.resolve(callCount === 1 ? "token-abc" : null);
+    });
+
     await renderMemberView();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /leave.*household/i }));
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /confirm leave/i }));
+      fireEvent.click(screen.getByRole("button", { name: /confirm leaving/i }));
     });
     await waitFor(() => screen.getByRole("alert"));
     expect(screen.getByRole("alert").textContent).toContain("Authentication error");
@@ -291,28 +280,30 @@ describe("HouseholdSettingsSection — Leave Household (issue #1798)", () => {
   });
 
   it("clears leave error when Cancel is clicked after an error", async () => {
-    setupLeaveApiError();
+    setupFetch({
+      leaveOk: false,
+      leaveStatus: 403,
+      leaveBody: { error: "forbidden", error_description: "Not a member." },
+    });
     await renderMemberView();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /leave.*household/i }));
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /confirm leave/i }));
+      fireEvent.click(screen.getByRole("button", { name: /confirm leaving/i }));
     });
     await waitFor(() => screen.getByRole("alert"));
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /cancel.*leaving/i }));
+      fireEvent.click(screen.getByRole("button", { name: /cancel leaving/i }));
     });
-    // Dialog gone, no error alert
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
   // ── Unauthenticated ──────────────────────────────────────────────────────────
 
-  it("shows locked view when members API returns 401", async () => {
+  it("shows locked view when token is null on initial load", async () => {
     mockEnsureFreshToken.mockResolvedValue(null);
-    setupMembersApiSuccess(); // won't be called — token is null
     render(<HouseholdSettingsSection />);
     await waitFor(() =>
       expect(screen.queryByTestId("household-locked")).not.toBeNull()
