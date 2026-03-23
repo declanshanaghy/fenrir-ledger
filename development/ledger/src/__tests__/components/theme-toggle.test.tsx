@@ -1,10 +1,12 @@
 /**
- * ThemeToggle — unit tests for Issue #848
+ * ThemeToggle — unit tests for Issue #848 and Issue #1926
  *
  * Verifies:
  *  - cycleTheme uses resolvedTheme (not raw "system") to determine next theme
  *  - Icon variant calls setTheme with opposite of resolvedTheme, not theme
  *  - Inline variant buttons call setTheme("light") / setTheme("dark") directly
+ *  - Icon variant button has no border classes (Issue #1926)
+ *  - Inline variant wrapper has no outer border classes (Issue #1926)
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -155,5 +157,59 @@ describe("ThemeToggle — inline variant", () => {
     render(<ThemeToggle variant="inline" />);
     fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
     expect(mockSetTheme).toHaveBeenCalledWith("dark");
+  });
+});
+
+// ── ThemeToggle — Issue #1926: no border on header toggle ────────────────────
+
+describe("ThemeToggle — Issue #1926: no border classes", () => {
+  it("icon variant button has no border or border-border class", () => {
+    mockThemeState.theme = "dark";
+    mockThemeState.resolvedTheme = "dark";
+
+    const { container } = render(<ThemeToggle variant="icon" />);
+    const button = container.querySelector("button");
+    expect(button).not.toBeNull();
+    const cls = button!.className;
+    expect(cls).not.toContain("border-border");
+    // Ensure no standalone "border" class (border-r or similar sub-strings are fine)
+    const tokens = cls.split(/\s+/);
+    expect(tokens).not.toContain("border");
+  });
+
+  it("inline variant wrapper has no outer border or border-border class", () => {
+    mockThemeState.theme = "dark";
+    mockThemeState.resolvedTheme = "dark";
+
+    const { container } = render(<ThemeToggle variant="inline" />);
+    const wrapper = container.querySelector('[role="radiogroup"]');
+    expect(wrapper).not.toBeNull();
+    const cls = wrapper!.className;
+    expect(cls).not.toContain("border-border");
+    const tokens = cls.split(/\s+/);
+    expect(tokens).not.toContain("border");
+  });
+
+  it("icon variant retains hover and transition classes", () => {
+    mockThemeState.theme = "dark";
+    mockThemeState.resolvedTheme = "dark";
+
+    const { container } = render(<ThemeToggle variant="icon" />);
+    const button = container.querySelector("button");
+    expect(button).not.toBeNull();
+    const cls = button!.className;
+    expect(cls).toContain("hover:text-gold");
+    expect(cls).toContain("transition-colors");
+  });
+
+  it("icon variant meets 44x44px touch target via inline style", () => {
+    mockThemeState.theme = "dark";
+    mockThemeState.resolvedTheme = "dark";
+
+    const { container } = render(<ThemeToggle variant="icon" />);
+    const button = container.querySelector("button") as HTMLButtonElement;
+    expect(button).not.toBeNull();
+    expect(button.style.minWidth).toBe("44px");
+    expect(button.style.minHeight).toBe("44px");
   });
 });
