@@ -1110,7 +1110,7 @@ body {
   font-size: 0.6rem; font-weight: 600;
   color: var(--gold);
   letter-spacing: 0.04em;
-  background: linear-gradient(135deg, rgba(201, 146, 10, 0.06) 0%, transparent 100%);
+  background: linear-gradient(135deg, rgba(201, 146, 10, 0.06) 0%, rgba(201, 146, 10, 0) 100%);
 }
 .decree-section-header:hover { background: rgba(201, 146, 10, 0.1); }
 .decree-section-glyph {
@@ -1135,6 +1135,9 @@ body {
   position: relative;
   background: linear-gradient(180deg, rgba(7, 7, 13, 0.4) 0%, rgba(201, 146, 10, 0.02) 100%);
 }
+[data-theme="light"] .decree-section-body {
+  background: linear-gradient(180deg, rgba(143, 110, 14, 0.04) 0%, rgba(143, 110, 14, 0.01) 100%);
+}
 .decree-section-body p {
   margin: 0 0 0.25rem 0;
 }
@@ -1156,7 +1159,7 @@ body {
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 2rem;
-  background: linear-gradient(transparent, var(--void));
+  background: linear-gradient(rgba(7, 7, 13, 0), var(--void));
   pointer-events: none;
 }
 /* When expanded, remove height limit and fade */
@@ -1166,6 +1169,9 @@ body {
 }
 .decree-section.open .decree-section-body::after {
   display: none;
+}
+[data-theme="light"] .decree-section-body::after {
+  background: linear-gradient(rgba(238, 230, 216, 0), var(--void));
 }
 /* Full-width sections (identity + issue details) span the grid */
 .decree-section.decree-wide {
@@ -1211,7 +1217,7 @@ body {
   margin: 0.75rem 0 0.25rem;
   padding: 0.75rem 1rem;
   text-align: center;
-  background: linear-gradient(135deg, rgba(201, 146, 10, 0.04) 0%, transparent 50%, rgba(201, 146, 10, 0.04) 100%);
+  background: linear-gradient(135deg, rgba(201, 146, 10, 0.04) 0%, rgba(201, 146, 10, 0) 50%, rgba(201, 146, 10, 0.04) 100%);
 }
 .decree-seal-runic-band {
   font-size: 0.65rem;
@@ -1446,7 +1452,7 @@ body {
 .decree-card-footer {
   padding: 0.5rem 0.8rem 0.4rem;
   text-align: center;
-  background: linear-gradient(135deg, rgba(201, 146, 10, 0.04) 0%, transparent 50%, rgba(201, 146, 10, 0.04) 100%);
+  background: linear-gradient(135deg, rgba(201, 146, 10, 0.04) 0%, rgba(201, 146, 10, 0) 50%, rgba(201, 146, 10, 0.04) 100%);
 }
 .decree-card-seal-band {
   font-size: 0.6rem;

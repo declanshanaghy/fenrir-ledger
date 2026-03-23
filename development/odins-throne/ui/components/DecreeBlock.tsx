@@ -310,7 +310,7 @@ export function DecreeBlock({ text, agentKey: jobAgentKey, onAvatarClick }: Decr
               right: "8px",
               fontSize: "9px",
               color: "var(--text-void)",
-              background: "rgba(42,42,62,0.6)",
+              background: theme === "light" ? "rgba(100, 80, 45, 0.12)" : "rgba(42,42,62,0.6)",
               padding: "1px 5px",
               borderRadius: "3px",
               fontFamily: "monospace",
