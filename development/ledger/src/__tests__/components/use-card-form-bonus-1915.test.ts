@@ -1,0 +1,348 @@
+/**
+ * useCardForm bonus amount storage — Issue #1915
+ *
+ * Verifies that points/miles bonus amounts are stored as whole units
+ * (not multiplied by 100 like monetary cents values), and that
+ * cashback bonuses remain stored in cents.
+ *
+ * @ref #1915
+ */
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import type { Mock } from "vitest";
+
+// ── Mocks ─────────────────────────────────────────────────────────────────────
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
+const mockSaveCard = vi.fn();
+vi.mock("@/lib/storage", () => ({
+  saveCard: mockSaveCard,
+  deleteCard: vi.fn(),
+  closeCard: vi.fn(),
+  getCards: vi.fn().mockReturnValue([]),
+}));
+
+vi.mock("@/lib/entitlement/card-limit", () => ({
+  canAddCard: vi.fn().mockReturnValue({ allowed: true }),
+}));
+
+vi.mock("@/hooks/useEntitlement", () => ({
+  useEntitlement: () => ({ tier: "karl" }),
+}));
+
+vi.mock("@/hooks/useTrialStatus", () => ({
+  clearTrialStatusCache: vi.fn(),
+  useTrialStatus: () => ({ status: "none" }),
+}));
+
+vi.mock("@/lib/trial-utils", () => ({
+  LS_TRIAL_START_TOAST_SHOWN: "fenrir:trial-start-toast-shown",
+}));
+
+vi.mock("@/lib/milestone-utils", () => ({
+  checkMilestone: vi.fn().mockReturnValue(null),
+}));
+
+vi.mock("@/lib/auth/refresh-session", () => ({
+  ensureFreshToken: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/analytics/track", () => ({
+  track: vi.fn(),
+}));
+
+vi.mock("sonner", () => ({
+  toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }),
+}));
+
+vi.mock("@/components/cards/GleipnirBearSinews", () => ({
+  GleipnirBearSinews: () => null,
+  useGleipnirFragment4: () => ({
+    open: false,
+    trigger: vi.fn(),
+    dismiss: vi.fn(),
+  }),
+}));
+
+vi.mock("@/lib/issuer-utils", () => ({
+  getIssuerRune: vi.fn().mockReturnValue("ᚠ"),
+}));
+
+// ── Imports ───────────────────────────────────────────────────────────────────
+
+import { useCardForm } from "@/components/cards/useCardForm";
+import {
+  getValhallaSignupBonusLabel,
+  formatBonusReward,
+} from "@/components/dashboard/ValhallaCardTile";
+import type { Card } from "@/lib/types";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function makeCard(overrides: Partial<Card> = {}): Card {
+  return {
+    id: "card-1",
+    householdId: "hh-1",
+    issuerId: "chase",
+    cardName: "Sapphire Preferred",
+    openDate: "2023-01-01T00:00:00.000Z",
+    creditLimit: 1500000,
+    annualFee: 9500,
+    annualFeeDate: "2026-01-01T00:00:00.000Z",
+    promoPeriodMonths: 0,
+    amountSpent: 0,
+    signUpBonus: null,
+    status: "active",
+    notes: "",
+    createdAt: "2023-01-01T00:00:00.000Z",
+    updatedAt: "2023-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+// ── getValhallaSignupBonusLabel display tests ─────────────────────────────────
+
+describe("getValhallaSignupBonusLabel — issue #1915", () => {
+  it("displays 65000 miles as '65,000 mi' (no extra zeros)", () => {
+    const card = makeCard({
+      signUpBonus: {
+        type: "miles",
+        amount: 65000,
+        spendRequirement: 400000,
+        deadline: "2023-04-01T00:00:00.000Z",
+        met: true,
+      },
+    });
+    expect(getValhallaSignupBonusLabel(card)).toBe("65,000 mi");
+  });
+
+  it("displays 1000000 points as '1,000,000 pts' (no extra zeros)", () => {
+    const card = makeCard({
+      signUpBonus: {
+        type: "points",
+        amount: 1000000,
+        spendRequirement: 600000,
+        deadline: "2023-04-01T00:00:00.000Z",
+        met: true,
+      },
+    });
+    expect(getValhallaSignupBonusLabel(card)).toBe("1,000,000 pts");
+  });
+
+  it("does NOT display 65000 miles as 6,500,000 mi (regression guard)", () => {
+    const card = makeCard({
+      signUpBonus: {
+        type: "miles",
+        amount: 65000,
+        spendRequirement: 400000,
+        deadline: "2023-04-01T00:00:00.000Z",
+        met: true,
+      },
+    });
+    expect(getValhallaSignupBonusLabel(card)).not.toBe("6,500,000 mi");
+  });
+
+  it("displays cashback amount as formatted currency (cents-based)", () => {
+    const card = makeCard({
+      signUpBonus: {
+        type: "cashback",
+        amount: 50000, // $500 in cents
+        spendRequirement: 300000,
+        deadline: "2023-04-01T00:00:00.000Z",
+        met: true,
+      },
+    });
+    expect(getValhallaSignupBonusLabel(card)).toBe("$500 cashback");
+  });
+});
+
+// ── formatBonusReward display tests ───────────────────────────────────────────
+
+describe("formatBonusReward — issue #1915", () => {
+  it("formats 65000 miles as '65,000 mi'", () => {
+    expect(formatBonusReward("miles", 65000)).toBe("65,000 mi");
+  });
+
+  it("formats 1000000 points as '1,000,000 pts'", () => {
+    expect(formatBonusReward("points", 1000000)).toBe("1,000,000 pts");
+  });
+
+  it("formats cashback in cents — $695 = 69500 cents", () => {
+    expect(formatBonusReward("cashback", 69500)).toBe("$695");
+  });
+});
+
+// ── useCardForm save path — bonus amount storage ──────────────────────────────
+
+describe("useCardForm onSubmit — bonus amount storage (issue #1915)", () => {
+  beforeEach(() => {
+    mockSaveCard.mockClear();
+    // Stub localStorage to avoid 'not defined' errors in test environment
+    if (typeof globalThis.localStorage === "undefined") {
+      Object.defineProperty(globalThis, "localStorage", {
+        value: {
+          getItem: vi.fn().mockReturnValue("0"),
+          setItem: vi.fn(),
+          removeItem: vi.fn(),
+        },
+        writable: true,
+      });
+    }
+  });
+
+  it("stores miles bonus as whole units (65000 → 65000, not 6500000)", () => {
+    const { result } = renderHook(() =>
+      useCardForm({ householdId: "hh-1" })
+    );
+    act(() => {
+      result.current.onSubmit({
+        issuerId: "chase",
+        cardName: "Sapphire Preferred",
+        openDate: "2024-01-15",
+        creditLimit: "15000",
+        annualFee: "95",
+        annualFeeDate: "2025-01-15",
+        bonusType: "miles",
+        bonusAmount: "65000",
+        bonusSpendRequirement: "4000",
+        bonusDeadline: "2024-04-15",
+        amountSpent: "",
+        notes: "",
+      });
+    });
+    expect(mockSaveCard).toHaveBeenCalledOnce();
+    const saved = (mockSaveCard as Mock).mock.calls[0][0] as Card;
+    expect(saved.signUpBonus?.amount).toBe(65000);
+  });
+
+  it("stores points bonus as whole units (1000000 → 1000000, not 100000000)", () => {
+    const { result } = renderHook(() =>
+      useCardForm({ householdId: "hh-1" })
+    );
+    act(() => {
+      result.current.onSubmit({
+        issuerId: "amex",
+        cardName: "Platinum",
+        openDate: "2024-01-15",
+        creditLimit: "30000",
+        annualFee: "695",
+        annualFeeDate: "2025-01-15",
+        bonusType: "points",
+        bonusAmount: "1000000",
+        bonusSpendRequirement: "6000",
+        bonusDeadline: "2024-04-15",
+        amountSpent: "",
+        notes: "",
+      });
+    });
+    expect(mockSaveCard).toHaveBeenCalledOnce();
+    const saved = (mockSaveCard as Mock).mock.calls[0][0] as Card;
+    expect(saved.signUpBonus?.amount).toBe(1000000);
+  });
+
+  it("stores cashback bonus in cents (500 dollars → 50000 cents)", () => {
+    const { result } = renderHook(() =>
+      useCardForm({ householdId: "hh-1" })
+    );
+    act(() => {
+      result.current.onSubmit({
+        issuerId: "citi",
+        cardName: "Double Cash",
+        openDate: "2024-01-15",
+        creditLimit: "10000",
+        annualFee: "0",
+        annualFeeDate: "2025-01-15",
+        bonusType: "cashback",
+        bonusAmount: "500",
+        bonusSpendRequirement: "1500",
+        bonusDeadline: "2024-04-15",
+        amountSpent: "",
+        notes: "",
+      });
+    });
+    expect(mockSaveCard).toHaveBeenCalledOnce();
+    const saved = (mockSaveCard as Mock).mock.calls[0][0] as Card;
+    expect(saved.signUpBonus?.amount).toBe(50000);
+  });
+
+  it("stores annual fee in cents (95 dollars → 9500 cents)", () => {
+    const { result } = renderHook(() =>
+      useCardForm({ householdId: "hh-1" })
+    );
+    act(() => {
+      result.current.onSubmit({
+        issuerId: "chase",
+        cardName: "Sapphire Preferred",
+        openDate: "2024-01-15",
+        creditLimit: "15000",
+        annualFee: "95",
+        annualFeeDate: "2025-01-15",
+        bonusType: "points",
+        bonusAmount: "60000",
+        bonusSpendRequirement: "4000",
+        bonusDeadline: "2024-04-15",
+        amountSpent: "",
+        notes: "",
+      });
+    });
+    expect(mockSaveCard).toHaveBeenCalledOnce();
+    const saved = (mockSaveCard as Mock).mock.calls[0][0] as Card;
+    expect(saved.annualFee).toBe(9500);
+  });
+});
+
+// ── useCardForm load path — defaultValues for bonus ───────────────────────────
+
+describe("useCardForm defaultValues — bonus amount load (issue #1915)", () => {
+  it("loads miles bonus amount as string of whole units (65000 → '65000')", () => {
+    const card = makeCard({
+      signUpBonus: {
+        type: "miles",
+        amount: 65000,
+        spendRequirement: 400000,
+        deadline: "2025-04-01T00:00:00.000Z",
+        met: false,
+      },
+    });
+    const { result } = renderHook(() =>
+      useCardForm({ householdId: "hh-1", initialValues: card })
+    );
+    expect(result.current.defaultValues.bonusAmount).toBe("65000");
+  });
+
+  it("loads points bonus amount as string of whole units (1000000 → '1000000')", () => {
+    const card = makeCard({
+      signUpBonus: {
+        type: "points",
+        amount: 1000000,
+        spendRequirement: 600000,
+        deadline: "2025-04-01T00:00:00.000Z",
+        met: false,
+      },
+    });
+    const { result } = renderHook(() =>
+      useCardForm({ householdId: "hh-1", initialValues: card })
+    );
+    expect(result.current.defaultValues.bonusAmount).toBe("1000000");
+  });
+
+  it("loads cashback bonus using centsToDollars (50000 cents → '500')", () => {
+    const card = makeCard({
+      signUpBonus: {
+        type: "cashback",
+        amount: 50000, // $500 in cents
+        spendRequirement: 150000,
+        deadline: "2025-04-01T00:00:00.000Z",
+        met: false,
+      },
+    });
+    const { result } = renderHook(() =>
+      useCardForm({ householdId: "hh-1", initialValues: card })
+    );
+    expect(result.current.defaultValues.bonusAmount).toBe("500");
+  });
+});

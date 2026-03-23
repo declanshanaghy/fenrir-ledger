@@ -134,7 +134,9 @@ function buildDefaultValues(initialValues?: Card): Partial<CardFormValues> {
       ? { bonusType: initialValues.signUpBonus.type }
       : {}),
     bonusAmount: initialValues.signUpBonus
-      ? centsToDollars(initialValues.signUpBonus.amount)
+      ? initialValues.signUpBonus.type === "cashback"
+        ? centsToDollars(initialValues.signUpBonus.amount)
+        : String(initialValues.signUpBonus.amount)
       : "",
     bonusSpendRequirement: initialValues.signUpBonus
       ? centsToDollars(initialValues.signUpBonus.spendRequirement)
@@ -314,7 +316,10 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
         signUpBonus: data.bonusType
           ? {
               type: data.bonusType,
-              amount: dollarsToCents(data.bonusAmount ?? ""),
+              amount:
+                data.bonusType === "cashback"
+                  ? dollarsToCents(data.bonusAmount ?? "")
+                  : Math.round(parseFloat(data.bonusAmount ?? "") || 0),
               spendRequirement: spendRequirementCents,
               deadline: bonusDeadlineIso,
               met: minimumSpendMet,
