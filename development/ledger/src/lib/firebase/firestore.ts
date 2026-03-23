@@ -477,6 +477,103 @@ export async function leaveHouseholdTransaction(
   });
 }
 
+// ─── Kick household member ────────────────────────────────────────────────────
+
+export interface KickMemberResult {
+  /** The new solo household created for the kicked member */
+  newHousehold: FirestoreHousehold;
+}
+
+/**
+ * Executes the kick-member operation as an atomic Firestore transaction.
+ *
+ * Steps (all-or-nothing):
+ *   1. Fetch caller (owner) user doc — verify they are the household owner
+ *   2. Fetch target member user doc — verify they are in the same household and not the owner
+ *   3. Remove memberId from household.memberIds
+ *   4. Create new solo household for the kicked member (id = memberId)
+ *   5. Update kicked member's user doc: householdId = memberId, role = "owner"
+ *
+ * Cards remain with the old household — the kicked member's new solo household starts empty.
+ *
+ * @throws Error "caller_not_found" if the caller's user document is missing
+ * @throws Error "not_owner" if the caller is not the household owner
+ * @throws Error "target_not_found" if the target member's user document is missing
+ * @throws Error "not_member" if the target is not in the caller's household
+ * @throws Error "cannot_kick_owner" if the target is the owner (self-kick guard)
+ * @throws Error "household_not_found" if the household document is missing
+ *
+ * Issue #1818
+ */
+export async function kickMemberTransaction(
+  callerId: string,
+  memberId: string
+): Promise<KickMemberResult> {
+  const db = getFirestore();
+
+  return await db.runTransaction(async (tx) => {
+    // 1. Fetch caller doc — must be the household owner
+    const callerRef = db.doc(FIRESTORE_PATHS.user(callerId));
+    const callerSnap = await tx.get(callerRef);
+    if (!callerSnap.exists) {
+      throw new Error("caller_not_found");
+    }
+    const caller = callerSnap.data() as FirestoreUser;
+    if (caller.role !== "owner") {
+      throw new Error("not_owner");
+    }
+
+    // 2. Fetch target member doc
+    const memberRef = db.doc(FIRESTORE_PATHS.user(memberId));
+    const memberSnap = await tx.get(memberRef);
+    if (!memberSnap.exists) {
+      throw new Error("target_not_found");
+    }
+    const member = memberSnap.data() as FirestoreUser;
+
+    // 3. Target must be in the caller's household and must not be the owner
+    if (member.householdId !== caller.householdId) {
+      throw new Error("not_member");
+    }
+    if (member.role === "owner") {
+      throw new Error("cannot_kick_owner");
+    }
+
+    // 4. Fetch household doc
+    const householdRef = db.doc(FIRESTORE_PATHS.household(caller.householdId));
+    const householdSnap = await tx.get(householdRef);
+    if (!householdSnap.exists) {
+      throw new Error("household_not_found");
+    }
+    const household = householdSnap.data() as FirestoreHousehold;
+
+    const now = new Date().toISOString();
+
+    // 5. Remove kicked member from household memberIds
+    const updatedMemberIds = household.memberIds.filter((id) => id !== memberId);
+    tx.update(householdRef, { memberIds: updatedMemberIds, updatedAt: now });
+
+    // 6. Create new solo household for the kicked member (id = memberId)
+    const newHousehold: FirestoreHousehold = {
+      id: memberId,
+      name: `${member.displayName}'s Household`,
+      ownerId: memberId,
+      memberIds: [memberId],
+      inviteCode: generateInviteCode(),
+      inviteCodeExpiresAt: generateInviteCodeExpiry(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    const newHouseholdRef = db.doc(FIRESTORE_PATHS.household(memberId));
+    tx.set(newHouseholdRef, newHousehold);
+
+    // 7. Update kicked member's user doc
+    tx.update(memberRef, { householdId: memberId, role: "owner", updatedAt: now });
+
+    return { newHousehold };
+  });
+}
+
 // ─── Processed webhook events (deduplication) ────────────────────────────────
 
 /** 24 hours in milliseconds — TTL for processed Stripe webhook event documents */

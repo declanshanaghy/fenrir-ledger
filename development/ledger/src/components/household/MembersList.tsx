@@ -4,9 +4,11 @@
  * MembersList — renders the household members list with avatars and role badges.
  *
  * Each row shows: avatar initials, display name (+ "(you)" suffix), email, role badge.
+ * When `onKick` is provided (owner-only), non-owner rows show a Remove button.
  *
  * @see ux/wireframes/household/settings-household.html § Members list
  * Issue #1123
+ * Issue #1818 — owner kick action
  */
 
 interface HouseholdMember {
@@ -19,6 +21,8 @@ interface HouseholdMember {
 
 interface MembersListProps {
   members: HouseholdMember[];
+  /** Called when the owner clicks Remove on a non-owner member row */
+  onKick?: (member: HouseholdMember) => void;
 }
 
 function getInitials(name: string): string {
@@ -27,7 +31,7 @@ function getInitials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-export function MembersList({ members }: MembersListProps) {
+export function MembersList({ members, onKick }: MembersListProps) {
   return (
     <div className="flex flex-col gap-2" role="list" aria-label="Household members">
       {members.map((member) => (
@@ -63,6 +67,18 @@ export function MembersList({ members }: MembersListProps) {
           <span className="border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-widest font-heading text-foreground flex-shrink-0">
             {member.role === "owner" ? "Owner" : "Member"}
           </span>
+
+          {/* Remove button — owner only, non-owner members only */}
+          {onKick && member.role !== "owner" && (
+            <button
+              type="button"
+              onClick={() => onKick(member)}
+              className="min-h-[32px] px-2.5 py-1 border border-destructive/50 text-xs font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 flex-shrink-0"
+              aria-label={`Remove ${member.displayName} from household`}
+            >
+              Remove
+            </button>
+          )}
         </div>
       ))}
     </div>

@@ -59,6 +59,9 @@ export function HouseholdSettingsSection() {
   const [isLeaving, setIsLeaving] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [kickTarget, setKickTarget] = useState<HouseholdMember | null>(null);
+  const [isKicking, setIsKicking] = useState(false);
+  const [kickError, setKickError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchHousehold = useCallback(async () => {
@@ -159,6 +162,39 @@ export function HouseholdSettingsSection() {
       setIsLeaving(false);
     }
   }, [router]);
+
+  const handleKickConfirm = useCallback(async () => {
+    if (!kickTarget) return;
+    setIsKicking(true);
+    setKickError(null);
+    try {
+      const token = await ensureFreshToken();
+      if (!token) {
+        setKickError("Authentication error. Please sign in again.");
+        setIsKicking(false);
+        return;
+      }
+      const res = await fetch("/api/household/kick", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ memberId: kickTarget.userId }),
+      });
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error_description?: string };
+        setKickError(json.error_description ?? "Failed to remove member. Please try again.");
+        setIsKicking(false);
+        return;
+      }
+      setKickTarget(null);
+      await fetchHousehold();
+    } catch {
+      setKickError("Connection error. Please try again.");
+      setIsKicking(false);
+    }
+  }, [kickTarget, fetchHousehold]);
 
   if (isLoading) {
     return (
@@ -309,8 +345,52 @@ export function HouseholdSettingsSection() {
             <p className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
               Members
             </p>
-            <MembersList members={data.members} />
+            <MembersList
+              members={data.members}
+              onKick={isOwner ? (member) => { setKickTarget(member); setKickError(null); } : undefined}
+            />
           </div>
+
+          {/* Owner: kick confirmation dialog */}
+          {isOwner && kickTarget && (
+            <div
+              className="border border-destructive/60 p-3 flex flex-col gap-3"
+              role="alertdialog"
+              aria-label={`Confirm removing ${kickTarget.displayName}`}
+            >
+              <p className="text-sm font-heading font-bold text-destructive">
+                Remove {kickTarget.displayName} from your household?
+              </p>
+              <p className="text-xs text-muted-foreground font-body">
+                They will be moved to a new solo household. Their cards will remain with this household.
+              </p>
+              {kickError && (
+                <p className="text-xs text-destructive font-body" role="alert">
+                  {kickError}
+                </p>
+              )}
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleKickConfirm}
+                  disabled={isKicking}
+                  className="min-h-[44px] px-4 py-2 border border-destructive text-sm font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={`Confirm removing ${kickTarget.displayName}`}
+                >
+                  {isKicking ? "Removing…" : "Confirm Remove"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setKickTarget(null); setKickError(null); }}
+                  disabled={isKicking}
+                  className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+                  aria-label="Cancel removing member"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Owner: invite code or full banner */}
           {isOwner && (
