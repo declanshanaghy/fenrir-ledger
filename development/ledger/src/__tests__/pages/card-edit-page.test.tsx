@@ -15,7 +15,7 @@ import type { Card } from "@/lib/types";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockReplace = vi.fn();
+const mockReplace = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace }),
   useParams: () => ({ id: "card-123" }),

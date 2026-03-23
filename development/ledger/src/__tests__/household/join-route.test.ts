@@ -13,12 +13,12 @@ vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const mockRequireAuthz = vi.fn();
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/authz", () => ({
   requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
 
-const mockJoinHouseholdTransaction = vi.fn();
+const mockJoinHouseholdTransaction = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/firebase/firestore", () => ({
   joinHouseholdTransaction: (...args: unknown[]) => mockJoinHouseholdTransaction(...args),

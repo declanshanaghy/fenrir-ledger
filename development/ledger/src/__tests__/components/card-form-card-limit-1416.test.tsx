@@ -52,7 +52,7 @@ vi.mock("framer-motion", () => {
 
 // ── Next.js Router ────────────────────────────────────────────────────────────
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
   usePathname: () => "/ledger",
@@ -114,8 +114,8 @@ vi.mock("@/components/ui/select", () => {
 
 // ── Storage ───────────────────────────────────────────────────────────────────
 
-const mockSaveCard = vi.fn();
-const mockGetCards = vi.fn();
+const mockSaveCard = vi.hoisted(() => vi.fn());
+const mockGetCards = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/storage", () => ({
   saveCard: (...args: unknown[]) => mockSaveCard(...args),
   deleteCard: vi.fn(),
@@ -125,7 +125,7 @@ vi.mock("@/lib/storage", () => ({
 
 // ── canAddCard — the key mock for this test suite ─────────────────────────────
 
-const mockCanAddCard = vi.fn();
+const mockCanAddCard = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/entitlement/card-limit", () => ({
   canAddCard: (...args: unknown[]) => mockCanAddCard(...args),
 }));
@@ -173,8 +173,8 @@ vi.mock("@/lib/analytics/track", () => ({
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 
-const mockToastError = vi.fn();
-const mockToastSuccess = vi.fn();
+const mockToastError = vi.hoisted(() => vi.fn());
+const mockToastSuccess = vi.hoisted(() => vi.fn());
 vi.mock("sonner", () => ({
   toast: Object.assign(vi.fn(), {
     error: (...args: unknown[]) => mockToastError(...args),

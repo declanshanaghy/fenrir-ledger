@@ -62,7 +62,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => ({ get: mockSearchParamsGet }),
 }));
 
-const mockSearchParamsGet = vi.fn(() => null);
+const mockSearchParamsGet = vi.hoisted(() => vi.fn(() => null));
 
 vi.mock("next/link", () => ({
   __esModule: true,

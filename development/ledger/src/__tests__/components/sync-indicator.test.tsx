@@ -18,8 +18,8 @@ import { SyncIndicator } from "@/components/layout/SyncIndicator";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
-const mockTrigger = vi.fn();
-const mockDismiss = vi.fn();
+const mockTrigger = vi.hoisted(() => vi.fn());
+const mockDismiss = vi.hoisted(() => vi.fn());
 
 vi.mock("@/components/cards/GleipnirCatFootfall", () => ({
   GleipnirCatFootfall: () => null,

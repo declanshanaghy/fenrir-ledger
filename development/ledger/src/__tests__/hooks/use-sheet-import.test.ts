@@ -28,7 +28,7 @@ vi.mock("@/lib/trial-utils", () => ({
 }));
 
 // Mock global fetch
-const mockFetch = vi.fn();
+const mockFetch = vi.hoisted(() => vi.fn());
 
 // ── Setup ────────────────────────────────────────────────────────────────────
 

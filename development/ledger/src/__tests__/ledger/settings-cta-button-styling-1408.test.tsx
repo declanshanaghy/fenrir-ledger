@@ -15,7 +15,7 @@ import { SyncSettingsSection } from "@/components/sync/SyncSettingsSection";
 
 // ── HouseholdSettingsSection mocks ─────────────────────────────────────────────
 
-const mockEnsureFreshToken = vi.fn();
+const mockEnsureFreshToken = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: (...args: unknown[]) => mockEnsureFreshToken(...args),
 }));

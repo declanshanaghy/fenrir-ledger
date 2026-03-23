@@ -13,7 +13,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 
 // ── Next navigation ───────────────────────────────────────────────────────────
 
-const mockRouterPush = vi.fn();
+const mockRouterPush = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockRouterPush }),
   usePathname: () => "/ledger",

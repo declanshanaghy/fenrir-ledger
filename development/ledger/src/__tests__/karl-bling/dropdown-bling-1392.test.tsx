@@ -19,7 +19,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 
 // ── Mutable mock state ────────────────────────────────────────────────────────
 
-const mockRouterPush = vi.fn();
+const mockRouterPush = vi.hoisted(() => vi.fn());
 const mockIsKarlOrTrial = { value: false };
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────

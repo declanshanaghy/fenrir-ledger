@@ -29,7 +29,7 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 let mockPathname = "/ledger";
 
 vi.mock("next/navigation", () => ({

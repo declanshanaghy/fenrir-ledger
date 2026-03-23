@@ -18,7 +18,7 @@ import AuthCallbackPage from "@/app/ledger/auth/callback/page";
 
 // ── Module mocks ───────────────────────────────────────────────────────────────
 
-const mockSearchParamsGet = vi.fn();
+const mockSearchParamsGet = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useSearchParams: () => ({ get: mockSearchParamsGet }),
 }));

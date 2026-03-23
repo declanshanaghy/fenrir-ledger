@@ -21,7 +21,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => ({ get: () => null }),
 }));
 
-const mockHasFeature = vi.fn(() => false);
+const mockHasFeature = vi.hoisted(() => vi.fn(() => false));
 vi.mock("@/hooks/useEntitlement", () => ({
   useEntitlement: () => ({ hasFeature: mockHasFeature }),
 }));

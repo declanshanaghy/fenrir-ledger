@@ -19,11 +19,11 @@ const mockMarkEventProcessed = vi.hoisted(() => vi.fn());
 
 // ── Mock entitlement store ────────────────────────────────────────────────
 
-const mockGetStripeEntitlement = vi.fn();
-const mockSetStripeEntitlement = vi.fn();
-const mockGetGoogleSubByStripeCustomerId = vi.fn();
-const mockSetAnonymousStripeEntitlement = vi.fn();
-const mockGetAnonymousStripeEntitlement = vi.fn();
+const mockGetStripeEntitlement = vi.hoisted(() => vi.fn());
+const mockSetStripeEntitlement = vi.hoisted(() => vi.fn());
+const mockGetGoogleSubByStripeCustomerId = vi.hoisted(() => vi.fn());
+const mockSetAnonymousStripeEntitlement = vi.hoisted(() => vi.fn());
+const mockGetAnonymousStripeEntitlement = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/kv/entitlement-store", () => ({
   getStripeEntitlement: (...args: unknown[]) => mockGetStripeEntitlement(...args),
@@ -40,9 +40,9 @@ vi.mock("@/lib/kv/entitlement-store", () => ({
 
 // ── Mock Firestore (dedup + syncHouseholdTierToFirestore) ─────────────────
 
-const mockFirestoreUpdate = vi.fn().mockResolvedValue(undefined);
-const mockFirestoreDoc = vi.fn().mockReturnValue({ update: mockFirestoreUpdate });
-const mockGetUser = vi.fn().mockResolvedValue(null);
+const mockFirestoreUpdate = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const mockFirestoreDoc = vi.hoisted(() => vi.fn().mockReturnValue({ update: mockFirestoreUpdate }));
+const mockGetUser = vi.hoisted(() => vi.fn().mockResolvedValue(null));
 
 vi.mock("@/lib/firebase/firestore", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/firebase/firestore")>();

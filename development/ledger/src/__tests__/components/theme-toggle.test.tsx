@@ -13,7 +13,7 @@ import { cycleTheme, ThemeToggle } from "@/components/layout/ThemeToggle";
 
 // ── Shared mock ─────────────────────────────────────────────────────────────
 
-const mockSetTheme = vi.fn();
+const mockSetTheme = vi.hoisted(() => vi.fn());
 
 // Mock state that tests can mutate via mockThemeState
 const mockThemeState = {

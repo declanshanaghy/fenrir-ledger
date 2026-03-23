@@ -16,7 +16,7 @@ import { HouseholdSettingsSection } from "@/components/household/HouseholdSettin
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockEnsureFreshToken = vi.fn();
+const mockEnsureFreshToken = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: (...args: unknown[]) => mockEnsureFreshToken(...args),
 }));

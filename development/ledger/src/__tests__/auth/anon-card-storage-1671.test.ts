@@ -36,7 +36,7 @@ const localStorageMock = {
 
 // ─── window.dispatchEvent mock ────────────────────────────────────────────────
 
-const mockDispatchEvent = vi.fn();
+const mockDispatchEvent = vi.hoisted(() => vi.fn());
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
 

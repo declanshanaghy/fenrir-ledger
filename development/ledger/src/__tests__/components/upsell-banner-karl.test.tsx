@@ -12,8 +12,8 @@ import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockSubscribeStripe = vi.fn();
-const mockRouterPush = vi.fn();
+const mockSubscribeStripe = vi.hoisted(() => vi.fn());
+const mockRouterPush = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockRouterPush }),

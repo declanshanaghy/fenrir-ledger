@@ -10,7 +10,7 @@ import { NextRequest } from "next/server";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockRequireAuthz = vi.fn();
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/authz", () => ({
   requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));

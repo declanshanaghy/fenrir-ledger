@@ -17,19 +17,19 @@ import { NextRequest } from "next/server";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockRequireAuthz = vi.fn();
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/authz", () => ({
   requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
 
-const mockRateLimit = vi.fn();
+const mockRateLimit = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/rate-limit", () => ({
   rateLimit: (...args: unknown[]) => mockRateLimit(...args),
 }));
 
-const mockImportFromSheet = vi.fn();
-const mockImportFromCsv = vi.fn();
-const mockImportFromFile = vi.fn();
+const mockImportFromSheet = vi.hoisted(() => vi.fn());
+const mockImportFromCsv = vi.hoisted(() => vi.fn());
+const mockImportFromFile = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/sheets/import-pipeline", () => ({
   importFromSheet: (...args: unknown[]) => mockImportFromSheet(...args),

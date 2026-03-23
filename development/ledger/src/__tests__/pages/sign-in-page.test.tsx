@@ -11,8 +11,8 @@ import SignInPage from "@/app/ledger/sign-in/page";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockReplace = vi.fn();
-const mockPush = vi.fn();
+const mockReplace = vi.hoisted(() => vi.fn());
+const mockPush = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockReplace, push: mockPush }),

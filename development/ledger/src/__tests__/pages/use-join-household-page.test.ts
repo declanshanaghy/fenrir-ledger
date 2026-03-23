@@ -13,7 +13,7 @@ import { useJoinHouseholdPage } from "@/app/ledger/join/useJoinHouseholdPage";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
