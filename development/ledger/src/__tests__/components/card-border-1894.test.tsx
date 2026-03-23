@@ -57,37 +57,37 @@ describe("Card border consistency (#1894)", () => {
   it("ValhallaCardTile does NOT have a thick left border", () => {
     render(<ValhallaCardTile card={closedCard} />);
     const tile = screen.getByTestId("valhalla-card-tile");
-    expect(tile.className).not.toContain("border-l-4");
-    expect(tile.className).not.toContain("realm-stone");
+    expect(tile).not.toHaveClass("border-l-4");
+    expect(tile).not.toHaveClass("border-l-[hsl(var(--realm-stone))]");
   });
 
   it("ValhallaCardTile has uniform border matching HuntCardTile", () => {
     render(<ValhallaCardTile card={closedCard} />);
     const tile = screen.getByTestId("valhalla-card-tile");
-    expect(tile.className).toContain("border");
-    expect(tile.className).toContain("border-secondary");
+    expect(tile).toHaveClass("border");
+    expect(tile).toHaveClass("border-secondary");
   });
 
   it("HowlCardTile does NOT have a thick left border", () => {
     render(<HowlCardTile card={howlCard} />);
     const tile = screen.getByTestId("howl-card-tile");
-    expect(tile.className).not.toContain("border-l-4");
-    expect(tile.className).not.toContain("realm-muspel");
-    expect(tile.className).not.toContain("realm-hati");
+    expect(tile).not.toHaveClass("border-l-4");
+    expect(tile).not.toHaveClass("border-l-[hsl(var(--realm-muspel))]");
+    expect(tile).not.toHaveClass("border-l-[hsl(var(--realm-hati))]");
   });
 
   it("HowlCardTile has uniform border matching HuntCardTile", () => {
     render(<HowlCardTile card={howlCard} />);
     const tile = screen.getByTestId("howl-card-tile");
-    expect(tile.className).toContain("border");
-    expect(tile.className).toContain("border-secondary");
+    expect(tile).toHaveClass("border");
+    expect(tile).toHaveClass("border-secondary");
   });
 
   it("HuntCardTile has uniform border (reference)", () => {
     render(<HuntCardTile card={baseCard} />);
     const tile = screen.getByTestId("hunt-card-tile");
-    expect(tile.className).toContain("border");
-    expect(tile.className).toContain("border-secondary");
-    expect(tile.className).not.toContain("border-l-4");
+    expect(tile).toHaveClass("border");
+    expect(tile).toHaveClass("border-secondary");
+    expect(tile).not.toHaveClass("border-l-4");
   });
 });
