@@ -189,23 +189,10 @@ describe("Issue #1609 Fix 2 — ProfileDropdown: no transition-colors on menu it
     expect(signOut.className).not.toMatch(/\btransition-colors\b/);
   });
 
-  it("Theme menu row uses transition-[color,border-color] not transition-colors", () => {
-    render(<LedgerTopBar />);
-    openDropdown();
-    // The Theme row button has text content "Theme" — find by that text
-    const allMenuItems = screen.getAllByRole("menuitem");
-    const themeItem = allMenuItems.find((el) => el.textContent?.includes("Theme"));
-    expect(themeItem).toBeDefined();
-    if (themeItem) {
-      expect(themeItem.className).toContain("transition-[color,border-color]");
-      expect(themeItem.className).not.toMatch(/\btransition-colors\b/);
-    }
-  });
-
-  it("dropdown menu renders all 6 menu items", () => {
+  it("dropdown menu renders all 5 menu items (Theme moved to header bar — Issue #1906)", () => {
     render(<LedgerTopBar />);
     openDropdown();
     const menuItems = screen.getAllByRole("menuitem");
-    expect(menuItems.length).toBe(6);
+    expect(menuItems.length).toBe(5);
   });
 });

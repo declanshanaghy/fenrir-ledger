@@ -7,10 +7,13 @@
  *   2. Account
  *   3. Household
  *   4. Settings
- *   5. Theme   ← 2nd-last (moved from position 2)
- *   6. Sign out
+ *   5. Sign out
+ *
+ * Note: Theme was moved to the header bar (Issue #1906) and is no longer in
+ * the dropdown.
  *
  * @ref #1483
+ * @ref #1906
  */
 
 import React from "react";
@@ -84,35 +87,25 @@ describe("ProfileDropdown — menu item order (Issue #1483)", () => {
     vi.resetModules();
   });
 
-  it("renders all six menu items in the correct DOM order", async () => {
+  it("renders all five menu items in the correct DOM order", async () => {
     await openDropdown();
 
     const items = screen.getAllByRole("menuitem");
     const labels = items.map((el) => el.textContent?.trim() ?? "");
 
-    // Theme button contains the ThemeToggle span + "Theme" text
-    // The textContent of the button will include the span content (empty) + "Theme"
     expect(labels[0]).toContain("My Cards");
     expect(labels[1]).toContain("Account");
     expect(labels[2]).toContain("Household");
     expect(labels[3]).toContain("Settings");
-    expect(labels[4]).toContain("Theme");
-    expect(labels[5]).toContain("Sign out");
+    expect(labels[4]).toContain("Sign out");
   });
 
-  it("Theme is the 5th menu item (index 4) — 2nd-last before Sign out", async () => {
+  it("Sign out is the last menu item (index 4)", async () => {
     await openDropdown();
 
     const items = screen.getAllByRole("menuitem");
-    expect(items.length).toBe(6);
-    expect(items[4].textContent).toContain("Theme");
-  });
-
-  it("Sign out is the last menu item (index 5)", async () => {
-    await openDropdown();
-
-    const items = screen.getAllByRole("menuitem");
-    expect(items[5].textContent).toContain("Sign out");
+    expect(items.length).toBe(5);
+    expect(items[4].textContent).toContain("Sign out");
   });
 
   it("My Cards is the first menu item (index 0)", async () => {
@@ -131,21 +124,20 @@ describe("ProfileDropdown — menu item order (Issue #1483)", () => {
     expect(accountIdx).toBeLessThan(householdIdx);
   });
 
-  it("Settings appears before Theme in DOM order", async () => {
+  it("Settings appears before Sign out in DOM order", async () => {
     await openDropdown();
 
     const items = screen.getAllByRole("menuitem");
     const settingsIdx = items.findIndex((el) => el.textContent?.includes("Settings"));
-    const themeIdx = items.findIndex((el) => el.textContent?.includes("Theme"));
-    expect(settingsIdx).toBeLessThan(themeIdx);
+    const signOutIdx = items.findIndex((el) => el.textContent?.includes("Sign out"));
+    expect(settingsIdx).toBeLessThan(signOutIdx);
   });
 
-  it("Theme appears before Sign out in DOM order", async () => {
+  it("Theme entry is not present in the dropdown (moved to header bar — Issue #1906)", async () => {
     await openDropdown();
 
     const items = screen.getAllByRole("menuitem");
     const themeIdx = items.findIndex((el) => el.textContent?.includes("Theme"));
-    const signOutIdx = items.findIndex((el) => el.textContent?.includes("Sign out"));
-    expect(themeIdx).toBeLessThan(signOutIdx);
+    expect(themeIdx).toBe(-1);
   });
 });
