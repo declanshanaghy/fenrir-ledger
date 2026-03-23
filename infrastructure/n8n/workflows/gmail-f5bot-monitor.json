@@ -142,7 +142,7 @@
         "messages": {
           "values": [
             {
-              "content": "=F5Bot found a mention of the keyword \"{{ $json.keyword }}\" on {{ $json.subreddit }}.\n\nPost: {{ $json.postTitle }}\nAuthor: u/{{ $json.author }}\n\nContent:\n{{ $json.snippet || \"(no snippet available)\" }}\n\nURL: {{ $json.redditUrl }}\n\n{{ $json.isComment ? \"This is a comment — draft a reply to the specific comment.\" : \"This is a post — draft a top-level reply.\" }} Write 2–4 sentences that add real value to this discussion. Be specific to the content above. Only mention tracking tools or apps if the conversation naturally calls for it."
+              "content": "=F5Bot found a mention of the keyword \"{{ $json.keyword }}\" on {{ $json.subreddit }}.\n\nPost: {{ $json.postTitle }}\nAuthor: u/{{ $json.author }}\n\nContent:\n{{ $json.snippet || \"(no snippet available)\" }}\n\nURL: {{ $json.redditUrl }}\n\n{{ $json.isComment ? \"This is a comment — draft a reply to the specific comment.\" : \"This is a post — draft a top-level reply.\" }} Write 2–4 short paragraphs (one point per paragraph) that add real value to this discussion. Each paragraph should be 1-2 sentences max. Break up your response so it reads naturally on Reddit — no walls of text. Be specific to the content above. Only mention tracking tools or apps if the conversation naturally calls for it."
             }
           ]
         },
