@@ -40,6 +40,24 @@ vi.mock("@/components/entitlement/KarlUpsellDialog", async () => (await import("
 
 // ── Inline mocks (Dashboard-specific) ─────────────────────────────────────
 
+vi.mock("@/components/dashboard/HuntCardTile", () => ({
+  HuntCardTile: ({ card }: { card: { cardName: string } }) => (
+    <div data-testid={`card-tile-${card.cardName}`}>{card.cardName}</div>
+  ),
+}));
+
+vi.mock("@/components/dashboard/HowlCardTile", () => ({
+  HowlCardTile: ({ card }: { card: { cardName: string } }) => (
+    <div data-testid={`card-tile-${card.cardName}`}>{card.cardName}</div>
+  ),
+}));
+
+vi.mock("@/components/dashboard/ValhallaCardTile", () => ({
+  ValhallaCardTile: ({ card }: { card: { cardName: string } }) => (
+    <div data-testid={`card-tile-${card.cardName}`}>{card.cardName}</div>
+  ),
+}));
+
 vi.mock("@/components/dashboard/TabHeader", () => ({
   TabHeader: ({ tabId }: { tabId: string }) => (
     <div data-testid={`tab-header-${tabId}`} />
