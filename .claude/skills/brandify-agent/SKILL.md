@@ -1,27 +1,31 @@
 ---
 name: brandify-agent
-description: "Convert agent log files (stream-json from Claude Code) into styled HTML reports using the Fenrir Ledger theme. Use when the user says 'brandify agent', 'agent report', 'prettify agent log', or wants to view agent execution logs as HTML."
+description: "Convert agent log files (stream-json from Claude Code) into MDX chronicles published at /chronicles/agent-{slug}. Use when the user says 'brandify agent', 'agent report', 'prettify agent log', or wants to publish agent execution logs as chronicles."
 ---
 
-# Brandify Agent — Agent Log to HTML Report
+# Brandify Agent — Agent Log to MDX Chronicle
 
-Converts Claude Code stream-json agent logs into styled, interactive HTML reports using the Fenrir Ledger visual system. Supports local HTML viewing and publishing as chronicles.
+Converts Claude Code stream-json agent logs into MDX chronicles with plain HTML markup, styled by `chronicle.css`. Published at `/chronicles/agent-{slug}`.
 
 ## Usage
 
 ```
 /brandify-agent <session-id-or-log-path>
-/brandify-agent <session-id-or-log-path> --publish
-/brandify-agent --regen-assets
+/brandify-agent <file1.log> <file2.log> <file3.log>        # saga mode
 ```
 
 ## Arguments
 
 | Arg | Required | Description |
 |-----|----------|-------------|
-| `<session-id>` | Yes (unless `--regen-assets`) | Session ID (looks up `tmp/agent-logs/<id>.log`) or full path to `.log` file |
-| `--publish` | No | Generate MDX output to `content/blog/` for chronicles publishing at `/chronicles/agent-{slug}` |
-| `--regen-assets` | No | Regenerate shared CSS/JS files without processing a log |
+| `<session-id>` | Yes | Session ID (looks up `tmp/agent-logs/<id>.log`) or full path to `.log` file |
+
+### Saga Mode (multiple files)
+
+When given 2+ log files, brandify automatically combines them into a single continuous
+saga report via `combine-saga.mjs`. Files are auto-sorted by step number from the filename
+pattern (`issue-N-stepS-agent-hash`). The combined report shows chapter divisions between
+sessions.
 
 ## Workflow
 
@@ -56,22 +60,23 @@ fi
 If the argument is a full file path (contains `/` or ends with `.log`), use it directly
 (skip the download step — the user provided a specific file).
 
-### Step 2 — Generate the report
+**Saga mode:** If multiple file paths are provided (2+ files), combine them first:
 
-**HTML mode (default):**
 ```bash
-SCRIPT="$REPO_ROOT/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs"
-node "$SCRIPT" --input "$LOG_FILE"
+SAGA_FILE="$REPO_ROOT/tmp/agent-logs/saga-issue-$(date +%s).log"
+COMBINE="$REPO_ROOT/.claude/skills/brandify-agent/scripts/combine-saga.mjs"
+node "$COMBINE" --output "$SAGA_FILE" --sort <file1> <file2> <file3>
+LOG_FILE="$SAGA_FILE"
 ```
 
-Output goes to the same directory with `.html` extension (replacing `.log`).
-Shared assets (`agent-report.css`, `agent-report.js`) are auto-generated alongside.
+Then proceed to Step 2 with the combined saga log.
 
-**Publish mode (`--publish`):**
+### Step 2 — Generate the chronicle
+
 ```bash
 SCRIPT="$REPO_ROOT/.claude/skills/brandify-agent/scripts/generate-agent-report.mjs"
 BLOG_DIR="$REPO_ROOT/development/ledger/content/blog"
-node "$SCRIPT" --input "$LOG_FILE" --publish --blog-dir "$BLOG_DIR"
+node "$SCRIPT" --input "$LOG_FILE" --blog-dir "$BLOG_DIR"
 ```
 
 Output: `content/blog/agent-{session-slug}.mdx` with frontmatter (title, date, rune, excerpt, slug, category: "agent"). Viewable at `/chronicles/agent-{slug}`. Uses `<details>`/`<summary>` for collapsible turns (no JS needed). Agent chronicles display with an "Agent" badge on the index and detail pages.
@@ -79,10 +84,9 @@ Output: `content/blog/agent-{session-slug}.mdx` with frontmatter (title, date, r
 ### Step 3 — Report
 
 ```
-**Report generated:** `<html-path-or-mdx-path>`
+**Report generated:** `<mdx-path>`
 **Turns:** N | **Tool calls:** N | **Errors:** N
-**Verdict:** PASS/FAIL/none
-Open: `open <html-path>` or view at `/chronicles/agent-{slug}`
+View at `/chronicles/agent-{slug}`
 ```
 
 ## Metadata Detection
@@ -94,30 +98,15 @@ The report extracts session ID, branch, and model from multiple sources (in prio
 3. **Filename** — Dispatch session ID pattern: `issue-<N>-step<S>-<agent>-<hash>.log`
 4. **Git commands in log** — Branch name from `git branch --show-current` tool results
 
-## Regenerate Assets
-
-To regenerate shared CSS/JS without processing a log:
-
-```bash
-node "$SCRIPT" --regen-assets --output-dir tmp/agent-logs
-```
-
-## Output Structure
-
-```
-tmp/agent-logs/
-  agent-report.css        ← shared theme (regenerable)
-  agent-report.js         ← shared toggle logic (regenerable)
-  issue-682-step2-loki-xxxx.log   ← raw log (input)
-  issue-682-step2-loki-xxxx.html  ← styled report (output)
-```
-
 ## Features
 
-- Fenrir Ledger dark theme (void black, gold accents, Cinzel fonts)
-- Collapsible turns with thinking, text, and tool blocks
+- Plain HTML output compatible with MDXRemote `format: "md"` + `rehypeRaw`
+- Collapsible turns with thinking, text, and tool blocks via `<details>`/`<summary>`
 - Color-coded tool badges (Bash=teal, Read=blue, Edit=amber, Write=gold, Todo=purple)
-- Entrypoint section with color-coded status lines
-- Summary bar with turn/tool/error counts
+- Entrypoint section with decree formatting
+- Stats grid with turn/tool/error/token/git counts
 - Auto-detected QA verdict with PASS/FAIL styling
-- Expand All / Collapse All controls
+- Decree Complete block rendering
+- Agent callback with Norse signoff
+- Secret masking via sanitize-chronicle.mjs
+- Post-generation MDX compile validation
