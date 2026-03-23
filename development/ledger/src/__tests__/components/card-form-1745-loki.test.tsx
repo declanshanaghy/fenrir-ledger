@@ -14,96 +14,32 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-// ── Framer Motion ─────────────────────────────────────────────────────────────
+// ── Shared mock factories ──────────────────────────────────────────────────
+// See src/__tests__/mocks/ for factory definitions.
 
-vi.mock("framer-motion", () => {
-  const React = require("react");
-  const motion = {
-    div: React.forwardRef(
-      (
-        {
-          children,
-          className,
-          ...rest
-        }: React.HTMLAttributes<HTMLDivElement> & {
-          custom?: unknown;
-          variants?: unknown;
-          initial?: unknown;
-          animate?: unknown;
-          exit?: unknown;
-          transition?: unknown;
-        },
-        ref: React.Ref<HTMLDivElement>,
-      ) => React.createElement("div", { ref, className, ...rest }, children),
-    ),
-  };
-  return {
-    motion,
-    AnimatePresence: ({ children }: { children: React.ReactNode }) =>
-      React.createElement(React.Fragment, null, children),
-    useReducedMotion: () => true,
-  };
-});
+vi.mock("framer-motion", async () => (await import("../mocks/dialog-mocks")).framerMotionMock);
+vi.mock("@/hooks/useEntitlement", async () => (await import("../mocks/hook-mocks")).entitlementMockKarl);
+vi.mock("@/hooks/useTrialStatus", async () => (await import("../mocks/hook-mocks")).trialStatusMockNone);
+vi.mock("@/lib/storage", async () => (await import("../mocks/storage-mocks")).storageMockBasic);
+vi.mock("@/lib/entitlement/card-limit", async () => (await import("../mocks/storage-mocks")).cardLimitMockAllowed);
+vi.mock("@/lib/milestone-utils", async () => (await import("../mocks/storage-mocks")).milestoneMock);
+vi.mock("@/lib/auth/refresh-session", async () => (await import("../mocks/storage-mocks")).refreshSessionMock);
+vi.mock("@/lib/analytics/track", async () => (await import("../mocks/storage-mocks")).analyticsMock);
+vi.mock("@/lib/issuer-utils", async () => (await import("../mocks/storage-mocks")).issuerUtilsMock);
+vi.mock("@/components/cards/GleipnirBearSinews", async () => (await import("../mocks/component-mocks")).gleipnirBearSinewsMock);
 
-// ── Next.js Router ────────────────────────────────────────────────────────────
+// ── Inline mocks (test-specific) ──────────────────────────────────────────
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
-}));
-
-// ── Storage ───────────────────────────────────────────────────────────────────
-
-vi.mock("@/lib/storage", () => ({
-  saveCard: vi.fn(),
-  deleteCard: vi.fn(),
-  closeCard: vi.fn(),
-  getCards: vi.fn().mockReturnValue([]),
-}));
-
-// ── Entitlement + trial ───────────────────────────────────────────────────────
-
-vi.mock("@/lib/entitlement/card-limit", () => ({
-  canAddCard: vi.fn().mockReturnValue({ allowed: true }),
-}));
-
-vi.mock("@/hooks/useEntitlement", () => ({
-  useEntitlement: () => ({ tier: "karl" }),
-}));
-
-vi.mock("@/hooks/useTrialStatus", () => ({
-  clearTrialStatusCache: vi.fn(),
-  useTrialStatus: () => ({ status: "none" }),
 }));
 
 vi.mock("@/lib/trial-utils", () => ({
   LS_TRIAL_START_TOAST_SHOWN: "fenrir:trial-start-toast-shown",
 }));
 
-// ── Misc ──────────────────────────────────────────────────────────────────────
-
-vi.mock("@/lib/milestone-utils", () => ({
-  checkMilestone: vi.fn().mockReturnValue(null),
-}));
-
-vi.mock("@/lib/auth/refresh-session", () => ({
-  ensureFreshToken: vi.fn().mockResolvedValue(undefined),
-}));
-
-vi.mock("@/lib/analytics/track", () => ({
-  track: vi.fn(),
-}));
-
 vi.mock("sonner", () => ({
   toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }),
-}));
-
-vi.mock("@/components/cards/GleipnirBearSinews", () => ({
-  GleipnirBearSinews: () => null,
-  useGleipnirFragment4: () => ({ open: false, trigger: vi.fn(), dismiss: vi.fn() }),
-}));
-
-vi.mock("@/lib/issuer-utils", () => ({
-  getIssuerRune: vi.fn().mockReturnValue("ᚠ"),
 }));
 
 // ── Imports ───────────────────────────────────────────────────────────────────

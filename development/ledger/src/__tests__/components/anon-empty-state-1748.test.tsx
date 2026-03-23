@@ -19,26 +19,18 @@ import { AnonEmptyState } from "@/components/dashboard/AnonEmptyState";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { SignInNudge } from "@/components/layout/SignInNudge";
 
-// ── Mock next/link ──────────────────────────────────────────────────────────
+// ── Shared mock factories ──────────────────────────────────────────────────
+// See src/__tests__/mocks/ for factory definitions.
 
-vi.mock("next/link", () => ({
-  __esModule: true,
-  default: ({
-    href,
-    children,
-    ...props
-  }: {
-    href: string;
-    children: React.ReactNode;
-    [key: string]: unknown;
-  }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
-}));
+vi.mock("next/link", async () => (await import("../mocks/component-mocks")).nextLinkMock);
+vi.mock("@/lib/storage", async () => (await import("../mocks/storage-mocks")).storageMockTrash);
+vi.mock("@/contexts/RagnarokContext", async () => (await import("../mocks/hook-mocks")).ragnarokContextMock);
+vi.mock("@/lib/trial-utils", async () => (await import("../mocks/storage-mocks")).trialUtilsMockLimit);
+vi.mock("@/components/dashboard/CardTile", async () => (await import("../mocks/component-mocks")).cardTileMock);
+vi.mock("@/components/dashboard/AnimatedCardGrid", async () => (await import("../mocks/component-mocks")).animatedCardGridMock);
+vi.mock("@/components/entitlement/KarlUpsellDialog", async () => (await import("../mocks/component-mocks")).karlUpsellDialogMock);
 
-// ── Mock next/navigation ────────────────────────────────────────────────────
+// ── Inline mocks ──────────────────────────────────────────────────────────
 
 const mockPush = vi.hoisted(() => vi.fn());
 
@@ -46,44 +38,6 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
   usePathname: () => "/ledger",
   useSearchParams: () => new URLSearchParams(),
-}));
-
-// ── Dashboard dependency mocks ───────────────────────────────────────────────
-
-vi.mock("@/lib/storage", () => ({
-  restoreCard: vi.fn(),
-  expungeCard: vi.fn(),
-  expungeAllCards: vi.fn(),
-}));
-
-vi.mock("@/contexts/RagnarokContext", () => ({
-  useRagnarok: () => ({ ragnarokActive: false }),
-}));
-
-vi.mock("@/lib/trial-utils", () => ({
-  THRALL_CARD_LIMIT: 5,
-}));
-
-vi.mock("@/components/dashboard/CardTile", () => ({
-  CardTile: ({ card }: { card: { cardName: string } }) => (
-    <div data-testid={`card-tile-${card.cardName}`}>{card.cardName}</div>
-  ),
-}));
-
-vi.mock("@/components/dashboard/AnimatedCardGrid", () => ({
-  AnimatedCardGrid: ({
-    cards,
-    renderCard,
-  }: {
-    cards: { id: string; cardName: string }[];
-    renderCard: (card: { id: string; cardName: string }) => React.ReactNode;
-  }) => (
-    <div data-testid="card-grid">
-      {cards.map((card) => (
-        <div key={card.id}>{renderCard(card)}</div>
-      ))}
-    </div>
-  ),
 }));
 
 vi.mock("@/components/dashboard/TabHeader", () => ({
@@ -96,19 +50,6 @@ vi.mock("@/components/dashboard/TabSummary", () => ({
   TabSummary: ({ tabId }: { tabId: string }) => (
     <div data-testid={`tab-summary-${tabId}`} />
   ),
-}));
-
-vi.mock("@/components/entitlement/KarlUpsellDialog", () => ({
-  KarlUpsellDialog: ({ open, onDismiss }: { open: boolean; onDismiss: () => void }) =>
-    open ? (
-      <div data-testid="karl-upsell-dialog">
-        <button onClick={onDismiss}>Dismiss</button>
-      </div>
-    ) : null,
-  KARL_UPSELL_VALHALLA: {},
-  KARL_UPSELL_VELOCITY: {},
-  KARL_UPSELL_HOWL: {},
-  KARL_UPSELL_TRASH: {},
 }));
 
 vi.mock("@/components/dashboard/TrashView", () => ({
