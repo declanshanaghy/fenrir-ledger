@@ -39,7 +39,7 @@
     --secondary-foreground: 25  55% 10%;
 
     --muted:                36  24% 85%;    /* #dad0b6 — warm muted surface */
-    --muted-foreground:     28  28% 35%;    /* #6f5238 — warm brown */
+    --muted-foreground:     27  35% 28%;    /* #5a3d23 — warm dark brown (WCAG AA, Issue #1874) */
 
     --accent:               42  35% 87%;    /* #dfd1af — gold-wash accent */
     --accent-foreground:    25  55% 10%;
@@ -49,7 +49,7 @@
     --destructive-foreground: 0  0% 100%;
 
     /* ── Structure ──────────────────────────────────────────── */
-    --border:               35  28% 74%;    /* #c8ad88 — warm tan border */
+    --border:               33  36% 48%;    /* #966b3c — warm brown border, visible on parchment (Issue #1874) */
     --input:                38  25% 91%;    /* #ebdfcb — parchment input */
     --ring:                 38  80% 28%;    /* dark burnt gold focus ring */
     --radius:               0.25rem;        /* sharp, angular — not pill */
@@ -316,6 +316,21 @@
       0 0 12px hsl(var(--primary) / 0.12);
   }
 }
+
+/* ── Issue #1874: Structural border thickness ───────────────────────────────
+ *
+ * Direction-specific border utilities upgraded to 1.5px so structural lines
+ * (headers, footers, nav separators, dividers, sidebar edge) are clearly
+ * visible on the parchment background and in both themes.
+ *
+ * Using unlayered CSS to take precedence over @layer utilities (Tailwind).
+ * Card borders are handled at the component level via `border-2` (2px).
+ * Inline-style toaster borders updated in AppShell/LedgerShell separately.
+ */
+.border-t { border-top-width: 1.5px; }
+.border-b { border-bottom-width: 1.5px; }
+.border-r { border-right-width: 1.5px; }
+.border-l { border-left-width: 1.5px; }
 
 /* ── Interactive Card Hover ─────────────────────────────────────────────────
  *
