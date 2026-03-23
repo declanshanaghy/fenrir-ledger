@@ -151,10 +151,13 @@ function sanitizeSheetsCsvForSecurity(csv: string): string {
 }
 
 /**
- * Extract card data from a binary XLS/XLSX file via SheetJS + LLM.
+ * Extract card data from an XLSX file via ExcelJS + LLM.
  *
  * Converts all visible sheets to CSV (merged with newlines), then
  * passes the combined text through the standard CSV extraction pipeline.
+ *
+ * Note: Legacy .xls (BIFF binary) format is not supported. Users should
+ * re-save their file as .xlsx before uploading.
  *
  * @param base64 - Raw base64-encoded file content (no data URL prefix)
  * @param mimeType - MIME type of the file (unused, format drives parsing)
@@ -169,30 +172,40 @@ export async function extractCardsFromFile(
 ): Promise<SheetImportResponse> {
   log.debug("extractCardsFromFile called", { filename, format, mimeType, base64Length: base64.length });
 
+  // Legacy .xls (BIFF binary format) is not supported by exceljs.
+  // Guide users to re-save their file as .xlsx before uploading.
+  if (format === "xls") {
+    log.debug("extractCardsFromFile returning", { errorCode: "INVALID_CSV", reason: "xls not supported" });
+    return {
+      error: {
+        code: "INVALID_CSV",
+        message:
+          "Legacy .xls files are not supported. Please save your spreadsheet as .xlsx (Excel Workbook) and try again.",
+      },
+    };
+  }
+
   let csvText: string;
   try {
-    // Dynamically import SheetJS to avoid bundling on client
-    const XLSX = await import("xlsx");
+    // Dynamically import ExcelJS to avoid bundling on client (CVE fix: replaces xlsx 0.18.5)
+    const { Workbook } = await import("exceljs");
 
-    // Decode base64 to binary
+    // Decode base64 to binary buffer and load workbook.
+    // Cast via unknown: ExcelJS declares its own Buffer interface (extends ArrayBuffer)
+    // which TypeScript treats as distinct from Node.js Buffer, but ExcelJS accepts both at runtime.
     const binary = Buffer.from(base64, "base64");
-    const workbook = XLSX.read(binary, { type: "buffer" });
+    const workbook = new Workbook();
+    await workbook.xlsx.load(binary as unknown as ArrayBuffer);
 
     // Convert all visible sheets to CSV and concatenate
     const sheetCsvParts: string[] = [];
-    for (const sheetName of workbook.SheetNames) {
-      const sheet = workbook.Sheets[sheetName];
-      if (!sheet) continue;
+    for (const worksheet of workbook.worksheets) {
+      // Skip hidden sheets
+      if (worksheet.state === "hidden" || worksheet.state === "veryHidden") continue;
 
-      // Skip sheets explicitly hidden (SheetJS marks hidden sheets in !visiblity or via sheetVisibility)
-      // Access workbook properties safely
-      const wb = workbook as typeof workbook & { Workbook?: { Sheets?: Array<{ Hidden?: number }> } };
-      const sheetMeta = wb.Workbook?.Sheets?.[workbook.SheetNames.indexOf(sheetName)];
-      if (sheetMeta?.Hidden) continue;
-
-      const sheetCsv = XLSX.utils.sheet_to_csv(sheet, { forceQuotes: false });
+      const sheetCsv = worksheetToCsv(worksheet);
       if (sheetCsv.trim().length > 0) {
-        sheetCsvParts.push(`# Sheet: ${sheetName}\n${sheetCsv}`);
+        sheetCsvParts.push(`# Sheet: ${worksheet.name}\n${sheetCsv}`);
       }
     }
 
@@ -213,7 +226,7 @@ export async function extractCardsFromFile(
 
     log.debug("extractCardsFromFile converted to CSV", { csvLength: csvText.length, sheetCount: sheetCsvParts.length });
   } catch (err) {
-    log.error("extractCardsFromFile: SheetJS parsing failed", err);
+    log.error("extractCardsFromFile: ExcelJS parsing failed", err);
     return {
       error: {
         code: "INVALID_CSV",
@@ -224,4 +237,66 @@ export async function extractCardsFromFile(
 
   // Delegate to the standard CSV extraction pipeline
   return extractCardsFromCsv(csvText);
+}
+
+/**
+ * Convert an ExcelJS Worksheet to a CSV string.
+ *
+ * Handles all ExcelJS cell value types:
+ * - Primitives (null, string, number, boolean) → direct conversion
+ * - Date → ISO string
+ * - Formula / shared formula → resolved result value
+ * - Rich text → concatenated plain text
+ * - Hyperlink → display text
+ * - Error → empty string
+ */
+function worksheetToCsv(worksheet: import("exceljs").Worksheet): string {
+  const rows: string[] = [];
+  worksheet.eachRow({ includeEmpty: false }, (row) => {
+    const cells: string[] = [];
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cells.push(cellValueToString(cell.value));
+    });
+    rows.push(cells.join(","));
+  });
+  return rows.join("\n");
+}
+
+/**
+ * Convert a single ExcelJS CellValue to a CSV-safe string.
+ */
+function cellValueToString(value: import("exceljs").CellValue): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return quoteCsvField(value);
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object") {
+    // Formula or shared formula — use the resolved result
+    if ("formula" in value || "sharedFormula" in value) {
+      const formulaValue = value as import("exceljs").CellFormulaValue | import("exceljs").CellSharedFormulaValue;
+      return formulaValue.result !== undefined ? cellValueToString(formulaValue.result) : "";
+    }
+    // Rich text — join all text runs
+    if ("richText" in value) {
+      const text = value.richText.map((r) => r.text).join("");
+      return quoteCsvField(text);
+    }
+    // Hyperlink — use display text
+    if ("text" in value) {
+      return quoteCsvField(String((value as import("exceljs").CellHyperlinkValue).text));
+    }
+    // Error value — leave empty
+    if ("error" in value) return "";
+  }
+  return "";
+}
+
+/**
+ * Quote a CSV field if it contains a comma, newline, or double-quote.
+ */
+function quoteCsvField(value: string): string {
+  if (value.includes(",") || value.includes("\n") || value.includes('"')) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
 }
