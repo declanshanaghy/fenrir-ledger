@@ -78,7 +78,7 @@ describe("buildInviteMailtoUrl", () => {
     const url = buildInviteMailtoUrl(code, { random: () => 0 });
     const params = new URLSearchParams(url.replace("mailto:your-friend@example.com?", ""));
     const body = params.get("body") ?? "";
-    expect(body).toContain("fenrirledger.com");
+    expect(body).toContain("https://fenrirledger.com");
     expect(body).toContain("Settings > Household");
     expect(body).toContain("Join a Household");
   });
