@@ -797,12 +797,17 @@ function DecreeSectionBody({ body }: { body: string }) {
   const elements: Array<React.ReactElement> = [];
   const listBuffer: string[] = [];
   const codeBuffer: string[] = [];
+  const fenceBuffer: string[] = [];
+  let inFence = false;
+  let fenceLang = "";
   let keyIdx = 0;
 
+  // Triple-backtick fences are handled separately — exclude from isCodeLine
   const isCodeLine = (line: string) =>
-    /^(cd |git |gh |bash |npm |node |```)/.test(line.trimStart()) || /^ {2,}/.test(line);
+    /^(cd |git |gh |bash |npm |node )/.test(line.trimStart()) || /^ {2,}/.test(line);
   const isListLine = (line: string) => /^[-*] /.test(line.trimStart());
   const isHeadingLine = (line: string) => /^##\s+/.test(line.trimStart()) || /^\*\*/.test(line.trimStart());
+  const isFenceLine = (line: string) => /^`{3,}/.test(line.trimStart());
 
   const flushList = () => {
     if (listBuffer.length === 0) return;
@@ -827,7 +832,39 @@ function DecreeSectionBody({ body }: { body: string }) {
     codeBuffer.length = 0;
   };
 
+  const flushFence = () => {
+    if (fenceBuffer.length === 0 && !inFence) return;
+    elements.push(
+      <pre key={`fence-${keyIdx++}`} className="decree-body-fence">
+        <code className={fenceLang ? `language-${fenceLang}` : undefined}>
+          {fenceBuffer.join("\n")}
+        </code>
+      </pre>
+    );
+    fenceBuffer.length = 0;
+    inFence = false;
+    fenceLang = "";
+  };
+
   for (const line of lines) {
+    // Handle triple-backtick fences first
+    if (isFenceLine(line)) {
+      if (!inFence) {
+        flushList();
+        flushCode();
+        inFence = true;
+        fenceLang = line.trimStart().replace(/^`{3,}/, "").trim();
+      } else {
+        flushFence();
+      }
+      continue;
+    }
+
+    if (inFence) {
+      fenceBuffer.push(line);
+      continue;
+    }
+
     if (isCodeLine(line)) {
       flushList();
       codeBuffer.push(line);
@@ -849,6 +886,8 @@ function DecreeSectionBody({ body }: { body: string }) {
   }
   flushCode();
   flushList();
+  // Flush any unclosed fence (render what we have)
+  if (inFence) flushFence();
 
   return <>{elements}</>;
 }
