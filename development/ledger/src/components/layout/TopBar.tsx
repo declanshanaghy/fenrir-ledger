@@ -33,6 +33,7 @@ import { useTheme } from "next-themes";
 import { ThemeToggle, cycleTheme } from "@/components/layout/ThemeToggle";
 import { getEntitlementCache, clearEntitlementCache } from "@/lib/entitlement/cache";
 import { buildSignInUrl } from "@/lib/auth/sign-in-url";
+import { KarlBadge } from "@/components/layout/KarlBadge";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -299,30 +300,6 @@ function UpsellPromptPanel({ panelId, onClose, triggerRef }: UpsellPromptProps) 
   );
 }
 
-// ── KarlBadge ─────────────────────────────────────────────────────────────────
-
-/**
- * KARL subscriber badge — rendered in the header next to the user email.
- * Always in the DOM when authenticated; CSS cascade controls visibility:
- *   [data-tier="karl"] .karl-bling-badge { display: inline-flex; }
- *
- * Hidden for trial and thrall tiers (CSS-only, zero JS logic needed).
- * Runic accents (ᚷ Gebo) are decorative — aria-hidden.
- */
-function KarlBadge() {
-  return (
-    <span
-      className="karl-bling-badge"
-      aria-label="Karl subscriber"
-      role="img"
-    >
-      <span className="karl-badge-rune" aria-hidden="true">ᚷ</span>
-      KARL
-      <span className="karl-badge-rune" aria-hidden="true">ᚷ</span>
-    </span>
-  );
-}
-
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
 export function TopBar() {
@@ -414,6 +391,9 @@ export function TopBar() {
             </button>
           )}
 
+          {/* ── Karl/trial badge — CSS controls visibility per tier ── */}
+          {isAuthenticated && user && <KarlBadge />}
+
           {/* ── Signed-in state ── */}
           {isAuthenticated && user && (
             <button
@@ -431,9 +411,6 @@ export function TopBar() {
               <span className="text-sm text-muted-foreground font-body hidden sm:block max-w-[200px] truncate">
                 {user.email}
               </span>
-
-              {/* KARL badge — CSS-only visibility, shown only for Karl subscribers */}
-              <KarlBadge />
 
               {/* Avatar */}
               <Avatar picture={user.picture} name={user.name} size={32} goldRing={true} />
