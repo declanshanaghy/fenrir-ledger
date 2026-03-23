@@ -799,7 +799,8 @@ body {
 .ws-badge.open            { color: var(--teal-asgard); border-color: var(--teal-asgard); }
 .ws-badge.closed          { color: var(--text-void); border-color: var(--rune-border); }
 .ws-badge.error           { color: var(--error-strong); border-color: var(--error-strong); }
-.ws-badge.replayed-cache  { color: var(--gold); border-color: var(--gold); opacity: 0.85; }
+.ws-badge.replayed-cache,
+.header-action-btn.replayed-cache { color: var(--gold); border-color: var(--gold); opacity: 0.85; cursor: default; }
 /* icon variant: higher specificity wins over state-based border-color overrides above */
 .ws-badge.ws-badge-icon   { border: none; padding: 0; border-radius: 0; }
 
