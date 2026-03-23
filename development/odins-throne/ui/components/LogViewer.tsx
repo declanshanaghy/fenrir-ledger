@@ -82,9 +82,10 @@ import { ToolBlock } from "./ToolBlock";
 import { NorseErrorTablet } from "./NorseErrorTablet";
 import { NorseVerdictInscription, isVerdictMessage } from "./NorseVerdictInscription";
 import { DecreeBlock, isDecreeBlock } from "./DecreeBlock";
-import { AGENT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
+import { AGENT_AVATARS, AGENT_LIGHT_AVATARS, AGENT_COLORS, AGENT_NAMES, AGENT_RUNE_NAMES, AGENT_TITLES, STATUS_COLORS, STATUS_LABELS, WIKI_LINKS } from "../lib/constants";
 import { StatusIconSvg } from "./StatusIcon";
 import { downloadLogFile } from "../lib/localStorageLogs";
+import { useTheme } from "../hooks/useTheme";
 
 import { resolveSessionTitle } from "../lib/resolveSessionTitle";
 
@@ -602,9 +603,11 @@ function AgentBubble({
     );
   }
 
+  const { theme } = useTheme();
   const name = agentName ?? AGENT_NAMES[agentKey ?? ""] ?? "Agent";
   const title = AGENT_TITLES[agentKey ?? ""] ?? "";
-  const avatar = AGENT_AVATARS[agentKey ?? ""];
+  const avatarMap = theme === "light" ? AGENT_LIGHT_AVATARS : AGENT_AVATARS;
+  const avatar = avatarMap[agentKey ?? ""];
   const color = AGENT_COLORS[agentKey ?? ""] ?? "var(--gold)";
 
   return (
