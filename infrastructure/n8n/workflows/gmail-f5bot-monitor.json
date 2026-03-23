@@ -141,7 +141,7 @@
           "parameters": [
             {
               "name": "User-Agent",
-              "value": "fenrir-ledger-n8n/1.0"
+              "value": "fenrir-ledger:f5bot-monitor:v1.0 (by /u/Wide-Pass369)"
             }
           ]
         },
