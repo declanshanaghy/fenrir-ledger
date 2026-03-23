@@ -432,4 +432,18 @@ describe("useJoinHouseholdPage — entitlement refresh on join success (#1823)",
     expect(mockClearEntitlementCache).not.toHaveBeenCalled();
     expect(mockRefreshEntitlement).not.toHaveBeenCalled();
   });
+
+  it("does NOT refresh entitlement or clear cache on network error (fetch throws)", async () => {
+    const result = await setupWithPreview();
+
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error("offline"));
+
+    await act(async () => {
+      await result.current.handleConfirmJoin();
+    });
+
+    expect(result.current.step).toBe("merge_error");
+    expect(mockClearEntitlementCache).not.toHaveBeenCalled();
+    expect(mockRefreshEntitlement).not.toHaveBeenCalled();
+  });
 });
