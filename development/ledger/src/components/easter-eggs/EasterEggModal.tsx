@@ -9,6 +9,7 @@
  *   - Two-column body: image left | divider | children right
  *   - Footer "So it is written" dismiss button
  *   - Optional howl: pass audioSrc="/sounds/fenrir-growl.mp3" to play on open
+ *   - Optional audioFade: fade-in 500ms on open, fade-out 600ms on close
  *
  * Accessibility:
  *   - DialogTitle maps to the supplied `title` prop (screen-reader visible).
@@ -30,6 +31,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+
+// -- Constants --
+
+const HOWL_TARGET_VOLUME = 0.25;
+const FADE_STEP_MS = 40;
 
 // -- Types --
 
@@ -53,6 +59,11 @@ export interface EasterEggModalProps {
    * restrictions. Pass undefined to suppress audio.
    */
   audioSrc?: string;
+  /**
+   * When true, audio fades in over ~500ms on open and fades out over ~600ms
+   * on close. Requires audioSrc to have any effect.
+   */
+  audioFade?: boolean;
   /** Discovery text, lore, and reward details -- rendered in the right column. */
   children: ReactNode;
 }
@@ -66,33 +77,88 @@ export function EasterEggModal({
   description = "You have found a hidden easter egg.",
   image,
   audioSrc,
+  audioFade = false,
   children,
 }: EasterEggModalProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fadeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Play the howl whenever the modal opens.
+  // Handle audio play/stop with optional fade on open/close transitions.
+  // No cleanup return — we don't interrupt fade timers on re-render.
   useEffect(() => {
-    if (!open || !audioSrc) return;
+    if (!audioSrc) return;
 
     if (!audioRef.current) {
       audioRef.current = new Audio(audioSrc);
     }
-
     const audio = audioRef.current;
-    audio.currentTime = 0;
 
-    audio.play().catch((err: unknown) => {
-      if (!(err instanceof DOMException)) return;
-      // Silently ignore autoplay policy blocks and abort signals — both are expected
-      // in headless / background contexts and require no user-facing action.
-      if (err.name === "NotAllowedError" || err.name === "AbortError") return;
-      console.warn("[EasterEggModal] audio playback error:", err);
-    });
+    // Cancel any in-flight fade before starting a new one.
+    if (fadeTimerRef.current) {
+      clearInterval(fadeTimerRef.current);
+      fadeTimerRef.current = null;
+    }
 
+    if (open) {
+      audio.currentTime = 0;
+
+      if (audioFade) {
+        audio.volume = 0;
+        audio.play().catch((err: unknown) => {
+          if (!(err instanceof DOMException)) return;
+          if (err.name === "NotAllowedError" || err.name === "AbortError") return;
+          console.warn("[EasterEggModal] audio playback error:", err);
+        });
+        const step = HOWL_TARGET_VOLUME / (500 / FADE_STEP_MS);
+        fadeTimerRef.current = setInterval(() => {
+          const next = Math.min(audio.volume + step, HOWL_TARGET_VOLUME);
+          audio.volume = next;
+          if (next >= HOWL_TARGET_VOLUME) {
+            clearInterval(fadeTimerRef.current!);
+            fadeTimerRef.current = null;
+          }
+        }, FADE_STEP_MS);
+      } else {
+        audio.play().catch((err: unknown) => {
+          if (!(err instanceof DOMException)) return;
+          if (err.name === "NotAllowedError" || err.name === "AbortError") return;
+          console.warn("[EasterEggModal] audio playback error:", err);
+        });
+      }
+    } else if (!audio.paused) {
+      // Modal just closed while audio is still playing.
+      if (audioFade) {
+        const startVol = audio.volume;
+        const step = startVol > 0 ? startVol / (600 / FADE_STEP_MS) : 0;
+        if (step > 0) {
+          fadeTimerRef.current = setInterval(() => {
+            const next = Math.max(audio.volume - step, 0);
+            audio.volume = next;
+            if (next <= 0) {
+              clearInterval(fadeTimerRef.current!);
+              fadeTimerRef.current = null;
+              audio.pause();
+              audio.currentTime = 0;
+            }
+          }, FADE_STEP_MS);
+        } else {
+          audio.pause();
+        }
+      } else {
+        audio.pause();
+      }
+    }
+  }, [open, audioSrc, audioFade]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Unmount cleanup only — cancel intervals and silence audio.
+  useEffect(() => {
     return () => {
-      audio.pause();
+      if (fadeTimerRef.current) {
+        clearInterval(fadeTimerRef.current);
+      }
+      audioRef.current?.pause();
     };
-  }, [open, audioSrc]);
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
