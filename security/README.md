@@ -4,7 +4,7 @@ Owned by **Heimdall** (`.claude/agents/heimdall.md`).
 
 This directory contains all security documentation for the Fenrir Ledger project: audit reports, architecture diagrams, checklists, and advisories.
 
-## Current State (as of 2026-03-20)
+## Current State (as of 2026-03-23)
 
 - **Infrastructure**: GKE Autopilot (not Vercel). See `infrastructure/k8s/app/` for deployment manifests.
 - **Subscription platform**: Stripe Direct only. Patreon has been fully removed.
@@ -13,8 +13,10 @@ This directory contains all security documentation for the Fenrir Ledger project
 - **CSP**: Includes all required Google and Stripe domains.
 - **Entitlement store**: Firestore (migrated from Upstash Redis in issue #1521 — `KV_REST_API_URL` and `KV_REST_API_TOKEN` no longer used or deployed).
 - **Firestore sync (issue #1126)**: ~~2 CRITICAL IDOR vulnerabilities~~ → **RESOLVED**. IDOR in `/api/sync/pull` (PR #1203) and `/api/sync/push` (PR #1207) fixed — both routes now derive `householdId` from the server-side user record, not the client. See report below.
+- **Odin's Throne (issue #1879)**: **1 CRITICAL OPEN** — oauth2-proxy `--skip-auth-regex=.*` bypasses all authentication on `odins-throne.fenrirledger.com`. The full monitor UI and job API are publicly accessible without credentials. Assign to FiremanDecko for immediate fix.
 - **Open findings (Firestore audit)**: 1 HIGH (invite validate PII leakage), 3 MEDIUM (no rate limiting on invite/sync routes, Admin SDK bypasses rules), 3 LOW (error handling, entropy docs, tier disclosure), 3 INFO (emulator-only rules, soft-delete, no collection group).
 - **Open findings (older reports)**: 3 LOW (distributed rate limiting, webhook deduplication, email validation), 3 INFO (trust chain comment, publishable key monitoring), plus external pentest CRITICAL (Next.js CVEs #475 — **RESOLVED**: upgraded to Next.js 16.x) and HIGH (SheetJS #476 — still open).
+- **Report format note**: Pen test reports are now published as self-contained HTML files (e.g., `security/pen-test-report.html`) in addition to Markdown reports in `security/reports/`.
 
 ---
 
@@ -22,6 +24,7 @@ This directory contains all security documentation for the Fenrir Ledger project
 
 | Date | Scope | Risk Summary | Status | Path |
 |------|-------|-------------|--------|------|
+| 2026-03-23 | **External Pen Test — fenrirledger.com + Odin's Throne** (issue #1879) | **1C / 0H / 0M / 2L / 2I** | **[Active] CRITICAL Throne auth bypass open; LOW/INFO new findings; see open tracker** | [pen-test-report.html](pen-test-report.html) |
 | 2026-03-17 | **Firestore Sync & Household Data Access** (issue #1126) | **2C / 1H / 3M / 3L / 3I** | **[Active] CRITICAL IDOR fixed in PRs #1203 + #1207; HIGH + MEDIUM findings open** | [reports/2026-03-17-firestore-sync-audit.md](reports/2026-03-17-firestore-sync-audit.md) |
 | 2026-03-10 | **Comprehensive External Pen Test** — Consolidated from 4 parallel audits (#470–473) | **1C / 1H / 3M / 3L / 5I** | **[Active] CRITICAL Next.js CVEs RESOLVED (Next.js upgraded to 16.x); HIGH SheetJS unpatched — see issues** | [reports/2026-03-09-external-pentest.md](reports/2026-03-09-external-pentest.md) |
 | 2026-03-02 | Google API Integration | 0C / 3H / 3M / 3L / 3I | Active — findings partially open | [reports/2026-03-02-google-api-integration.md](reports/2026-03-02-google-api-integration.md) |
@@ -90,6 +93,16 @@ None to date.
 ## Open Findings Tracker
 
 The following findings from active reports remain open. Assign to FiremanDecko for remediation.
+
+### External Pen Test (2026-03-23 — fenrirledger.com + Odin's Throne, issue #1879)
+
+| ID | Report | Severity | Title | Status | Issue |
+|----|--------|----------|-------|--------|-------|
+| **PT2026-CRIT-001** | **pen-test-report.html** | **CRITICAL** | **Odin's Throne: oauth2-proxy auth bypass via `--skip-auth-regex=.*` — all routes unauthenticated** | Open | — |
+| PT2026-LOW-001 | pen-test-report.html | LOW | Technology disclosure via `x-powered-by: Next.js` header | Open | — |
+| PT2026-LOW-002 | pen-test-report.html | LOW | Build commit SHA exposed in `/api/health` response | Open | — |
+| PT2026-INFO-001 | pen-test-report.html | INFO | No `/.well-known/security.txt` file | Open | — |
+| PT2026-INFO-002 | pen-test-report.html | INFO | Naked domain redirect includes explicit port 443 in Location header | Open | — |
 
 ### Firestore Sync (2026-03-17 Audit)
 
