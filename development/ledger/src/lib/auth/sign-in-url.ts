@@ -6,8 +6,10 @@
  *
  * Security: only relative paths starting with "/" are accepted. Protocol-relative
  * URLs ("//evil.com"), absolute URLs, and paths containing backslashes or
- * control characters are rejected. The sign-in page defaults to /ledger when
- * returnTo is missing or invalid.
+ * control characters are rejected. URL-encoded slash/backslash sequences
+ * (%2f, %5c) are also rejected to prevent bypass via encoded characters that
+ * browsers decode before navigating (SEV-001 fix — issue #1889).
+ * The sign-in page defaults to /ledger when returnTo is missing or invalid.
  */
 
 const DEFAULT_DESTINATION = "/ledger";
@@ -20,6 +22,9 @@ const DEFAULT_DESTINATION = "/ledger";
  *  - Absolute URLs (http://, https://, etc.)
  *  - Protocol-relative URLs (//evil.com)
  *  - Paths with backslashes (\\evil.com — some browsers normalise \ to /)
+ *  - URL-encoded slashes (%2f) and backslashes (%5c) — browsers decode these
+ *    before navigation, turning /%2fevil.com into //evil.com (SEV-001)
+ *  - Double-encoded variants (e.g. /%252fevil.com → /%2fevil.com after decode)
  *  - Paths with control characters or encoded newlines
  *  - The sign-in page itself (would cause a loop)
  *
@@ -40,9 +45,34 @@ export function validateReturnTo(value: string | null | undefined): string {
     return DEFAULT_DESTINATION;
   }
 
+  // Reject URL-encoded slashes (%2f) and backslashes (%5c) — SEV-001.
+  // Browsers decode these before navigating, so /%2fevil.com → //evil.com.
+  if (/%2f/i.test(trimmed) || /%5c/i.test(trimmed)) {
+    return DEFAULT_DESTINATION;
+  }
+
   // Reject control characters and encoded newlines (%0a, %0d) which can
   // enable header injection in some environments.
   if (/[\x00-\x1f]/.test(trimmed) || /%0[aAdD]/i.test(trimmed)) {
+    return DEFAULT_DESTINATION;
+  }
+
+  // Decode once and re-run key checks to catch double-encoded bypass attempts.
+  // Example: /%252fevil.com → /%2fevil.com after one decode → caught above.
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(trimmed);
+  } catch {
+    // Malformed percent-encoding — reject.
+    return DEFAULT_DESTINATION;
+  }
+
+  if (
+    decoded.startsWith("//") ||
+    decoded.includes("\\") ||
+    /%2f/i.test(decoded) ||
+    /%5c/i.test(decoded)
+  ) {
     return DEFAULT_DESTINATION;
   }
 
