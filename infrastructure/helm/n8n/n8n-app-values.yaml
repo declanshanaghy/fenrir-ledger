@@ -42,11 +42,11 @@ config:
       value: "https://marketing.fenrirledger.com/"
     - name: WEBHOOK_URL
       value: "https://marketing.fenrirledger.com/"
-    - name: ANTHROPIC_API_KEY
+    - name: N8N_API_KEY
       valueFrom:
         secretKeyRef:
           name: n8n-secrets
-          key: ANTHROPIC_API_KEY
+          key: N8N_API_KEY
 
 # Secrets from K8s secret. Only N8N_ENCRYPTION_KEY comes from the secret.
 # Host/port/protocol are set via config (not secrets — they're not sensitive).
