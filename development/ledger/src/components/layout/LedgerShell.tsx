@@ -59,7 +59,7 @@ export function LedgerShell({ children }: LedgerShellProps) {
       <div className="flex flex-col h-screen bg-background">
         {/* Slim top bar placeholder */}
         <div className="h-12 shrink-0 border-b border-border" />
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden">
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
       </div>
@@ -72,8 +72,11 @@ export function LedgerShell({ children }: LedgerShellProps) {
       <LedgerTopBar />
 
       {/* Full-width content area — no sidebar */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Main content */}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {/* Main content — flex-col + flex-1 allocates a definite HEIGHT so
+            overflow-auto creates a properly bounded scroll container.
+            Issue #1919: flex ROW left height from align-self:stretch which
+            some browsers don't treat as definite, causing excess scroll. */}
         <main
           id="main-content"
           className="flex-1 overflow-auto pb-14 md:pb-0"
