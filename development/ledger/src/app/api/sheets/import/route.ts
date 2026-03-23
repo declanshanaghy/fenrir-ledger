@@ -4,6 +4,7 @@ import type { SheetImportError } from "@/lib/sheets/types";
 import { importFromSheet } from "@/lib/sheets/import-pipeline";
 import { importFromCsv } from "@/lib/sheets/csv-import-pipeline";
 import { importFromFile } from "@/lib/sheets/file-import-pipeline";
+import { validateImportUrl } from "@/lib/sheets/url-validation";
 import { requireAuthz } from "@/lib/auth/authz";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
@@ -143,6 +144,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const validated = validateMode(parsed.body);
   if (!validated.ok) return validated.response;
+
+  // SSRF prevention: validate URL before passing to the pipeline (MEDIUM-002 / #1891)
+  if (validated.mode === "url") {
+    const urlError = validateImportUrl(validated.url);
+    if (urlError) {
+      log.warn("POST /api/sheets/import: rejected URL — SSRF prevention", { reason: urlError });
+      return errorResponse("INVALID_URL", urlError);
+    }
+  }
 
   try {
     const result = await runPipeline(validated);
