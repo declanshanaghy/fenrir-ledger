@@ -216,7 +216,6 @@ export function HowlCardTile({ card, lokiLabel }: HowlCardTileProps) {
 
   const daysUntilSoonest = getHowlDaysUntilSoonest(card);
   const tier = getHowlUrgencyTier(daysUntilSoonest);
-  const borderClass = getHowlBorderClass(tier);
   const urgencyTextClass = getHowlUrgencyTextClass(tier);
 
   // Timer ring deadline: fee_approaching/overdue → annualFeeDate, promo_expiring → bonus deadline
@@ -261,10 +260,7 @@ export function HowlCardTile({ card, lokiLabel }: HowlCardTileProps) {
 
       <Link href={`/ledger/cards/${card.id}/edit`} className="block group">
         <Card
-          className={cn(
-            "h-full border border-secondary cursor-pointer border-l-4",
-            borderClass
-          )}
+          className="h-full border border-secondary cursor-pointer"
           data-testid="howl-card-tile"
         >
           <CardHeader className="pb-3">

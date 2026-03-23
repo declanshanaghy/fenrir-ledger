@@ -200,7 +200,7 @@ export function ValhallaCardTile({ card, lokiLabel }: ValhallaCardTileProps) {
 
       <Link href={`/ledger/cards/${card.id}/edit`} className="block group">
         <Card
-          className="h-full border border-secondary cursor-pointer border-l-4 border-l-[hsl(var(--realm-stone))]"
+          className="h-full border border-secondary cursor-pointer"
           data-testid="valhalla-card-tile"
         >
           <CardHeader className="pb-3">
