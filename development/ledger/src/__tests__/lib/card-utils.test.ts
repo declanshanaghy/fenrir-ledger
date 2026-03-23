@@ -22,30 +22,8 @@ import {
   dollarsToCents,
   centsToDollars,
 } from "@/lib/card-utils";
-import type { Card } from "@/lib/types";
 import { FEE_APPROACHING_DAYS, PROMO_EXPIRING_DAYS } from "@/lib/constants";
-
-// ── Test helpers ──────────────────────────────────────────────────────────
-
-function makeCard(overrides: Partial<Card> = {}): Card {
-  return {
-    id: "test-id",
-    householdId: "hh-1",
-    issuerId: "chase",
-    cardName: "Test Card",
-    openDate: "2025-01-01T00:00:00.000Z",
-    creditLimit: 500000,
-    annualFee: 0,
-    annualFeeDate: "",
-    promoPeriodMonths: 0,
-    signUpBonus: null,
-    status: "active",
-    notes: "",
-    createdAt: "2025-01-01T00:00:00.000Z",
-    updatedAt: "2025-01-01T00:00:00.000Z",
-    ...overrides,
-  };
-}
+import { makeCard } from "@/__tests__/fixtures/cards";
 
 /** Returns a Date object for "today + n days" at midnight local time. */
 function daysFromNow(n: number): Date {

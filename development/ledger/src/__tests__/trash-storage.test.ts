@@ -16,41 +16,15 @@ import {
   setAllCards,
   getCards,
 } from "@/lib/storage";
-import type { Card } from "@/lib/types";
+import { makeCard, makeDeletedCard } from "@/__tests__/fixtures/cards";
 
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-const HOUSEHOLD_ID = "test-household-1";
-
-function makeCard(overrides: Partial<Card> = {}): Card {
-  const id = overrides.id ?? `card-${Math.random().toString(36).slice(2)}`;
-  return {
-    id,
-    householdId: HOUSEHOLD_ID,
-    cardName: "Test Card",
-    issuerId: "chase",
-    openDate: "2026-01-01T00:00:00.000Z",
-    creditLimit: 500000,
-    annualFee: 0,
-    annualFeeDate: "",
-    promoPeriodMonths: 0,
-    signUpBonus: null,
-    notes: "",
-    status: "active",
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z",
-    ...overrides,
-  } as Card;
-}
-
-function makeDeletedCard(overrides: Partial<Card> = {}): Card {
-  return makeCard({
-    deletedAt: "2026-03-01T12:00:00.000Z",
-    ...overrides,
-  });
-}
+// "hh-test" matches the shared fixture default householdId so makeCard()
+// and getDeletedCards(HOUSEHOLD_ID) use the same key without explicit overrides.
+const HOUSEHOLD_ID = "hh-test";
 
 // ---------------------------------------------------------------------------
 // Setup: seed localStorage before each test

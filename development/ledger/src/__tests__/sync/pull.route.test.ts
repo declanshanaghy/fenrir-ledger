@@ -14,7 +14,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Card } from "@/lib/types";
+import { makeCard } from "@/__tests__/fixtures/cards";
 
 // ── Mock: authz ────────────────────────────────────────────────────────────
 
@@ -38,29 +38,6 @@ import { GET } from "@/app/api/sync/pull/route";
 import { NextRequest } from "next/server";
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-let _seq = 0;
-
-function makeCard(overrides: Partial<Card> = {}): Card {
-  _seq++;
-  return {
-    id: `card-${_seq}`,
-    householdId: "hh-test",
-    issuerId: "chase",
-    cardName: `Test Card ${_seq}`,
-    openDate: "2025-01-01T00:00:00.000Z",
-    creditLimit: 500000,
-    annualFee: 0,
-    annualFeeDate: "",
-    promoPeriodMonths: 0,
-    signUpBonus: null,
-    status: "active",
-    notes: "",
-    createdAt: "2025-01-01T00:00:00.000Z",
-    updatedAt: "2025-01-01T00:00:00.000Z",
-    ...overrides,
-  };
-}
 
 function makeRequest(householdId?: string): NextRequest {
   const url = householdId

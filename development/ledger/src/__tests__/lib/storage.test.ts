@@ -5,8 +5,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { Card, Household } from "@/lib/types";
+import type { Household } from "@/lib/types";
 import { STORAGE_KEY_PREFIX, STORAGE_KEYS, SCHEMA_VERSION } from "@/lib/constants";
+import { makeCard } from "@/__tests__/fixtures/cards";
 
 import {
   migrateIfNeeded,
@@ -24,27 +25,9 @@ import {
 
 // ── Test helpers ──────────────────────────────────────────────────────────
 
-const HH_ID = "test-household-id";
-
-function makeCard(overrides: Partial<Card> = {}): Card {
-  return {
-    id: `card-${Math.random().toString(36).slice(2, 9)}`,
-    householdId: HH_ID,
-    issuerId: "chase",
-    cardName: "Test Card",
-    openDate: "2025-01-01T00:00:00.000Z",
-    creditLimit: 500000,
-    annualFee: 0,
-    annualFeeDate: "",
-    promoPeriodMonths: 0,
-    signUpBonus: null,
-    status: "active",
-    notes: "",
-    createdAt: "2025-01-01T00:00:00.000Z",
-    updatedAt: "2025-01-01T00:00:00.000Z",
-    ...overrides,
-  };
-}
+// "hh-test" matches the shared fixture default householdId so makeCard()
+// and getCards(HH_ID) use the same namespace without explicit overrides.
+const HH_ID = "hh-test";
 
 function seedCards(cards: Card[]): void {
   localStorage.setItem(
