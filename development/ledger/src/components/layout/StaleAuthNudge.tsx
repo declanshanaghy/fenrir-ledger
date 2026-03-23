@@ -147,7 +147,7 @@ export function StaleAuthNudge(): React.ReactElement | null {
       <div className="hidden sm:flex items-center justify-between px-4 py-2.5 gap-4">
         <div className="flex flex-col gap-0.5 flex-1 min-w-0">
           {/* Voice 2: atmospheric frame */}
-          <p className="text-xs text-gold/70 italic font-body">
+          <p className="text-xs text-foreground italic font-body">
             The wolf remembers your oath.
           </p>
           {/* Voice 1: functional nudge */}
@@ -162,8 +162,8 @@ export function StaleAuthNudge(): React.ReactElement | null {
             onClick={handleSignIn}
             className={[
               "px-3 py-1.5 text-xs font-heading tracking-wide",
-              "border border-gold/50 text-gold",
-              "hover:bg-gold/10 transition-colors",
+              "bg-primary text-primary-foreground",
+              "hover:brightness-110 active:scale-[0.97] transition-[transform,filter]",
               "rounded-sm whitespace-nowrap",
             ].join(" ")}
             style={{ minHeight: 36 }}
@@ -198,8 +198,8 @@ export function StaleAuthNudge(): React.ReactElement | null {
           onClick={handleSignIn}
           className={[
             "self-start px-3 py-1.5 text-xs font-heading tracking-wide",
-            "border border-gold/50 text-gold",
-            "hover:bg-gold/10 transition-colors",
+            "bg-primary text-primary-foreground",
+            "hover:brightness-110 active:scale-[0.97] transition-[transform,filter]",
             "rounded-sm",
           ].join(" ")}
           style={{ minHeight: 36 }}

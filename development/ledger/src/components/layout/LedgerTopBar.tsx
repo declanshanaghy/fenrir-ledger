@@ -418,13 +418,13 @@ function CompactSignInNudge({ onDismiss }: SignInNudgeProps) {
 
   return (
     <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gold/30 bg-gold/5">
-      <span className="hidden sm:block text-xs text-gold/80 italic font-body whitespace-nowrap">
+      <span className="hidden sm:block text-xs text-foreground italic font-body whitespace-nowrap">
         The wolf remembers your oath
       </span>
       <button
         type="button"
         onClick={() => router.push("/ledger/sign-in")}
-        className="px-3 py-1 text-xs font-heading tracking-wide border border-gold/50 text-gold hover:bg-gold/10 transition-colors rounded-sm whitespace-nowrap"
+        className="px-3 py-1 text-xs font-heading tracking-wide bg-primary text-primary-foreground hover:brightness-110 active:scale-[0.97] transition-[transform,filter] rounded-sm whitespace-nowrap"
         style={{ minHeight: 32 }}
       >
         Sign in

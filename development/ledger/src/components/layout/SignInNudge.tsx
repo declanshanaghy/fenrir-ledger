@@ -111,9 +111,9 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
             onClick={() => router.push(buildSignInUrl(pathname))}
             className={[
               "px-3 py-1.5 text-sm font-heading tracking-wide",
-              "border border-gold/50 text-gold",
-              "hover:bg-gold/10 hover:brightness-110 active:scale-[0.97] active:brightness-90",
-              "transition-[transform,filter,background-color,color] duration-150 ease-out",
+              "bg-primary text-primary-foreground",
+              "hover:brightness-110 active:scale-[0.97] active:brightness-90",
+              "transition-[transform,filter] duration-150 ease-out",
               "rounded-sm whitespace-nowrap",
             ].join(" ")}
             style={{ minHeight: 36 }}
@@ -144,9 +144,9 @@ export function SignInNudge({ hasCards }: SignInNudgeProps) {
           onClick={() => router.push(buildSignInUrl(pathname))}
           className={[
             "self-start px-3 py-1.5 text-sm font-heading tracking-wide",
-            "border border-gold/50 text-gold",
-            "hover:bg-gold/10 hover:brightness-110 active:scale-[0.97] active:brightness-90",
-            "transition-[transform,filter,background-color,color] duration-150 ease-out",
+            "bg-primary text-primary-foreground",
+            "hover:brightness-110 active:scale-[0.97] active:brightness-90",
+            "transition-[transform,filter] duration-150 ease-out",
             "rounded-sm",
           ].join(" ")}
           style={{ minHeight: 36 }}
