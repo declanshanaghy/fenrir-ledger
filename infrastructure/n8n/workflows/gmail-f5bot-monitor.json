@@ -290,6 +290,33 @@
         420
       ],
       "notes": "Reached when a F5Bot email item has no valid extractable Reddit URLs. Workflow ends cleanly for that item."
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "update",
+        "messageId": "={{ $json.emailId }}",
+        "updateFields": {
+          "removeLabelIds": [
+            "UNREAD"
+          ]
+        }
+      },
+      "id": "f5b0-0013-4000-8000-000000000013",
+      "name": "Gmail — Mark as Read",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        2420,
+        220
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Eck5j1Xj1x6zyc9A",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "Marks each F5Bot email as read after its draft has been created. Uses emailId carried through the pipeline. Runs per-item (once per Reddit link), but Gmail handles duplicate mark-read calls gracefully."
     }
   ],
   "connections": {
@@ -400,6 +427,17 @@
         [
           {
             "node": "Gmail — Create Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail — Create Draft": {
+      "main": [
+        [
+          {
+            "node": "Gmail — Mark as Read",
             "type": "main",
             "index": 0
           }
