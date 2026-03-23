@@ -7,6 +7,7 @@
 
 import { extractCardsFromCsv } from "./extract-cards";
 import { CSV_TRUNCATION_LIMIT } from "./prompt";
+import { sanitizeCsvUnicode } from "./unicode-sanitize";
 import type { SheetImportResponse } from "./types";
 import { log } from "@/lib/logger";
 
@@ -22,8 +23,11 @@ const MIN_CSV_LENGTH = 10;
 export async function importFromCsv(csv: string): Promise<SheetImportResponse> {
   log.debug("importFromCsv called", { csvLength: csv.length });
 
+  // 0. Sanitize Unicode — strip control/invisible chars and NFC-normalize (MEDIUM-003, #1892)
+  const sanitized = typeof csv === "string" ? sanitizeCsvUnicode(csv) : csv;
+
   // 1. Validate CSV content
-  if (!csv || typeof csv !== "string" || csv.trim().length < MIN_CSV_LENGTH) {
+  if (!sanitized || typeof sanitized !== "string" || sanitized.trim().length < MIN_CSV_LENGTH) {
     log.debug("importFromCsv returning", { errorCode: "INVALID_CSV", reason: "empty or too short" });
     return {
       error: {
@@ -34,16 +38,16 @@ export async function importFromCsv(csv: string): Promise<SheetImportResponse> {
   }
 
   // 2. Truncate if too long
-  const truncated = csv.length > CSV_TRUNCATION_LIMIT
-    ? csv.slice(0, CSV_TRUNCATION_LIMIT)
-    : csv;
+  const truncated = sanitized.length > CSV_TRUNCATION_LIMIT
+    ? sanitized.slice(0, CSV_TRUNCATION_LIMIT)
+    : sanitized;
 
-  const truncationWarning = csv.length > CSV_TRUNCATION_LIMIT
-    ? `CSV was truncated from ${csv.length.toLocaleString()} to ${CSV_TRUNCATION_LIMIT.toLocaleString()} characters. Some rows may have been dropped.`
+  const truncationWarning = sanitized.length > CSV_TRUNCATION_LIMIT
+    ? `CSV was truncated from ${sanitized.length.toLocaleString()} to ${CSV_TRUNCATION_LIMIT.toLocaleString()} characters. Some rows may have been dropped.`
     : undefined;
 
   if (truncationWarning) {
-    log.info("importFromCsv: CSV truncated", { originalLength: csv.length, truncatedLength: CSV_TRUNCATION_LIMIT });
+    log.info("importFromCsv: CSV truncated", { originalLength: sanitized.length, truncatedLength: CSV_TRUNCATION_LIMIT });
   }
 
   // 3. Extract cards using shared LLM pipeline
