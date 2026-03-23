@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DashboardTab } from "@/lib/constants";
 import type { Card } from "@/lib/types";
-import { daysUntil } from "@/lib/card-utils";
+import { daysUntil, formatCurrency } from "@/lib/card-utils";
 
 /** localStorage key pattern for summary dismissal */
 function getSummaryStorageKey(tabId: DashboardTab): string {
@@ -96,10 +96,17 @@ function activeSummary(cards: Card[]): React.ReactNode[] {
 }
 
 /**
- * THE HUNT tab: "{count} cards with open bonus windows, {approaching} approaching deadline"
- * If approaching === 0, omit that segment.
+ * THE HUNT tab: aggregate spend progress across all hunt cards.
+ *
+ * Format: "{count} cards · $X of $Y total min spend · {approaching} approaching deadline"
+ * Issue #1792 — show aggregate min spend progress in the summary bar.
  */
 function huntSummary(cards: Card[]): React.ReactNode[] {
+  const totalSpent = cards.reduce((sum, c) => sum + (c.amountSpent ?? 0), 0);
+  const totalRequired = cards.reduce(
+    (sum, c) => sum + (c.signUpBonus?.spendRequirement ?? 0),
+    0
+  );
   const approaching = cards.filter((c) => {
     if (!c.signUpBonus?.deadline) return false;
     const days = daysUntil(c.signUpBonus.deadline);
@@ -112,7 +119,28 @@ function huntSummary(cards: Card[]): React.ReactNode[] {
       {cards.length} card{cards.length !== 1 ? "s" : ""}
     </span>
   );
-  parts.push(" with open bonus windows");
+
+  if (totalRequired > 0) {
+    const pct = Math.min(
+      100,
+      Math.round((totalSpent / totalRequired) * 100)
+    );
+    parts.push(" · ");
+    parts.push(
+      <span key="spend" className="font-bold">
+        {formatCurrency(totalSpent)}
+      </span>
+    );
+    parts.push(` of ${formatCurrency(totalRequired)} min spend`);
+    parts.push(
+      <span key="pct" className="font-bold">
+        {" "}({pct}%)
+      </span>
+    );
+  } else {
+    parts.push(" with open bonus windows");
+  }
+
   if (approaching > 0) {
     parts.push(", ");
     parts.push(

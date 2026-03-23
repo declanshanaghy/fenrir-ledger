@@ -36,6 +36,7 @@
 
 import { restoreCard, expungeCard, expungeAllCards } from "@/lib/storage";
 import { CardTile } from "./CardTile";
+import { HuntCardTile } from "./HuntCardTile";
 import { EmptyState } from "./EmptyState";
 import { AnonEmptyState } from "./AnonEmptyState";
 import { AnimatedCardGrid } from "./AnimatedCardGrid";
@@ -451,7 +452,7 @@ export function Dashboard({
             <AnimatedCardGrid
               cards={displayHuntCards}
               renderCard={(card) => (
-                <CardTile
+                <HuntCardTile
                   card={card}
                   lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
                 />
