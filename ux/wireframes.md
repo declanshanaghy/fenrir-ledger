@@ -36,6 +36,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Theme — Void Norse Dark Theme Contrast Fix (Issue #1875)
+
+| File | Description |
+|------|-------------|
+| [wireframes/theme/dark-void-palette.html](wireframes/theme/dark-void-palette.html) | Dark void theme contrast palette: before/after comparison swatches for 5 changed tokens (--border, --muted, --secondary, --input, --muted-foreground), WCAG contrast ratio table for all corrected combinations, rendered before/after UI demo on void-black canvas (cards, tabs, buttons, divider, input, sidebar), border thickness visual reference (1px/1.5px/2px), CSS variable change table (current vs proposed HSL), border thickness spec per component class, accessibility summary, acceptance criteria traceability. |
+| [wireframes/theme/dark-void-interaction-spec.md](wireframes/theme/dark-void-interaction-spec.md) | Interaction spec: root problem analysis (--border at 1.4:1 contrast — fails WCAG 3:1), complete token change table (5 tokens changed, remainder unchanged), per-element border thickness requirements (cards 2px, tabs/buttons/dividers/inputs/nav 1.5px), color application rules (warm charcoal hue family, surface depth hierarchy corrected, border token propagation via @apply border-border), component affected list, implementation notes for FiremanDecko (targeted dark: overrides, not global). |
+
+---
+
 ## Theme — Vellum Norse Tan/Parchment Light Mode (Issue #1833)
 
 | File | Description |
