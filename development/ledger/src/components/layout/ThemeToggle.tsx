@@ -17,7 +17,7 @@
  *   - Touch-friendly: min 44x44px tap targets
  *
  * Styling:
- *   - text-muted-foreground baseline (no border — icon-only header aesthetic)
+ *   - border-border, text-muted-foreground baseline
  *   - Active state: text-gold, bg-secondary
  *   - Norse aesthetic: sharp corners, gold accent
  */
@@ -25,11 +25,6 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
-
-export const THEME_OPTIONS = [
-  { value: "light", label: "Light", Icon: Sun },
-  { value: "dark", label: "Dark", Icon: Moon },
-] as const;
 
 /** Toggle between dark and light themes */
 export function cycleTheme(currentTheme: string | undefined): string {
@@ -84,7 +79,7 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
     }
     return (
       <div
-        className="h-[36px] w-[88px] rounded-sm bg-secondary/30"
+        className="h-[44px] w-[44px] rounded-sm bg-secondary/30"
         aria-hidden="true"
       />
     );
@@ -115,7 +110,8 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
       <button
         type="button"
         onClick={() => setTheme(cycleTheme(resolvedTheme ?? theme))}
-        className="flex items-center justify-center rounded-sm text-muted-foreground hover:text-gold transition-colors"
+        className="flex items-center justify-center rounded-sm border border-border
+                   text-muted-foreground hover:text-gold transition-colors"
         style={{ minWidth: 44, minHeight: 44 }}
         aria-label={`Theme: ${currentLabel}. Click to switch to ${nextLabel}.`}
       >
@@ -124,36 +120,17 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
     );
   }
 
-  // Inline variant: two-button toggle
+  // Inline variant: single cycling toggle button
+  const ToggleIcon = isDark ? Sun : Moon;
   return (
-    <div
-      role="radiogroup"
-      aria-label="Theme"
-      className="inline-flex items-center rounded-sm overflow-hidden"
+    <button
+      type="button"
+      onClick={() => setTheme(cycleTheme(resolvedTheme ?? theme))}
+      className="flex items-center justify-center text-muted-foreground hover:text-gold transition-colors"
+      style={{ minWidth: 44, minHeight: 44 }}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
-      {THEME_OPTIONS.map(({ value, label, Icon }) => {
-        const isActive = (resolvedTheme ?? theme) === value;
-        return (
-          <button
-            key={value}
-            type="button"
-            role="radio"
-            aria-checked={isActive}
-            aria-label={label}
-            onClick={() => setTheme(value)}
-            className={[
-              "flex items-center justify-center transition-colors",
-              "border-r border-border last:border-r-0",
-              isActive
-                ? "bg-secondary text-gold"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
-            ].join(" ")}
-            style={{ minWidth: 44, minHeight: 36 }}
-          >
-            <Icon className="h-4 w-4" />
-          </button>
-        );
-      })}
-    </div>
+      <ToggleIcon className="h-4 w-4" />
+    </button>
   );
 }

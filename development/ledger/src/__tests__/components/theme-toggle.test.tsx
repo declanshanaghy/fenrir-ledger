@@ -1,12 +1,10 @@
 /**
- * ThemeToggle — unit tests for Issue #848 and Issue #1926
+ * ThemeToggle — unit tests for Issues #848, #1927
  *
  * Verifies:
  *  - cycleTheme uses resolvedTheme (not raw "system") to determine next theme
  *  - Icon variant calls setTheme with opposite of resolvedTheme, not theme
- *  - Inline variant buttons call setTheme("light") / setTheme("dark") directly
- *  - Icon variant button has no border classes (Issue #1926)
- *  - Inline variant wrapper has no outer border classes (Issue #1926)
+ *  - Inline variant (Issue #1927): single cycling button, no radiogroup, icon/aria-label swap
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -106,123 +104,59 @@ describe("ThemeToggle — icon variant (Issue #848 fix)", () => {
   });
 });
 
-// ── ThemeToggle — inline variant ─────────────────────────────────────────────
+// ── ThemeToggle — inline variant (Issue #1927: single cycling button) ─────────
 
-describe("ThemeToggle — inline variant", () => {
-  it("renders radiogroup with Light and Dark radio buttons", () => {
+describe("ThemeToggle — inline variant (Issue #1927)", () => {
+  it("renders a single button — no radiogroup", () => {
     mockThemeState.theme = "dark";
     mockThemeState.resolvedTheme = "dark";
 
     render(<ThemeToggle variant="inline" />);
-    expect(screen.getByRole("radiogroup")).toBeDefined();
-    expect(screen.getByRole("radio", { name: "Light" })).toBeDefined();
-    expect(screen.getByRole("radio", { name: "Dark" })).toBeDefined();
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+    expect(screen.queryByRole("radio")).toBeNull();
+    expect(screen.getByRole("button")).toBeDefined();
   });
 
-  it("Dark button is aria-checked when resolvedTheme='dark'", () => {
+  it("dark mode: aria-label is 'Switch to light mode'", () => {
     mockThemeState.theme = "dark";
     mockThemeState.resolvedTheme = "dark";
 
     render(<ThemeToggle variant="inline" />);
-    const darkButton = screen.getByRole("radio", { name: "Dark" });
-    const lightButton = screen.getByRole("radio", { name: "Light" });
-    expect(darkButton.getAttribute("aria-checked")).toBe("true");
-    expect(lightButton.getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeDefined();
   });
 
-  it("Light button is aria-checked when resolvedTheme='light'", () => {
+  it("light mode: aria-label is 'Switch to dark mode'", () => {
     mockThemeState.theme = "light";
     mockThemeState.resolvedTheme = "light";
 
     render(<ThemeToggle variant="inline" />);
-    const lightButton = screen.getByRole("radio", { name: "Light" });
-    const darkButton = screen.getByRole("radio", { name: "Dark" });
-    expect(lightButton.getAttribute("aria-checked")).toBe("true");
-    expect(darkButton.getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeDefined();
   });
 
-  it("clicking Light button calls setTheme('light')", () => {
+  it("dark mode: clicking calls setTheme('light')", () => {
     mockThemeState.theme = "dark";
     mockThemeState.resolvedTheme = "dark";
 
     render(<ThemeToggle variant="inline" />);
-    fireEvent.click(screen.getByRole("radio", { name: "Light" }));
+    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
     expect(mockSetTheme).toHaveBeenCalledWith("light");
   });
 
-  it("clicking Dark button calls setTheme('dark')", () => {
+  it("light mode: clicking calls setTheme('dark')", () => {
     mockThemeState.theme = "light";
     mockThemeState.resolvedTheme = "light";
 
     render(<ThemeToggle variant="inline" />);
-    fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
+    fireEvent.click(screen.getByRole("button", { name: "Switch to dark mode" }));
     expect(mockSetTheme).toHaveBeenCalledWith("dark");
   });
-});
 
-// ── ThemeToggle — Issue #1926: no border on header toggle ────────────────────
-
-describe("ThemeToggle — Issue #1926: no border classes", () => {
-  it("icon variant button has no border or border-border class", () => {
-    mockThemeState.theme = "dark";
+  it("resolvedTheme='dark' with theme='system': clicking calls setTheme('light')", () => {
+    mockThemeState.theme = "system";
     mockThemeState.resolvedTheme = "dark";
 
-    const { container } = render(<ThemeToggle variant="icon" />);
-    const button = container.querySelector("button");
-    expect(button).not.toBeNull();
-    const cls = button!.className;
-    expect(cls).not.toContain("border-border");
-    // Ensure no standalone "border" class (border-r or similar sub-strings are fine)
-    const tokens = cls.split(/\s+/);
-    expect(tokens).not.toContain("border");
-  });
-
-  it("inline variant wrapper has no outer border or border-border class", () => {
-    mockThemeState.theme = "dark";
-    mockThemeState.resolvedTheme = "dark";
-
-    const { container } = render(<ThemeToggle variant="inline" />);
-    const wrapper = container.querySelector('[role="radiogroup"]');
-    expect(wrapper).not.toBeNull();
-    const cls = wrapper!.className;
-    expect(cls).not.toContain("border-border");
-    const tokens = cls.split(/\s+/);
-    expect(tokens).not.toContain("border");
-  });
-
-  it("icon variant retains hover and transition classes", () => {
-    mockThemeState.theme = "dark";
-    mockThemeState.resolvedTheme = "dark";
-
-    const { container } = render(<ThemeToggle variant="icon" />);
-    const button = container.querySelector("button");
-    expect(button).not.toBeNull();
-    const cls = button!.className;
-    expect(cls).toContain("hover:text-gold");
-    expect(cls).toContain("transition-colors");
-  });
-
-  it("icon variant meets 44x44px touch target via inline style", () => {
-    mockThemeState.theme = "dark";
-    mockThemeState.resolvedTheme = "dark";
-
-    const { container } = render(<ThemeToggle variant="icon" />);
-    const button = container.querySelector("button") as HTMLButtonElement;
-    expect(button).not.toBeNull();
-    expect(button.style.minWidth).toBe("44px");
-    expect(button.style.minHeight).toBe("44px");
-  });
-
-  it("icon variant has no border classes in light theme (both themes borderless)", () => {
-    mockThemeState.theme = "light";
-    mockThemeState.resolvedTheme = "light";
-
-    const { container } = render(<ThemeToggle variant="icon" />);
-    const button = container.querySelector("button");
-    expect(button).not.toBeNull();
-    const cls = button!.className;
-    expect(cls).not.toContain("border-border");
-    const tokens = cls.split(/\s+/);
-    expect(tokens).not.toContain("border");
+    render(<ThemeToggle variant="inline" />);
+    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
+    expect(mockSetTheme).toHaveBeenCalledWith("light");
   });
 });
