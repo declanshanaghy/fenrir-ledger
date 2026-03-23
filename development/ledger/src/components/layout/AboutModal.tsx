@@ -8,6 +8,7 @@
  *         On mobile: left column collapses into header; content fills full width.
  */
 
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -30,21 +31,25 @@ const TEAM = [
   {
     name: "Freya",
     role: "Product Owner",
+    rune: "ᚠ",
     voice: "She decides what the wolf hunts next.",
   },
   {
     name: "Luna",
     role: "UX Designer",
+    rune: "ᛚ",
     voice: "She shapes the shadows where the wolf walks.",
   },
   {
     name: "FiremanDecko",
     role: "Principal Engineer",
-    voice: "He forged the chain. Then taught the wolf to wear it willingly.",
+    rune: "ᚦ",
+    voice: "He forged the chain. Then taught the wolf to wear it.",
   },
   {
     name: "Loki",
     role: "QA",
+    rune: "ᛏ",
     voice: "He tests every lock. He is, after all, the reason locks exist.",
   },
 ] as const;
@@ -57,6 +62,27 @@ const INGREDIENTS = [
   "The breath of a fish",
   "The spittle of a bird",
 ] as const;
+
+/** Reads all 6 Gleipnir fragment keys from localStorage on mount.
+ *  Safe in SSR and private-mode environments — returns all-false on error. */
+export function useGleipnirFragments(): { found: boolean[] } {
+  const [found, setFound] = useState<boolean[]>([
+    false, false, false, false, false, false,
+  ]);
+
+  useEffect(() => {
+    try {
+      const states = Array.from({ length: 6 }, (_, i) =>
+        localStorage.getItem(`egg:gleipnir-${i + 1}`) === "1"
+      );
+      setFound(states);
+    } catch {
+      // localStorage unavailable (SSR, private mode) — keep all false
+    }
+  }, []);
+
+  return { found };
+}
 
 function BuildInfo() {
   const rawCommit = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
@@ -120,6 +146,10 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
     dismiss: dismissBeard,
   } = useGleipnirFragment2();
 
+  const { found } = useGleipnirFragments();
+  const foundCount = found.filter(Boolean).length;
+  const allFound = foundCount === 6;
+
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -134,7 +164,7 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
 
         {/* ── Header ────────────────────────────────────────────────── */}
         {/* pr-10 keeps title clear of the built-in X close button      */}
-        <div className="flex items-center gap-3 px-5 py-3.5 pr-10 border-b border-border shrink-0">
+        <div className="flex items-center gap-3 px-5 py-3 pr-10 border-b border-border shrink-0">
           {/* Rune: visible only on mobile where the left column is hidden */}
           <span className="text-2xl text-gold leading-none md:hidden" aria-hidden="true">
             ᛟ
@@ -151,22 +181,22 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
         </DialogDescription>
 
         {/* ── Two-column body ───────────────────────────────────────── */}
-        <div className="flex flex-col md:grid md:grid-cols-[200px_1px_1fr] flex-1 overflow-hidden">
+        <div className="flex flex-col md:grid md:grid-cols-[190px_1px_1fr] flex-1 overflow-hidden">
 
           {/* Left — logo / identity (desktop only) */}
-          <div className="hidden md:flex flex-col items-center justify-center gap-4 px-6 py-8 text-center shrink-0">
-            <span className="text-6xl text-gold leading-none" aria-hidden="true">
+          <div className="hidden md:flex flex-col items-center justify-center gap-3 px-5 py-6 text-center shrink-0">
+            <span className="text-5xl text-gold leading-none" aria-hidden="true">
               ᛟ
             </span>
             <div>
-              <p className="font-display text-gold tracking-widest uppercase text-base">
+              <p className="font-display text-gold tracking-widest uppercase text-sm">
                 Fenrir Ledger
               </p>
-              <p className="font-body text-muted-foreground text-sm italic mt-1">
+              <p className="font-body text-muted-foreground text-xs italic mt-1">
                 Break free. Harvest every reward.
               </p>
             </div>
-            <p className="font-body text-muted-foreground text-[13px] italic leading-relaxed max-w-[160px]">
+            <p className="font-body text-muted-foreground text-[11px] italic leading-relaxed max-w-[150px]">
               &ldquo;The wolf watches what the issuers hope you forget.&rdquo;
             </p>
 
@@ -178,65 +208,123 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
           <div className="hidden md:block border-l border-border" aria-hidden="true" />
 
           {/* Right — team & ingredients (scrollable) */}
-          <div className="flex flex-col overflow-y-auto px-5 py-5 gap-0">
+          <div className="flex flex-col overflow-y-auto px-5 py-4 gap-0">
 
             {/* The Pack */}
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-3">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2">
               The Pack
             </p>
-            <div className="flex flex-col gap-3.5 mb-5">
+            <div className="flex flex-col gap-2 mb-4" data-testid="pack-list">
               {TEAM.map((member) => (
-                <div key={member.name}>
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="font-heading text-sm font-bold uppercase tracking-wide text-primary">
-                      {member.name}
-                    </span>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {member.role}
-                    </span>
+                <div key={member.name} className="flex items-start gap-2.5">
+                  {/* Profile icon — 32×32 themed rune circle */}
+                  <div
+                    className="w-8 h-8 md:w-8 md:h-8 rounded-full border border-gold/40 flex items-center justify-center text-gold font-mono text-sm shrink-0 mt-0.5"
+                    aria-hidden="true"
+                    data-testid={`pack-icon-${member.name.toLowerCase()}`}
+                  >
+                    {member.rune}
                   </div>
-                  <p className="font-body text-base italic text-muted-foreground leading-snug mt-0.5">
-                    &ldquo;{member.voice}&rdquo;
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <span className="font-heading text-[11px] font-bold uppercase tracking-wide text-primary">
+                        {member.name}
+                      </span>
+                      <span className="font-mono text-[10px] text-muted-foreground">
+                        {member.role}
+                      </span>
+                    </div>
+                    <p
+                      className="font-body text-[11px] italic text-muted-foreground leading-snug mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis"
+                      title={`"${member.voice}"`}
+                    >
+                      &ldquo;{member.voice}&rdquo;
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
 
             {/* Separator */}
-            <div className="border-t border-border mb-5" aria-hidden="true" />
+            <div className="border-t border-border mb-4" aria-hidden="true" />
 
             {/* Six Impossible Things */}
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-3">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2">
               Gleipnir was made of:
             </p>
-            <ol className="flex flex-col gap-2 list-none">
-              {INGREDIENTS.map((ingredient, i) => (
-                <li key={i} className="flex items-baseline gap-3">
-                  <span className="font-mono text-xs text-gold shrink-0 w-5 text-right">
-                    {ROMAN[i]}
-                  </span>
-                  {i === 1 ? (
-                    /* Gleipnir fragment II — The Beard of a Woman.
-                     * Intentionally indistinguishable from the surrounding text.
-                     * cursor-default hides the affordance; the wolf rewards curiosity. */
-                    <button
-                      type="button"
-                      onClick={triggerBeard}
-                      className="font-body text-base text-foreground leading-snug bg-transparent border-0 p-0 text-left cursor-default hover:text-gold transition-colors"
+            <ol className="flex flex-col gap-1.5 list-none" data-testid="gleipnir-list">
+              {INGREDIENTS.map((ingredient, i) => {
+                const isFound = found[i];
+                return (
+                  <li key={i} className="flex items-center gap-2.5">
+                    {/* Roman numeral — gold at full brightness when found, muted when not */}
+                    <span
+                      className={`font-mono text-[11px] shrink-0 w-5 text-right ${
+                        isFound ? "text-gold" : "text-gold/40"
+                      }`}
                     >
-                      {ingredient}
-                    </button>
-                  ) : (
-                    <span className="font-body text-base text-foreground leading-snug">
-                      {ingredient}
+                      {ROMAN[i]}
                     </span>
-                  )}
-                </li>
-              ))}
+
+                    {/* Status indicator — 14×14px */}
+                    <span
+                      className={`font-mono text-[11px] shrink-0 leading-none ${
+                        isFound ? "text-gold" : "text-muted-foreground/50"
+                      }`}
+                      aria-label={`fragment ${i + 1} ${isFound ? "found" : "not yet found"}`}
+                      data-testid={`gleipnir-status-${i + 1}`}
+                    >
+                      {isFound ? "✓" : "ᛜ"}
+                    </span>
+
+                    {/* Ingredient text */}
+                    {i === 1 ? (
+                      /* Gleipnir fragment II — The Beard of a Woman.
+                       * cursor-default hides the affordance; the wolf rewards curiosity. */
+                      <button
+                        type="button"
+                        onClick={triggerBeard}
+                        aria-label="The beard of a woman — easter egg trigger"
+                        className={`font-body text-[12px] leading-snug bg-transparent border-0 p-0 text-left cursor-default transition-colors ${
+                          isFound
+                            ? "text-foreground"
+                            : "text-foreground/35 italic"
+                        }`}
+                        style={{ cursor: "default" }}
+                      >
+                        {ingredient}
+                      </button>
+                    ) : (
+                      <span
+                        className={`font-body text-[12px] leading-snug ${
+                          isFound
+                            ? "text-foreground"
+                            : "text-foreground/35 italic"
+                        }`}
+                      >
+                        {ingredient}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ol>
 
+            {/* Fragment progress counter */}
+            <div className="mt-2 font-mono text-[10px] text-muted-foreground/60" data-testid="gleipnir-progress">
+              <span>{foundCount} of 6 fragments found</span>
+              {allFound && (
+                <span
+                  className="block text-gold animate-pulse mt-0.5"
+                  data-testid="gleipnir-complete"
+                >
+                  ✦ Gleipnir is complete. The wolf stirs.
+                </span>
+              )}
+            </div>
+
             {/* Separator */}
-            <div className="border-t border-border mt-5 mb-5" aria-hidden="true" />
+            <div className="border-t border-border mt-4 mb-4" aria-hidden="true" />
 
             {/* Wolf's Hunger — aggregate bonus summary */}
             <WolfHungerMeter />
@@ -245,7 +333,7 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
         </div>
 
         {/* ── Footer ────────────────────────────────────────────────── */}
-        <div className="flex justify-end px-5 py-3 border-t border-border shrink-0">
+        <div className="flex justify-end px-5 py-2.5 border-t border-border shrink-0">
           <DialogClose asChild>
             <Button variant="outline" size="sm">
               Close

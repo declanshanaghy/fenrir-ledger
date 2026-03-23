@@ -11,6 +11,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## About Modal v2 — Easter Eggs, Compressed Layout, Profile Icons (Issue #1806)
+
+| File | Description |
+|------|-------------|
+| [wireframes/modals/about-modal-v2-easter-eggs.html](wireframes/modals/about-modal-v2-easter-eggs.html) | About modal redesign: 6 sections — (A) design decision tables (compression fixes, profile icon spec, Gleipnir state spec), (B) Pack section before/after compression comparison (profile icon row: 32px rune circles, 1-line quotes with ellipsis, ~36px per member), (C) Gleipnir fragment found/unfound state panels (all unfound, partial 3/6, all 6 complete with "Gleipnir is complete" message), (D) full desktop modal at 680px width showing compressed layout in partial discovery state with annotation on hidden Fragment II trigger, (E) mobile 375px single-column layout (28px icons, rune in header, scrollable), (F) WCAG 2.1 AA accessibility table (icon aria-hidden, fragment status aria-labels, Fragment II keyboard access, quote title tooltip). |
+| [wireframes/modals/about-modal-v2-interaction-spec.md](wireframes/modals/about-modal-v2-interaction-spec.md) | Interaction spec: Gleipnir fragment state machine (localStorage read on open, found/unfound visual rules per fragment, Fragment II hidden button behavior, progress counter, "Gleipnir complete" pulse message), Pack compression spec (rune icon table per member, row height budget, shortened quotes table, title tooltip fallback), height budget table targeting 560px dialog at 900px viewport, responsive breakpoints, component change summary (AboutModal.tsx + new useGleipnirFragments hook), edge cases (SSR/private-mode localStorage, live-update not supported, all-found state). |
+
+---
+
 ## Settings — Tab Redesign
 
 | File | Description |

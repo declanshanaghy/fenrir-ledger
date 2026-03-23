@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: About Modal v2 — Easter Eggs, Compressed Layout, Profile Icons (#1806)</title>
+  <style>
+    /* Layout and structure only.
+       No colors, no custom fonts, no shadows, no border-radius.
+       Theme styling is defined in ux/theme-system.md.
+       Permitted: display flex/grid, border, width/height, padding/margin,
+                  font-size, font-weight, opacity (placeholder items only). */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; padding: 24px; }
+
+    .page-title { font-size: 22px; font-weight: bold; margin-bottom: 6px; }
+    .page-meta { font-size: 11px; font-style: italic; margin-bottom: 32px; }
+
+    .section { margin-bottom: 48px; }
+    .section-title {
+      font-size: 16px; font-weight: bold;
+      border-bottom: 2px solid; padding-bottom: 8px; margin-bottom: 16px;
+    }
+    .section-subtitle { font-size: 12px; margin-bottom: 16px; }
+
+    .note { font-size: 11px; font-style: italic; margin-top: 6px; }
+    .label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 8px; }
+
+    .spec-box { border: 1px solid; padding: 16px; margin-bottom: 20px; }
+    .spec-title { font-weight: bold; margin-bottom: 10px; }
+
+    table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+    th, td { border: 1px solid; padding: 6px 10px; font-size: 12px; text-align: left; vertical-align: top; }
+    th { font-weight: bold; }
+
+    /* ── Modal shell ──────────────────────────────────────────── */
+    .modal {
+      position: relative;
+      width: min(680px, 92vw);
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      max-height: 580px; /* target: fits 900px viewport with browser chrome */
+    }
+
+    .modal-header {
+      padding: 12px 20px 12px 20px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .modal-header h1 {
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .btn-close {
+      width: 28px; height: 28px;
+      border: 1px solid; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      background: none; font-size: 14px; flex-shrink: 0;
+    }
+
+    /* ── Two-column layout ────────────────────────────────────── */
+    .modal-body {
+      display: grid;
+      grid-template-columns: 190px 1px 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Left column — identity */
+    .col-logo {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; padding: 20px 14px;
+      flex-shrink: 0;
+    }
+    .logo-rune {
+      width: 56px; height: 56px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .logo-wordmark { font-size: 11px; font-weight: bold; text-align: center; letter-spacing: 0.12em; text-transform: uppercase; }
+    .logo-tagline { font-size: 10px; font-style: italic; text-align: center; line-height: 1.4; }
+    .build-info { font-size: 10px; font-family: monospace; text-align: center; line-height: 1.6; margin-top: 4px; }
+
+    /* Divider */
+    .col-divider { border-left: 1px solid; }
+
+    /* Right column — scrollable content */
+    .col-content {
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+      padding: 16px 18px;
+      gap: 0;
+    }
+
+    /* ── Section label ────────────────────────────────────────── */
+    .content-section-label {
+      font-size: 10px; font-weight: bold;
+      text-transform: uppercase; letter-spacing: 0.18em;
+      margin-bottom: 10px;
+    }
+
+    /* ── Pack section — profile icons ────────────────────────── */
+    .pack-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+
+    .pack-member {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    /* Profile icon: 32px circle with initials */
+    .profile-icon {
+      width: 32px; height: 32px;
+      border: 1px solid;
+      border-radius: 50%; /* theme will apply themed shape */
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: bold;
+      flex-shrink: 0;
+      font-family: monospace;
+    }
+
+    .member-info { display: flex; flex-direction: column; gap: 1px; }
+    .member-name {
+      font-size: 12px; font-weight: bold;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .member-role { font-size: 10px; }
+    /* Quote: single line max, truncated with ellipsis */
+    .member-quote {
+      font-size: 11px; font-style: italic;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 260px;
+    }
+
+    /* ── Divider ──────────────────────────────────────────────── */
+    .row-divider { border-top: 1px solid; margin: 12px 0; }
+
+    /* ── Gleipnir fragment list ───────────────────────────────── */
+    .gleipnir-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 0; }
+
+    .gleipnir-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 4px 0;
+    }
+
+    /* Roman numeral badge */
+    .fragment-numeral {
+      width: 20px; font-size: 10px; font-family: monospace;
+      font-weight: bold; text-align: right; flex-shrink: 0;
+    }
+
+    /* Status indicator: 14px × 14px icon slot */
+    .fragment-status {
+      width: 14px; height: 14px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; flex-shrink: 0;
+    }
+
+    /* Found: checkmark, full opacity */
+    .fragment-found .fragment-status::after { content: "✓"; font-size: 9px; }
+    .fragment-found .fragment-label { font-size: 12px; }
+
+    /* Unfound: lock glyph, dimmed */
+    .fragment-unfound .fragment-status::after { content: "ᛜ"; font-size: 8px; }
+    .fragment-unfound .fragment-label { font-size: 12px; opacity: 0.35; font-style: italic; }
+
+    /* Discovered fragment: the trigger element (fragment II) */
+    .fragment-trigger .fragment-label {
+      cursor: default; /* no affordance shown */
+      text-decoration: none;
+    }
+
+    /* Fragment progress counter */
+    .fragment-progress {
+      font-size: 10px; font-family: monospace;
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid;
+    }
+    .fragment-complete-msg {
+      font-size: 10px; font-family: monospace;
+      font-style: italic; margin-top: 4px;
+    }
+
+    /* ── Wolf Hunger section ──────────────────────────────────── */
+    .hunger-section { margin-top: 0; }
+    .hunger-line { font-size: 11px; font-family: monospace; }
+    .hunger-fallback { font-size: 11px; font-style: italic; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    .modal-footer {
+      border-top: 1px solid; padding: 10px 20px;
+      display: flex; justify-content: flex-end;
+      flex-shrink: 0;
+    }
+    .btn-close-primary {
+      border: 1px solid; padding: 6px 20px;
+      cursor: pointer; background: none;
+      font-size: 12px; font-weight: bold; min-height: 36px;
+    }
+
+    /* ── ANNOTATION BADGES ────────────────────────────────────── */
+    .annotation {
+      display: inline-block; border: 1px dashed;
+      padding: 2px 6px; font-size: 10px; margin-left: 6px;
+    }
+
+    /* ── MOBILE VIEWPORT ─────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      display: flex; flex-direction: column;
+    }
+    .mobile-header {
+      border-bottom: 1px solid; padding: 10px 14px;
+      display: flex; align-items: center; gap: 10px;
+      flex-shrink: 0;
+    }
+    .mobile-rune {
+      width: 28px; height: 28px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .mobile-body {
+      overflow-y: auto; padding: 14px;
+      max-height: 480px;
+    }
+    .mobile-footer {
+      border-top: 1px solid; padding: 10px 14px;
+      display: flex; justify-content: flex-end; flex-shrink: 0;
+    }
+    .mobile-pack-member {
+      display: flex; align-items: center; gap: 8px; padding: 5px 0;
+    }
+    .mobile-profile-icon {
+      width: 28px; height: 28px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: bold;
+      flex-shrink: 0; font-family: monospace;
+    }
+
+    /* ── STATE COMPARISON ────────────────────────────────────── */
+    .states-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 20px; margin-bottom: 24px;
+    }
+    .state-panel { border: 1px solid; padding: 14px; }
+    .state-panel-title { font-weight: bold; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+
+  <h1 class="page-title">About Modal v2 — Easter Eggs, Compressed Layout, Profile Icons</h1>
+  <p class="page-meta">
+    Issue #1806 · wireframe covers: compressed Pack section with profile icons, Gleipnir fragment found/unfound states,
+    easter egg discovery feedback, desktop two-column, mobile single-column (375px).
+    Structure only — theme styling via theme-system.md.
+  </p>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION A — DESIGN DECISIONS SUMMARY
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">A. Design Decisions</div>
+
+    <div class="spec-box">
+      <div class="spec-title">Problem: Dialog Too Tall</div>
+      <table>
+        <tr><th>Issue</th><th>Root Cause</th><th>Fix</th></tr>
+        <tr>
+          <td>Pack member quotes span 2–3 lines</td>
+          <td>font-size: base (16px), line-height: relaxed, full prose</td>
+          <td>Truncate to 1 line max with ellipsis; compress font-size to 11px italic</td>
+        </tr>
+        <tr>
+          <td>Pack member gap too large</td>
+          <td>gap-3.5 + mt-0.5 on quote</td>
+          <td>Reduce gap to 8px; align icon + name + role in one row</td>
+        </tr>
+        <tr>
+          <td>Gleipnir items tall</td>
+          <td>font-body text-base (16px)</td>
+          <td>Compress to 12px; reduce gap between items</td>
+        </tr>
+        <tr>
+          <td>WolfHungerMeter spacing</td>
+          <td>Margins compound below dividers</td>
+          <td>Tighten section margins; share single divider above Plunder section</td>
+        </tr>
+      </table>
+      <p class="note">Target: 900px viewport height, full dialog visible without scrolling.</p>
+    </div>
+
+    <div class="spec-box">
+      <div class="spec-title">Profile Icons — Design Specification</div>
+      <table>
+        <tr><th>Member</th><th>Initials</th><th>Rune Option (alt)</th><th>Size</th><th>Shape</th></tr>
+        <tr><td>Freya</td><td>F</td><td>ᚠ (fehu — wealth, Freya's domain)</td><td>32px × 32px</td><td>Circle border (themed: gold on void-black)</td></tr>
+        <tr><td>Luna</td><td>L</td><td>ᛚ (laguz — water/moon)</td><td>32px × 32px</td><td>Circle border</td></tr>
+        <tr><td>FiremanDecko</td><td>FD</td><td>ᚦ (thurisaz — giant, forge)</td><td>32px × 32px</td><td>Circle border</td></tr>
+        <tr><td>Loki</td><td>Lo</td><td>ᛚ (laguz — shapeshifter association)</td><td>32px × 32px</td><td>Circle border</td></tr>
+      </table>
+      <p class="note">
+        Preferred: rune glyphs in themed circles (gold glyph, dark bg). Fallback: initials if rune rendering varies.
+        Engineer may choose rune vs. initials — both valid. Do NOT use external images for icons.
+      </p>
+    </div>
+
+    <div class="spec-box">
+      <div class="spec-title">Gleipnir Fragment Visual States</div>
+      <table>
+        <tr><th>State</th><th>localStorage</th><th>Roman Numeral</th><th>Status Icon</th><th>Label</th><th>Interactivity</th></tr>
+        <tr>
+          <td>Unfound</td>
+          <td>key absent or null</td>
+          <td>Muted (gold/40)</td>
+          <td>Lock rune ᛜ (12px, muted)</td>
+          <td>opacity 0.35, italic</td>
+          <td>None (static text) — except fragment II which is always a hidden trigger button</td>
+        </tr>
+        <tr>
+          <td>Found</td>
+          <td>key = "1"</td>
+          <td>Gold accent, full brightness</td>
+          <td>Checkmark ✓ (gold)</td>
+          <td>Full opacity, upright</td>
+          <td>Fragment II: still shows trigger button (re-triggerable? see interaction spec)</td>
+        </tr>
+      </table>
+      <p class="note">
+        Fragment discovery is read from localStorage on modal open (not live-polled).
+        Keys: egg:gleipnir-1 through egg:gleipnir-6.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION B — COMPRESSED PACK + GLEIPNIR STATE COMPARISON
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">B. Pack Section — Before vs. After Compression</div>
+
+    <div class="states-grid">
+
+      <!-- Before -->
+      <div class="state-panel">
+        <div class="state-panel-title">Before (current — too tall)</div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-size: 13px; font-weight: bold; text-transform: uppercase;">Freya</span>
+              <span style="font-size: 11px;">Product Owner</span>
+            </div>
+            <!-- Long quote wraps to 2 lines -->
+            <p style="font-size: 16px; font-style: italic; margin-top: 4px; line-height: 1.4;">
+              "She decides what the wolf hunts next."
+            </p>
+          </div>
+          <div>
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-size: 13px; font-weight: bold; text-transform: uppercase;">FiremanDecko</span>
+              <span style="font-size: 11px;">Principal Engineer</span>
+            </div>
+            <!-- Extra-long quote wraps to 3 lines -->
+            <p style="font-size: 16px; font-style: italic; margin-top: 4px; line-height: 1.4;">
+              "He forged the chain. Then taught the wolf to wear it willingly."
+            </p>
+          </div>
+        </div>
+        <p class="note">Each member ~56px tall. 4 members = ~224px for Pack section alone.</p>
+      </div>
+
+      <!-- After -->
+      <div class="state-panel">
+        <div class="state-panel-title">After (compressed — profile icon row)</div>
+        <div class="pack-list">
+
+          <div class="pack-member">
+            <div class="profile-icon">ᚠ</div>
+            <div class="member-info">
+              <div style="display: flex; align-items: baseline; gap: 6px;">
+                <span class="member-name">Freya</span>
+                <span class="member-role">Product Owner</span>
+              </div>
+              <div class="member-quote">"She decides what the wolf hunts next."</div>
+            </div>
+          </div>
+
+          <div class="pack-member">
+            <div class="profile-icon">ᛚ</div>
+            <div class="member-info">
+              <div style="display: flex; align-items: baseline; gap: 6px;">
+                <span class="member-name">Luna</span>
+                <span class="member-role">UX Designer</span>
+              </div>
+              <div class="member-quote">"She shapes the shadows where the wolf walks."</div>
+            </div>
+          </div>
+
+          <div class="pack-member">
+            <div class="profile-icon">ᚦ</div>
+            <div class="member-info">
+              <div style="display: flex; align-items: baseline; gap: 6px;">
+                <span class="member-name">FiremanDecko</span>
+                <span class="member-role">Principal Engineer</span>
+              </div>
+              <div class="member-quote">"He forged the chain. Then taught the wolf to wear it."</div>
+            </div>
+          </div>
+
+          <div class="pack-member">
+            <div class="profile-icon">ᛏ</div>
+            <div class="member-info">
+              <div style="display: flex; align-items: baseline; gap: 6px;">
+                <span class="member-name">Loki</span>
+                <span class="member-role">QA</span>
+              </div>
+              <div class="member-quote">"He tests every lock. He is, after all, the reason locks exist."</div>
+            </div>
+          </div>
+
+        </div>
+        <p class="note">Each member ~36px tall. 4 members = ~144px. Saves ~80px.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION C — GLEIPNIR FRAGMENT STATES
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">C. Gleipnir Fragment States — Found vs. Unfound</div>
+
+    <div class="states-grid">
+
+      <!-- All unfound -->
+      <div class="state-panel">
+        <div class="state-panel-title">All Fragments Unfound (new user)</div>
+        <span class="label">Gleipnir was made of:</span>
+        <ol class="gleipnir-list">
+          <li class="gleipnir-item fragment-unfound">
+            <span class="fragment-numeral">I</span>
+            <span class="fragment-status" aria-label="locked"></span>
+            <span class="fragment-label">The sound of a cat's footfall</span>
+          </li>
+          <li class="gleipnir-item fragment-unfound">
+            <span class="fragment-numeral">II</span>
+            <span class="fragment-status" aria-label="locked"></span>
+            <!-- Fragment II is always a hidden button trigger even when unfound -->
+            <button type="button" class="fragment-label" style="background:none;border:0;padding:0;cursor:default;opacity:0.35;font-style:italic;font-size:12px;">
+              The beard of a woman
+            </button>
+          </li>
+          <li class="gleipnir-item fragment-unfound">
+            <span class="fragment-numeral">III</span>
+            <span class="fragment-status" aria-label="locked"></span>
+            <span class="fragment-label">The roots of a mountain</span>
+          </li>
+          <li class="gleipnir-item fragment-unfound">
+            <span class="fragment-numeral">IV</span>
+            <span class="fragment-status" aria-label="locked"></span>
+            <span class="fragment-label">The sinews of a bear</span>
+          </li>
+          <li class="gleipnir-item fragment-unfound">
+            <span class="fragment-numeral">V</span>
+            <span class="fragment-status" aria-label="locked"></span>
+            <span class="fragment-label">The breath of a fish</span>
+          </li>
+          <li class="gleipnir-item fragment-unfound">
+            <span class="fragment-numeral">VI</span>
+            <span class="fragment-status" aria-label="locked"></span>
+            <span class="fragment-label">The spittle of a bird</span>
+          </li>
+        </ol>
+        <div class="fragment-progress">0 of 6 fragments found</div>
+      </div>
+
+      <!-- Mixed / partial -->
+      <div class="state-panel">
+        <div class="state-panel-title">Partial Discovery (3 found)</div>
+        <span class="label">Gleipnir was made of:</span>
+        <ol class="gleipnir-list">
+          <li class="gleipnir-item fragment-found">
+            <span class="fragment-numeral">I</span>
+            <span class="fragment-status" aria-label="found"></span>
+            <span class="fragment-label">The sound of a cat's footfall</span>
+          </li>
+          <li class="gleipnir-item fragment-found fragment-trigger">
+            <span class="fragment-numeral">II</span>
+            <span class="fragment-status" aria-label="found"></span>
+            <!-- Still a hidden button when found -->
+            <button type="button" class="fragment-label" style="background:none;border:0;padding:0;cursor:default;font-size:12px;">
+              The beard of a woman
+            </button>
+          </li>
+          <li class="gleipnir-item fragment-unfound">
+            <span class="fragment-numeral">III</span>
+            <span class="fragment-status" aria-label="locked"></span>
+            <span class="fragment-label">The roots of a mountain</span>
+          </li>
+          <li class="gleipnir-item fragment-found">
+            <span class="fragment-numeral">IV</span>
+            <span class="fragment-status" aria-label="found"></span>
+            <span class="fragment-label">The sinews of a bear</span>
+          </li>
+          <li class="gleipnir-item fragment-unfound">
+            <span class="fragment-numeral">V</span>
+            <span class="fragment-status" aria-label="locked"></span>
+            <span class="fragment-label">The breath of a fish</span>
+          </li>
+          <li class="gleipnir-item fragment-unfound">
+            <span class="fragment-numeral">VI</span>
+            <span class="fragment-status" aria-label="locked"></span>
+            <span class="fragment-label">The spittle of a bird</span>
+          </li>
+        </ol>
+        <div class="fragment-progress">3 of 6 fragments found</div>
+      </div>
+
+    </div>
+
+    <!-- All found -->
+    <div class="state-panel" style="max-width: 340px;">
+      <div class="state-panel-title">All Fragments Found — Gleipnir Complete</div>
+      <span class="label">Gleipnir was made of:</span>
+      <ol class="gleipnir-list">
+        <li class="gleipnir-item fragment-found"><span class="fragment-numeral">I</span><span class="fragment-status" aria-label="found"></span><span class="fragment-label">The sound of a cat's footfall</span></li>
+        <li class="gleipnir-item fragment-found fragment-trigger"><span class="fragment-numeral">II</span><span class="fragment-status" aria-label="found"></span><button type="button" class="fragment-label" style="background:none;border:0;padding:0;cursor:default;font-size:12px;">The beard of a woman</button></li>
+        <li class="gleipnir-item fragment-found"><span class="fragment-numeral">III</span><span class="fragment-status" aria-label="found"></span><span class="fragment-label">The roots of a mountain</span></li>
+        <li class="gleipnir-item fragment-found"><span class="fragment-numeral">IV</span><span class="fragment-status" aria-label="found"></span><span class="fragment-label">The sinews of a bear</span></li>
+        <li class="gleipnir-item fragment-found"><span class="fragment-numeral">V</span><span class="fragment-status" aria-label="found"></span><span class="fragment-label">The breath of a fish</span></li>
+        <li class="gleipnir-item fragment-found"><span class="fragment-numeral">VI</span><span class="fragment-status" aria-label="found"></span><span class="fragment-label">The spittle of a bird</span></li>
+      </ol>
+      <div class="fragment-progress">6 of 6 fragments found</div>
+      <div class="fragment-complete-msg">✦ Gleipnir is complete. The wolf stirs.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION D — FULL DESKTOP MODAL (compressed, all states)
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">D. Full Desktop Modal — Compressed Layout (partial discovery)</div>
+    <p class="section-subtitle">
+      Target: fits within 580px dialog height (900px viewport minus browser chrome ~130px, overlay padding ~190px).
+      Right column scrollable only on very tall content or mobile.
+    </p>
+
+    <span class="label">Desktop — 680px wide dialog</span>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="about-title-v2">
+
+      <!-- Header -->
+      <header class="modal-header">
+        <!-- Mobile only: rune in header (hidden on desktop via md:hidden) -->
+        <span style="font-size: 20px; display: none;">ᛟ</span>
+        <h1 id="about-title-v2">About Fenrir Ledger</h1>
+        <button class="btn-close" aria-label="Close">×</button>
+      </header>
+
+      <!-- Two-column body -->
+      <div class="modal-body">
+
+        <!-- Left — logo / identity (desktop only) -->
+        <div class="col-logo">
+          <div class="logo-rune" aria-hidden="true">ᛟ</div>
+          <div class="logo-wordmark">Fenrir Ledger</div>
+          <div class="logo-tagline">Break free.<br/>Harvest every reward.</div>
+          <p class="logo-tagline" style="margin-top: 4px;">"The wolf watches what<br/>the issuers hope you forget."</p>
+          <!-- Build info — monospace, tiny, muted -->
+          <div class="build-info">
+            commit <span style="text-decoration: underline;">abc1234</span><br/>
+            built Jan 1 2026<br/>
+            env production
+          </div>
+        </div>
+
+        <!-- Vertical divider -->
+        <div class="col-divider" aria-hidden="true"></div>
+
+        <!-- Right — scrollable content -->
+        <div class="col-content">
+
+          <!-- The Pack -->
+          <div class="content-section-label">The Pack</div>
+          <div class="pack-list">
+
+            <div class="pack-member">
+              <div class="profile-icon" aria-hidden="true">ᚠ</div>
+              <div class="member-info">
+                <div style="display: flex; align-items: baseline; gap: 6px;">
+                  <span class="member-name">Freya</span>
+                  <span class="member-role">Product Owner</span>
+                </div>
+                <div class="member-quote">"She decides what the wolf hunts next."</div>
+              </div>
+            </div>
+
+            <div class="pack-member">
+              <div class="profile-icon" aria-hidden="true">ᛚ</div>
+              <div class="member-info">
+                <div style="display: flex; align-items: baseline; gap: 6px;">
+                  <span class="member-name">Luna</span>
+                  <span class="member-role">UX Designer</span>
+                </div>
+                <div class="member-quote">"She shapes the shadows where the wolf walks."</div>
+              </div>
+            </div>
+
+            <div class="pack-member">
+              <div class="profile-icon" aria-hidden="true">ᚦ</div>
+              <div class="member-info">
+                <div style="display: flex; align-items: baseline; gap: 6px;">
+                  <span class="member-name">FiremanDecko</span>
+                  <span class="member-role">Principal Engineer</span>
+                </div>
+                <div class="member-quote">"He forged the chain. Then taught the wolf to wear it."</div>
+              </div>
+            </div>
+
+            <div class="pack-member">
+              <div class="profile-icon" aria-hidden="true">ᛏ</div>
+              <div class="member-info">
+                <div style="display: flex; align-items: baseline; gap: 6px;">
+                  <span class="member-name">Loki</span>
+                  <span class="member-role">QA</span>
+                </div>
+                <div class="member-quote">"He tests every lock. He is, after all, the reason locks exist."</div>
+              </div>
+            </div>
+
+          </div><!-- /.pack-list -->
+
+          <!-- Divider -->
+          <div class="row-divider" aria-hidden="true"></div>
+
+          <!-- Gleipnir — partial discovery state -->
+          <div class="content-section-label">Gleipnir was made of:</div>
+          <ol class="gleipnir-list">
+
+            <li class="gleipnir-item fragment-found">
+              <span class="fragment-numeral">I</span>
+              <span class="fragment-status" aria-label="fragment I found"></span>
+              <span class="fragment-label">The sound of a cat's footfall</span>
+            </li>
+
+            <!-- Fragment II — hidden trigger button, visually identical to siblings -->
+            <li class="gleipnir-item fragment-found fragment-trigger">
+              <span class="fragment-numeral">II</span>
+              <span class="fragment-status" aria-label="fragment II found"></span>
+              <button
+                type="button"
+                class="fragment-label"
+                style="background:none;border:0;padding:0;cursor:default;font-size:12px;"
+                aria-label="The beard of a woman — easter egg trigger"
+              >
+                The beard of a woman
+              </button>
+              <span class="annotation">hidden trigger</span>
+            </li>
+
+            <li class="gleipnir-item fragment-unfound">
+              <span class="fragment-numeral">III</span>
+              <span class="fragment-status" aria-label="fragment III not yet found"></span>
+              <span class="fragment-label">The roots of a mountain</span>
+            </li>
+
+            <li class="gleipnir-item fragment-unfound">
+              <span class="fragment-numeral">IV</span>
+              <span class="fragment-status" aria-label="fragment IV not yet found"></span>
+              <span class="fragment-label">The sinews of a bear</span>
+            </li>
+
+            <li class="gleipnir-item fragment-unfound">
+              <span class="fragment-numeral">V</span>
+              <span class="fragment-status" aria-label="fragment V not yet found"></span>
+              <span class="fragment-label">The breath of a fish</span>
+            </li>
+
+            <li class="gleipnir-item fragment-unfound">
+              <span class="fragment-numeral">VI</span>
+              <span class="fragment-status" aria-label="fragment VI not yet found"></span>
+              <span class="fragment-label">The spittle of a bird</span>
+            </li>
+
+          </ol>
+
+          <!-- Fragment progress -->
+          <div class="fragment-progress">2 of 6 fragments found</div>
+
+          <!-- Divider -->
+          <div class="row-divider" aria-hidden="true"></div>
+
+          <!-- Fenrir's Plunder (WolfHungerMeter) -->
+          <div class="content-section-label">Fenrir's Plunder</div>
+          <div class="hunger-section">
+            <!-- Has-rewards variant -->
+            <div class="hunger-line">412,000 pts · 95,000 miles · $320 cashback</div>
+            <!-- Empty-state variant (shown when no bonuses met):
+            <div class="hunger-fallback">The wolf has not yet fed.</div>
+            -->
+          </div>
+
+        </div><!-- /.col-content -->
+      </div><!-- /.modal-body -->
+
+      <!-- Footer -->
+      <footer class="modal-footer">
+        <button class="btn-close-primary" type="button">Close</button>
+      </footer>
+
+    </div><!-- /.modal -->
+
+    <div class="spec-box" style="margin-top: 16px; max-width: 680px;">
+      <div class="spec-title">Desktop Layout Spec</div>
+      <table>
+        <tr><th>Property</th><th>Value</th><th>Notes</th></tr>
+        <tr><td>Modal max-width</td><td>680px, 92vw on small screens</td><td>Unchanged from current</td></tr>
+        <tr><td>Modal max-height</td><td>~580px</td><td>Down from ~90vh; fits 900px viewport</td></tr>
+        <tr><td>Left column width</td><td>190px</td><td>Reduced from 200px for small savings</td></tr>
+        <tr><td>Profile icon size</td><td>32px × 32px circle</td><td>Rune glyph inside, themed circle border</td></tr>
+        <tr><td>Pack member row height</td><td>~36px</td><td>Icon + name/role + single-line quote</td></tr>
+        <tr><td>Pack section total</td><td>~144px (4 × 36px)</td><td>Saved ~80px vs. current</td></tr>
+        <tr><td>Quote max-width</td><td>260px</td><td>Single line, overflow ellipsis</td></tr>
+        <tr><td>Gleipnir item height</td><td>~22px</td><td>12px text + 6px gap</td></tr>
+        <tr><td>Right col overflow-y</td><td>auto (scroll only when needed)</td><td>Should not scroll at 900px+</td></tr>
+        <tr><td>Header padding</td><td>py-3 (12px) → was py-3.5 (14px)</td><td>Save 4px</td></tr>
+        <tr><td>Section gap (Pack→Gleipnir)</td><td>12px each side of divider</td><td>Was 20px (mb-5)</td></tr>
+        <tr><td>Footer padding</td><td>py-2.5 (10px)</td><td>Was py-3 (12px)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION E — MOBILE (375px)
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">E. Mobile Viewport — 375px</div>
+    <p class="section-subtitle">
+      Left column hidden; rune ᛟ moves to inline header. Single-column layout.
+      Gleipnir and Pack sections stack vertically. Dialog is scrollable at mobile sizes.
+    </p>
+
+    <div class="mobile-frame" role="dialog" aria-modal="true" aria-labelledby="about-title-mobile">
+
+      <!-- Mobile header -->
+      <header class="mobile-header">
+        <div class="mobile-rune" aria-hidden="true">ᛟ</div>
+        <h1 id="about-title-mobile" style="font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; flex: 1;">
+          About Fenrir Ledger
+        </h1>
+        <button class="btn-close" aria-label="Close">×</button>
+      </header>
+
+      <!-- Mobile body — scrollable -->
+      <div class="mobile-body">
+
+        <!-- Pack section -->
+        <div class="content-section-label" style="margin-bottom: 8px;">The Pack</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+
+          <div class="mobile-pack-member">
+            <div class="mobile-profile-icon" aria-hidden="true">ᚠ</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap;">
+                <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">Freya</span>
+                <span style="font-size: 10px;">Product Owner</span>
+              </div>
+              <div style="font-size: 10px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                "She decides what the wolf hunts next."
+              </div>
+            </div>
+          </div>
+
+          <div class="mobile-pack-member">
+            <div class="mobile-profile-icon" aria-hidden="true">ᛚ</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap;">
+                <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">Luna</span>
+                <span style="font-size: 10px;">UX Designer</span>
+              </div>
+              <div style="font-size: 10px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                "She shapes the shadows where the wolf walks."
+              </div>
+            </div>
+          </div>
+
+          <div class="mobile-pack-member">
+            <div class="mobile-profile-icon" aria-hidden="true">ᚦ</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap;">
+                <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">FiremanDecko</span>
+                <span style="font-size: 10px;">Principal Engineer</span>
+              </div>
+              <div style="font-size: 10px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                "He forged the chain. Then taught the wolf to wear it."
+              </div>
+            </div>
+          </div>
+
+          <div class="mobile-pack-member">
+            <div class="mobile-profile-icon" aria-hidden="true">ᛏ</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap;">
+                <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">Loki</span>
+                <span style="font-size: 10px;">QA</span>
+              </div>
+              <div style="font-size: 10px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                "He tests every lock. He is, after all, the reason locks exist."
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end pack -->
+
+        <div style="border-top: 1px solid; margin: 10px 0;" aria-hidden="true"></div>
+
+        <!-- Gleipnir mobile -->
+        <div class="content-section-label" style="margin-bottom: 8px;">Gleipnir was made of:</div>
+        <ol class="gleipnir-list" style="gap: 5px; margin-bottom: 0;">
+          <li class="gleipnir-item fragment-found" style="gap: 8px;">
+            <span class="fragment-numeral" style="font-size: 10px;">I</span>
+            <span class="fragment-status" style="width: 12px; height: 12px; font-size: 8px;" aria-label="found"></span>
+            <span class="fragment-label" style="font-size: 11px;">The sound of a cat's footfall</span>
+          </li>
+          <li class="gleipnir-item fragment-found fragment-trigger" style="gap: 8px;">
+            <span class="fragment-numeral" style="font-size: 10px;">II</span>
+            <span class="fragment-status" style="width: 12px; height: 12px; font-size: 8px;" aria-label="found"></span>
+            <button type="button" style="background:none;border:0;padding:0;cursor:default;font-size:11px;">The beard of a woman</button>
+          </li>
+          <li class="gleipnir-item fragment-unfound" style="gap: 8px;">
+            <span class="fragment-numeral" style="font-size: 10px;">III</span>
+            <span class="fragment-status" style="width: 12px; height: 12px; font-size: 8px;" aria-label="locked"></span>
+            <span class="fragment-label" style="font-size: 11px;">The roots of a mountain</span>
+          </li>
+          <li class="gleipnir-item fragment-unfound" style="gap: 8px;">
+            <span class="fragment-numeral" style="font-size: 10px;">IV</span>
+            <span class="fragment-status" style="width: 12px; height: 12px; font-size: 8px;" aria-label="locked"></span>
+            <span class="fragment-label" style="font-size: 11px;">The sinews of a bear</span>
+          </li>
+          <li class="gleipnir-item fragment-unfound" style="gap: 8px;">
+            <span class="fragment-numeral" style="font-size: 10px;">V</span>
+            <span class="fragment-status" style="width: 12px; height: 12px; font-size: 8px;" aria-label="locked"></span>
+            <span class="fragment-label" style="font-size: 11px;">The breath of a fish</span>
+          </li>
+          <li class="gleipnir-item fragment-unfound" style="gap: 8px;">
+            <span class="fragment-numeral" style="font-size: 10px;">VI</span>
+            <span class="fragment-status" style="width: 12px; height: 12px; font-size: 8px;" aria-label="locked"></span>
+            <span class="fragment-label" style="font-size: 11px;">The spittle of a bird</span>
+          </li>
+        </ol>
+        <div class="fragment-progress" style="font-size: 10px; margin-top: 8px;">2 of 6 fragments found</div>
+
+        <div style="border-top: 1px solid; margin: 10px 0;" aria-hidden="true"></div>
+
+        <!-- Plunder mobile -->
+        <div class="content-section-label" style="margin-bottom: 6px;">Fenrir's Plunder</div>
+        <div style="font-size: 11px; font-family: monospace;">412,000 pts · $320 cashback</div>
+
+        <!-- Build info on mobile (below Plunder since left col is hidden) -->
+        <div style="margin-top: 12px; font-size: 10px; font-family: monospace; line-height: 1.7;">
+          commit abc1234 · built Jan 1 2026 · env production
+        </div>
+
+      </div><!-- /.mobile-body -->
+
+      <!-- Mobile footer -->
+      <footer class="mobile-footer">
+        <button style="border: 1px solid; padding: 8px 20px; font-size: 12px; min-height: 44px; font-weight: bold;" type="button">Close</button>
+      </footer>
+
+    </div><!-- /.mobile-frame -->
+
+    <div class="spec-box" style="margin-top: 16px; max-width: 375px;">
+      <div class="spec-title">Mobile Layout Notes</div>
+      <ul style="font-size: 12px; padding-left: 16px; line-height: 1.8;">
+        <li>Full-width single column (no grid)</li>
+        <li>Left column hidden — rune ᛟ in inline header (28×28)</li>
+        <li>Profile icons reduced to 28×28</li>
+        <li>Font sizes reduced: names 11px, roles/quotes 10px</li>
+        <li>Gleipnir text 11px, status icons 12×12</li>
+        <li>Dialog scrollable (overflow-y: auto) at this viewport</li>
+        <li>Close button: min-height 44px touch target</li>
+        <li>Build info moves below Plunder section on mobile</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION F — ACCESSIBILITY SPEC
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">F. Accessibility Requirements</div>
+
+    <div class="spec-box">
+      <table>
+        <tr><th>Element</th><th>Requirement</th><th>Implementation Note</th></tr>
+        <tr>
+          <td>Profile icons (rune glyphs)</td>
+          <td>aria-hidden="true" on icon span; name/role text is adjacent and readable</td>
+          <td>Icons are purely decorative; screen reader reads name + role from text</td>
+        </tr>
+        <tr>
+          <td>Fragment status icons</td>
+          <td>aria-label on the status span: "fragment N found" or "fragment N not yet found"</td>
+          <td>Do not rely on checkmark/lock glyph alone for state communication</td>
+        </tr>
+        <tr>
+          <td>Fragment II hidden button</td>
+          <td>aria-label="The beard of a woman — easter egg trigger" so SR users can locate and activate</td>
+          <td>Intentionally hidden from visual design, but must be keyboard accessible</td>
+        </tr>
+        <tr>
+          <td>Fragment dimming (unfound)</td>
+          <td>opacity: 0.35 visual only; text content unchanged for SR</td>
+          <td>Do not use aria-disabled or aria-hidden on unfound items</td>
+        </tr>
+        <tr>
+          <td>Pack quote truncation</td>
+          <td>Full quote in title attribute of .member-quote element</td>
+          <td>Allows hover/focus reveal of full text; tooltip pattern</td>
+        </tr>
+        <tr>
+          <td>Fragment count</td>
+          <td>aria-live="polite" if it updates without page reload</td>
+          <td>Currently reads on open only — no live update needed</td>
+        </tr>
+        <tr>
+          <td>Keyboard navigation</td>
+          <td>Tab order: Header → Pack items → Gleipnir list (fragment II button in flow) → Close</td>
+          <td>Fragment II must be in natural tab order</td>
+        </tr>
+        <tr>
+          <td>Focus ring</td>
+          <td>All interactive elements (buttons, close) have visible focus ring</td>
+          <td>Minimum 2px solid outline, offset 2px — matches existing pattern</td>
+        </tr>
+        <tr>
+          <td>Touch targets</td>
+          <td>Close button min 44×44px; Pack icon-row min 36px height</td>
+          <td>Profile icons not interactive — no touch target size required</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <p style="font-size: 11px; font-style: italic; margin-top: 24px;">
+    Wireframe: about-modal-v2-easter-eggs.html · Issue #1806 · Luna UX Designer
+  </p>
+
+</body>
+</html>
