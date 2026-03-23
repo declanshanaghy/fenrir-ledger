@@ -19,36 +19,10 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 
-// ── Framer Motion ─────────────────────────────────────────────────────────────
+// ── Shared mock factories ──────────────────────────────────────────────────
+// See src/__tests__/mocks/ for factory definitions.
 
-vi.mock("framer-motion", () => {
-  const React = require("react");
-  const motion = {
-    div: React.forwardRef(
-      (
-        {
-          children,
-          className,
-          ...rest
-        }: React.HTMLAttributes<HTMLDivElement> & {
-          custom?: unknown;
-          variants?: unknown;
-          initial?: unknown;
-          animate?: unknown;
-          exit?: unknown;
-          transition?: unknown;
-        },
-        ref: React.Ref<HTMLDivElement>,
-      ) => React.createElement("div", { ref, className, ...rest }, children),
-    ),
-  };
-  return {
-    motion,
-    AnimatePresence: ({ children }: { children: React.ReactNode }) =>
-      React.createElement(React.Fragment, null, children),
-    useReducedMotion: () => true,
-  };
-});
+vi.mock("framer-motion", async () => (await import("../mocks/dialog-mocks")).framerMotionMock);
 
 // ── Next.js Router ────────────────────────────────────────────────────────────
 
@@ -130,45 +104,22 @@ vi.mock("@/lib/entitlement/card-limit", () => ({
   canAddCard: (...args: unknown[]) => mockCanAddCard(...args),
 }));
 
-// ── Entitlement ───────────────────────────────────────────────────────────────
+// ── Shared mock factories ──────────────────────────────────────────────────
+// See src/__tests__/mocks/ for factory definitions.
 
-vi.mock("@/hooks/useEntitlement", () => ({
-  useEntitlement: () => ({ tier: "thrall" }),
-}));
+vi.mock("@/hooks/useEntitlement", async () => (await import("../mocks/hook-mocks")).entitlementMockThrall);
+vi.mock("@/hooks/useAuth", async () => (await import("../mocks/hook-mocks")).authMockAuthenticated);
+vi.mock("@/hooks/useTrialStatus", async () => (await import("../mocks/hook-mocks")).trialStatusMockNone);
+vi.mock("@/lib/milestone-utils", async () => (await import("../mocks/storage-mocks")).milestoneMock);
+vi.mock("@/lib/auth/refresh-session", async () => (await import("../mocks/storage-mocks")).refreshSessionMock);
+vi.mock("@/lib/analytics/track", async () => (await import("../mocks/storage-mocks")).analyticsMock);
+vi.mock("@/lib/issuer-utils", async () => (await import("../mocks/storage-mocks")).issuerUtilsMock);
+vi.mock("@/components/cards/GleipnirBearSinews", async () => (await import("../mocks/component-mocks")).gleipnirBearSinewsMock);
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
-
-vi.mock("@/hooks/useAuth", () => ({
-  useAuth: () => ({ status: "authenticated", householdId: "hh-test", signOut: vi.fn(), ensureHouseholdId: () => "hh-test" }),
-}));
-
-// ── Trial ─────────────────────────────────────────────────────────────────────
-
-vi.mock("@/hooks/useTrialStatus", () => ({
-  clearTrialStatusCache: vi.fn(),
-  useTrialStatus: () => ({ status: "none" }),
-}));
+// ── Inline mocks (captured for assertions) ────────────────────────────────
 
 vi.mock("@/lib/trial-utils", () => ({
   LS_TRIAL_START_TOAST_SHOWN: "fenrir:trial-start-toast-shown",
-}));
-
-// ── Milestone ─────────────────────────────────────────────────────────────────
-
-vi.mock("@/lib/milestone-utils", () => ({
-  checkMilestone: vi.fn().mockResolvedValue(undefined),
-}));
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-
-vi.mock("@/lib/auth/refresh-session", () => ({
-  ensureFreshToken: vi.fn().mockResolvedValue(undefined),
-}));
-
-// ── Analytics ─────────────────────────────────────────────────────────────────
-
-vi.mock("@/lib/analytics/track", () => ({
-  track: vi.fn(),
 }));
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
@@ -180,19 +131,6 @@ vi.mock("sonner", () => ({
     error: (...args: unknown[]) => mockToastError(...args),
     success: vi.fn(),
   }),
-}));
-
-// ── Gleipnir ──────────────────────────────────────────────────────────────────
-
-vi.mock("@/components/cards/GleipnirBearSinews", () => ({
-  GleipnirBearSinews: () => null,
-  useGleipnirFragment4: () => ({ open: false, trigger: vi.fn(), dismiss: vi.fn() }),
-}));
-
-// ── Issuer utils ──────────────────────────────────────────────────────────────
-
-vi.mock("@/lib/issuer-utils", () => ({
-  getIssuerRune: vi.fn().mockReturnValue("ᚠ"),
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

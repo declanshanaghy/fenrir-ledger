@@ -22,78 +22,27 @@ vi.mock("sonner", () => ({
   },
 }));
 
-// ── Standard mocks shared by both shells ──────────────────────────────────────
+// ── Shared mock factories ──────────────────────────────────────────────────
+// See src/__tests__/mocks/ for factory definitions.
 
-vi.mock("next/link", () => ({
-  __esModule: true,
-  default: ({
-    href,
-    children,
-    ...props
-  }: {
-    href: string;
-    children: React.ReactNode;
-    [key: string]: unknown;
-  }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
-}));
+vi.mock("next/link", async () => (await import("../mocks/component-mocks")).nextLinkMock);
+vi.mock("next/navigation", async () => (await import("../mocks/hook-mocks")).nextNavigationMock);
+vi.mock("next-themes", async () => (await import("../mocks/hook-mocks")).nextThemesMock);
+vi.mock("@/hooks/useAuth", async () => (await import("../mocks/hook-mocks")).authMockAnonymous);
+vi.mock("@/lib/entitlement/cache", async () => (await import("../mocks/storage-mocks")).entitlementCacheMock);
+vi.mock("@/lib/auth/sign-in-url", async () => (await import("../mocks/storage-mocks")).signInUrlMock);
+vi.mock("@/components/layout/ThemeToggle", async () => (await import("../mocks/component-mocks")).themeToggleMock);
+vi.mock("@/components/cards/GleipnirMountainRoots", async () => (await import("../mocks/component-mocks")).gleipnirMountainRootsMock);
+vi.mock("@/contexts/RagnarokContext", async () => (await import("../mocks/hook-mocks")).ragnarokContextMock);
+vi.mock("@/contexts/AuthContext", async () => (await import("../mocks/hook-mocks")).authContextMockAnon);
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
-  usePathname: () => "/",
-  useSearchParams: () => new URLSearchParams(),
-}));
-
-vi.mock("next-themes", () => ({
-  useTheme: () => ({ theme: "dark", setTheme: vi.fn() }),
-}));
-
-vi.mock("@/hooks/useAuth", () => ({
-  useAuth: () => ({
-    data: null,
-    status: "anonymous",
-    householdId: "test-household",
-    signOut: vi.fn(),
-  }),
-}));
-
-vi.mock("@/lib/entitlement/cache", () => ({
-  getEntitlementCache: () => null,
-  clearEntitlementCache: vi.fn(),
-}));
-
-vi.mock("@/lib/auth/sign-in-url", () => ({
-  buildSignInUrl: (returnTo: string) => `/ledger/sign-in?returnTo=${returnTo}`,
-}));
-
-vi.mock("@/components/layout/ThemeToggle", () => ({
-  ThemeToggle: () => <button type="button">T</button>,
-  cycleTheme: (t: string) => (t === "dark" ? "light" : "dark"),
-}));
+// ── Inline mocks ──────────────────────────────────────────────────────────
 
 vi.mock("@/components/layout/SyncIndicator", () => ({ SyncIndicator: () => null }));
 vi.mock("./SyncIndicator", () => ({ SyncIndicator: () => null }));
 vi.mock("./KonamiHowl", () => ({ KonamiHowl: () => null }));
 vi.mock("./ForgeMasterEgg", () => ({ ForgeMasterEgg: () => null }));
 vi.mock("@/components/easter-eggs/HeilungModal", () => ({ HeilungModal: () => null }));
-vi.mock("@/components/cards/GleipnirMountainRoots", () => ({
-  GleipnirMountainRoots: () => null,
-  useGleipnirFragment3: () => ({ open: false, dismiss: vi.fn() }),
-}));
-vi.mock("@/contexts/RagnarokContext", () => ({
-  useRagnarok: () => ({ ragnarokActive: false }),
-}));
-vi.mock("@/contexts/AuthContext", () => ({
-  useAuthContext: () => ({
-    status: "anonymous",
-    session: null,
-    householdId: "",
-    signOut: vi.fn(),
-  }),
-}));
 
 // LedgerShell-specific mocks
 vi.mock("@/components/layout/LedgerTopBar", () => ({
