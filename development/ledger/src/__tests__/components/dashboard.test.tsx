@@ -393,6 +393,24 @@ describe("Dashboard — all tab panel", () => {
     expect(screen.getAllByTestId("card-tile-Active Card").length).toBeGreaterThan(0);
     expect(screen.getAllByTestId("card-tile-Valhalla Card").length).toBeGreaterThan(0);
   });
+
+  // Issue #1850 — all tab delegates bonus_open → HuntCardTile
+  it("renders bonus_open card in all panel via HuntCardTile mock", () => {
+    render(<Dashboard cards={[makeCard("b1", "bonus_open", "Hunt Card")]} />);
+    expect(screen.getAllByTestId("card-tile-Hunt Card").length).toBeGreaterThan(0);
+  });
+
+  // Issue #1850 — all tab delegates fee_approaching → HowlCardTile
+  it("renders fee_approaching card in all panel via HowlCardTile mock", () => {
+    render(<Dashboard cards={[makeCard("f1", "fee_approaching", "Howl Card")]} />);
+    expect(screen.getAllByTestId("card-tile-Howl Card").length).toBeGreaterThan(0);
+  });
+
+  // Issue #1850 — all tab delegates closed → ValhallaCardTile
+  it("renders closed card in all panel via ValhallaCardTile mock", () => {
+    render(<Dashboard cards={[makeCard("v1", "closed", "Valhalla Closed")]} />);
+    expect(screen.getAllByTestId("card-tile-Valhalla Closed").length).toBeGreaterThan(0);
+  });
 });
 
 // ── Tests: valhalla tab panel ──────────────────────────────────────────────
