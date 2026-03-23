@@ -1,14 +1,16 @@
 # --------------------------------------------------------------------------
-# CI Tests — TypeScript Check + Unit Tests + Playwright E2E against GKE Prod
+# CI Tests — TypeScript Check + Unit Tests (4-way sharded) + Playwright E2E
 #
 # Runs on every push to PR branches and workflow_dispatch:
-#   1. TypeScript type-checking (pnpm run verify:tsc)
-#   2. Vitest unit tests (pnpm run verify:unit)
+#   1. TypeScript type-checking (pnpm run verify:tsc)          ─┐ parallel
+#   2. Vitest unit tests — 4-way matrix shard                  ─┘
 #   3. Playwright E2E tests against https://www.fenrirledger.com
+#      (only after all tsc + unit shards pass)
 #   4. Upload test artifacts + upsert PR comment with results
 #   5. odins-spear verify (tsc + unit) when development/odins-spear/** changes
 #
 # Replaces the former Vercel-deployment-based CI workflow (Issue #734).
+# Adds 4-way Vitest sharding for ~3-4x unit test speedup (Issue #1854).
 #
 # Required GitHub Secrets:
 #   (none — tests run against the public GKE prod endpoint)
@@ -30,19 +32,23 @@ on:
       - ".github/workflows/ci-tests.yml"
   workflow_dispatch:
 
+# ---------------------------------------------------------------------------
+# Shared setup steps (reused via composite-style inline repetition)
+# ---------------------------------------------------------------------------
+
 jobs:
-  ci:
-    name: TypeScript + Unit + E2E
+  # ─── 1. TypeScript type-check ────────────────────────────────────────────
+  tsc:
+    name: TypeScript Check
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: "20"
@@ -67,12 +73,86 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: TypeScript check
-        id: tsc
         run: pnpm run verify:tsc
 
+  # ─── 2. Vitest unit tests — 4-way matrix shard ───────────────────────────
+  unit:
+    name: Unit Tests (Shard ${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "store=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Run unit tests
-        id: unit
-        run: pnpm run verify:unit
+        working-directory: development/ledger
+        run: npx vitest run --pool threads --shard=${{ matrix.shard }}/4
+
+  # ─── 3. Playwright E2E (requires all tsc + unit shards to pass) ──────────
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    needs: [tsc, unit]
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "store=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
         working-directory: development/ledger
@@ -92,8 +172,18 @@ jobs:
           path: development/ledger/playwright-report/
           retention-days: 14
 
+  # ─── 4. PR comment — aggregates all job results ──────────────────────────
+  report:
+    name: CI Report
+    runs-on: ubuntu-latest
+    needs: [tsc, unit, e2e]
+    if: always() && github.event_name == 'push'
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
       - name: Upsert PR comment with CI results
-        if: always() && github.event_name == 'push'
         # Fine-grained PAT is sufficient for PR comment writes (pull-requests: write)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN_PAT_FINE_GRAINED }}
@@ -115,7 +205,14 @@ jobs:
 
             const prNumber = pulls.data[0].number;
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
-            const status = '${{ job.status }}' === 'success' ? '✅' : '❌';
+
+            const tscResult  = '${{ needs.tsc.result }}';
+            const unitResult = '${{ needs.unit.result }}';
+            const e2eResult  = '${{ needs.e2e.result }}';
+
+            const icon = (r) => r === 'success' ? '✅' : r === 'skipped' ? '⏭️' : '❌';
+            const allPassed = [tscResult, unitResult, e2eResult].every(r => r === 'success');
+            const status = allPassed ? '✅' : '❌';
             const marker = '<!-- ci-tests-comment -->';
 
             const body = [
@@ -124,9 +221,9 @@ jobs:
               '',
               `| Check | Status |`,
               `|-------|--------|`,
-              `| TypeScript | ${'${{ steps.tsc.outcome }}' || '—'} |`,
-              `| Unit Tests | ${'${{ steps.unit.outcome }}' || '—'} |`,
-              `| E2E Tests  | ${'${{ steps.e2e.outcome }}' || '—'} |`,
+              `| TypeScript       | ${icon(tscResult)} ${tscResult} |`,
+              `| Unit Tests (4×)  | ${icon(unitResult)} ${unitResult} |`,
+              `| E2E Tests        | ${icon(e2eResult)} ${e2eResult} |`,
               '',
               `**Commit:** \`${sha.slice(0, 7)}\``,
               `**Run:** [View details](${runUrl})`,
@@ -154,6 +251,7 @@ jobs:
               });
             }
 
+  # ─── 5. Odin's Spear — TypeScript + Unit ─────────────────────────────────
   odins-spear-ci:
     name: Odin's Spear — TypeScript + Unit
     runs-on: ubuntu-latest
@@ -165,10 +263,10 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: "20"
