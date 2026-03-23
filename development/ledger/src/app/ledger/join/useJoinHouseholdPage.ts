@@ -42,6 +42,8 @@ export interface HouseholdPreview {
   memberCount: number;
   members: Array<{ displayName: string; email: string; role: string }>;
   userCardCount: number;
+  /** Cards already in the target household — displayed in merge confirmation UI. */
+  targetHouseholdCardCount: number;
 }
 
 // ---------------------------------------------------------------------------

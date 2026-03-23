@@ -319,13 +319,16 @@ export default function JoinHouseholdPage() {
   if (step === "confirm" && preview) {
     const hasCards = preview.userCardCount > 0;
     const cardCountLabel = `${preview.userCardCount} card${preview.userCardCount !== 1 ? "s" : ""}`;
+    const targetCardLabel = `${preview.targetHouseholdCardCount} card${preview.targetHouseholdCardCount !== 1 ? "s" : ""}`;
 
     return (
       <div className="px-4 py-8 flex justify-center">
         <div className="w-full max-w-[480px] flex flex-col gap-5">
           <header>
             <h1 className="text-xl font-heading font-bold text-foreground border-b border-border pb-3">
-              Confirm: Merge Cards &amp; Join Household
+              {hasCards
+                ? "Confirm: Merge Cards \u0026 Join Household"
+                : "Confirm: Join Household"}
             </h1>
           </header>
 
@@ -360,7 +363,8 @@ export default function JoinHouseholdPage() {
               <p className="text-xs text-muted-foreground font-body mt-0.5">
                 {preview.memberCount} existing member
                 {preview.memberCount !== 1 ? "s" : ""} ·{" "}
-                {MAX_MEMBERS - preview.memberCount} spot remaining
+                {MAX_MEMBERS - preview.memberCount} spot remaining ·{" "}
+                {targetCardLabel}
               </p>
             </div>
           </div>

@@ -37,7 +37,10 @@ import { GET } from "@/app/api/household/invite/validate/route";
 const USER_ID = "user_joiner";
 const OWNER_ID = "user_owner";
 const HOUSEHOLD_ID = "hh_target";
-const CALLER_HOUSEHOLD_ID = "hh_solo";
+// Solo user: householdId MUST equal userId (Google sub) — that is how solo
+// households are keyed in Firestore.  The old CALLER_HOUSEHOLD_ID = "hh_solo"
+// was wrong; it would now trigger the already_in_household guard.
+const CALLER_HOUSEHOLD_ID = USER_ID;
 
 function makeRequest(code: string | null = "X7K2NP"): NextRequest {
   const url = code
@@ -113,20 +116,28 @@ describe("GET /api/household/invite/validate", () => {
       memberCount: number;
       members: unknown[];
       userCardCount: number;
+      targetHouseholdCardCount: number;
     };
     expect(body.householdId).toBe(HOUSEHOLD_ID);
     expect(body.householdName).toBe("Eriksen Household");
     expect(body.memberCount).toBe(2);
     expect(body.userCardCount).toBe(0);
+    expect(body.targetHouseholdCardCount).toBe(0);
     expect(Array.isArray(body.members)).toBe(true);
   });
 
   it("includes userCardCount matching caller's solo household cards", async () => {
-    mockGetCards.mockResolvedValue([{ id: "card1" }, { id: "card2" }, { id: "card3" }]);
+    // Caller (solo user) has 3 cards under their own householdId (= USER_ID).
+    // Target household has 0 cards.
+    mockGetCards.mockImplementation((id: string) => {
+      if (id === USER_ID) return Promise.resolve([{ id: "card1" }, { id: "card2" }, { id: "card3" }]);
+      return Promise.resolve([]);
+    });
     const res = await GET(makeRequest("X7K2NP"));
     expect(res.status).toBe(200);
-    const body = await res.json() as { userCardCount: number };
+    const body = await res.json() as { userCardCount: number; targetHouseholdCardCount: number };
     expect(body.userCardCount).toBe(3);
+    expect(body.targetHouseholdCardCount).toBe(0);
   });
 
   it("returns 404 for invalid code", async () => {

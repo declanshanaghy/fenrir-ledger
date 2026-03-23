@@ -195,6 +195,7 @@ describe("JoinHouseholdPage — code entry step", () => {
         { displayName: "Thor", email: "thor@asgard.com", role: "member" },
       ],
       userCardCount: 3,
+      targetHouseholdCardCount: 7,
     };
     global.fetch = vi
       .fn()
