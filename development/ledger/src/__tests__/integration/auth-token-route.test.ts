@@ -14,7 +14,7 @@ import { POST } from "@/app/api/auth/token/route";
 
 // Mock the rate limiter to always allow (override per-test as needed)
 vi.mock("@/lib/rate-limit", () => ({
-  rateLimit: vi.fn(() => ({ success: true, remaining: 9 })),
+  rateLimit: vi.fn(() => ({ success: true, remaining: 9, retryAfter: undefined })),
 }));
 
 // Mock the logger
@@ -137,6 +137,7 @@ describe("/api/auth/token — Rate limiting", () => {
     (rateLimit as ReturnType<typeof vi.fn>).mockReturnValueOnce({
       success: false,
       remaining: 0,
+      retryAfter: 45,
     });
 
     const req = makeRequest({ refresh_token: "test-refresh" });
@@ -145,6 +146,36 @@ describe("/api/auth/token — Rate limiting", () => {
     expect(res.status).toBe(429);
     const data = await res.json();
     expect(data.error).toBe("rate_limited");
+  });
+
+  it("includes Retry-After header in 429 response", async () => {
+    const { rateLimit } = await import("@/lib/rate-limit");
+    (rateLimit as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      success: false,
+      remaining: 0,
+      retryAfter: 42,
+    });
+
+    const req = makeRequest({ refresh_token: "test-refresh" });
+
+    const res = await POST(req);
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBe("42");
+  });
+
+  it("falls back to Retry-After: 60 when retryAfter is undefined", async () => {
+    const { rateLimit } = await import("@/lib/rate-limit");
+    (rateLimit as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      success: false,
+      remaining: 0,
+      retryAfter: undefined,
+    });
+
+    const req = makeRequest({ refresh_token: "test-refresh" });
+
+    const res = await POST(req);
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBe("60");
   });
 });
 

@@ -94,6 +94,27 @@ describe("rateLimit", () => {
     expect(result.remaining).toBe(0);
   });
 
+  it("returns retryAfter (seconds) when rate limited", () => {
+    const now = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(now);
+
+    // Exhaust the limit
+    for (let i = 0; i < 2; i++) {
+      rateLimit("user:retry", { limit: 2, windowMs: 30_000 });
+    }
+
+    const result = rateLimit("user:retry", { limit: 2, windowMs: 30_000 });
+    expect(result.success).toBe(false);
+    expect(result.retryAfter).toBeGreaterThan(0);
+    expect(result.retryAfter).toBeLessThanOrEqual(30);
+  });
+
+  it("does not return retryAfter for successful requests", () => {
+    const result = rateLimit("user:no-retry", { limit: 5, windowMs: 60_000 });
+    expect(result.success).toBe(true);
+    expect(result.retryAfter).toBeUndefined();
+  });
+
   it("returns remaining=0 for the last allowed request", () => {
     // With limit=2, the 2nd request should have remaining=0
     rateLimit("user:5", { limit: 2, windowMs: 60_000 });
