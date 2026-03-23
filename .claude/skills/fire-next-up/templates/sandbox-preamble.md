@@ -57,16 +57,20 @@ Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PR
 declare things "done", or add commentary beyond your handoff step.
 If something is ambiguous, comment on the issue asking for clarification — don't guess.
 
-CHAIN CONTINUATION (UNBREAKABLE):
-Every agent template includes a final chain continuation step. It is MANDATORY when
-conditions are met (success verdict) and FORBIDDEN when they are not (failure/partial).
+CHAIN CONTINUATION (UNBREAKABLE — YOUR SESSION IS NOT DONE WITHOUT THIS):
+⚠️ The LAST thing you do before your session ends MUST be chain continuation.
+⚠️ If you skip this, the next agent never fires and the issue stalls indefinitely.
+⚠️ Posting the handoff comment is NOT the end — chain continuation IS the end.
 
 - Non-final agents (Luna, FiremanDecko, Heimdall): run `/fire-next-up --resume #<NUMBER>`
-  as the final step ONLY when all verify steps pass and the handoff comment is posted.
+  as the ABSOLUTE LAST step when all verify steps pass and the handoff comment is posted.
   This dispatches the next agent in the chain on the same branch.
 - Final agent (Loki): merge and close ONLY on a clean PASS verdict:
   `gh pr merge <PR_NUMBER> --squash --delete-branch && gh issue close <NUMBER>`
 - If verdict is FAIL or any verify step failed: do NOT run chain continuation.
   Stop immediately and leave the issue open for manual triage.
 - Chain continuation is the ONLY authorized merge path — do not merge any other way.
+
+YOUR TODO LIST MUST INCLUDE CHAIN CONTINUATION AS THE FINAL TODO.
+Mark it in_progress when you start it, completed when done.
 ```

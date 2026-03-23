@@ -101,8 +101,6 @@ If conflicts: resolve, re-run feature tests.
 
 If no PR exists (sole agent): `gh pr create --title "Issue #<NUMBER> - test: <title>" --body "PR for issue: #<NUMBER>\n\n<summary>"`
 
-**DO NOT MERGE.** Only the orchestrator merges. Your job ends at the verdict comment.
-
 **Step 6 — QA verdict comment:**
 gh issue comment <NUMBER> --body "## Loki QA Verdict
 
@@ -117,14 +115,18 @@ gh issue comment <NUMBER> --body "## Loki QA Verdict
 - <AC-2 result>
 
 **Build:** tsc + build PASS. New feature tests PASS. Full suite deferred to CI.
-<If PASS: Ready for merge — awaiting orchestrator + CI green.>
+<If PASS: Ready for merge.>
 <If FAIL: Blocked — see failures above.>"
 
-**Step 7 — Chain continuation (PASS only):**
-If your verdict is PASS (all tests green, tsc + build PASS):
+**Step 7 — CHAIN CONTINUATION (MANDATORY — DO NOT SKIP):**
+⚠️ THIS STEP IS NOT OPTIONAL. Your session is NOT complete until this runs.
+⚠️ If you stop after Step 6 without running Step 7, the PR never merges and the issue stalls.
+
+If your verdict is PASS (all tests green, tsc + build PASS), you MUST run these commands:
   gh pr view <BRANCH> --json number --jq '.number'
   gh pr merge <PR_NUMBER> --squash --delete-branch
   gh issue close <NUMBER>
+
 If FAIL: do NOT run this step — leave the issue open for manual triage.
 
 ---
