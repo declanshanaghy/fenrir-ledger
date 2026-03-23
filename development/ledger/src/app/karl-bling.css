@@ -193,7 +193,7 @@
  *   [data-tier="karl"]  — full gold badge (active subscriber)
  *   [data-tier="trial"] — dimmed/muted badge (trial user, links to /pricing)
  *
- * Runic accent characters (ᚷ Gebo, decorative) are rendered in HTML,
+ * Runic accent characters (ᚠ Fehu left, ᛟ Othala right, decorative) are rendered in HTML,
  * marked aria-hidden="true" — purely visual adornment.
  *
  * Issue: #1779
@@ -220,13 +220,20 @@
   color: var(--karl-gold);
   border: 1px solid rgba(212, 165, 32, 0.50);
   border-radius: 2px;
-  padding: 0.1rem 0.45rem;
+  padding: 0.25rem 0.55rem;
   box-shadow: var(--karl-shadow-sm);
   animation: karl-badge-pulse 3.6s ease-in-out infinite;
+  transition: box-shadow 180ms ease-out, border-color 180ms ease-out;
   /* Mobile responsive: shrinks below 375px naturally with rem units */
   white-space: nowrap;
   vertical-align: middle;
   text-decoration: none;
+}
+
+/* Karl: gold glow on hover — decorative premium effect */
+[data-tier="karl"] .karl-bling-badge:hover {
+  box-shadow: 0 0 12px rgba(201,146,10,0.5), 0 0 4px rgba(201,146,10,0.7);
+  border-color: var(--karl-gold);
 }
 
 /* Trial: dimmed/muted badge — links to /pricing as upsell nudge */
@@ -242,7 +249,7 @@
   color: var(--karl-gold-dim);
   border: 1px solid rgba(212, 165, 32, 0.22);
   border-radius: 2px;
-  padding: 0.1rem 0.45rem;
+  padding: 0.25rem 0.55rem;
   opacity: 0.60;
   white-space: nowrap;
   vertical-align: middle;
@@ -258,7 +265,7 @@
 [data-tier="karl"] .karl-bling-badge .karl-badge-rune,
 [data-tier="trial"] .karl-bling-badge .karl-badge-rune {
   font-family: serif;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   line-height: 1;
   opacity: 0.75;
 }
@@ -355,9 +362,11 @@
     opacity: 0.55;
   }
 
-  /* Badge pulse suppressed — static gold border retained */
-  [data-tier="karl"] .karl-bling-badge {
+  /* Badge pulse suppressed — static gold border retained; hover transition suppressed */
+  [data-tier="karl"] .karl-bling-badge,
+  [data-tier="karl"] .karl-bling-badge:hover {
     animation: none;
+    transition: none;
   }
 
   /* Trial badge transition suppressed */

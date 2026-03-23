@@ -12,7 +12,7 @@
  * Trial: <Link href="/pricing"> — tappable upsell nudge to upgrade
  * Thrall: <span> in DOM but hidden by CSS (no JS branch needed)
  *
- * Runic accents (ᚷ Gebo) are aria-hidden — purely decorative.
+ * Runic accents (ᚠ Fehu left, ᛟ Othala right) are aria-hidden — purely decorative.
  *
  * Issue: #1779
  */
@@ -25,9 +25,9 @@ import { useTrialStatus } from "@/hooks/useTrialStatus";
 function BadgeInner() {
   return (
     <>
-      <span className="karl-badge-rune" aria-hidden="true">ᚷ</span>
+      <span className="karl-badge-rune" aria-hidden="true">ᚠ</span>
       KARL
-      <span className="karl-badge-rune" aria-hidden="true">ᚷ</span>
+      <span className="karl-badge-rune" aria-hidden="true">ᛟ</span>
     </>
   );
 }
