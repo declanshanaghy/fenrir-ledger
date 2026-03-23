@@ -81,6 +81,30 @@ describe("MembersList — behaviour", () => {
     render(<MembersList members={members} />);
     expect(screen.getByText("thor@example.com")).toBeDefined();
   });
+
+  // ── Remove button (issue #1818) ──────────────────────────────────────────
+
+  it("shows Remove button on non-owner row when onKick is provided", () => {
+    render(<MembersList members={members} onKick={vi.fn()} />);
+    expect(screen.getByRole("button", { name: /remove björn andersen/i })).toBeInTheDocument();
+  });
+
+  it("does not show Remove button on owner row even when onKick is provided", () => {
+    render(<MembersList members={members} onKick={vi.fn()} />);
+    expect(screen.queryByRole("button", { name: /remove thorvald/i })).not.toBeInTheDocument();
+  });
+
+  it("does not show any Remove button when onKick is not provided", () => {
+    render(<MembersList members={members} />);
+    expect(screen.queryByRole("button", { name: /remove/i })).not.toBeInTheDocument();
+  });
+
+  it("calls onKick with the correct member when Remove is clicked", () => {
+    const onKick = vi.fn();
+    render(<MembersList members={members} onKick={onKick} />);
+    fireEvent.click(screen.getByRole("button", { name: /remove björn andersen/i }));
+    expect(onKick).toHaveBeenCalledWith(members[1]);
+  });
 });
 
 // ── InviteCodeDisplay ─────────────────────────────────────────────────────────
