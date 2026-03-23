@@ -1012,7 +1012,357 @@
 
 .chronicle-page .commit-item:last-child { border-bottom: none; }
 
-/* ── Decree Complete ── */
+/* ══════════════════════════════════════════════════════════════════
+   DECREE CARD — Odin's Throne style (.dc-*)
+   ══════════════════════════════════════════════════════════════════ */
+
+.chronicle-page .dc-card {
+  position: relative;
+  border: 1px solid var(--c-border);
+  border-left-width: 3px;
+  margin: 24px 0;
+  background: var(--c-bg-card);
+  padding: 0;
+}
+
+/* ── Header: agent profile + decree title ── */
+
+.chronicle-page .dc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  gap: 12px;
+}
+
+.chronicle-page .dc-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chronicle-page .dc-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.chronicle-page .dc-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chronicle-page .dc-agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.chronicle-page .dc-agent-name {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.chronicle-page .dc-agent-title {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.65rem;
+  color: var(--c-fg-muted);
+}
+
+.chronicle-page .dc-agent-runes {
+  font-size: 0.68rem;
+  opacity: 0.75;
+  letter-spacing: 2px;
+}
+
+.chronicle-page .dc-meta {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.chronicle-page .dc-title {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  color: var(--c-gold);
+}
+
+.chronicle-page .dc-rune-delim {
+  opacity: 0.6;
+}
+
+.chronicle-page .dc-issue {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  color: var(--c-fg-muted);
+}
+
+/* ── Verdict row ── */
+
+.chronicle-page .dc-verdict-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.chronicle-page .dc-verdict-label {
+  font-size: 0.62rem;
+  letter-spacing: 1.5px;
+  color: var(--c-fg-muted);
+  text-transform: uppercase;
+  font-family: var(--font-mono), monospace;
+}
+
+.chronicle-page .dc-verdict-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-family: var(--font-cinzel-decorative), 'Cinzel Decorative', serif;
+}
+
+.chronicle-page .dc-pr-link {
+  margin-left: auto;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--c-teal);
+  text-decoration: none;
+}
+
+.chronicle-page .dc-pr-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Collapsible sections (Summary / Checks) ── */
+
+.chronicle-page .dc-section {
+  padding: 0 16px;
+  margin: 8px 0;
+}
+
+.chronicle-page .dc-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--c-fg);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.chronicle-page .dc-section-glyph {
+  font-size: 0.85rem;
+  color: var(--c-gold);
+  opacity: 0.8;
+}
+
+.chronicle-page .dc-section-title {
+  color: var(--c-fg);
+}
+
+/* Summary list */
+
+.chronicle-page .dc-list {
+  list-style: none;
+  padding: 0 0 0 4px;
+  margin: 4px 0 8px;
+}
+
+.chronicle-page .dc-list-item {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--c-fg);
+  padding: 2px 0;
+  padding-left: 12px;
+  position: relative;
+}
+
+.chronicle-page .dc-list-item::before {
+  content: '\2022';
+  position: absolute;
+  left: 0;
+  color: var(--c-gold);
+  opacity: 0.6;
+}
+
+/* Checks grid */
+
+.chronicle-page .dc-checks {
+  margin: 4px 0 8px;
+}
+
+.chronicle-page .dc-check-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.chronicle-page .dc-check-item:last-child {
+  border-bottom: none;
+}
+
+.chronicle-page .dc-check-name {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--c-fg-muted);
+}
+
+.chronicle-page .dc-check-value {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+
+/* ── Footer: seal + signoff ── */
+
+.chronicle-page .dc-footer {
+  margin-top: 4px;
+  padding: 10px 16px;
+}
+
+.chronicle-page .dc-seal-band {
+  opacity: 0.5;
+  letter-spacing: 4px;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.chronicle-page .dc-seal {
+  font-style: italic;
+  font-size: 0.72rem;
+  color: var(--c-gold);
+  text-align: center;
+  padding: 4px 0;
+  letter-spacing: 0.5px;
+}
+
+.chronicle-page .dc-signoff {
+  font-style: italic;
+  font-size: 0.68rem;
+  color: var(--c-fg-muted);
+  text-align: center;
+  padding: 2px 0 4px;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .chronicle-page .dc-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chronicle-page .dc-meta {
+    text-align: left;
+  }
+  .chronicle-page .dc-verdict-value {
+    font-size: 1.1rem;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ENTRYPOINT STRUCTURED LINES — Odin's Throne style (.ep-*)
+   ══════════════════════════════════════════════════════════════════ */
+
+.chronicle-page .ep-body {
+  padding: 12px;
+  margin: 8px 0 0;
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+}
+
+.chronicle-page .ep-header {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--c-gold);
+  letter-spacing: 0.1em;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: 4px;
+}
+
+.chronicle-page .ep-ok {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--c-teal);
+  padding: 2px 0;
+}
+
+.chronicle-page .ep-ok-marker {
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.chronicle-page .ep-warn {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--c-amber);
+  padding: 2px 0;
+}
+
+.chronicle-page .ep-warn::before {
+  content: '[WARN] ';
+  font-weight: 700;
+}
+
+.chronicle-page .ep-fatal {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--c-fire);
+  font-weight: 700;
+  padding: 2px 0;
+  background: rgba(239, 68, 68, 0.06);
+  padding-left: 8px;
+  border-left: 2px solid var(--c-fire);
+}
+
+.chronicle-page .ep-fatal::before {
+  content: '[FATAL] ';
+}
+
+.chronicle-page .ep-kv {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+}
+
+.chronicle-page .ep-kv-key {
+  color: var(--c-fg-muted);
+  min-width: 100px;
+}
+
+.chronicle-page .ep-kv-key::after {
+  content: ':';
+}
+
+.chronicle-page .ep-kv-val {
+  color: var(--c-gold);
+}
+
+.chronicle-page .ep-raw {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  color: var(--c-fg-muted);
+  opacity: 0.6;
+  padding: 1px 0;
+  white-space: pre-wrap;
+}
+
+/* Legacy decree-complete kept for backward compat with existing chronicles */
 
 .chronicle-page .decree-complete {
   border: 2px solid var(--c-teal);

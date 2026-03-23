@@ -19,8 +19,20 @@ import {
   AGENT_SIGNOFFS,
   AGENT_CALLBACK_QUOTES,
   AGENT_CALLBACK_RUNES,
+  AGENT_RUNE_NAMES,
+  AGENT_TITLES as AGENT_ROLE_TITLES,
   parseDecreeBlock,
 } from "./agent-identity.mjs";
+
+// Agent accent colors — matches Odin's Throne constants.ts
+const AGENT_COLORS = {
+  firemandecko: "#4ecdc4",
+  loki: "#a78bfa",
+  luna: "#6b8afd",
+  freya: "#f0b429",
+  heimdall: "#8B5E3C",
+  odin: "#c9920a",
+};
 
 // Agent display names — inline since we no longer import from mayo-heckler
 const AGENT_NAMES = {
@@ -475,6 +487,45 @@ function toolBadgeClass(name) {
   return "";
 }
 
+// ---------------------------------------------------------------------------
+// Tool categorisation — ported from Odin's Throne constants.ts
+// ---------------------------------------------------------------------------
+function toolCategory(name, input) {
+  const cmd = String(input?.command ?? "");
+  if (name === "TodoWrite" || name === "TodoUpdate") return "tracking";
+  if (name === "Read" || name === "Grep" || name === "Glob") return "reading";
+  if (name === "Edit" || name === "MultiEdit") return "editing";
+  if (name === "Write") return "writing";
+  if (name === "Agent") return "delegating";
+  if (name === "Bash") {
+    if (/git\s+(add|commit|push)/.test(cmd)) return "committing";
+    if (/git\s+(fetch|rebase|pull|merge)/.test(cmd)) return "syncing";
+    if (/git\s+(log|diff|status|branch)/.test(cmd)) return "inspecting";
+    if (/verify\.sh|tsc|--noEmit/.test(cmd)) return "verifying";
+    if (/vitest|playwright|jest/.test(cmd)) return "testing";
+    if (/next\s+build|npm\s+run\s+build/.test(cmd)) return "building";
+    if (/gh\s+issue/.test(cmd)) return "issue ops";
+    if (/gh\s+pr/.test(cmd)) return "PR ops";
+    if (/npm\s+(ci|install)|npx/.test(cmd)) return "installing";
+    if (/curl|wget/.test(cmd)) return "fetching";
+    if (/kubectl|helm/.test(cmd)) return "k8s ops";
+    if (/rm\s+-rf|mkdir/.test(cmd)) return "cleanup";
+  }
+  return name.toLowerCase();
+}
+
+function batchSummary(tools) {
+  const categories = {};
+  for (const t of tools) {
+    const cat = toolCategory(t.name, t.input);
+    categories[cat] = (categories[cat] || 0) + 1;
+  }
+  const parts = Object.entries(categories)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, count]) => count > 1 ? `${count} ${cat}` : cat);
+  return parts.join(", ");
+}
+
 function toolInputPreview(tool) {
   function singleLine(s) { return s.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim(); }
   if (tool.name === "Bash" && tool.input?.command) return esc(singleLine(tool.input.description || tool.input.command.slice(0, 100)));
@@ -505,19 +556,45 @@ function renderToolOutput(tool) {
   return sanitizeToolOutput(raw, 800);
 }
 
+function renderEntrypointLine(line) {
+  if (/^===.*===$/.test(line)) {
+    const text = line.replace(/^=+\s*|\s*=+$/g, "");
+    return `<div class="ep-header">${esc(text)}</div>`;
+  }
+  if (/^---.*---$/.test(line)) {
+    const text = line.replace(/^-+\s*|\s*-+$/g, "");
+    return `<div class="ep-header">${esc(text)}</div>`;
+  }
+  if (line.startsWith("[FATAL]")) {
+    return `<div class="ep-fatal">${esc(line.slice(7).trim())}</div>`;
+  }
+  if (line.startsWith("[WARN]")) {
+    return `<div class="ep-warn">${esc(line.slice(6).trim())}</div>`;
+  }
+  if (line.startsWith("[ok]")) {
+    return `<div class="ep-ok"><span class="ep-ok-marker">[ok]</span> ${esc(line.slice(4).trim())}</div>`;
+  }
+  const kvMatch = /^(Session|Branch|Model|Working directory):\s*(.+)$/.exec(line);
+  if (kvMatch) {
+    return `<div class="ep-kv"><span class="ep-kv-key">${esc(kvMatch[1])}</span><span class="ep-kv-val">${esc(kvMatch[2])}</span></div>`;
+  }
+  return `<div class="ep-raw">${esc(line)}</div>`;
+}
+
 function renderEntrypoint() {
   // Split into sandbox setup (before --- TASK PROMPT ---) and decree (after)
   const promptIdx = entrypointLines.findIndex(l => /TASK PROMPT/.test(l));
   const setupLines = promptIdx >= 0 ? entrypointLines.slice(0, promptIdx) : entrypointLines;
   const promptLines = promptIdx >= 0 ? entrypointLines.slice(promptIdx + 1) : [];
 
-  const setupText = setupLines
+  const setupBody = setupLines
     .filter(l => l.trim())
+    .map(l => renderEntrypointLine(l))
     .join("\n");
   const setupMarkup = `
 <details class="entrypoint">
 <summary>&#5765; Sandbox Forging</summary>
-<pre>${esc(setupText)}</pre>
+<div class="ep-body">${setupBody}</div>
 </details>`;
 
   if (promptLines.length === 0) return setupMarkup;
@@ -743,7 +820,7 @@ while (mi < turns.length) {
 <details class="agent-turn${hasError ? " agent-turn-error" : ""}">
 <summary>
 <span class="agent-turn-num">${numLabel}</span>
-<span class="agent-turn-summary">${mergedTools.length} tool calls</span>
+<span class="agent-turn-summary">${esc(batchSummary(mergedTools))}</span>
 <span class="agent-turn-badges">${toolBadges}</span>
 </summary>
 <div class="agent-turn-body">
@@ -840,41 +917,74 @@ if (verdict) {
 
 const decreeMarkup = renderEntrypoint();
 
-// Build decree-complete block if present
+// Build decree-complete block — Odin's Throne DecreeBlock style
 let decreeCompleteMarkup = "";
 if (decree) {
-  const dVerdictColor = decree.verdict === "PASS" ? "var(--teal-asgard)" : decree.verdict === "FAIL" ? "var(--fire-muspel)" : "var(--amber-hati)";
+  const dAgentColor = AGENT_COLORS[agentNameKey] || "#c9920a";
+  const dAgentRunes = AGENT_RUNE_NAMES[agentNameKey] || AGENT_RUNE_NAMES._fallback || "";
+  const dAgentRole = AGENT_ROLE_TITLES[agentNameKey] || "";
+
+  const isPass = /^(PASS|DONE|DELIVERED|APPROVED|SECURED)$/i.test(decree.verdict || "");
+  const isFail = /^FAIL$/i.test(decree.verdict || "");
+  const verdictColor = isFail ? "#ef4444" : isPass ? "#f0b429" : "#9ca3af";
+  const verdictGlow = isFail ? "0 0 12px rgba(239,68,68,0.6)" : isPass ? "0 0 12px rgba(240,180,41,0.5)" : "none";
+  const borderColor = isFail ? "#ef4444" : dAgentColor;
+  const verdictBg = isFail ? "rgba(239,68,68,0.06)" : "rgba(201,146,10,0.04)";
+  const verdictBorder = isFail ? "rgba(239,68,68,0.25)" : "rgba(201,146,10,0.20)";
+
   const dChecks = decree.checks.length > 0
     ? decree.checks.map(c => {
-        const ok = /pass|ok|complete|delivered|approved|secured|done/i.test(c.result);
-        const fail = /fail|error|missing/i.test(c.result);
-        const cc = ok ? "var(--teal-asgard)" : fail ? "var(--fire-muspel)" : "var(--text-rune)";
-        return `<div class="decree-check"><span class="decree-check-name">${esc(c.name)}</span><span class="decree-check-result" style="color: ${cc}">${esc(c.result)}</span></div>`;
+        const ok = /^(pass|ok|complete|delivered|approved|secured|done)/i.test(c.result);
+        const fail = /^(fail|error|missing|findings)/i.test(c.result);
+        const cc = fail ? "#ef4444" : ok ? "#22c55e" : "#9ca3af";
+        const bg = fail ? "rgba(239,68,68,0.15)" : ok ? "rgba(34,197,94,0.12)" : "rgba(96,96,112,0.15)";
+        return `<div class="dc-check-item"><span class="dc-check-name">${esc(c.name)}</span><span class="dc-check-value" style="color: ${cc}; background: ${bg}">${esc(c.result)}</span></div>`;
       }).join("\n")
     : "";
+
   const dSummary = decree.summary.length > 0
-    ? `<ul class="decree-summary">${decree.summary.map(s => `<li>${esc(s)}</li>`).join("")}</ul>`
+    ? decree.summary.map(s => `<li class="dc-list-item">${esc(s)}</li>`).join("\n")
     : "";
-  const dPr = decree.pr ? `<div class="decree-field"><span class="decree-label">PR:</span> <a href="${esc(decree.pr)}" target="_blank" rel="noopener">${esc(decree.pr)}</a></div>` : "";
+
+  const dPr = decree.pr
+    ? `<a class="dc-pr-link" href="${esc(decree.pr)}" target="_blank" rel="noopener noreferrer" aria-label="Pull request: ${esc(decree.pr)}">PR &nearr;</a>`
+    : "";
+
   decreeCompleteMarkup = `
-<div class="decree-complete">
-<div class="decree-complete-header">
-<div class="decree-complete-runes">&#5869;&#5869;&#5869; DECREE COMPLETE &#5869;&#5869;&#5869;</div>
-<div class="decree-complete-verdict" style="color: ${dVerdictColor}">${esc(decree.verdict ?? "COMPLETE")}</div>
+<div class="dc-card" style="border-left: 3px solid ${borderColor}" aria-label="Decree from ${esc(agentName)}: verdict ${esc(decree.verdict || 'COMPLETE')}">
+<div class="dc-header">
+<div class="dc-identity">
+<div class="dc-avatar" style="border-color: ${dAgentColor}"><img src="${agentAvatarPath}" alt="${esc(agentName)}" loading="lazy"></div>
+<div class="dc-agent-info">
+<span class="dc-agent-name" style="color: ${dAgentColor}">${esc(agentName)}</span>
+${dAgentRole ? `<span class="dc-agent-title">${esc(dAgentRole)}</span>` : ""}
+${dAgentRunes ? `<span class="dc-agent-runes" style="color: ${dAgentColor}" aria-hidden="true">${esc(dAgentRunes)}</span>` : ""}
 </div>
-<div class="decree-complete-body">
-<div class="decree-field"><span class="decree-label">Issue:</span> #${esc(decree.issue ?? issueNum)}</div>
+</div>
+<div class="dc-meta">
+<div class="dc-title"><span class="dc-rune-delim" aria-hidden="true">&#5869;&#5869;&#5869;</span> DECREE COMPLETE <span class="dc-rune-delim" aria-hidden="true">&#5869;&#5869;&#5869;</span></div>
+${decree.issue ? `<span class="dc-issue" aria-label="Issue #${esc(decree.issue)}">Issue #${esc(decree.issue)}</span>` : ""}
+</div>
+</div>
+<div class="dc-verdict-row" style="border-top: 1px solid ${verdictBorder}; border-bottom: 1px solid ${verdictBorder}; background: ${verdictBg}" aria-label="Verdict: ${esc(decree.verdict || 'COMPLETE')}">
+<span class="dc-verdict-label">VERDICT</span>
+<span class="dc-verdict-value" style="color: ${verdictColor}; text-shadow: ${verdictGlow}">${esc(decree.verdict || "COMPLETE")}</span>
 ${dPr}
-${dSummary}
-${dChecks}
-<div class="decree-seal-line">
-<span class="decree-seal-runes">${esc(decree.sealRunes ?? agentCallback.runes)}</span>
-<span class="decree-seal-agent">${esc(decree.sealAgent ?? agentName)}</span>
-<span class="decree-seal-title">${esc(decree.sealTitle ?? agentTitle)}</span>
 </div>
-<div class="decree-signoff">${esc(decree.signoff ?? agentCallback.signoff)}</div>
+${dSummary ? `<div class="dc-section">
+<div class="dc-section-header"><span class="dc-section-glyph" aria-hidden="true">&#5765;</span> <span class="dc-section-title">SUMMARY</span></div>
+<ul class="dc-list" aria-label="Decree summary">${dSummary}</ul>
+</div>` : ""}
+${dChecks ? `<div class="dc-section">
+<div class="dc-section-header"><span class="dc-section-glyph" aria-hidden="true">&#5775;</span> <span class="dc-section-title">CHECKS</span></div>
+<div class="dc-checks" aria-label="Decree checks">${dChecks}</div>
+</div>` : ""}
+<div class="dc-footer" style="border-top: 1px solid rgba(201,146,10,0.20)">
+<div class="dc-seal-band" style="color: ${dAgentColor}" aria-hidden="true">&#5869; &middot; &#5869; &middot; &#5869;</div>
+${decree.sealAgent || decree.sealRunes || decree.sealTitle ? `<div class="dc-seal">${esc(decree.sealAgent || agentName)} &middot; ${esc(decree.sealRunes || dAgentRunes)} &middot; ${esc(decree.sealTitle || dAgentRole)}</div>` : ""}
+${decree.signoff ? `<div class="dc-signoff">&ldquo;${esc(decree.signoff)}&rdquo;</div>` : ""}
+<div class="dc-seal-band" style="color: ${dAgentColor}" aria-hidden="true">&#5869; &middot; &#5869; &middot; &#5869;</div>
 </div>
-<div class="decree-complete-footer">&#5869;&#5869;&#5869; END DECREE &#5869;&#5869;&#5869;</div>
 </div>`;
 }
 
