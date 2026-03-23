@@ -376,6 +376,91 @@ export async function joinHouseholdTransaction(
   });
 }
 
+// ─── Leave household ──────────────────────────────────────────────────────────
+
+export interface LeaveHouseholdResult {
+  /** The new solo household created for the departing user */
+  newHousehold: FirestoreHousehold;
+}
+
+/**
+ * Executes the leave-household operation as an atomic Firestore transaction.
+ *
+ * Steps (all-or-nothing):
+ *   1. Fetch user doc — verify caller is a member (not owner)
+ *   2. Fetch household doc — remove userId from memberIds
+ *   3. Create new solo household (id = userId) with a fresh invite code
+ *   4. Update user doc: householdId = userId, role = "owner"
+ *
+ * Cards are NOT moved — they remain with the old household.
+ * If the transaction fails, Firestore rolls back automatically.
+ *
+ * @throws Error "not_member" if the user is not in a multi-member household
+ * @throws Error "is_owner" if the caller is the household owner
+ * @throws Error "user_not_found" if the user document is missing
+ * @throws Error "household_not_found" if the household document is missing
+ *
+ * Issue #1798
+ */
+export async function leaveHouseholdTransaction(
+  userId: string
+): Promise<LeaveHouseholdResult> {
+  const db = getFirestore();
+
+  return await db.runTransaction(async (tx) => {
+    // 1. Fetch user doc
+    const userRef = db.doc(FIRESTORE_PATHS.user(userId));
+    const userSnap = await tx.get(userRef);
+    if (!userSnap.exists) {
+      throw new Error("user_not_found");
+    }
+    const user = userSnap.data() as FirestoreUser;
+
+    // 2. Verify caller is a member, not owner
+    if (user.role === "owner") {
+      throw new Error("is_owner");
+    }
+
+    // 3. Fetch current household
+    const householdRef = db.doc(FIRESTORE_PATHS.household(user.householdId));
+    const householdSnap = await tx.get(householdRef);
+    if (!householdSnap.exists) {
+      throw new Error("household_not_found");
+    }
+    const household = householdSnap.data() as FirestoreHousehold;
+
+    // Sanity: confirm userId is actually in memberIds
+    if (!household.memberIds.includes(userId)) {
+      throw new Error("not_member");
+    }
+
+    const now = new Date().toISOString();
+
+    // 4. Remove user from household memberIds
+    const updatedMemberIds = household.memberIds.filter((id) => id !== userId);
+    tx.update(householdRef, { memberIds: updatedMemberIds, updatedAt: now });
+
+    // 5. Create new solo household (id = userId — same as original solo household)
+    const newHousehold: FirestoreHousehold = {
+      id: userId,
+      name: `${user.displayName}'s Household`,
+      ownerId: userId,
+      memberIds: [userId],
+      inviteCode: generateInviteCode(),
+      inviteCodeExpiresAt: generateInviteCodeExpiry(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    const newHouseholdRef = db.doc(FIRESTORE_PATHS.household(userId));
+    tx.set(newHouseholdRef, newHousehold);
+
+    // 6. Update user doc
+    tx.update(userRef, { householdId: userId, role: "owner", updatedAt: now });
+
+    return { newHousehold };
+  });
+}
+
 // ─── Processed webhook events (deduplication) ────────────────────────────────
 
 /** 24 hours in milliseconds — TTL for processed Stripe webhook event documents */
