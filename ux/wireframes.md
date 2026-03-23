@@ -11,6 +11,14 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Chrome — Unified Header (Issue #1853)
+
+| File | Description |
+|------|-------------|
+| [wireframes/chrome/unified-header.html](wireframes/chrome/unified-header.html) | Unified header shell for marketing and ledger surfaces: 7 sections — (A) before/after height comparison (Marketing h-16 64px → unified h-12 48px), (B) desktop variants (Marketing with CTA + inline theme toggle; Ledger anonymous with icon theme toggle + avatar; Ledger authenticated with KarlBadge + identity cluster + gold-ring avatar; Ledger trial with TrialBadge + dimmed KarlBadge), (C) mobile 375px variants with hamburger and full-screen overlay (Marketing overlay includes CTA + theme toggle footer; Ledger overlay replaces CTA with My Cards link), (D) dropdown panels unchanged (UpsellPromptPanel + ProfileDropdown shown for context at 48px offset), (E) token delta table (height, logo rune ᚠ→ᛟ, wordmark size text-base→text-sm, color text-foreground→text-gold, z-50→z-[100], gap-8→gap-6, CTA height trim, skip nav parity), (F) WCAG 2.1 AA accessibility checklist, (G) implementation notes for FiremanDecko (files: MarketingNavbar.tsx + LedgerTopBar.tsx only; non-goals listed). |
+
+---
+
 ## Cards — Valhalla + Howl Tab Contextual Card Details (Issue #1808)
 
 | File | Description |

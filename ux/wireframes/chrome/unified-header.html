@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe — Unified Header (Issue #1853)</title>
+  <style>
+    /* === RESET / LAYOUT ONLY — no theme styling === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: monospace; font-size: 13px; }
+
+    /* Wireframe scaffolding */
+    .wf-page       { padding: 24px; max-width: 1200px; }
+    .wf-section    { margin-bottom: 48px; }
+    .wf-label      { font-size: 11px; font-weight: bold; letter-spacing: 0.08em;
+                     text-transform: uppercase; border-bottom: 2px solid; padding-bottom: 4px;
+                     margin-bottom: 16px; }
+    .wf-sublabel   { font-size: 11px; margin-bottom: 8px; font-style: italic; }
+    .note          { font-size: 11px; margin-top: 8px; padding: 6px 8px;
+                     border-left: 3px solid; font-style: italic; }
+    .note-block    { font-size: 11px; padding: 8px 12px; border: 1px dashed;
+                     margin-top: 12px; line-height: 1.6; }
+    .note-block h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+                     margin-bottom: 4px; }
+    hr             { border: none; border-top: 1px dashed; margin: 32px 0; }
+
+    /* ================================================================
+       BEFORE / AFTER DIFF PANELS
+       ================================================================ */
+    .diff-row      { display: flex; gap: 16px; margin-bottom: 12px; }
+    .diff-col      { flex: 1; min-width: 0; }
+    .diff-col-label { font-size: 10px; font-weight: bold; text-transform: uppercase;
+                      letter-spacing: 0.1em; margin-bottom: 6px; }
+
+    /* ================================================================
+       UNIFIED HEADER BASE
+       Height 48px, sticky, border-bottom
+       ================================================================ */
+    .header-shell {
+      height: 48px;
+      border-bottom: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    /* Marketing variant uses inner container with max-width */
+    .header-shell.marketing-variant {
+      padding: 0;
+    }
+    .header-shell.marketing-variant .header-inner {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Ledger variant: full-bleed px-4 */
+    .header-shell.ledger-variant {
+      padding: 0 16px;
+    }
+
+    /* ── Logo ─────────────────────────────────────────────────── */
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 44px; /* touch target */
+    }
+    .logo-rune    { font-size: 18px; font-weight: bold; }
+    .logo-word    { font-size: 13px; font-weight: bold; letter-spacing: 0.16em;
+                    text-transform: uppercase; }
+    .logo-word-short { display: none; font-size: 11px; font-weight: bold;
+                       letter-spacing: 0.16em; text-transform: uppercase; }
+
+    /* ── Center nav ───────────────────────────────────────────── */
+    .center-nav {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 24px; /* gap-6 = 24px */
+    }
+    .nav-link       { font-size: 13px; font-weight: 400; }
+    .nav-link.active { font-weight: 600; border: 1px solid; padding: 2px 10px; }
+
+    /* ── Right slot ───────────────────────────────────────────── */
+    .right-slot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Controls */
+    .theme-toggle-inline {
+      width: 28px; height: 28px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+    .theme-toggle-icon {
+      width: 32px; height: 32px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .cta-button {
+      height: 32px;
+      padding: 0 16px;
+      border: 1px solid;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      display: flex; align-items: center; white-space: nowrap;
+    }
+    .avatar-button {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .avatar-circle {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .avatar-circle.gold-ring { border-width: 2px; }
+    .trial-badge {
+      font-size: 10px; font-weight: bold; letter-spacing: 0.06em;
+      border: 1px solid; padding: 2px 6px; text-transform: uppercase;
+    }
+    .karl-badge {
+      font-size: 10px; font-weight: bold; letter-spacing: 0.06em;
+      border: 1px solid; padding: 2px 6px;
+    }
+    .identity-cluster {
+      display: flex; align-items: center; gap: 8px;
+      min-height: 44px; padding: 0 4px;
+    }
+    .identity-text {
+      display: flex; flex-direction: column; align-items: flex-end;
+    }
+    .identity-name  { font-size: 13px; font-weight: 600; }
+    .identity-email { font-size: 11px; }
+
+    /* ── Hamburger ────────────────────────────────────────────── */
+    .hamburger-btn {
+      display: none; /* hidden on desktop */
+      min-width: 44px; min-height: 44px;
+      border: 1px solid;
+      align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    /* ── Mobile overlay ───────────────────────────────────────── */
+    .overlay-shell {
+      width: 100%; height: 400px; /* approximate viewport */
+      border: 1px solid;
+      display: flex; flex-direction: column;
+      padding: 24px;
+    }
+    .overlay-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .overlay-close-btn {
+      min-width: 44px; min-height: 44px;
+      border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .overlay-nav-link {
+      display: block; padding: 12px 0;
+      border-bottom: 1px solid;
+      font-size: 15px; font-weight: 500;
+    }
+    .overlay-nav-link.active { font-weight: 700; }
+    .overlay-footer {
+      margin-top: 32px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .overlay-cta {
+      padding: 12px 0;
+      border: 1px solid;
+      font-size: 14px; font-weight: 600;
+      text-align: center; letter-spacing: 0.05em;
+    }
+    .overlay-theme-row {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+
+    /* ================================================================
+       COMPARISON FRAMES (Before / After)
+       ================================================================ */
+    .before-header {
+      height: 64px; /* old marketing height */
+      border: 2px dashed;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; position: relative;
+    }
+    .after-header {
+      height: 48px;
+      border: 2px solid;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; position: relative;
+    }
+    .height-ruler {
+      position: absolute;
+      right: -52px; top: 0; bottom: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 10px; font-style: italic;
+      width: 48px; border-left: 1px dashed;
+    }
+
+    /* ================================================================
+       VIEWPORT FRAMES
+       ================================================================ */
+    .viewport-desktop  { width: 100%; }
+    .viewport-tablet   { width: 768px; }
+    .viewport-mobile   { width: 375px; border: 2px solid; }
+
+    .viewport-label {
+      font-size: 10px; text-transform: uppercase; font-weight: bold;
+      letter-spacing: 0.1em; margin-bottom: 6px;
+    }
+
+    /* ================================================================
+       SPEC TABLE
+       ================================================================ */
+    table  { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid; padding: 6px 10px; text-align: left;
+             vertical-align: top; }
+    th     { font-weight: bold; text-transform: uppercase; font-size: 11px;
+             letter-spacing: 0.05em; }
+    .changed { font-weight: bold; }
+
+    /* ================================================================
+       DROPDOWN / PANEL
+       ================================================================ */
+    .dropdown-shell {
+      width: 256px;
+      border: 1px solid;
+      display: flex; flex-direction: column;
+    }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid;
+      font-size: 14px; min-height: 44px;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-icon { width: 16px; height: 16px; border: 1px solid; flex-shrink: 0;
+                     display: flex; align-items: center; justify-content: center;
+                     font-size: 10px; }
+    .dot-indicator { width: 6px; height: 6px; border-radius: 50%; border: 1px solid;
+                     margin-left: auto; }
+  </style>
+</head>
+<body>
+<main class="wf-page">
+
+  <!-- ================================================================
+       HEADER
+       ================================================================ -->
+  <div style="margin-bottom: 32px;">
+    <h1 style="font-size: 18px; font-weight: bold; margin-bottom: 6px;">
+      Unified Header — Issue #1853
+    </h1>
+    <p style="font-size: 12px; line-height: 1.6; max-width: 720px;">
+      Marketing and ledger headers are inconsistent in height, logo size, typography,
+      and spacing. This wireframe defines a single unified header shell used by both
+      surfaces. The <strong>ledger layout is the reference</strong> (compact 48px).
+      Marketing keeps its CTA + inline theme toggle; Ledger keeps its avatar + Karl/Trial
+      badge cluster.
+    </p>
+  </div>
+
+
+  <!-- ================================================================
+       SECTION 1: BEFORE / AFTER HEIGHT COMPARISON
+       ================================================================ -->
+  <div class="wf-section">
+    <div class="wf-label">1. Before / After — Height Alignment</div>
+    <p class="note-block">
+      <h4>Key change: Marketing navbar shrinks from 64px (h-16) to 48px (h-12)</h4>
+      Both headers must render at exactly 48px. All padding, logo sizes, and control
+      heights are constrained to fit cleanly. No other visible element in the header
+      changes — only the shell height and logo text size.
+    </p>
+
+    <div style="margin-top: 20px; position: relative; padding-right: 60px;">
+      <!-- BEFORE: Marketing at 64px -->
+      <div class="diff-col-label">BEFORE — MarketingNavbar h-16 (64px)</div>
+      <div class="before-header" style="margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px; font-weight: bold;">ᚠ</span>
+          <span style="font-size: 15px; font-weight: bold; letter-spacing: 0.14em; text-transform: uppercase;">Fenrir Ledger</span>
+        </div>
+        <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 28px;">
+          <span style="font-size: 13px;">Features</span>
+          <span style="font-size: 13px;">Prose Edda</span>
+          <span style="font-size: 13px; font-weight: 600; border: 1px solid; padding: 2px 10px;">About</span>
+          <span style="font-size: 13px;">Free Trial</span>
+          <span style="font-size: 13px;">Pricing</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 28px; height: 28px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 12px;">☀</div>
+          <div style="height: 32px; padding: 0 16px; border: 2px solid; font-size: 13px; font-weight: 600; display: flex; align-items: center; white-space: nowrap;">Open the Ledger →</div>
+        </div>
+        <div class="height-ruler">64px<br>↕</div>
+      </div>
+
+      <!-- AFTER: Both at 48px -->
+      <div class="diff-col-label">AFTER — Unified Header h-12 (48px) — Marketing variant shown</div>
+      <div class="after-header">
+        <div style="display: flex; align-items: center; gap: 6px; min-height: 44px;">
+          <span style="font-size: 18px; font-weight: bold;">ᛟ</span>
+          <span style="font-size: 13px; font-weight: bold; letter-spacing: 0.16em; text-transform: uppercase;">FENRIR LEDGER</span>
+        </div>
+        <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 24px;">
+          <span style="font-size: 13px;">Features</span>
+          <span style="font-size: 13px;">Prose Edda</span>
+          <span style="font-size: 13px; font-weight: 600; border: 1px solid; padding: 2px 10px;">About</span>
+          <span style="font-size: 13px;">Free Trial</span>
+          <span style="font-size: 13px;">Pricing</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 28px; height: 28px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 12px;">☀</div>
+          <div style="height: 30px; padding: 0 14px; border: 2px solid; font-size: 13px; font-weight: 600; display: flex; align-items: center; white-space: nowrap;">Open the Ledger →</div>
+        </div>
+        <div class="height-ruler">48px<br>↕</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       SECTION 2: UNIFIED HEADER — DESKTOP VARIANTS
+       ================================================================ -->
+  <div class="wf-section">
+    <div class="wf-label">2. Unified Header — Desktop Variants (≥ 768px)</div>
+
+    <!-- Variant A: Marketing -->
+    <div style="margin-bottom: 20px;">
+      <div class="wf-sublabel">Variant A — Marketing pages (/features, /about, /pricing, /chronicles, etc.)</div>
+      <div class="header-shell marketing-variant">
+        <div class="header-inner">
+          <!-- Logo -->
+          <a class="logo-group" href="/" aria-label="Fenrir Ledger — home">
+            <span class="logo-rune">ᛟ</span>
+            <span class="logo-word">FENRIR LEDGER</span>
+          </a>
+          <!-- Center nav (desktop only) -->
+          <nav class="center-nav" aria-label="Marketing site navigation">
+            <a class="nav-link" href="/features">Features</a>
+            <a class="nav-link" href="/chronicles">Prose Edda</a>
+            <a class="nav-link active" href="/about" aria-current="page">About</a>
+            <a class="nav-link" href="/free-trial">Free Trial</a>
+            <a class="nav-link" href="/pricing">Pricing</a>
+          </nav>
+          <!-- Right: theme toggle + CTA -->
+          <div class="right-slot">
+            <div class="theme-toggle-inline" aria-label="Toggle theme" title="ThemeToggle variant=inline">☀</div>
+            <a class="cta-button" href="/ledger">Open the Ledger →</a>
+          </div>
+        </div>
+      </div>
+      <p class="note">Container: max-w-[1100px] centered, px-6. CTA links to /ledger. ThemeToggle variant="inline" (28px pill).</p>
+    </div>
+
+    <!-- Variant B: Ledger anonymous -->
+    <div style="margin-bottom: 20px;">
+      <div class="wf-sublabel">Variant B — Ledger app, anonymous user (/ledger/*)</div>
+      <div class="header-shell ledger-variant">
+        <!-- Skip nav -->
+        <!-- Logo + hamburger group -->
+        <div class="logo-group">
+          <span class="logo-rune">ᛟ</span>
+          <span class="logo-word">FENRIR LEDGER</span>
+        </div>
+        <!-- Center nav (desktop only, absolute centered) -->
+        <nav class="center-nav" aria-label="Marketing site navigation">
+          <a class="nav-link" href="/features">Features</a>
+          <a class="nav-link" href="/chronicles">Prose Edda</a>
+          <a class="nav-link" href="/about">About</a>
+          <a class="nav-link" href="/free-trial">Free Trial</a>
+          <a class="nav-link" href="/pricing">Pricing</a>
+        </nav>
+        <!-- Right: theme toggle icon + anonymous avatar -->
+        <div class="right-slot">
+          <div class="theme-toggle-icon" aria-label="Toggle theme" title="ThemeToggle variant=icon">☀</div>
+          <button class="avatar-button" aria-label="Sign in to sync your data" title="Opens UpsellPromptPanel">
+            <div class="avatar-circle" title="28px rune avatar, no gold ring">ᛟ</div>
+          </button>
+        </div>
+      </div>
+      <p class="note">Padding: px-4 (flush). ThemeToggle variant="icon" (32px square). Avatar 28px, no gold ring. Clicking avatar opens UpsellPromptPanel.</p>
+    </div>
+
+    <!-- Variant C: Ledger authenticated -->
+    <div style="margin-bottom: 20px;">
+      <div class="wf-sublabel">Variant C — Ledger app, authenticated user (Karl subscriber shown)</div>
+      <div class="header-shell ledger-variant">
+        <!-- Logo -->
+        <div class="logo-group">
+          <span class="logo-rune">ᛟ</span>
+          <span class="logo-word">FENRIR LEDGER</span>
+        </div>
+        <!-- Center nav -->
+        <nav class="center-nav" aria-label="Marketing site navigation">
+          <a class="nav-link" href="/features">Features</a>
+          <a class="nav-link" href="/chronicles">Prose Edda</a>
+          <a class="nav-link" href="/about">About</a>
+          <a class="nav-link" href="/free-trial">Free Trial</a>
+          <a class="nav-link" href="/pricing">Pricing</a>
+        </nav>
+        <!-- Right: trial badge (if trial) + karl badge + identity + avatar -->
+        <div class="right-slot">
+          <!-- TrialBadge — only shown when user is on trial -->
+          <!-- <div class="trial-badge">7 days left</div> -->
+          <!-- KarlBadge — shown when Karl subscriber or trial -->
+          <div class="karl-badge" title="KarlBadge component">KARL</div>
+          <!-- Identity cluster (sm+) -->
+          <div class="identity-cluster">
+            <div class="identity-text" title="Hidden on mobile, visible sm+">
+              <span class="identity-name">Björn Ironside</span>
+              <span class="identity-email">bjorn@valhalla.no</span>
+            </div>
+            <button class="avatar-button" aria-label="Open user menu" style="min-width: 44px; min-height: 44px;">
+              <div class="avatar-circle gold-ring" title="28px avatar, gold ring for Karl">B</div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="note">No ThemeToggle in header when authenticated — theme lives in ProfileDropdown. KarlBadge visible only for Karl/trial. Name+email hidden on mobile (sm:flex). Gold ring on avatar for Karl subscribers.</p>
+    </div>
+
+    <!-- Variant D: Ledger authenticated trial user -->
+    <div style="margin-bottom: 20px;">
+      <div class="wf-sublabel">Variant D — Ledger app, authenticated trial user (TrialBadge visible)</div>
+      <div class="header-shell ledger-variant">
+        <div class="logo-group">
+          <span class="logo-rune">ᛟ</span>
+          <span class="logo-word">FENRIR LEDGER</span>
+        </div>
+        <nav class="center-nav" aria-label="Marketing site navigation">
+          <a class="nav-link" href="/features">Features</a>
+          <a class="nav-link" href="/chronicles">Prose Edda</a>
+          <a class="nav-link" href="/about">About</a>
+          <a class="nav-link" href="/free-trial">Free Trial</a>
+          <a class="nav-link" href="/pricing">Pricing</a>
+        </nav>
+        <div class="right-slot">
+          <div class="trial-badge" title="TrialBadge — color changes by urgency">7 days</div>
+          <div class="karl-badge" title="KarlBadge (dimmed+linked for trial)">TRIAL</div>
+          <div class="identity-cluster">
+            <div class="identity-text">
+              <span class="identity-name">Freya Odinsdóttir</span>
+              <span class="identity-email">freya@gods.no</span>
+            </div>
+            <button class="avatar-button" aria-label="Open user menu">
+              <div class="avatar-circle" title="No gold ring for trial users">F</div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="note">TrialBadge shows remaining days with color urgency (green → amber → red). No gold ring on avatar for trial users (Karl only). KarlBadge is dimmed+linked for trial.</p>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       SECTION 3: MOBILE VARIANTS (375px)
+       ================================================================ -->
+  <div class="wf-section">
+    <div class="wf-label">3. Mobile Header + Overlay (375px viewport)</div>
+    <p class="note-block">
+      <h4>Shared mobile behavior</h4>
+      Both variants collapse center nav. Left shows logo (rune + short initials "FL" on very small screens or full wordmark at 375px).
+      Right shows hamburger (44×44px touch target). Hamburger opens full-screen overlay. Center nav is hidden.
+    </p>
+
+    <div class="diff-row" style="margin-top: 20px;">
+      <!-- Mobile: Marketing -->
+      <div class="diff-col">
+        <div class="diff-col-label">Mobile A — Marketing variant (375px)</div>
+        <div class="viewport-mobile">
+          <!-- Mobile header bar -->
+          <div class="header-shell" style="padding: 0 16px;">
+            <a class="logo-group" href="/" style="gap: 6px;">
+              <span class="logo-rune">ᛟ</span>
+              <span class="logo-word" style="font-size: 12px;">FENRIR LEDGER</span>
+            </a>
+            <button class="hamburger-btn" style="display: flex;" aria-label="Open navigation menu" aria-expanded="false">
+              ☰
+            </button>
+          </div>
+          <!-- Overlay (shown open for spec) -->
+          <div class="overlay-shell">
+            <div class="overlay-header">
+              <a class="logo-group" href="/">
+                <span class="logo-rune">ᛟ</span>
+                <span class="logo-word" style="font-size: 12px;">FENRIR LEDGER</span>
+              </a>
+              <button class="overlay-close-btn" aria-label="Close navigation menu" autofocus>✕</button>
+            </div>
+            <nav aria-label="Mobile navigation">
+              <a class="overlay-nav-link" href="/features">Features</a>
+              <a class="overlay-nav-link active" href="/about" aria-current="page">About</a>
+              <a class="overlay-nav-link" href="/chronicles">Prose Edda</a>
+              <a class="overlay-nav-link" href="/free-trial">Free Trial</a>
+              <a class="overlay-nav-link" href="/pricing">Pricing</a>
+            </nav>
+            <div class="overlay-footer">
+              <a class="overlay-cta" href="/ledger">Open the Ledger →</a>
+              <div class="overlay-theme-row">
+                <span style="font-size: 12px;">Theme:</span>
+                <div class="theme-toggle-inline">☀</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="note">Overlay: role="dialog" aria-modal="true". Focus auto-moves to close button. Escape closes overlay and returns focus to hamburger. Body scroll locked while open. Backdrop tap closes.</p>
+      </div>
+
+      <!-- Mobile: Ledger anonymous -->
+      <div class="diff-col">
+        <div class="diff-col-label">Mobile B — Ledger variant, anonymous (375px)</div>
+        <div class="viewport-mobile">
+          <!-- Mobile header bar -->
+          <div class="header-shell" style="padding: 0 16px;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <a class="logo-group" href="/" style="gap: 6px;">
+                <span class="logo-rune">ᛟ</span>
+                <span class="logo-word" style="font-size: 12px;">FENRIR LEDGER</span>
+              </a>
+              <button class="hamburger-btn" style="display: flex;" aria-label="Open navigation menu">☰</button>
+            </div>
+            <div class="right-slot">
+              <div class="theme-toggle-icon" style="width: 28px; height: 28px; font-size: 12px; border: 1px solid; display: flex; align-items: center; justify-content: center;">☀</div>
+              <button class="avatar-button" style="min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;">
+                <div class="avatar-circle" style="width: 28px; height: 28px;">ᛟ</div>
+              </button>
+            </div>
+          </div>
+          <!-- Overlay (shown open for spec) -->
+          <div class="overlay-shell">
+            <div class="overlay-header">
+              <a class="logo-group" href="/">
+                <span class="logo-rune">ᛟ</span>
+                <span class="logo-word" style="font-size: 12px;">FENRIR LEDGER</span>
+              </a>
+              <button class="overlay-close-btn" aria-label="Close navigation menu" autofocus>✕</button>
+            </div>
+            <nav aria-label="Mobile navigation">
+              <a class="overlay-nav-link" href="/features">Features</a>
+              <a class="overlay-nav-link" href="/chronicles">Prose Edda</a>
+              <a class="overlay-nav-link" href="/about">About</a>
+              <a class="overlay-nav-link" href="/free-trial">Free Trial</a>
+              <a class="overlay-nav-link" href="/pricing">Pricing</a>
+              <!-- Ledger adds My Cards as the app entry point -->
+              <a class="overlay-nav-link" href="/ledger">My Cards</a>
+            </nav>
+            <!-- No CTA or theme toggle in ledger mobile overlay footer -->
+            <div style="margin-top: 24px; font-size: 11px; font-style: italic;">
+              No CTA footer in Ledger overlay — users are already in the app.
+            </div>
+          </div>
+        </div>
+        <p class="note">Ledger overlay adds "My Cards" nav link. No CTA footer. Theme toggle stays in the header right slot (not moved to overlay for Ledger). Same overlay close behavior.</p>
+      </div>
+
+      <!-- Mobile: Ledger authenticated -->
+      <div class="diff-col">
+        <div class="diff-col-label">Mobile C — Ledger variant, authenticated (375px)</div>
+        <div class="viewport-mobile">
+          <div class="header-shell" style="padding: 0 16px;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <a class="logo-group" href="/">
+                <span class="logo-rune">ᛟ</span>
+                <span class="logo-word" style="font-size: 12px;">FENRIR LEDGER</span>
+              </a>
+              <button class="hamburger-btn" style="display: flex;" aria-label="Open navigation menu">☰</button>
+            </div>
+            <div class="right-slot">
+              <!-- Karl badge (no trial badge on mobile unless urgency) -->
+              <div class="karl-badge" style="font-size: 9px; padding: 2px 4px;">KARL</div>
+              <!-- Avatar only — name/email hidden on mobile -->
+              <button class="avatar-button" style="min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;">
+                <div class="avatar-circle gold-ring" style="width: 28px; height: 28px;">B</div>
+              </button>
+            </div>
+          </div>
+          <p style="font-size: 11px; font-style: italic; padding: 8px 16px; border-top: 1px dashed;">
+            ProfileDropdown opens below header. Name+email hidden on mobile. Overlay accessible via hamburger.
+          </p>
+        </div>
+        <p class="note">On mobile: name/email pair hidden (sm:flex hidden). Only avatar button visible. KarlBadge visible at all breakpoints. TrialBadge hidden on mobile unless urgency (≤3 days).</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       SECTION 4: DROPDOWNS / PANELS (unchanged, shown for context)
+       ================================================================ -->
+  <div class="wf-section">
+    <div class="wf-label">4. Dropdown Panels — No Change (shown for context)</div>
+    <p class="note-block" style="margin-bottom: 16px;">
+      <h4>Dropdowns / panels are not modified by this issue</h4>
+      UpsellPromptPanel (anon) and ProfileDropdown (auth) are unchanged. Shown here to
+      confirm they still sit correctly beneath the new 48px header.
+    </p>
+
+    <div class="diff-row">
+      <div class="diff-col">
+        <div class="diff-col-label">UpsellPromptPanel (anonymous → clicks avatar)</div>
+        <div class="dropdown-shell" style="margin-top: 4px;">
+          <div style="padding: 12px 16px; font-size: 13px; font-style: italic; border-bottom: 1px solid;">
+            "The wolf runs unnamed. Your chains are stored here alone."
+          </div>
+          <div class="dropdown-item" style="font-size: 12px; line-height: 1.5;">
+            Sign in to back up your cards and access them from any device.
+          </div>
+          <div class="dropdown-item">
+            <div class="dropdown-icon"><span style="font-size: 8px;">⊞</span></div>
+            My Cards
+          </div>
+          <div class="dropdown-item">
+            <div class="dropdown-icon"><span style="font-size: 8px;">⚙</span></div>
+            Settings
+          </div>
+          <div class="dropdown-item" style="flex-direction: column; gap: 8px; align-items: stretch; min-height: auto; padding: 12px 16px;">
+            <div style="border: 2px solid; padding: 10px; text-align: center; font-size: 14px; font-weight: 600;">
+              Sign in to Google
+            </div>
+            <div style="text-align: center; font-size: 13px;">Not now</div>
+          </div>
+        </div>
+        <p class="note">width: 260px. top: calc(48px + 4px). No change from current. role="dialog" aria-modal="true".</p>
+      </div>
+
+      <div class="diff-col">
+        <div class="diff-col-label">ProfileDropdown (authenticated → clicks avatar)</div>
+        <div class="dropdown-shell" style="margin-top: 4px;">
+          <div class="dropdown-item">
+            <div class="dropdown-icon"><span style="font-size: 8px;">⊞</span></div>
+            My Cards
+            <div class="dot-indicator"></div>
+          </div>
+          <div class="dropdown-item">
+            <div class="dropdown-icon"><span style="font-size: 8px;">◯</span></div>
+            Account
+          </div>
+          <div class="dropdown-item">
+            <div class="dropdown-icon"><span style="font-size: 8px;">◎</span></div>
+            Household
+          </div>
+          <div class="dropdown-item">
+            <div class="dropdown-icon"><span style="font-size: 8px;">⚙</span></div>
+            Settings
+          </div>
+          <div class="dropdown-item">
+            <div class="dropdown-icon">☀</div>
+            <span style="font-size: 12px;">Theme</span>
+          </div>
+          <div class="dropdown-item">
+            <div class="dropdown-icon"><span style="font-size: 8px;">→</span></div>
+            Sign out
+          </div>
+        </div>
+        <p class="note">width: 256px. top: calc(48px + 8px). No change. Gold dot on active route. Theme row cycles theme on click.</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       SECTION 5: TOKEN SPEC TABLE
+       ================================================================ -->
+  <div class="wf-section">
+    <div class="wf-label">5. Token Delta — What Changes</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th>MarketingNavbar (before)</th>
+          <th>Unified / Ledger reference (after)</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Header height</strong></td>
+          <td class="changed">h-16 (64px)</td>
+          <td class="changed">h-12 (48px)</td>
+          <td>Marketing shrinks to match Ledger. Single height system-wide.</td>
+        </tr>
+        <tr>
+          <td><strong>Logo rune</strong></td>
+          <td class="changed">ᚠ (fehu) — text-2xl text-primary</td>
+          <td class="changed">ᛟ (odal) — text-lg font-bold text-gold</td>
+          <td>Ledger uses odal rune as brand symbol. Marketing aligns.</td>
+        </tr>
+        <tr>
+          <td><strong>Logo wordmark size</strong></td>
+          <td class="changed">text-base font-bold</td>
+          <td class="changed">text-sm font-display font-bold</td>
+          <td>Compact label to fit 48px rail.</td>
+        </tr>
+        <tr>
+          <td><strong>Logo wordmark color</strong></td>
+          <td class="changed">text-foreground (+ group-hover:text-primary)</td>
+          <td class="changed">text-gold (+ hover:brightness-110)</td>
+          <td>Gold is the Fenrir brand accent. Marketing aligns to ledger treatment.</td>
+        </tr>
+        <tr>
+          <td><strong>Background</strong></td>
+          <td>bg-background/90 backdrop-blur-sm</td>
+          <td class="changed">bg-background/90 backdrop-blur-sm</td>
+          <td>Ledger adopts the blur from marketing (quality carry-over). Both identical.</td>
+        </tr>
+        <tr>
+          <td><strong>z-index</strong></td>
+          <td class="changed">z-50</td>
+          <td class="changed">z-[100]</td>
+          <td>Ledger z-[100] avoids conflicts with card/modal stacking contexts.</td>
+        </tr>
+        <tr>
+          <td><strong>Center nav gap</strong></td>
+          <td class="changed">gap-8 (32px)</td>
+          <td class="changed">gap-6 (24px)</td>
+          <td>Slightly tighter to fit within 48px height optical weight.</td>
+        </tr>
+        <tr>
+          <td><strong>CTA button height</strong></td>
+          <td class="changed">py-2 (tall)</td>
+          <td class="changed">h-[30px] (fits 48px rail)</td>
+          <td>Trim 2px from CTA so it doesn't feel cramped in the shorter header.</td>
+        </tr>
+        <tr>
+          <td><strong>Container (marketing)</strong></td>
+          <td>max-w-[1100px] mx-auto px-6</td>
+          <td>max-w-[1100px] mx-auto px-6</td>
+          <td>Unchanged — marketing pages are wider content, needs constrained container.</td>
+        </tr>
+        <tr>
+          <td><strong>Container (ledger)</strong></td>
+          <td>—</td>
+          <td>px-4 flush</td>
+          <td>Unchanged — ledger app is full-bleed.</td>
+        </tr>
+        <tr>
+          <td><strong>Skip nav link</strong></td>
+          <td class="changed">Missing in MarketingNavbar</td>
+          <td class="changed">Add sr-only skip link to MarketingNavbar</td>
+          <td>A11y parity with LedgerTopBar. Visible on focus.</td>
+        </tr>
+        <tr>
+          <td><strong>Mobile breakpoint</strong></td>
+          <td>md: (768px)</td>
+          <td>md: (768px)</td>
+          <td>No change — both already use the same Tailwind md: breakpoint.</td>
+        </tr>
+        <tr>
+          <td><strong>Mobile hamburger touch target</strong></td>
+          <td>min 44×44px (WCAG 2.5.5)</td>
+          <td>min 44×44px (WCAG 2.5.5)</td>
+          <td>No change — both already compliant.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ================================================================
+       SECTION 6: ACCESSIBILITY SPEC
+       ================================================================ -->
+  <div class="wf-section">
+    <div class="wf-label">6. Accessibility Requirements (WCAG 2.1 AA)</div>
+    <div class="note-block">
+      <h4>Both header variants must meet these criteria</h4>
+      <ul style="margin-left: 16px; line-height: 2;">
+        <li><strong>Skip nav link</strong> — sr-only, visible on :focus. Target: #main-content. Both variants (marketing currently missing this).</li>
+        <li><strong>role="banner"</strong> — header element wraps entire nav. Both variants.</li>
+        <li><strong>aria-label on nav</strong> — "Marketing site navigation" for center nav, "Mobile navigation" for overlay nav.</li>
+        <li><strong>aria-expanded</strong> — hamburger button reports open/closed state.</li>
+        <li><strong>aria-controls</strong> — hamburger controls the overlay id.</li>
+        <li><strong>aria-current="page"</strong> — active nav link.</li>
+        <li><strong>Touch targets ≥ 44×44px</strong> — hamburger, close button, avatar button, CTA all satisfy WCAG 2.5.5.</li>
+        <li><strong>Escape closes overlay</strong> — focus returns to hamburger on close.</li>
+        <li><strong>Focus trap in overlay</strong> — auto-focus close button on open; Tab cycles within overlay.</li>
+        <li><strong>Body scroll lock</strong> — overflow:hidden on body when overlay open.</li>
+        <li><strong>Logo aria-label</strong> — "Fenrir Ledger — home" (or "go to home" for ledger context).</li>
+      </ul>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       SECTION 7: IMPLEMENTATION NOTES FOR FIREMAN DECKO
+       ================================================================ -->
+  <div class="wf-section">
+    <div class="wf-label">7. Implementation Notes — FiremanDecko</div>
+    <div class="note-block">
+      <h4>Files to change</h4>
+      <ul style="margin-left: 16px; line-height: 2;">
+        <li><code>src/components/marketing/MarketingNavbar.tsx</code> — height h-16→h-12, rune ᚠ→ᛟ, text-2xl→text-lg, wordmark text-base→text-sm font-display, z-50→z-[100], gap-8→gap-6, CTA height trim, add skip nav link, logo color text-foreground→text-gold.</li>
+        <li><code>src/components/layout/LedgerTopBar.tsx</code> — adopt backdrop-blur-sm (currently missing). No other height/logo changes needed (already 48px, already text-gold).</li>
+        <li>No changes to <code>MarketingNavLinks.tsx</code>, dropdowns, or overlay structures.</li>
+      </ul>
+      <h4 style="margin-top: 12px;">Order of changes</h4>
+      <ol style="margin-left: 16px; line-height: 2;">
+        <li>Update MarketingNavbar — all token changes in one pass.</li>
+        <li>Update LedgerTopBar — add backdrop-blur-sm only.</li>
+        <li>Run existing tests: <code>src/__tests__/components/ledger-topbar.test.tsx</code> and <code>src/__tests__/components/site-header.test.tsx</code>.</li>
+        <li>Visual smoke test at 375px, 768px, 1280px for both surfaces.</li>
+      </ol>
+      <h4 style="margin-top: 12px;">Non-goals</h4>
+      <ul style="margin-left: 16px; line-height: 2;">
+        <li>Do NOT change SiteHeader.tsx — it is a separate utility header for inner pages, not the top-level nav.</li>
+        <li>Do NOT change overlay structure or dropdown content.</li>
+        <li>Do NOT change MarketingNavLinks.tsx.</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr>
+  <p style="font-size: 11px; font-style: italic;">
+    Luna — UX Designer | Issue #1853 | 2026-03-23 |
+    Wireframe: ux/wireframes/chrome/unified-header.html
+  </p>
+
+</main>
+</body>
+</html>
