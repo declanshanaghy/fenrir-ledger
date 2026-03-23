@@ -41,6 +41,8 @@ const mockSetAllCards = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/storage", () => ({
   getRawAllCards: (...args: unknown[]) => mockGetRawAllCards(...args),
   setAllCards: (...args: unknown[]) => mockSetAllCards(...args),
+  // Issue #1796: resolves actual householdId — fall back to the provided sub in tests
+  getEffectiveHouseholdId: (fallback: string) => fallback,
 }));
 
 // Controllable migration mock (supports all test variants)

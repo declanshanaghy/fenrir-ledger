@@ -252,6 +252,54 @@ export function initializeHousehold(householdId: string): Household {
   return newHousehold;
 }
 
+// ─── Effective household ID (post-join) ───────────────────────────────────────
+
+/**
+ * localStorage key for the user's current effective household ID.
+ *
+ * For solo users this equals session.user.sub (set implicitly by ensureSoloHousehold).
+ * After joining a shared household the join flow writes the new household ID here
+ * so that useCloudSync always reads/writes the correct namespaced key.
+ *
+ * Not stored in FenrirSession because it is a server-side claim, not a JWT claim.
+ */
+const EFFECTIVE_HOUSEHOLD_ID_KEY = "fenrir:householdId";
+
+/**
+ * Returns the stored effective household ID, falling back to the provided default
+ * (typically session.user.sub which equals the solo household ID).
+ *
+ * @param fallback - The Google sub claim from the session token
+ */
+export function getEffectiveHouseholdId(fallback: string): string {
+  if (!isBrowser()) return fallback;
+  return localStorage.getItem(EFFECTIVE_HOUSEHOLD_ID_KEY) ?? fallback;
+}
+
+/**
+ * Persists the effective household ID after a successful household join.
+ * Call this immediately after the /api/household/join response succeeds.
+ *
+ * @param householdId - The new household ID returned by the join API
+ */
+export function setStoredHouseholdId(householdId: string): void {
+  if (!isBrowser()) return;
+  localStorage.setItem(EFFECTIVE_HOUSEHOLD_ID_KEY, householdId);
+}
+
+/**
+ * Removes the cards and household keys for a given household ID from localStorage.
+ * Call with the OLD household ID after a successful join to prevent stale solo
+ * data lingering under the previous key.
+ *
+ * @param householdId - The household ID whose keys should be removed
+ */
+export function clearHouseholdLocalStorage(householdId: string): void {
+  if (!isBrowser()) return;
+  localStorage.removeItem(cardsKey(householdId));
+  localStorage.removeItem(householdKey(householdId));
+}
+
 // ─── Card Operations ──────────────────────────────────────────────────────────
 
 /**

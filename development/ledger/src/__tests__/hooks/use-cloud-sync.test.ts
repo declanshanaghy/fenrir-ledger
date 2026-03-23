@@ -46,6 +46,8 @@ vi.mock("sonner", () => ({
 vi.mock("@/lib/storage", () => ({
   getRawAllCards: vi.fn().mockReturnValue([]),
   setAllCards: vi.fn(),
+  // Issue #1796: resolves actual householdId — fall back to the provided sub in tests
+  getEffectiveHouseholdId: (fallback: string) => fallback,
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

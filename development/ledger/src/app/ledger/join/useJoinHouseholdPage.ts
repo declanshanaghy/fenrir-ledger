@@ -11,6 +11,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import { getSession } from "@/lib/auth/session";
+import { clearHouseholdLocalStorage, setStoredHouseholdId } from "@/lib/storage";
 
 // ---------------------------------------------------------------------------
 // Types (re-exported so page.tsx and tests can import from one place)
@@ -252,6 +254,16 @@ export function useJoinHouseholdPage(): JoinHouseholdPageState {
         };
         setCardsMerged(data.movedCardCount);
         setHouseholdName(data.householdName);
+
+        // Migrate localStorage: remove solo keys, store new householdId (#1796).
+        // The user's solo householdId equals their Google sub (session.user.sub).
+        // After joining, useCloudSync must use the new household's ID instead.
+        const session = getSession();
+        if (session?.user?.sub) {
+          clearHouseholdLocalStorage(session.user.sub);
+        }
+        setStoredHouseholdId(data.householdId);
+
         setStep("success");
       } else if (res.status === 409) {
         setStep("race_full");
