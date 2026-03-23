@@ -137,6 +137,7 @@ export function AnimatedCardGrid({ cards, renderCard }: AnimatedCardGridProps) {
             <motion.div
               key={card.id}
               layout
+              className="h-full"
               variants={variants}
               initial="hidden"
               animate="visible"

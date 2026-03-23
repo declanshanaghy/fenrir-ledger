@@ -163,7 +163,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
      * by @media (prefers-reduced-motion: reduce) in globals.css.
      */
     <motion.div
-      className="card-chain karl-bling-card"
+      className="card-chain karl-bling-card h-full"
       style={{ position: "relative" }}
       {...(!reducedMotion && {
         whileHover: { y: -2 },
@@ -175,7 +175,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
       <span aria-hidden="true" className="karl-rune-corner karl-rune-tr">ᚱ</span>
       <span aria-hidden="true" className="karl-rune-corner karl-rune-bl">ᛁ</span>
       <span aria-hidden="true" className="karl-rune-corner karl-rune-br">ᚾ</span>
-      <Link href={`/ledger/cards/${card.id}/edit`} className="block group">
+      <Link href={`/ledger/cards/${card.id}/edit`} className="block group h-full">
         <Card className="h-full border border-secondary cursor-pointer" data-testid="card-tile">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">

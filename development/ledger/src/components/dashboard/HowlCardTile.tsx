@@ -245,7 +245,7 @@ export function HowlCardTile({ card, lokiLabel }: HowlCardTileProps) {
 
   return (
     <motion.div
-      className="card-chain karl-bling-card"
+      className="card-chain karl-bling-card h-full"
       style={{ position: "relative" }}
       {...(!reducedMotion && {
         whileHover: { y: -2 },
@@ -258,7 +258,7 @@ export function HowlCardTile({ card, lokiLabel }: HowlCardTileProps) {
       <span aria-hidden="true" className="karl-rune-corner karl-rune-bl">ᛁ</span>
       <span aria-hidden="true" className="karl-rune-corner karl-rune-br">ᚾ</span>
 
-      <Link href={`/ledger/cards/${card.id}/edit`} className="block group">
+      <Link href={`/ledger/cards/${card.id}/edit`} className="block group h-full">
         <Card
           className="h-full border border-secondary cursor-pointer"
           data-testid="howl-card-tile"
