@@ -38,14 +38,14 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush, replace: vi.fn() }),
   usePathname: () => "/ledger",
 }));
 
-const mockSetTheme = vi.fn();
+const mockSetTheme = vi.hoisted(() => vi.fn());
 const mockThemeState = {
   theme: "dark" as string | undefined,
   resolvedTheme: "dark" as string | undefined,

@@ -40,7 +40,7 @@ vi.mock("next/link", () => ({
 
 // ── Mock next/navigation ────────────────────────────────────────────────────
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),

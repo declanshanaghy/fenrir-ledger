@@ -163,10 +163,10 @@ vi.mock("@/components/dashboard/DashboardTabButton", () => ({
 
 // useDashboardTabs: mutable so individual tests can override
 let mockActiveTab = "active";
-const mockHandleTabClick = vi.fn((tabId: string) => {
+const mockHandleTabClick = vi.hoisted(() => vi.fn((tabId: string) => {
   mockActiveTab = tabId;
-});
-const mockSetUpsellOpen = vi.fn();
+}));
+const mockSetUpsellOpen = vi.hoisted(() => vi.fn());
 
 vi.mock("@/hooks/useDashboardTabs", () => ({
   useDashboardTabs: () => ({

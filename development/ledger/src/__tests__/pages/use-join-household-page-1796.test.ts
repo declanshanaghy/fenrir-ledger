@@ -14,7 +14,7 @@ import { useJoinHouseholdPage } from "@/app/ledger/join/useJoinHouseholdPage";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
@@ -34,8 +34,8 @@ vi.mock("@/lib/auth/session", () => ({
   })),
 }));
 
-const mockClearHouseholdLocalStorage = vi.fn();
-const mockSetStoredHouseholdId = vi.fn();
+const mockClearHouseholdLocalStorage = vi.hoisted(() => vi.fn());
+const mockSetStoredHouseholdId = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/storage", () => ({
   clearHouseholdLocalStorage: (...args: unknown[]) => mockClearHouseholdLocalStorage(...args),

@@ -61,7 +61,7 @@ vi.mock("@radix-ui/react-dialog", async (importOriginal) => {
 
 // ── Next navigation ───────────────────────────────────────────────────────────
 
-const mockRouterPush = vi.fn();
+const mockRouterPush = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockRouterPush }),
   usePathname: () => "/ledger",
@@ -70,7 +70,7 @@ vi.mock("next/navigation", () => ({
 // ── Auth + Entitlement ────────────────────────────────────────────────────────
 
 let mockAuthStatus = "authenticated";
-const mockSubscribeStripe = vi.fn();
+const mockSubscribeStripe = vi.hoisted(() => vi.fn());
 
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ status: mockAuthStatus }),

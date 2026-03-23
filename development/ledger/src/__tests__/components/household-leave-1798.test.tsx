@@ -18,27 +18,27 @@ import { HouseholdSettingsSection } from "@/components/household/HouseholdSettin
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-const mockEnsureFreshToken = vi.fn();
+const mockEnsureFreshToken = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: (...args: unknown[]) => mockEnsureFreshToken(...args),
 }));
 
-const mockGetSession = vi.fn();
+const mockGetSession = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/session", () => ({
   getSession: () => mockGetSession(),
 }));
 
-const mockSetAllCards = vi.fn();
+const mockSetAllCards = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/storage", () => ({
   setAllCards: (...args: unknown[]) => mockSetAllCards(...args),
 }));
 
-const mockFetch = vi.fn();
+const mockFetch = vi.hoisted(() => vi.fn());
 vi.stubGlobal("fetch", mockFetch);
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────

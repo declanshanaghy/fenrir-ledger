@@ -28,7 +28,7 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 // Mock global fetch for Google token endpoint
-const mockFetch = vi.fn();
+const mockFetch = vi.hoisted(() => vi.fn());
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

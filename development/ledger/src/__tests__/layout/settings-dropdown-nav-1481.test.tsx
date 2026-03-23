@@ -35,7 +35,7 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 let mockPathname = "/ledger/settings";
 
 vi.mock("next/navigation", () => ({

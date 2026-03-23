@@ -30,7 +30,7 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush, replace: vi.fn() }),
@@ -48,7 +48,7 @@ vi.mock("@/components/layout/ThemeToggle", () => ({
 }));
 
 // eslint-disable-next-line prefer-const
-let mockEntitlementCache = vi.fn(() => null);
+let mockEntitlementCache = vi.hoisted(() => vi.fn(() => null));
 
 vi.mock("@/lib/entitlement/cache", () => ({
   getEntitlementCache: () => mockEntitlementCache(),

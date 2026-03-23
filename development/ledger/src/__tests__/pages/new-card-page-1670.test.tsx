@@ -20,7 +20,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockEnsureHouseholdId = vi.fn(() => "anon");
+const mockEnsureHouseholdId = vi.hoisted(() => vi.fn(() => "anon"));
 let mockHouseholdId: string | null = null;
 let mockStatus = "loading";
 

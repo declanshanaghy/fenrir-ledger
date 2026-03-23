@@ -46,9 +46,10 @@ vi.mock("@/lib/auth/session", () => ({
 }));
 
 // getEffectiveHouseholdId returns JOINED_HH_ID — user has already joined.
-const mockGetEffectiveHouseholdId = vi.fn<[string], string>().mockReturnValue(JOINED_HH_ID);
-const mockGetRawAllCards = vi.fn().mockReturnValue([]);
-const mockSetAllCards = vi.fn();
+// Note: mockReturnValue is set in beforeEach since JOINED_HH_ID is not available at hoist time.
+const mockGetEffectiveHouseholdId = vi.hoisted(() => vi.fn<[string], string>());
+const mockGetRawAllCards = vi.hoisted(() => vi.fn().mockReturnValue([]));
+const mockSetAllCards = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/storage", () => ({
   getEffectiveHouseholdId: (fallback: string) => mockGetEffectiveHouseholdId(fallback),
@@ -102,6 +103,7 @@ describe("useCloudSync — uses getEffectiveHouseholdId after join (#1796)", () 
     // Session is written in each test just before syncNow() is called.
     vi.stubGlobal("fetch", mockFetch);
     mockFetch.mockReturnValue(makePushResponse());
+    mockGetEffectiveHouseholdId.mockReturnValue(JOINED_HH_ID);
   });
 
   afterEach(() => {

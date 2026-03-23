@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 // Mock requireAuthz
-const mockRequireAuthz = vi.fn();
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/authz", () => ({
   requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
@@ -22,9 +22,9 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 
 // Mock import pipelines
-const mockImportFromSheet = vi.fn();
-const mockImportFromCsv = vi.fn();
-const mockImportFromFile = vi.fn();
+const mockImportFromSheet = vi.hoisted(() => vi.fn());
+const mockImportFromCsv = vi.hoisted(() => vi.fn());
+const mockImportFromFile = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/sheets/import-pipeline", () => ({
   importFromSheet: (...args: unknown[]) => mockImportFromSheet(...args),

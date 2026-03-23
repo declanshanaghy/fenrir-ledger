@@ -19,7 +19,7 @@ import { TrialSettingsSection } from "@/components/trial/TrialSettingsSection";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockSubscribeStripe = vi.fn();
+const mockSubscribeStripe = vi.hoisted(() => vi.fn());
 
 const mockTrialStatus = {
   remainingDays: 15,

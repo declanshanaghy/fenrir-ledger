@@ -13,16 +13,16 @@ vi.mock("@/lib/logger", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const mockRequireAuth = vi.fn();
+const mockRequireAuth = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/require-auth", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
 }));
 
-const mockGetUser = vi.fn();
-const mockGetHousehold = vi.fn();
-const mockGetUsersByHouseholdId = vi.fn();
-const mockEnsureSoloHousehold = vi.fn();
-const mockGetStripeSubscription = vi.fn();
+const mockGetUser = vi.hoisted(() => vi.fn());
+const mockGetHousehold = vi.hoisted(() => vi.fn());
+const mockGetUsersByHouseholdId = vi.hoisted(() => vi.fn());
+const mockEnsureSoloHousehold = vi.hoisted(() => vi.fn());
+const mockGetStripeSubscription = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getUser: (...args: unknown[]) => mockGetUser(...args),

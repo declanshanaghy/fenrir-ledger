@@ -12,12 +12,12 @@ import type { FirestoreUser, FirestoreStripeSubscription } from "@/lib/firebase/
 
 // ── Mock Firestore helpers ────────────────────────────────────────────────
 
-const mockGetUser = vi.fn();
-const mockFindUserByStripeCustomerId = vi.fn();
-const mockSetUserStripeCustomerId = vi.fn();
-const mockGetStripeSubscription = vi.fn();
-const mockSetStripeSubscription = vi.fn();
-const mockDeleteStripeSubscription = vi.fn();
+const mockGetUser = vi.hoisted(() => vi.fn());
+const mockFindUserByStripeCustomerId = vi.hoisted(() => vi.fn());
+const mockSetUserStripeCustomerId = vi.hoisted(() => vi.fn());
+const mockGetStripeSubscription = vi.hoisted(() => vi.fn());
+const mockSetStripeSubscription = vi.hoisted(() => vi.fn());
+const mockDeleteStripeSubscription = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getUser: (...args: unknown[]) => mockGetUser(...args),

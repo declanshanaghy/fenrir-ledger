@@ -23,17 +23,17 @@ import type { StripeEntitlement } from "@/lib/kv/entitlement-store";
 // Mocks
 // ---------------------------------------------------------------------------
 
-const mockRateLimit = vi.fn().mockReturnValue({ success: true });
+const mockRateLimit = vi.hoisted(() => vi.fn().mockReturnValue({ success: true }));
 
 vi.mock("@/lib/rate-limit", () => ({
   rateLimit: (...args: unknown[]) => mockRateLimit(...args),
 }));
 
-const mockSubscriptionsRetrieve = vi.fn();
-const mockSubscriptionsUpdate = vi.fn();
-const mockSubscriptionsCancel = vi.fn();
-const mockSubscriptionsList = vi.fn();
-const mockCheckoutSessionsCreate = vi.fn();
+const mockSubscriptionsRetrieve = vi.hoisted(() => vi.fn());
+const mockSubscriptionsUpdate = vi.hoisted(() => vi.fn());
+const mockSubscriptionsCancel = vi.hoisted(() => vi.fn());
+const mockSubscriptionsList = vi.hoisted(() => vi.fn());
+const mockCheckoutSessionsCreate = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/stripe/api", () => ({
   stripe: {
@@ -51,8 +51,8 @@ vi.mock("@/lib/stripe/api", () => ({
   },
 }));
 
-const mockGetEntitlement = vi.fn<() => Promise<StripeEntitlement | null>>();
-const mockSetEntitlement = vi.fn();
+const mockGetEntitlement = vi.hoisted(() => vi.fn<() => Promise<StripeEntitlement | null>>());
+const mockSetEntitlement = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/kv/entitlement-store", () => ({
   getStripeEntitlement: (...args: unknown[]) => mockGetEntitlement(...args),

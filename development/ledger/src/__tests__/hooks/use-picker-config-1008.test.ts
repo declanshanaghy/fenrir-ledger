@@ -31,7 +31,7 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn().mockResolvedValue("mock-token-1008"),
 }));
 
-const mockFetch = vi.fn();
+const mockFetch = vi.hoisted(() => vi.fn());
 
 // ── Setup ────────────────────────────────────────────────────────────────────
 

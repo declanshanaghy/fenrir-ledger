@@ -21,7 +21,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 // ── Route handler mocks ──────────────────────────────────────────────────────
 
 // requireAuthz is the CORRECT guard — it must be called with tier: "karl-or-trial"
-const mockRequireAuthz = vi.fn();
+const mockRequireAuthz = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/authz", () => ({
   requireAuthz: (...args: unknown[]) => mockRequireAuthz(...args),
 }));
@@ -51,7 +51,7 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn().mockResolvedValue("mock-bearer-token"),
 }));
 
-const mockFetch = vi.fn();
+const mockFetch = vi.hoisted(() => vi.fn());
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

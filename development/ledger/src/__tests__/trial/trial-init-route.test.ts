@@ -45,7 +45,7 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 // requireAuth: by default resolves authenticated. Override per-test for 401 cases.
-const mockRequireAuth = vi.fn();
+const mockRequireAuth = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/require-auth", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
 }));

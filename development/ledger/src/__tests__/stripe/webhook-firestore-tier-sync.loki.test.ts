@@ -41,11 +41,11 @@ vi.mock("@/lib/stripe/api", () => ({
 
 // ── KV entitlement store mock ─────────────────────────────────────────────────
 
-const mockSetStripeEntitlement = vi.fn().mockResolvedValue(undefined);
-const mockSetAnonymousStripeEntitlement = vi.fn().mockResolvedValue(undefined);
-const mockGetGoogleSubByStripeCustomerId = vi.fn();
-const mockGetStripeEntitlement = vi.fn().mockResolvedValue(null);
-const mockGetAnonymousStripeEntitlement = vi.fn().mockResolvedValue(null);
+const mockSetStripeEntitlement = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const mockSetAnonymousStripeEntitlement = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const mockGetGoogleSubByStripeCustomerId = vi.hoisted(() => vi.fn());
+const mockGetStripeEntitlement = vi.hoisted(() => vi.fn().mockResolvedValue(null));
+const mockGetAnonymousStripeEntitlement = vi.hoisted(() => vi.fn().mockResolvedValue(null));
 
 vi.mock("@/lib/kv/entitlement-store", () => ({
   getStripeEntitlement: (...args: unknown[]) => mockGetStripeEntitlement(...args),

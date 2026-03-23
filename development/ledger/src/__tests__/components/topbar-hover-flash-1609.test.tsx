@@ -35,14 +35,14 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-const mockPush = vi.fn();
+const mockPush = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush, replace: vi.fn() }),
   usePathname: () => "/",
 }));
 
-const mockSetTheme = vi.fn();
+const mockSetTheme = vi.hoisted(() => vi.fn());
 
 vi.mock("next-themes", () => ({
   useTheme: () => ({

@@ -97,7 +97,7 @@ function makePickerApi(opts: { hasTheme?: boolean; darkValue?: string } = {}) {
 }
 
 /** Noop callback for tests that don't care about picker response */
-const noopCallback = vi.fn();
+const noopCallback = vi.hoisted(() => vi.fn());
 
 afterEach(() => {
   vi.restoreAllMocks();

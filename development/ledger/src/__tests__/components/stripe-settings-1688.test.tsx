@@ -19,8 +19,8 @@ import { StripeSettings } from "@/components/entitlement/StripeSettings";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockSubscribeStripe = vi.fn().mockResolvedValue(undefined);
-const mockOpenPortal = vi.fn().mockResolvedValue(undefined);
+const mockSubscribeStripe = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const mockOpenPortal = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 
 const BASE_ENTITLEMENT = {
   tier: "thrall" as string,
