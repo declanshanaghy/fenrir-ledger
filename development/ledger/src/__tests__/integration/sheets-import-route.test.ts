@@ -5,8 +5,8 @@
  * Validates auth, Karl tier gating, input validation, and pipeline dispatch.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { NextRequest } from "next/server";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from "vitest";
+import { NextRequest, NextResponse } from "next/server";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -73,13 +73,15 @@ const MOCK_FIRESTORE_USER = {
   updatedAt: "2024-01-01T00:00:00Z",
 };
 
-beforeEach(async () => {
-  // Auth + tier pass by default
-  mockRequireAuthz.mockResolvedValue({ ok: true, user: MOCK_USER, firestoreUser: MOCK_FIRESTORE_USER });
-
+beforeAll(async () => {
   // Dynamic import so mocks are in place
   const mod = await import("@/app/api/sheets/import/route");
   POST = mod.POST;
+});
+
+beforeEach(() => {
+  // Auth + tier pass by default
+  mockRequireAuthz.mockResolvedValue({ ok: true, user: MOCK_USER, firestoreUser: MOCK_FIRESTORE_USER });
 });
 
 afterEach(() => {
@@ -90,7 +92,6 @@ afterEach(() => {
 
 describe("/api/sheets/import — Auth & tier gating", () => {
   it("returns 401 when auth fails", async () => {
-    const { NextResponse } = await import("next/server");
     mockRequireAuthz.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json(
@@ -104,7 +105,6 @@ describe("/api/sheets/import — Auth & tier gating", () => {
   });
 
   it("returns 402 when Karl/trial check fails", async () => {
-    const { NextResponse } = await import("next/server");
     mockRequireAuthz.mockResolvedValueOnce({
       ok: false,
       response: NextResponse.json(

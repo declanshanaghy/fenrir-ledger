@@ -14,7 +14,7 @@
  * Issue #1124
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import type { Card } from "@/lib/types";
 
 // ─── localStorage mock ────────────────────────────────────────────────────────
@@ -54,6 +54,21 @@ vi.mock("@/lib/storage", () => ({
 
 const mockFetch = vi.fn<typeof fetch>();
 globalThis.fetch = mockFetch as unknown as typeof fetch;
+
+// ─── Module import (cached once) ─────────────────────────────────────────────
+
+let hasMigrated: typeof import("@/lib/sync/migration")["hasMigrated"];
+let markMigrated: typeof import("@/lib/sync/migration")["markMigrated"];
+let runMigration: typeof import("@/lib/sync/migration")["runMigration"];
+let MIGRATION_FLAG: typeof import("@/lib/sync/migration")["MIGRATION_FLAG"];
+
+beforeAll(async () => {
+  const mod = await import("@/lib/sync/migration");
+  hasMigrated = mod.hasMigrated;
+  markMigrated = mod.markMigrated;
+  runMigration = mod.runMigration;
+  MIGRATION_FLAG = mod.MIGRATION_FLAG;
+});
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -96,19 +111,16 @@ describe("hasMigrated / markMigrated", () => {
     vi.clearAllMocks();
   });
 
-  it("returns false when flag is absent", async () => {
-    const { hasMigrated } = await import("@/lib/sync/migration");
+  it("returns false when flag is absent", () => {
     expect(hasMigrated()).toBe(false);
   });
 
-  it("returns true after markMigrated()", async () => {
-    const { hasMigrated, markMigrated } = await import("@/lib/sync/migration");
+  it("returns true after markMigrated()", () => {
     markMigrated();
     expect(hasMigrated()).toBe(true);
   });
 
-  it("markMigrated() sets fenrir:migrated = 'true' in localStorage", async () => {
-    const { markMigrated } = await import("@/lib/sync/migration");
+  it("markMigrated() sets fenrir:migrated = 'true' in localStorage", () => {
     markMigrated();
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
       "fenrir:migrated",
@@ -127,7 +139,6 @@ describe("runMigration — already migrated guard", () => {
     // Pre-set the flag
     localStorageStore["fenrir:migrated"] = "true";
 
-    const { runMigration } = await import("@/lib/sync/migration");
     const result = await runMigration("hh-test", "id-token-123");
 
     expect(result.ran).toBe(false);
@@ -155,7 +166,6 @@ describe("runMigration — download direction", () => {
     ];
     mockFetch.mockResolvedValue(makePushResponse(cloudCards));
 
-    const { runMigration } = await import("@/lib/sync/migration");
     const result = await runMigration("hh-test", "id-token-123");
 
     expect(result.ran).toBe(true);
@@ -190,7 +200,6 @@ describe("runMigration — upload direction", () => {
     // Cloud returns the same 2 cards (local-only upload scenario)
     mockFetch.mockResolvedValue(makePushResponse(localCards));
 
-    const { runMigration } = await import("@/lib/sync/migration");
     const result = await runMigration("hh-test", "id-token-123");
 
     expect(result.ran).toBe(true);
@@ -205,7 +214,6 @@ describe("runMigration — upload direction", () => {
 
     mockFetch.mockResolvedValue(makePushResponse([activeCard]));
 
-    const { runMigration } = await import("@/lib/sync/migration");
     await runMigration("hh-test", "tok-abc");
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -244,7 +252,6 @@ describe("runMigration — merge direction", () => {
     ];
     mockFetch.mockResolvedValue(makePushResponse(mergedCards));
 
-    const { runMigration } = await import("@/lib/sync/migration");
     const result = await runMigration("hh-test", "id-token-123");
 
     expect(result.ran).toBe(true);
@@ -264,7 +271,6 @@ describe("runMigration — empty direction", () => {
     mockGetRawAllCards.mockReturnValue([]);
     mockFetch.mockResolvedValue(makePushResponse([]));
 
-    const { runMigration } = await import("@/lib/sync/migration");
     const result = await runMigration("hh-test", "id-token-123");
 
     expect(result.ran).toBe(true);
@@ -287,8 +293,6 @@ describe("runMigration — API error handling", () => {
       makeErrorResponse(403, "forbidden", "Cloud sync is a Karl-tier feature.")
     );
 
-    const { runMigration, hasMigrated } = await import("@/lib/sync/migration");
-
     await expect(runMigration("hh-test", "id-token-123")).rejects.toThrow(
       "Cloud sync is a Karl-tier feature."
     );
@@ -303,8 +307,6 @@ describe("runMigration — API error handling", () => {
     mockFetch.mockResolvedValue(
       makeErrorResponse(500, "internal_error", "Server blew up.")
     );
-
-    const { runMigration } = await import("@/lib/sync/migration");
 
     let thrown: Error & { code?: string } | null = null;
     try {
@@ -326,8 +328,6 @@ describe("runMigration — API error handling", () => {
       json: async () => { throw new SyntaxError("not json"); },
     } as Response);
 
-    const { runMigration } = await import("@/lib/sync/migration");
-
     await expect(runMigration("hh-test", "id-token-123")).rejects.toThrow(
       "Migration failed."
     );
@@ -345,8 +345,6 @@ describe("runMigration — idempotency", () => {
     const cards = [makeCard("c1", "2026-01-01T10:00:00Z")];
     mockFetch.mockResolvedValue(makePushResponse(cards));
 
-    const { runMigration } = await import("@/lib/sync/migration");
-
     // First call
     const first = await runMigration("hh-test", "id-token-123");
     expect(first.ran).toBe(true);
@@ -361,8 +359,7 @@ describe("runMigration — idempotency", () => {
 });
 
 describe("MIGRATION_FLAG constant", () => {
-  it("has the expected value", async () => {
-    const { MIGRATION_FLAG } = await import("@/lib/sync/migration");
+  it("has the expected value", () => {
     expect(MIGRATION_FLAG).toBe("fenrir:migrated");
   });
 });
