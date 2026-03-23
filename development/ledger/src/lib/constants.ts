@@ -36,8 +36,11 @@ export const STORAGE_KEYS = {
   SCHEMA_VERSION: `${STORAGE_KEY_PREFIX}:schema_version`,
 } as const;
 
-/** Current schema version. Increment when Card or Household interfaces change. */
-export const SCHEMA_VERSION = 1;
+/** Current schema version. Increment when Card or Household interfaces change.
+ *  v1: Initial schema + soft-delete (deletedAt)
+ *  v2: Monetary fields migrated from cents to dollars (issue #1915)
+ */
+export const SCHEMA_VERSION = 2;
 
 /**
  * Days before annual fee date to show "fee_approaching" status.

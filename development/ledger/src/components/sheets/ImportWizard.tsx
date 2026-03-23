@@ -64,10 +64,10 @@ const ERROR_MESSAGES: Record<SheetImportErrorCode, string> = {
   SUBSCRIPTION_REQUIRED: "Import requires a Karl subscription. Upgrade to unlock this feature.",
 };
 
-/** Format cents as a dollar amount string */
-function formatFee(cents: number): string {
-  if (cents === 0) return "No annual fee";
-  return `$${(cents / 100).toFixed(0)}/yr`;
+/** Format dollars as a dollar amount string */
+function formatFee(dollars: number): string {
+  if (dollars === 0) return "No annual fee";
+  return `$${dollars.toFixed(0)}/yr`;
 }
 
 /** Format ISO date string to short locale date */

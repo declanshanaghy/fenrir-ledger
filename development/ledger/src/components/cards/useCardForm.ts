@@ -30,8 +30,6 @@ import { useEntitlement } from "@/hooks/useEntitlement";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import {
   computeCardStatus,
-  dollarsToCents,
-  centsToDollars,
   generateId,
   isoToLocalDateString,
   localDateStringToIso,
@@ -124,8 +122,8 @@ function buildDefaultValues(initialValues?: Card): Partial<CardFormValues> {
       isoToLocalDateString(initialValues.openDate) ||
       initialValues.openDate ||
       "",
-    creditLimit: centsToDollars(initialValues.creditLimit),
-    annualFee: centsToDollars(initialValues.annualFee),
+    creditLimit: initialValues.creditLimit > 0 ? String(initialValues.creditLimit) : "",
+    annualFee: initialValues.annualFee > 0 ? String(initialValues.annualFee) : "",
     annualFeeDate:
       isoToLocalDateString(initialValues.annualFeeDate) ||
       initialValues.annualFeeDate ||
@@ -134,18 +132,18 @@ function buildDefaultValues(initialValues?: Card): Partial<CardFormValues> {
       ? { bonusType: initialValues.signUpBonus.type }
       : {}),
     bonusAmount: initialValues.signUpBonus
-      ? initialValues.signUpBonus.type === "cashback"
-        ? centsToDollars(initialValues.signUpBonus.amount)
-        : String(initialValues.signUpBonus.amount)
+      ? String(initialValues.signUpBonus.amount)
       : "",
     bonusSpendRequirement: initialValues.signUpBonus
-      ? centsToDollars(initialValues.signUpBonus.spendRequirement)
+      ? initialValues.signUpBonus.spendRequirement > 0
+        ? String(initialValues.signUpBonus.spendRequirement)
+        : ""
       : "",
     bonusDeadline: initialValues.signUpBonus?.deadline
       ? isoToLocalDateString(initialValues.signUpBonus.deadline) ||
         initialValues.signUpBonus.deadline
       : "",
-    amountSpent: centsToDollars(initialValues.amountSpent ?? 0),
+    amountSpent: (initialValues.amountSpent ?? 0) > 0 ? String(initialValues.amountSpent) : "",
     status: initialValues.status,
     notes: initialValues.notes ?? "",
   };
@@ -297,10 +295,10 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
         data.bonusDeadline ||
         "";
 
-      const amountSpentCents = dollarsToCents(data.amountSpent ?? "");
-      const spendRequirementCents = dollarsToCents(data.bonusSpendRequirement ?? "");
+      const amountSpentDollars = parseFloat(data.amountSpent ?? "") || 0;
+      const spendRequirementDollars = parseFloat(data.bonusSpendRequirement ?? "") || 0;
       const minimumSpendMet =
-        spendRequirementCents > 0 && amountSpentCents >= spendRequirementCents;
+        spendRequirementDollars > 0 && amountSpentDollars >= spendRequirementDollars;
 
       const card: Card = {
         id: initialValues?.id ?? generateId(),
@@ -308,19 +306,19 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
         issuerId: data.issuerId,
         cardName: data.cardName,
         openDate: openDateIso,
-        creditLimit: dollarsToCents(data.creditLimit ?? ""),
-        annualFee: dollarsToCents(data.annualFee ?? ""),
+        creditLimit: parseFloat(data.creditLimit ?? "") || 0,
+        annualFee: parseFloat(data.annualFee ?? "") || 0,
         annualFeeDate: annualFeeDateIso,
         promoPeriodMonths: 0,
-        amountSpent: amountSpentCents,
+        amountSpent: amountSpentDollars,
         signUpBonus: data.bonusType
           ? {
               type: data.bonusType,
               amount:
                 data.bonusType === "cashback"
-                  ? dollarsToCents(data.bonusAmount ?? "")
+                  ? parseFloat(data.bonusAmount ?? "") || 0
                   : Math.round(parseFloat(data.bonusAmount ?? "") || 0),
-              spendRequirement: spendRequirementCents,
+              spendRequirement: spendRequirementDollars,
               deadline: bonusDeadlineIso,
               met: minimumSpendMet,
             }

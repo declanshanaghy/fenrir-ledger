@@ -8,10 +8,10 @@
  *
  * Metrics computed:
  *   - cardCount: total active (non-deleted) cards
- *   - totalAnnualFees: sum of annualFee fields across all cards (cents)
+ *   - totalAnnualFees: sum of annualFee fields across all cards (dollars)
  *   - feeAlertsCount: count of cards with fee_approaching or overdue status
  *   - closedCardsCount: count of cards with status "closed" or "graduated"
- *   - potentialSavings: sum of annualFee on closed/graduated cards (fees avoided, cents)
+ *   - potentialSavings: sum of annualFee on closed/graduated cards (fees avoided, dollars)
  *
  * All values are computed in real-time from localStorage data via storage.ts.
  *
@@ -31,7 +31,7 @@ import type { Card } from "@/lib/types";
 export interface TrialMetrics {
   /** Total number of active (non-deleted) cards. */
   cardCount: number;
-  /** Sum of annualFee fields across all cards, in cents. */
+  /** Sum of annualFee fields across all cards, in dollars. */
   totalAnnualFees: number;
   /** Formatted total annual fees as a dollar string (e.g. "$1,240"). */
   totalAnnualFeesFormatted: string;
@@ -39,7 +39,7 @@ export interface TrialMetrics {
   feeAlertsCount: number;
   /** Number of cards with "closed" or "graduated" status. */
   closedCardsCount: number;
-  /** Sum of annualFee on closed/graduated cards (fees avoided), in cents. */
+  /** Sum of annualFee on closed/graduated cards (fees avoided), in dollars. */
   potentialSavings: number;
   /** Formatted potential savings as a dollar string (e.g. "$390"). */
   potentialSavingsFormatted: string;

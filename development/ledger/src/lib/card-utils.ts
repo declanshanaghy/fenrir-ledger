@@ -166,14 +166,13 @@ export function computeCardStatus(card: Card, today?: Date): CardStatus {
 // ─── Display Formatters ───────────────────────────────────────────────────────
 
 /**
- * Formats a number of cents as a USD currency string.
+ * Formats a dollar amount as a USD currency string.
  *
- * @param cents - Integer cents value (e.g. 9500 → "$95.00")
+ * @param dollars - Dollar amount (e.g. 95 → "$95", 95.50 → "$95.5")
  * @returns Formatted currency string
  */
-export function formatCurrency(cents: number): string {
-  if (cents === 0) return "$0";
-  const dollars = cents / 100;
+export function formatCurrency(dollars: number): string {
+  if (dollars === 0) return "$0";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",

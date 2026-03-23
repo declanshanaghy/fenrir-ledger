@@ -16,15 +16,16 @@ export type CardStatus = "active" | "fee_approaching" | "promo_expiring" | "clos
 
 /**
  * Sign-up bonus details for a credit card.
- * All money amounts are stored as integer cents (USD).
+ * All money amounts are stored as dollars (USD).
+ * Points/miles are stored as raw integer counts (not currency).
  * All dates are full UTC ISO 8601 timestamps (e.g. "2025-03-15T00:00:00.000Z").
  */
 export interface SignUpBonus {
   /** Reward type: points, miles, or cashback */
   type: BonusType;
-  /** Reward amount: points count, miles count, or cashback in cents */
+  /** Reward amount: points count, miles count, or cashback in dollars */
   amount: number;
-  /** Minimum spend required to earn the bonus, in cents */
+  /** Minimum spend required to earn the bonus, in dollars */
   spendRequirement: number;
   /** Deadline to meet the spend requirement — full UTC ISO 8601 timestamp */
   deadline: string;
@@ -35,8 +36,9 @@ export interface SignUpBonus {
 /**
  * A credit card in the household portfolio.
  *
- * All money amounts are stored as integer cents (USD) to avoid floating-point
- * arithmetic errors. Display layer is responsible for dividing by 100.
+ * All money amounts are stored as dollars (USD). Points/miles are stored as
+ * raw integer counts. The display layer formats values directly without
+ * cents conversion.
  *
  * All dates are stored as full UTC ISO 8601 timestamps
  * (e.g. "2025-03-15T00:00:00.000Z"). The display layer converts to local
@@ -53,9 +55,9 @@ export interface Card {
   cardName: string;
   /** Date the card account was opened — full UTC ISO 8601 timestamp */
   openDate: string;
-  /** Credit limit in cents */
+  /** Credit limit in dollars */
   creditLimit: number;
-  /** Annual fee amount in cents (0 if no annual fee) */
+  /** Annual fee amount in dollars (0 if no annual fee) */
   annualFee: number;
   /** Next annual fee due date — full UTC ISO 8601 timestamp. Empty string if no annual fee. */
   annualFeeDate: string;
@@ -64,7 +66,7 @@ export interface Card {
   /** Sign-up bonus details, or null if no sign-up bonus */
   signUpBonus: SignUpBonus | null;
   /**
-   * Amount spent toward the sign-up bonus minimum spend requirement, in cents.
+   * Amount spent toward the sign-up bonus minimum spend requirement, in dollars.
    * Defaults to 0. Used to compute minimumSpendMet dynamically.
    */
   amountSpent?: number;

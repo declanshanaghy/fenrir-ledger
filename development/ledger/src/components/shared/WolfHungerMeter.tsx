@@ -17,7 +17,7 @@ import type { Card, BonusType } from "@/lib/types";
 interface BonusTotals {
   points: number;
   miles: number;
-  cashback: number; // in cents
+  cashback: number; // in dollars
 }
 
 function aggregateBonuses(cards: Card[]): BonusTotals {
@@ -33,13 +33,13 @@ function aggregateBonuses(cards: Card[]): BonusTotals {
 
 function formatBonusLine(type: BonusType, amount: number): string {
   if (type === "cashback") {
-    // amount is in cents
+    // amount is in dollars
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount / 100) + " cashback";
+    }).format(amount) + " cashback";
   }
   const label = type === "miles" ? "miles" : "points";
   return new Intl.NumberFormat("en-US").format(amount) + " " + label;

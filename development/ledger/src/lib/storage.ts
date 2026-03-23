@@ -132,15 +132,87 @@ function runMigrations(fromVersion: number, toVersion: number): void {
     // Fresh install — no data to transform
   }
 
-  // Version 1 → 2: Added deletedAt (optional) to Card and Household.
-  // No data transformation needed — existing records without the field are
-  // treated as non-deleted by the undefined check in the public API.
+  // Version 1 → 2: Monetary fields migrated from cents to dollars (issue #1915).
+  // - annualFee, creditLimit, amountSpent, signUpBonus.spendRequirement: divide by 100
+  // - signUpBonus.amount for cashback: divide by 100
+  // - signUpBonus.amount for points/miles: leave as-is (raw counts), EXCEPT if
+  //   unreasonably large (> 1,000,000) which indicates corruption from the old
+  //   dollarsToCents bug — divide those by 1000 per issue #1915 directive.
   if (fromVersion < 2 && toVersion >= 2) {
-    // No-op: optional field, absence === undefined === not deleted
+    migrateV1ToV2();
   }
+}
 
-  // Future migrations:
-  // if (fromVersion < 3 && toVersion >= 3) { ... }
+/**
+ * Scans all localStorage keys to find card arrays and converts monetary
+ * fields from cents to dollars (issue #1915: dollars everywhere).
+ */
+function migrateV1ToV2(): void {
+  if (!isBrowser()) return;
+
+  const CARDS_SUFFIX = ":cards";
+  const PREFIX = STORAGE_KEY_PREFIX + ":";
+  let migratedHouseholds = 0;
+
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(PREFIX) || !key.endsWith(CARDS_SUFFIX)) continue;
+
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+
+      let cards: Card[];
+      try {
+        cards = JSON.parse(raw) as Card[];
+      } catch {
+        continue;
+      }
+
+      if (!Array.isArray(cards)) continue;
+
+      const migrated = cards.map((card) => {
+        const updated: Card = {
+          ...card,
+          // Monetary fields: cents → dollars
+          annualFee: Math.round((card.annualFee ?? 0) / 100 * 100) / 100,
+          creditLimit: Math.round((card.creditLimit ?? 0) / 100 * 100) / 100,
+          amountSpent: Math.round(((card.amountSpent ?? 0) / 100) * 100) / 100,
+        };
+
+        if (card.signUpBonus) {
+          const { type, amount, spendRequirement } = card.signUpBonus;
+          // spendRequirement: cents → dollars
+          const newSpendReq = spendRequirement / 100;
+
+          let newAmount: number;
+          if (type === "cashback") {
+            // cashback was in cents → dollars
+            newAmount = amount / 100;
+          } else {
+            // points/miles are raw counts — leave as-is unless suspiciously large
+            // (indicates corruption from the old dollarsToCents multiply-by-100 bug)
+            newAmount = amount > 1_000_000 ? Math.round(amount / 1000) : amount;
+          }
+
+          updated.signUpBonus = {
+            ...card.signUpBonus,
+            amount: newAmount,
+            spendRequirement: newSpendReq,
+          };
+        }
+
+        return updated;
+      });
+
+      localStorage.setItem(key, JSON.stringify(migrated));
+      migratedHouseholds++;
+    }
+
+    console.info(`[FenrirLedger] v1→v2 migration: converted ${migratedHouseholds} household(s) to dollars`);
+  } catch (err) {
+    console.error("[FenrirLedger] v1→v2 migration failed:", err);
+  }
 }
 
 // ─── Household Operations ─────────────────────────────────────────────────────

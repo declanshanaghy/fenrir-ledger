@@ -29,10 +29,10 @@ const ISO_DATE_OR_EMPTY = z
 
 export const SignUpBonusSchema = z.object({
   type: z.enum(["points", "miles", "cashback"]),
-  /** Reward amount: points, miles, or cashback in cents. Cap at 10,000,000. */
-  amount: z.number().int().min(0).max(10_000_000),
-  /** Minimum spend in cents. Cap at $10,000,000 (1,000,000,000 cents). */
-  spendRequirement: z.number().int().min(0).max(1_000_000_000),
+  /** Reward amount: points/miles as raw integer counts; cashback in dollars. Cap at 10,000,000. */
+  amount: z.number().min(0).max(10_000_000),
+  /** Minimum spend in dollars. Cap at $10,000,000. */
+  spendRequirement: z.number().min(0).max(10_000_000),
   deadline: ISO_DATE_OR_EMPTY,
   met: z.boolean(),
 });
@@ -43,10 +43,10 @@ export const CardSchema = z.object({
   /** Card product name. Max 200 chars. */
   cardName: z.string().max(200),
   openDate: ISO_DATE_OR_EMPTY,
-  /** Credit limit in cents. Cap at $1,000,000 (100,000,000 cents). */
-  creditLimit: z.number().int().min(0).max(100_000_000),
-  /** Annual fee in cents. Cap at $10,000 (1,000,000 cents). */
-  annualFee: z.number().int().min(0).max(1_000_000),
+  /** Credit limit in dollars. Cap at $1,000,000. */
+  creditLimit: z.number().min(0).max(1_000_000),
+  /** Annual fee in dollars. Cap at $10,000. */
+  annualFee: z.number().min(0).max(10_000),
   annualFeeDate: ISO_DATE_OR_EMPTY,
   /** Promo period in months. Cap at 120 months (10 years). */
   promoPeriodMonths: z.number().int().min(0).max(120),
