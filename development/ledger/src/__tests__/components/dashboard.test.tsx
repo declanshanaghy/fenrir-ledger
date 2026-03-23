@@ -45,6 +45,18 @@ vi.mock("@/components/dashboard/CardTile", () => ({
   ),
 }));
 
+vi.mock("@/components/dashboard/ValhallaCardTile", () => ({
+  ValhallaCardTile: ({ card }: { card: { cardName: string } }) => (
+    <div data-testid={`card-tile-${card.cardName}`}>{card.cardName}</div>
+  ),
+}));
+
+vi.mock("@/components/dashboard/HowlCardTile", () => ({
+  HowlCardTile: ({ card }: { card: { cardName: string } }) => (
+    <div data-testid={`card-tile-${card.cardName}`}>{card.cardName}</div>
+  ),
+}));
+
 vi.mock("@/components/dashboard/EmptyState", () => ({
   EmptyState: () => <div data-testid="empty-state">No cards yet</div>,
 }));
