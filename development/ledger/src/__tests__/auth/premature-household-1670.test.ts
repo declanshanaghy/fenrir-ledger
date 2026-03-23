@@ -114,11 +114,21 @@ describe("Issue #1670/#1671 — no premature household creation", () => {
       expect(hh1.createdAt).toBe(hh2.createdAt);
     });
 
-    it("anonymous pages do NOT call initializeHousehold (householdId is null)", () => {
+    it("anonymous pages do NOT call initializeHousehold (householdId is null)", async () => {
       // With #1671, anonymous pages use ANON_HOUSEHOLD_ID = "anon" for storage.
       // initializeHousehold is never called for anonymous users.
       // This test documents the contract: anon users have no household record.
-      expect(true).toBe(true); // Contract documented above
+      const { ANON_HOUSEHOLD_ID } = await import("@/lib/constants");
+      const storageModule = await import("@/lib/storage");
+      const initSpy = vi.spyOn(storageModule, "initializeHousehold");
+
+      // Simulate what anonymous pages do: read the legacy anon id (no-op for new users)
+      const { getAnonHouseholdId } = await import("@/lib/auth/household");
+      getAnonHouseholdId();
+
+      // Anonymous users use the fixed "anon" key — initializeHousehold is never invoked
+      expect(ANON_HOUSEHOLD_ID).toBe("anon");
+      expect(initSpy).not.toHaveBeenCalled();
     });
   });
 });
