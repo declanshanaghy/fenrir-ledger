@@ -147,10 +147,6 @@ function makeCardWithBonus(amountSpentCents: number): Card {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('CardForm — amount spent / computed minimum spend indicator — Issue #1745', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("renders 'Amount spent' input in step 1 (wizard mode)", () => {
     render(<CardForm householdId="hh-1" />);
     expect(screen.getByLabelText(/amount spent/i)).toBeDefined();

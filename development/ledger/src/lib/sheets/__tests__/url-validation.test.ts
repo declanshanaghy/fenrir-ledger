@@ -2,7 +2,7 @@
  * Tests for SSRF prevention URL validation utilities.
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { isValidRedirectTarget, secureFetch } from "../url-validation";
 import { log } from "@/lib/logger";
 
@@ -14,10 +14,6 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch as any;
 
 describe("isValidRedirectTarget", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("allows HTTPS redirects to docs.google.com", () => {
     const valid = isValidRedirectTarget("https://docs.google.com/spreadsheets/d/abc123/export?format=csv");
     expect(valid).toBe(true);
@@ -90,10 +86,6 @@ describe("isValidRedirectTarget", () => {
 });
 
 describe("secureFetch", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   afterEach(() => {
     mockFetch.mockClear();
   });

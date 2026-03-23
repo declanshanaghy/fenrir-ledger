@@ -100,7 +100,6 @@ describe("Issue #1722 — AuthCallbackPage no longer calls /api/trial/init clien
   let locationReplaceMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     sessionStorage.clear();
     locationReplaceMock = vi.fn();
     Object.defineProperty(window, "location", {

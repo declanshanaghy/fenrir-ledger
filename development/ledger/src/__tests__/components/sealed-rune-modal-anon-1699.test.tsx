@@ -106,7 +106,6 @@ const baseProps = {
 
 describe("SealedRuneModal — anonymous user (issue #1699)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "anonymous";
     mockSubscribeStripe.mockResolvedValue(undefined);
   });
@@ -152,7 +151,6 @@ describe("SealedRuneModal — anonymous user (issue #1699)", () => {
 
 describe("SealedRuneModal — Thrall user (issue #1699 regression)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "authenticated";
     mockSubscribeStripe.mockResolvedValue(undefined);
   });

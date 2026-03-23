@@ -97,7 +97,6 @@ const ownerUser = {
 
 describe("GET /api/household/invite/validate", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: USER_ID, email: "joiner@example.com", name: "Björn", picture: "" } });
     mockFindHouseholdByInviteCode.mockResolvedValue(targetHousehold);
     mockGetUser.mockResolvedValue(callerUser);

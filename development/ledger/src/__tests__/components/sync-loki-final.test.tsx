@@ -110,7 +110,6 @@ function setSettingsError(retryIn: number | null = 120) {
 
 describe("SyncIndicator — dot CSS classes (offline + syncing + idle)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockIndicatorCloudSync.lastSyncedAt = null;
   });
 
@@ -140,10 +139,6 @@ describe("SyncIndicator — dot CSS classes (offline + syncing + idle)", () => {
 // ── SyncIndicator: tooltip is aria-hidden ─────────────────────────────────────
 
 describe("SyncIndicator — tooltip aria-hidden", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("tooltip wrapper has aria-hidden=true (decorative, not read by SR)", () => {
     setIndicatorThrall();
     const { container } = render(<SyncIndicator />);
@@ -159,7 +154,6 @@ describe("SyncSettingsSection — Trial: always shows upsell (not sync controls)
   beforeEach(() => {
     setSettingsTrial();
     setSettingsError(60); // even with error state set, trial should see upsell
-    vi.clearAllMocks();
   });
 
   it("Trial shows upsell card, not error block", () => {
@@ -196,7 +190,6 @@ describe("SyncSettingsSection — error: no errorMessage fallback text", () => {
     mockIndicatorCloudSync.errorTimestamp = new Date();
     mockIndicatorCloudSync.retryIn = null;
     mockIndicatorCloudSync.lastSyncedAt = null;
-    vi.clearAllMocks();
   });
 
   it("shows fallback 'Could not reach Yggdrasil' when errorMessage is null", () => {
@@ -217,7 +210,6 @@ describe("SyncSettingsSection — error: retryIn=null hides countdown", () => {
   beforeEach(() => {
     setSettingsKarl();
     setSettingsError(null);
-    vi.clearAllMocks();
   });
 
   it("does NOT render 'Retrying in:' text when retryIn is null", () => {
@@ -232,7 +224,6 @@ describe("SyncSettingsSection — error: timestamp label is 'Last successful syn
   beforeEach(() => {
     setSettingsKarl();
     setSettingsError(null);
-    vi.clearAllMocks();
   });
 
   it("shows 'Last successful sync:' label in error state", () => {
@@ -248,7 +239,6 @@ describe("SyncSettingsSection — syncing: progress bar motion-reduce class", ()
     setSettingsKarl();
     mockIndicatorCloudSync.status = "syncing";
     mockIndicatorCloudSync.lastSyncedAt = null;
-    vi.clearAllMocks();
   });
 
   it("progress bar fill has motion-reduce:animate-none class", () => {
@@ -274,7 +264,6 @@ describe("SyncSettingsSection — Karl: idle state renders cleanly", () => {
     mockIndicatorCloudSync.cardCount = null;
     mockIndicatorCloudSync.errorMessage = null;
     mockIndicatorCloudSync.errorCode = null;
-    vi.clearAllMocks();
   });
 
   it("no progress bar in idle state", () => {

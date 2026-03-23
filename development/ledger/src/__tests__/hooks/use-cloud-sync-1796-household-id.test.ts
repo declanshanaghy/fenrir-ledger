@@ -106,7 +106,6 @@ describe("useCloudSync — uses getEffectiveHouseholdId after join (#1796)", () 
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    vi.clearAllMocks();
     clearSession();
   });
 

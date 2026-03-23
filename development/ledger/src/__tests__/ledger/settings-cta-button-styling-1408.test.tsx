@@ -64,7 +64,6 @@ vi.mock("@/hooks/useCloudSync", () => ({
 
 describe("HouseholdSettingsSection — Sign in button gold CTA (issue #1408)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockEnsureFreshToken.mockResolvedValue(null);
   });
 
@@ -117,7 +116,6 @@ describe("HouseholdSettingsSection — Sign in button gold CTA (issue #1408)", (
 
 describe("SyncSettingsSection — Upgrade to Karl button gold CTA (issue #1408)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockEntitlement.tier = "thrall";
     mockEntitlement.isActive = false;
     mockTrialStatus.status = "none";

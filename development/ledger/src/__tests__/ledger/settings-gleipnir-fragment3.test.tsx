@@ -64,7 +64,6 @@ function navigateToSettingsTab() {
 describe("SettingsPage — RestoreTabGuides → Fragment #3 trigger", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
     // Reset URL hash so each test starts on default (account) tab
     window.location.hash = "";
   });

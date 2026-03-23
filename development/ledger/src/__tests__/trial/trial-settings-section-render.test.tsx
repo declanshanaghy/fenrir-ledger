@@ -68,10 +68,6 @@ const PRICE_BUTTON_ARIA = "Upgrade to Karl subscription";
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("TrialSettingsSection — Subscribe price button visibility (Issue #1032)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   // AC: Subscribe button with price hidden during active trial
   it("hides the price CTA button during an active trial", () => {
     setStatus("active");

@@ -58,7 +58,6 @@ describe("TrialStatusProvider — anonymous users skip API call (Issue #1636)", 
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "anonymous";
     clearTrialStatusCache();
 
@@ -120,7 +119,6 @@ describe("TrialStatusProvider — authenticated users fetch trial status (Issue 
   let capturedHeaders: Record<string, string>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "authenticated";
     capturedHeaders = {};
     clearTrialStatusCache();

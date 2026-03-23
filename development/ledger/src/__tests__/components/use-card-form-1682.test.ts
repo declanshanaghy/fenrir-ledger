@@ -271,10 +271,6 @@ describe("cardFormSchema — validation (issue #1682)", () => {
 // ── useCardForm hook ──────────────────────────────────────────────────────────
 
 describe("useCardForm hook (issue #1682)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("initialises in new-card mode with step 1", () => {
     const { result } = renderHook(() =>
       useCardForm({ householdId: "hh-1" })

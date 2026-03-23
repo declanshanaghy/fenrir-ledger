@@ -51,7 +51,6 @@ function setupSearchParams({
 
 describe("AuthCallbackPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     sessionStorage.clear();
   });
 

@@ -57,7 +57,6 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  vi.clearAllMocks();
   delete process.env.GOOGLE_PICKER_API_KEY;
 });
 

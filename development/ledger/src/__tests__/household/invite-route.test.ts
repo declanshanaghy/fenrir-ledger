@@ -74,7 +74,6 @@ const baseHousehold = {
 
 describe("POST /api/household/invite", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: OWNER_ID, email: "owner@example.com", name: "Thor", picture: "" } });
     mockGetUser.mockResolvedValue(baseUser);
     mockGetHousehold.mockResolvedValue(baseHousehold);

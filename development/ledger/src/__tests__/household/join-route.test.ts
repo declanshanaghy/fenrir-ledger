@@ -60,7 +60,6 @@ const successResult = {
 
 describe("POST /api/household/join", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockRequireAuthz.mockResolvedValue({ ok: true, user: { sub: USER_ID, email: "joiner@example.com", name: "Björn", picture: "" }, firestoreUser: { userId: USER_ID, email: "joiner@example.com", displayName: "Björn", householdId: "hh-solo", role: "owner" as const, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" } });
     mockJoinHouseholdTransaction.mockResolvedValue(successResult);
   });

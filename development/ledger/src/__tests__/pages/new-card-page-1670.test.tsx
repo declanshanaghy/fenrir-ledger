@@ -52,7 +52,6 @@ import NewCardPage from "@/app/ledger/cards/new/page";
 
 describe("NewCardPage — Issue #1671: anonymous uses fixed 'anon' key", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockHouseholdId = null;
     mockStatus = "loading";
   });

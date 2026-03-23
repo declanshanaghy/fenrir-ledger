@@ -141,10 +141,6 @@ function makeCard(overrides: Partial<Card> = {}): Card {
 // ── CardForm orchestrator tests ───────────────────────────────────────────────
 
 describe("CardForm (issue #1682 — decomposed orchestrator)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("renders wizard step 1 by default for new cards", () => {
     render(<CardForm householdId="hh-1" />);
     // Card Details fieldset is visible on step 1

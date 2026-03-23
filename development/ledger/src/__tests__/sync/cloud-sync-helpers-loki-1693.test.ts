@@ -63,7 +63,6 @@ describe("parseApiError — additional edge cases", () => {
 describe("maybeShowFirstSyncToast — additional edge cases", () => {
   beforeEach(() => {
     localStorage.removeItem(LS_FIRST_SYNC_SHOWN);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -103,10 +102,6 @@ describe("maybeShowFirstSyncToast — additional edge cases", () => {
 // ── showMigrationToast edge cases ──────────────────────────────────────────
 
 describe("showMigrationToast — additional edge cases", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("shows backup toast for direction=empty (no cards migrated)", () => {
     showMigrationToast(0, "empty");
     expect(toast.success).toHaveBeenCalledOnce();

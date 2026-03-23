@@ -68,7 +68,6 @@ function makeCard(overrides: Partial<Card> = {}): Card {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mockGetAllFirestoreCards.mockResolvedValue([]);
 });
 

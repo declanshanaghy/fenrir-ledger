@@ -83,7 +83,6 @@ function captureCardsChangedEvent(): { detail: { householdId: string } } | null 
 
 beforeEach(() => {
   localStorage.clear();
-  vi.clearAllMocks();
 });
 
 // ── saveCard ──────────────────────────────────────────────────────────────────

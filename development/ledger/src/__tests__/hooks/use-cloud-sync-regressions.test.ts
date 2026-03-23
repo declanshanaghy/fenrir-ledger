@@ -134,7 +134,6 @@ describe("useCloudSync — online/offline events (Karl)", () => {
     mockHasMigrated.mockReturnValue(true);
     vi.stubGlobal("fetch", mockFetch);
     mockFetch.mockReturnValue(hangingFetch());
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -183,7 +182,6 @@ describe("useCloudSync — Thrall ignores online/offline events", () => {
     mockEntitlement.tier = "thrall";
     mockEntitlement.isActive = false;
     mockAuthContext.status = "authenticated";
-    vi.clearAllMocks();
   });
 
   it("Thrall stays idle on 'offline' event", () => {
@@ -212,7 +210,6 @@ describe("useCloudSync — tier switching without page reload", () => {
     mockHasMigrated.mockReturnValue(true);
     vi.stubGlobal("fetch", mockFetch);
     mockFetch.mockReturnValue(hangingFetch());
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -267,7 +264,6 @@ describe("useCloudSync — retryIn countdown", () => {
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(true);
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
     vi.useFakeTimers();
   });
 
@@ -327,7 +323,6 @@ describe("useCloudSync — first-sync toast pluralization", () => {
     mockHasMigrated.mockReturnValue(true);
     localStorage.removeItem("fenrir:first-sync-shown");
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -383,7 +378,6 @@ describe("useCloudSync — error persists after toast dismiss (not dismissError)
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(true);
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -433,7 +427,6 @@ describe("useCloudSync — dismissError edge cases", () => {
     mockHasMigrated.mockReturnValue(true);
     vi.stubGlobal("fetch", mockFetch);
     mockFetch.mockReturnValue(hangingFetch());
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -489,7 +482,6 @@ describe("useCloudSync — syncNow dispatches fenrir:cloud-sync-complete", () =>
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(true);
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -550,7 +542,6 @@ describe("Bug 1 — Auth gating: sync does not fire before auth is confirmed", (
     vi.stubGlobal("fetch", mockFetch);
     mockFetch.mockReturnValue(hangingFetch());
     localStorage.removeItem("fenrir:first-sync-shown");
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -631,7 +622,6 @@ describe("Bug 2 — Restore vs backup message direction", () => {
     mockGetRawAllCards.mockReturnValue([]);
     localStorage.removeItem("fenrir:first-sync-shown");
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -728,7 +718,6 @@ describe("Bug 3 — Push loop prevention", () => {
     vi.stubGlobal("fetch", mockFetch);
     mockFetch.mockReturnValue(hangingFetch());
     vi.useFakeTimers();
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -755,8 +744,6 @@ describe("Bug 3 — Push loop prevention", () => {
     clearSession();
     mockFetch.mockReturnValue(hangingFetch());
     renderHook(() => useCloudSync());
-    vi.clearAllMocks();
-
     act(() => {
       window.dispatchEvent(new CustomEvent("fenrir:sync", { detail: {} }));
     });
@@ -792,8 +779,6 @@ describe("Bug 3 — Push loop prevention", () => {
   it("does not accumulate multiple debounce timers on rapid card-changed events", () => {
     clearSession();
     renderHook(() => useCloudSync());
-    vi.clearAllMocks();
-
     for (let i = 0; i < 10; i++) {
       act(() => {
         window.dispatchEvent(new CustomEvent("fenrir:cards-changed", { detail: {} }));
@@ -846,7 +831,6 @@ describe("useCloudSync / handleLoginTransition — AC-1: Thrall user", () => {
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -873,7 +857,6 @@ describe("useCloudSync / handleLoginTransition — AC-2: already migrated delega
     mockHasMigrated.mockReturnValue(true);
     mockRunMigration.mockReset();
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -910,7 +893,6 @@ describe("useCloudSync / handleLoginTransition — AC-3: upload direction toast"
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -938,7 +920,6 @@ describe("useCloudSync / handleLoginTransition — AC-4: download direction toas
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -966,7 +947,6 @@ describe("useCloudSync / handleLoginTransition — AC-5: merge direction toast",
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -994,7 +974,6 @@ describe("useCloudSync / handleLoginTransition — AC-6: empty direction, no toa
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -1020,7 +999,6 @@ describe("useCloudSync / handleLoginTransition — AC-7: singular card toast", (
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -1067,7 +1045,6 @@ describe("useCloudSync / handleLoginTransition — AC-8: migration error fallbac
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -1122,7 +1099,6 @@ describe("useCloudSync / handleLoginTransition — AC-9: first-sync-shown flag",
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
-    vi.clearAllMocks();
     localStorage.clear();
   });
 
@@ -1168,7 +1144,6 @@ describe("useCloudSync / handleLoginTransition — AC-10: status transitions", (
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -1204,7 +1179,6 @@ describe("useCloudSync / handleLoginTransition — AC-11: passes householdId and
     mockAuthContext.status = "authenticated";
     mockHasMigrated.mockReturnValue(false);
     mockRunMigration.mockReset();
-    vi.clearAllMocks();
     clearSession();
   });
 
@@ -1253,7 +1227,6 @@ describe("Bug 3 fix — setAllCards receives merged cards from server (not saveC
     mockGetRawAllCards.mockReturnValue([]);
     localStorage.removeItem("fenrir:first-sync-shown");
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -1308,7 +1281,6 @@ describe("Bug 2 fix — first-sync toast suppressed after fenrir:first-sync-show
     mockGetRawAllCards.mockReturnValue([]);
     localStorage.removeItem("fenrir:first-sync-shown");
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -1361,7 +1333,6 @@ describe("Bug 3 fix — Thrall does NOT attach fenrir:cards-changed auto-sync li
     vi.stubGlobal("fetch", mockFetch);
     mockFetch.mockReturnValue(hangingFetch());
     vi.useFakeTimers();
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -1372,8 +1343,6 @@ describe("Bug 3 fix — Thrall does NOT attach fenrir:cards-changed auto-sync li
 
   it("Thrall: dispatching fenrir:cards-changed does not trigger any fetch", () => {
     renderHook(() => useCloudSync());
-    vi.clearAllMocks();
-
     act(() => {
       window.dispatchEvent(new CustomEvent("fenrir:cards-changed", { detail: {} }));
     });
@@ -1395,7 +1364,6 @@ describe("Auth race fix — Authorization Bearer token sent in sync request", ()
     mockGetRawAllCards.mockReturnValue([]);
     localStorage.removeItem("fenrir:first-sync-shown");
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -1437,7 +1405,6 @@ describe("Sync on re-login — fires sync even when first-sync-shown already set
     localStorage.setItem("fenrir:first-sync-shown", "true");
     localStorage.setItem("fenrir:migrated", "true");
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -1488,7 +1455,6 @@ describe("Issue #1239 AC-1 — No push on page load/mount (no user action)", () 
     mockHasMigrated.mockReturnValue(true);
     localStorage.setItem("fenrir:first-sync-shown", "true");
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -1556,7 +1522,6 @@ describe("Issue #1239 AC-2 — Push fires on fenrir:cards-changed (debounced 10s
     localStorage.setItem("fenrir:first-sync-shown", "true");
     vi.stubGlobal("fetch", mockFetch);
     vi.useFakeTimers();
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -1615,8 +1580,6 @@ describe("Issue #1239 AC-2 — Push fires on fenrir:cards-changed (debounced 10s
     mockFetch.mockReturnValue(pushResponse(1));
 
     renderHook(() => useCloudSync());
-    vi.clearAllMocks();
-
     act(() => { window.dispatchEvent(new CustomEvent(EVT_CARDS_CHANGED)); });
 
     await act(async () => {
@@ -1657,7 +1620,6 @@ describe("Issue #1239 AC-3 — Network reconnect does NOT trigger push", () => {
     mockHasMigrated.mockReturnValue(true);
     vi.stubGlobal("fetch", mockFetch);
     mockFetch.mockReturnValue(hangingFetch());
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -1727,7 +1689,6 @@ describe("Issue #1239 AC-4 — No auto-retry push after sync error", () => {
     mockHasMigrated.mockReturnValue(true);
     vi.stubGlobal("fetch", mockFetch);
     vi.useFakeTimers();
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -1822,7 +1783,6 @@ describe("Issue #1239 AC-5 — Login fires GET /api/sync/pull, not POST /api/syn
     mockHasMigrated.mockReturnValue(true);
     localStorage.setItem("fenrir:first-sync-shown", "true");
     vi.stubGlobal("fetch", mockFetch);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {

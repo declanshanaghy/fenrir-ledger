@@ -60,7 +60,6 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 describe("AuthContext — regression: null householdId for anonymous users (#1670, #1671)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     // Default: no session (brand-new anonymous user)
     mockGetSession.mockReturnValue(null);
     mockIsSessionValid.mockReturnValue(false);

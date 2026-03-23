@@ -167,7 +167,6 @@ function makeRequest(
 
 describe("GET /api/sync — requireAuthz migration (issue #1200)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockGetCards.mockResolvedValue([]);
   });
 
@@ -209,7 +208,6 @@ describe("GET /api/sync — requireAuthz migration (issue #1200)", () => {
 
 describe("PUT /api/sync — requireAuthz migration (issue #1200)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockGetCards.mockResolvedValue([]);
     mockSetCards.mockResolvedValue(undefined);
   });
@@ -303,7 +301,6 @@ describe("POST /api/household/invite — requireAuthz migration (issue #1200)", 
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockGetHousehold.mockResolvedValue(HOUSEHOLD);
     mockRegenerateInviteCode.mockResolvedValue({
       ...HOUSEHOLD,
@@ -388,7 +385,6 @@ describe("POST /api/stripe/portal — requireAuthz migration (issue #1200)", () 
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockGetStripeEntitlement.mockResolvedValue(MOCK_ENTITLEMENT);
     mockStripe.billingPortal.sessions.create.mockResolvedValue({
       url: "https://billing.stripe.com/session/test",
@@ -458,7 +454,6 @@ describe("POST /api/stripe/unlink — requireAuthz migration (issue #1200)", () 
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockGetStripeEntitlement.mockResolvedValue(MOCK_ENTITLEMENT);
     mockStripe.subscriptions.cancel.mockResolvedValue({});
     mockSetStripeEntitlement.mockResolvedValue(undefined);
@@ -535,7 +530,6 @@ describe("POST /api/trial/convert — requireAuth (#1634: auth-based, no fingerp
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockMarkTrialConverted.mockResolvedValue(true);
   });
 

@@ -49,7 +49,6 @@ describe("GET /api/stripe/membership", () => {
   const mockCancelAt = Math.floor(Date.now() / 1000) + 15 * 24 * 60 * 60; // 15 days from now
 
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2024-01-15T10:00:00Z"));
 

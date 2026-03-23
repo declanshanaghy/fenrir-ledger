@@ -126,7 +126,6 @@ describe("useCloudSync — Karl: state transitions", () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
     vi.unstubAllGlobals();
     clearSession();
   });
@@ -238,7 +237,6 @@ describe("useCloudSync — first-sync toast", () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
     vi.unstubAllGlobals();
     clearSession();
   });
@@ -283,7 +281,6 @@ describe("useCloudSync — error toast", () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
     vi.unstubAllGlobals();
     clearSession();
   });

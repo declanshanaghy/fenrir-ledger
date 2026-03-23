@@ -78,7 +78,6 @@ describe("parseApiError", () => {
 describe("maybeShowFirstSyncToast", () => {
   beforeEach(() => {
     localStorage.removeItem(LS_FIRST_SYNC_SHOWN);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -129,10 +128,6 @@ describe("maybeShowFirstSyncToast", () => {
 // ── showMigrationToast ─────────────────────────────────────────────────────────
 
 describe("showMigrationToast", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("shows a restore toast for direction=download", () => {
     showMigrationToast(3, "download");
     expect(toast.success).toHaveBeenCalledOnce();

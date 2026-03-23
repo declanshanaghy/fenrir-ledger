@@ -52,7 +52,6 @@ import { HowlTeaserState } from "@/components/dashboard/HowlTeaserState";
 
 describe("HowlTeaserState — anonymous user (issue #1699)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "anonymous";
   });
 
@@ -99,7 +98,6 @@ describe("HowlTeaserState — anonymous user (issue #1699)", () => {
 
 describe("HowlTeaserState — Thrall user (issue #1699 regression)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "authenticated";
   });
 

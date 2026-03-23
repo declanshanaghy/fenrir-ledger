@@ -54,10 +54,6 @@ function fillChars(result: ReturnType<typeof renderHook<ReturnType<typeof useJoi
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("useJoinHouseholdPage — initial state", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("starts with empty chars and idle validation", () => {
     const { result } = renderHook(() => useJoinHouseholdPage());
     expect(result.current.chars).toHaveLength(6);
@@ -81,7 +77,6 @@ describe("useJoinHouseholdPage — initial state", () => {
 
 describe("useJoinHouseholdPage — validateCode via handleCharChange", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockPush.mockClear();
   });
 
@@ -180,10 +175,6 @@ describe("useJoinHouseholdPage — validateCode via handleCharChange", () => {
 });
 
 describe("useJoinHouseholdPage — input handlers", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("handleCharChange advances focus and updates chars", () => {
     const { result } = renderHook(() => useJoinHouseholdPage());
     act(() => {
@@ -236,7 +227,6 @@ describe("useJoinHouseholdPage — input handlers", () => {
 
 describe("useJoinHouseholdPage — handleConfirmJoin", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockPush.mockClear();
     mockRefreshEntitlement.mockResolvedValue(undefined);
     mockClearEntitlementCache.mockClear();
@@ -341,7 +331,6 @@ describe("useJoinHouseholdPage — handleConfirmJoin", () => {
 // redirect fires (router.push is client-side; EntitlementContext stays mounted).
 describe("useJoinHouseholdPage — entitlement refresh on join success (#1823)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockPush.mockClear();
     mockRefreshEntitlement.mockResolvedValue(undefined);
     mockClearEntitlementCache.mockClear();

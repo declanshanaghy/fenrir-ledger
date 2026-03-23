@@ -146,7 +146,6 @@ function makeSubscription(
 
 describe("POST /api/stripe/webhook", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     // Default: event not yet processed (no duplicate)
     mockIsEventProcessed.mockResolvedValue(false);
     mockMarkEventProcessed.mockResolvedValue(undefined);

@@ -98,7 +98,6 @@ function daysAgo(n: number): string {
 
 describe("POST /api/trial/status", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     authOk();
     mockDocRef.get.mockResolvedValue(missingSnap);
     mockDocRef.set.mockResolvedValue(undefined);

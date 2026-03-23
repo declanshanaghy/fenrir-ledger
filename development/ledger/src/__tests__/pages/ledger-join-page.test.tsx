@@ -52,7 +52,6 @@ vi.mock("@/lib/auth/refresh-session", () => ({
 
 describe("JoinHouseholdPage — code entry step", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockPush.mockClear();
   });
 

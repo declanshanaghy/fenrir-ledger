@@ -88,7 +88,6 @@ function setStatus(s: typeof mockCloudSync.status) {
 describe("SyncSettingsSection — Thrall: upsell card", () => {
   beforeEach(() => {
     setThrall();
-    vi.clearAllMocks();
   });
 
   it("renders Cloud Sync section with KARL badge", () => {
@@ -131,7 +130,6 @@ describe("SyncSettingsSection — Thrall: upsell card", () => {
 describe("SyncSettingsSection — Trial: upsell card (no upgrade button)", () => {
   beforeEach(() => {
     setTrial();
-    vi.clearAllMocks();
   });
 
   it("renders Cloud Sync section with KARL badge (not TRIAL)", () => {
@@ -173,7 +171,6 @@ describe("SyncSettingsSection — Karl: synced state", () => {
     setStatus("synced");
     mockCloudSync.lastSyncedAt = new Date();
     mockCloudSync.cardCount = 47;
-    vi.clearAllMocks();
   });
 
   it("renders no tier badge for Karl", () => {
@@ -206,7 +203,6 @@ describe("SyncSettingsSection — Karl: syncing state", () => {
   beforeEach(() => {
     setKarl();
     setStatus("syncing");
-    vi.clearAllMocks();
   });
 
   it("renders progress bar", () => {
@@ -228,7 +224,6 @@ describe("SyncSettingsSection — Karl: offline state", () => {
   beforeEach(() => {
     setKarl();
     setStatus("offline");
-    vi.clearAllMocks();
   });
 
   it("renders offline message", () => {
@@ -281,7 +276,6 @@ describe("SyncSettingsSection — Karl: error state", () => {
     mockCloudSync.errorTimestamp = new Date();
     mockCloudSync.retryIn = 120;
     mockCloudSync.lastSyncedAt = new Date();
-    vi.clearAllMocks();
   });
 
   it("renders error block with role=alert", () => {

@@ -252,7 +252,6 @@ async function fillAndSubmit(
 
 describe("CardForm — Thrall card limit enforcement (issue #643 / #1416)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockSaveCard.mockResolvedValue(undefined);
   });
 

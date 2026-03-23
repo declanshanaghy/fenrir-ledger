@@ -23,8 +23,9 @@ import '@testing-library/jest-dom/vitest';
 
 // Clean up DOM after each test (for component render tests)
 import { cleanup } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
 
 afterEach(() => {
   cleanup();
+  vi.clearAllMocks();
 });

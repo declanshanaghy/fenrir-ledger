@@ -33,7 +33,6 @@ const originalLocation = window.location;
 
 describe("AdminLayout", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "loading";
     mockSession = null;
     // Reset window.location

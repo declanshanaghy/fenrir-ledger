@@ -46,7 +46,6 @@ function makeRequest(body: Record<string, unknown> = {}): NextRequest {
 
 describe("POST /api/household/join — Loki edge cases", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockRequireAuthz.mockResolvedValue({
       ok: true,
       user: { sub: "user_owner", email: "owner@example.com", name: "Thor", picture: "" },

@@ -125,7 +125,6 @@ function makeSetValue() {
 // ── CardFormStep1: computed indicator ─────────────────────────────────────────
 
 describe("CardFormStep1 — computed minimumSpendMet indicator (issue #1745)", () => {
-  beforeEach(() => vi.clearAllMocks());
 
   it("does NOT show indicator when no spend requirement is set", () => {
     render(
@@ -195,7 +194,6 @@ describe("CardFormStep1 — computed minimumSpendMet indicator (issue #1745)", (
 // ── CardFormEditFields: no status dropdown ────────────────────────────────────
 
 describe("CardFormEditFields — no Card Status field (issue #1745)", () => {
-  beforeEach(() => vi.clearAllMocks());
 
   it("does NOT render a Status dropdown or label in edit mode", () => {
     render(
@@ -218,7 +216,6 @@ describe("CardFormEditFields — no Card Status field (issue #1745)", () => {
 // ── CardFormStep2: annual fee amount input ────────────────────────────────────
 
 describe("CardFormStep2 — annual fee amount in Step 2 (issue #1745)", () => {
-  beforeEach(() => vi.clearAllMocks());
 
   it("renders an 'Annual fee' amount input in Step 2", () => {
     render(

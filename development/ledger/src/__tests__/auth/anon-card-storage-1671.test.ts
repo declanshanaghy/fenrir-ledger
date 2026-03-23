@@ -41,7 +41,6 @@ const mockDispatchEvent = vi.fn();
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  vi.clearAllMocks();
   Object.keys(localStorageStore).forEach((k) => delete localStorageStore[k]);
   Object.defineProperty(globalThis, "localStorage", {
     value: localStorageMock,
