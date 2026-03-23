@@ -517,7 +517,7 @@ export function LedgerTopBar() {
     <>
     <header
       role="banner"
-      className="h-12 shrink-0 border-b border-border bg-background sticky top-0 z-[100] flex items-center justify-between px-4 relative"
+      className="h-12 shrink-0 border-b border-border bg-background/90 backdrop-blur-sm sticky top-0 z-[100] flex items-center justify-between px-4 relative"
     >
       {/* Skip nav link */}
       <a
