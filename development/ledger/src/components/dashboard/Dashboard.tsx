@@ -37,8 +37,8 @@
 import { restoreCard, expungeCard, expungeAllCards } from "@/lib/storage";
 import { CardTile } from "./CardTile";
 import { HuntCardTile } from "./HuntCardTile";
-import { ValhallaCardTile } from "./ValhallaCardTile";
 import { HowlCardTile } from "./HowlCardTile";
+import { ValhallaCardTile } from "./ValhallaCardTile";
 import { EmptyState } from "./EmptyState";
 import { AnonEmptyState } from "./AnonEmptyState";
 import { AnimatedCardGrid } from "./AnimatedCardGrid";
@@ -448,28 +448,17 @@ export function Dashboard({
             <AnimatedCardGrid
               cards={displayCards}
               renderCard={(card) => {
+                const lokiLabel = lokiActive ? lokiLabels[card.id] : undefined;
+                if (isHuntCard(card)) {
+                  return <HuntCardTile card={card} lokiLabel={lokiLabel} />;
+                }
                 if (isHowlCard(card)) {
-                  return (
-                    <HowlCardTile
-                      card={card}
-                      lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
-                    />
-                  );
+                  return <HowlCardTile card={card} lokiLabel={lokiLabel} />;
                 }
                 if (isValhallaCard(card)) {
-                  return (
-                    <ValhallaCardTile
-                      card={card}
-                      lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
-                    />
-                  );
+                  return <ValhallaCardTile card={card} lokiLabel={lokiLabel} />;
                 }
-                return (
-                  <CardTile
-                    card={card}
-                    lokiLabel={lokiActive ? lokiLabels[card.id] : undefined}
-                  />
-                );
+                return <CardTile card={card} lokiLabel={lokiLabel} />;
               }}
             />
           )}

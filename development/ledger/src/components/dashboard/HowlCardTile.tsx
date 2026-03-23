@@ -4,6 +4,7 @@
  * HowlCardTile — Howl-tab specific card tile with urgency-driven decision view.
  *
  * Issue #1808 — The Howl tab: show actionable urgency context, not generic credit limit.
+ * Issue #1850 — timer icon on card views across all tabs.
  *
  * Differences from CardTile + UrgencyBar combo:
  *   - Removes Credit limit row.
@@ -12,6 +13,7 @@
  *   - Urgency left border: 4px solid --realm-muspel (< 30 days) or --realm-hati (< 60 days).
  *   - Urgency badge replaces generic status badge.
  *   - SpendProgressBar reused from Hunt tab pattern.
+ *   - Timer ring (time elapsed from openDate toward nearest deadline) — no spend ring.
  *
  * Urgency tiers:
  *   - Red (< 30 days):  border + text use --realm-muspel
@@ -19,6 +21,7 @@
  *   - Overdue (days <= 0): red, pulse animation
  *
  * Wireframe: ux/wireframes/cards/howl-tab-cards.html
+ * Spec: ux/wireframes/cards/timer-icon-cards.html — Section 3
  */
 
 import Link from "next/link";
@@ -30,10 +33,10 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { StatusRing } from "./StatusRing";
+import { TimerRing } from "./TimerRing";
 import type { Card as CreditCard } from "@/lib/types";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/card-utils";
-import { getIssuerBadgeChar, getIssuerMeta } from "@/lib/issuer-utils";
+import { getIssuerMeta } from "@/lib/issuer-utils";
 import { IssuerLogo } from "@/components/shared/IssuerLogo";
 import { cn } from "@/lib/utils";
 
@@ -133,6 +136,30 @@ export function getHowlSpendPercent(card: CreditCard): number {
   return Math.min(100, Math.round((spent / required) * 100));
 }
 
+/**
+ * Returns true when the bonus warning row should appear.
+ *
+ * Condition: card has an unmet bonus deadline that is within 60 days AND
+ * the card also has an annual fee approaching.
+ */
+export function shouldShowBonusWarning(card: CreditCard): boolean {
+  if (!card.signUpBonus || card.signUpBonus.met) return false;
+  if (!card.signUpBonus.deadline) return false;
+  const bonusDays = daysUntil(card.signUpBonus.deadline);
+  return bonusDays >= 0 && bonusDays <= 60;
+}
+
+/**
+ * Computes the remaining spend for the bonus warning row.
+ * Returns 0 if spend requirement is already met or no bonus.
+ */
+export function getHowlBonusRemaining(card: CreditCard): number {
+  if (!card.signUpBonus || card.signUpBonus.met) return 0;
+  const spent = card.amountSpent ?? 0;
+  const required = card.signUpBonus.spendRequirement ?? 0;
+  return Math.max(0, required - spent);
+}
+
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 interface UrgencyBadgeProps {
@@ -185,13 +212,18 @@ interface HowlCardTileProps {
 export function HowlCardTile({ card, lokiLabel }: HowlCardTileProps) {
   const reducedMotion = useReducedMotion() ?? false;
 
-  const ringBadgeChar = getIssuerBadgeChar(card.issuerId);
   const issuerMeta = getIssuerMeta(card.issuerId);
 
   const daysUntilSoonest = getHowlDaysUntilSoonest(card);
   const tier = getHowlUrgencyTier(daysUntilSoonest);
   const borderClass = getHowlBorderClass(tier);
   const urgencyTextClass = getHowlUrgencyTextClass(tier);
+
+  // Timer ring deadline: fee_approaching/overdue → annualFeeDate, promo_expiring → bonus deadline
+  const isFee = card.status === "fee_approaching" || card.status === "overdue";
+  const deadlineDate = isFee
+    ? card.annualFeeDate
+    : (card.signUpBonus?.deadline ?? card.annualFeeDate);
 
   // Fee details
   const hasFee = card.annualFee > 0 && card.annualFeeDate;
@@ -238,13 +270,15 @@ export function HowlCardTile({ card, lokiLabel }: HowlCardTileProps) {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                <StatusRing
-                  status={card.status}
-                  daysRemaining={daysUntilSoonest}
-                  totalDays={365}
-                  initials={ringBadgeChar}
-                  cardName={card.cardName}
-                />
+                {/* Timer ring only — no spend ring for Howl */}
+                {deadlineDate && (
+                  <TimerRing
+                    openDate={card.openDate}
+                    deadlineDate={deadlineDate}
+                    tab="howl"
+                    cardName={card.cardName}
+                  />
+                )}
                 <div className="min-w-0">
                   <CardDescription
                     className="text-sm uppercase tracking-wide mb-1"
