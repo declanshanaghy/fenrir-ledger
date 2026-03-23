@@ -1,14 +1,18 @@
 /**
- * ImportWizard refactor — Issue #1687
+ * ImportWizard — canonical unit tests
  *
- * Verifies that the step-routing refactor produces the same visible output as
- * before: correct titles, aria-live announcements, loading messages, error
- * messages, and success content for every step. Tests are step-scoped and
- * drive through the mocked useSheetImport hook.
+ * Consolidates issue-numbered test clusters:
+ *   - import-wizard-1687.test.tsx (Regression: #1687)
+ *   - import-wizard-1740.test.tsx (Regression: #1740)
+ *
+ * Covers: step routing, titles, aria-live announcements, loading messages,
+ * error messages, success content, and the Continue button (#1740).
+ *
+ * @ref Issue #1687, #1740
  */
 
 import { describe, it, expect, vi, beforeAll } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { Mock } from "vitest";
 
 // ── Radix Dialog mock ─────────────────────────────────────────────────────────
@@ -110,6 +114,7 @@ async function renderWizard(overrides: Partial<typeof mockHookState> = {}) {
 
 // ── Tests: step "method" ──────────────────────────────────────────────────────
 
+// Regression: #1687
 describe('ImportWizard step="method"', () => {
   beforeAll(() => {
     mockHookState.step = "method";
@@ -128,6 +133,7 @@ describe('ImportWizard step="method"', () => {
 
 // ── Tests: step "url-entry" ───────────────────────────────────────────────────
 
+// Regression: #1687
 describe('ImportWizard step="url-entry"', () => {
   it("renders Share a Rune Tablet title", async () => {
     await renderWizard({ step: "url-entry" });
@@ -142,6 +148,7 @@ describe('ImportWizard step="url-entry"', () => {
 
 // ── Tests: step "csv-upload" ──────────────────────────────────────────────────
 
+// Regression: #1687
 describe('ImportWizard step="csv-upload"', () => {
   it("renders Deliver a Rune-Stone title", async () => {
     await renderWizard({ step: "csv-upload" });
@@ -156,6 +163,7 @@ describe('ImportWizard step="csv-upload"', () => {
 
 // ── Tests: step "loading" ─────────────────────────────────────────────────────
 
+// Regression: #1687
 describe('ImportWizard step="loading"', () => {
   it("renders Deciphering the runes title", async () => {
     await renderWizard({ step: "loading" });
@@ -177,9 +185,9 @@ describe('ImportWizard step="loading"', () => {
 
 // ── Tests: LoadingStepContent message variants ────────────────────────────────
 
+// Regression: #1687
 describe("LoadingStepContent — loading message by import method", () => {
   it("shows spreadsheet message when importMethod is null (url import path)", async () => {
-    // importMethod starts null at method selection
     await renderWizard({ step: "loading" });
     expect(
       screen.getByText("Reading the runes from your spreadsheet...")
@@ -189,6 +197,7 @@ describe("LoadingStepContent — loading message by import method", () => {
 
 // ── Tests: step "preview" ─────────────────────────────────────────────────────
 
+// Regression: #1687
 describe('ImportWizard step="preview"', () => {
   it("renders Preview Import title", async () => {
     await renderWizard({ step: "preview", cards: [] });
@@ -253,6 +262,7 @@ describe('ImportWizard step="preview"', () => {
 
 // ── Tests: step "error" ───────────────────────────────────────────────────────
 
+// Regression: #1687
 describe('ImportWizard step="error"', () => {
   it("renders Import Failed title", async () => {
     await renderWizard({ step: "error", errorCode: null, errorMessage: "" });
@@ -261,7 +271,6 @@ describe('ImportWizard step="error"', () => {
 
   it("renders Close and Try Again buttons", async () => {
     await renderWizard({ step: "error", errorCode: null, errorMessage: "Oops" });
-    // Use getAllByRole since the dialog X button also has accessible name "Close"
     const closeButtons = screen.getAllByRole("button", { name: /close/i });
     expect(closeButtons.length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("button", { name: /try again/i })).toBeDefined();
@@ -310,6 +319,7 @@ describe('ImportWizard step="error"', () => {
 
 // ── Tests: step "success" ─────────────────────────────────────────────────────
 
+// Regression: #1687, #1740
 describe('ImportWizard step="success"', () => {
   it("renders Cards imported! title", async () => {
     await renderWizard({ step: "success" });
@@ -325,10 +335,46 @@ describe('ImportWizard step="success"', () => {
     await renderWizard({ step: "success" });
     expect(screen.getByText("Success: cards imported")).toBeDefined();
   });
+
+  // Regression: #1740 — Continue button added to success screen
+  it("renders a Continue button on the success screen", async () => {
+    await renderWizard({ step: "success" });
+    expect(screen.getByRole("button", { name: /continue/i })).toBeDefined();
+  });
+
+  it("calls onClose when Continue is clicked", async () => {
+    const onClose = vi.fn();
+    const { ImportWizard } = await import("@/components/sheets/ImportWizard");
+    render(
+      <ImportWizard open={true} onClose={onClose} onConfirmImport={vi.fn()} existingCards={[]} />
+    );
+    const continueBtn = screen.getByRole("button", { name: /continue/i });
+    fireEvent.click(continueBtn);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("Continue button has full-width class", async () => {
+    await renderWizard({ step: "success" });
+    const continueBtn = screen.getByRole("button", { name: /continue/i });
+    expect(continueBtn.className).toContain("w-full");
+  });
+
+  it("Continue button has primary action styling (bg-primary)", async () => {
+    await renderWizard({ step: "success" });
+    const continueBtn = screen.getByRole("button", { name: /continue/i });
+    expect(continueBtn.className).toContain("bg-primary");
+  });
+
+  it("Continue button has minimum 44px touch target (h-11)", async () => {
+    await renderWizard({ step: "success" });
+    const continueBtn = screen.getByRole("button", { name: /continue/i });
+    expect(continueBtn.className).toContain("h-11");
+  });
 });
 
 // ── Tests: aria-live region ───────────────────────────────────────────────────
 
+// Regression: #1687
 describe("AriaLiveRegion — step announcements", () => {
   it("announces picker step", async () => {
     await renderWizard({ step: "picker" });

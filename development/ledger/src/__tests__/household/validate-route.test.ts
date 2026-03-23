@@ -1,7 +1,14 @@
 /**
  * Unit tests for GET /api/household/invite/validate
  *
+ * Consolidates issue-numbered test clusters:
+ *   - validate-route-1820.test.ts (Regression: #1820)
+ *   - validate-route-loki.test.ts (Loki edge cases)
+ *
  * Issue #1123 — household invite code flow
+ * Issue #1820 — join wizard shows wrong card count during merge step
+ *
+ * @ref Issue #1123, #1820
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -44,7 +51,7 @@ const CALLER_HOUSEHOLD_ID = USER_ID;
 
 function makeRequest(code: string | null = "X7K2NP"): NextRequest {
   const url = code
-    ? `http://localhost/api/household/invite/validate?code=${code}`
+    ? `http://localhost/api/household/invite/validate?code=${encodeURIComponent(code)}`
     : "http://localhost/api/household/invite/validate";
   return new NextRequest(url, {
     headers: { Authorization: "Bearer valid-token" },
@@ -126,20 +133,6 @@ describe("GET /api/household/invite/validate", () => {
     expect(Array.isArray(body.members)).toBe(true);
   });
 
-  it("includes userCardCount matching caller's solo household cards", async () => {
-    // Caller (solo user) has 3 cards under their own householdId (= USER_ID).
-    // Target household has 0 cards.
-    mockGetCards.mockImplementation((id: string) => {
-      if (id === USER_ID) return Promise.resolve([{ id: "card1" }, { id: "card2" }, { id: "card3" }]);
-      return Promise.resolve([]);
-    });
-    const res = await GET(makeRequest("X7K2NP"));
-    expect(res.status).toBe(200);
-    const body = await res.json() as { userCardCount: number; targetHouseholdCardCount: number };
-    expect(body.userCardCount).toBe(3);
-    expect(body.targetHouseholdCardCount).toBe(0);
-  });
-
   it("returns 404 for invalid code", async () => {
     mockFindHouseholdByInviteCode.mockResolvedValue(null);
     const res = await GET(makeRequest("ZZZZZ1"));
@@ -179,5 +172,138 @@ describe("GET /api/household/invite/validate", () => {
   it("returns 400 for code with wrong format", async () => {
     const res = await GET(makeRequest("TOOLONGCODE"));
     expect(res.status).toBe(400);
+  });
+
+  // ── already_in_household guard (Regression: #1820) ────────────────────────
+
+  // Regression: #1820 — prevents getCards(callerUser.householdId) returning shared household cards
+  it("returns 409 already_in_household when caller is already in a household", async () => {
+    const joinedCallerUser = { ...callerUser, householdId: "hh_already_joined" };
+    mockGetUser.mockResolvedValue(joinedCallerUser);
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(409);
+    const body = await res.json() as { error: string };
+    expect(body.error).toBe("already_in_household");
+  });
+
+  it("does NOT call getCards when returning already_in_household (no stale count leak)", async () => {
+    const joinedCallerUser = { ...callerUser, householdId: "hh_already_joined" };
+    mockGetUser.mockResolvedValue(joinedCallerUser);
+    await GET(makeRequest());
+    expect(mockGetCards).not.toHaveBeenCalled();
+  });
+
+  // ── userCardCount uses userId (solo household path) (Regression: #1820) ──
+
+  // Regression: #1820 — userCardCount must use userId, not callerUser.householdId
+  it("fetches userCardCount using userId, not callerUser.householdId", async () => {
+    mockGetCards.mockImplementation((id: string) => {
+      if (id === USER_ID) return Promise.resolve([{ id: "c1" }, { id: "c2" }]);
+      return Promise.resolve([]);
+    });
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { userCardCount: number };
+    expect(body.userCardCount).toBe(2);
+    expect(mockGetCards).toHaveBeenCalledWith(USER_ID);
+  });
+
+  it("returns targetHouseholdCardCount in 200 response", async () => {
+    mockGetCards.mockImplementation((id: string) => {
+      if (id === USER_ID)           return Promise.resolve([]);
+      if (id === HOUSEHOLD_ID) return Promise.resolve([{ id: "t1" }, { id: "t2" }, { id: "t3" }]);
+      return Promise.resolve([]);
+    });
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { targetHouseholdCardCount: number };
+    expect(body.targetHouseholdCardCount).toBe(3);
+  });
+
+  it("returns both userCardCount and targetHouseholdCardCount independently", async () => {
+    mockGetCards.mockImplementation((id: string) => {
+      if (id === USER_ID)     return Promise.resolve([{ id: "u1" }]);
+      if (id === HOUSEHOLD_ID) return Promise.resolve([{ id: "t1" }, { id: "t2" }]);
+      return Promise.resolve([]);
+    });
+    const res = await GET(makeRequest());
+    const body = await res.json() as { userCardCount: number; targetHouseholdCardCount: number };
+    expect(body.userCardCount).toBe(1);
+    expect(body.targetHouseholdCardCount).toBe(2);
+  });
+
+  // ── Edge cases (Loki) ─────────────────────────────────────────────────────
+
+  it("returns 404 when getUser returns null (user record missing)", async () => {
+    mockGetUser.mockResolvedValue(null);
+    const res = await GET(makeRequest("X7K2NP"));
+    expect(res.status).toBe(404);
+    const body = await res.json() as { error: string };
+    expect(body.error).toBe("user_not_found");
+  });
+
+  it("returns 400 for empty string code param", async () => {
+    const res = await GET(makeRequest(""));
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 for whitespace-only code param", async () => {
+    const res = await GET(makeRequest("   "));
+    expect(res.status).toBe(400);
+  });
+
+  it("normalises lowercase code to uppercase before lookup", async () => {
+    await GET(makeRequest("x7k2np"));
+    expect(mockFindHouseholdByInviteCode).toHaveBeenCalledWith("X7K2NP");
+  });
+
+  it("returns 400 for code containing special characters", async () => {
+    const res = await GET(makeRequest("X7!2NP"));
+    expect(res.status).toBe(400);
+  });
+
+  it("200 response includes members array with name and role", async () => {
+    const res = await GET(makeRequest("X7K2NP"));
+    expect(res.status).toBe(200);
+    const body = await res.json() as {
+      members: Array<{ displayName: string; email: string; role: string }>;
+    };
+    expect(body.members).toHaveLength(1);
+    expect(body.members[0]?.displayName).toBe("Thorvald");
+    expect(body.members[0]?.role).toBe("owner");
+  });
+
+  it("does not expose inviteCode field in response body", async () => {
+    const res = await GET(makeRequest("X7K2NP"));
+    expect(res.status).toBe(200);
+    const body = await res.json() as Record<string, unknown>;
+    expect(body).not.toHaveProperty("inviteCode");
+  });
+
+  // SEV-003 (HIGH) — documented by Heimdall audit issue #1126
+  // The validate endpoint currently leaks member email (PII) to any invite-code holder.
+  // EXPECTED AFTER FIX: email should be absent from the members array response.
+  it("SEV-003: members array currently exposes email field (PII leakage — pending fix in #1194)", async () => {
+    const res = await GET(makeRequest("X7K2NP"));
+    expect(res.status).toBe(200);
+    const body = await res.json() as {
+      members: Array<{ displayName: string; email?: string; role: string }>;
+    };
+    // Document current vulnerable state: email IS present in the response.
+    // This assertion will need to be inverted (expect email to be absent) when SEV-003 is fixed.
+    expect(body.members[0]).toHaveProperty("email");
+  });
+
+  it("includes userCardCount matching caller's solo household cards", async () => {
+    // Caller (solo user) has 3 cards under their own householdId (= USER_ID).
+    mockGetCards.mockImplementation((id: string) => {
+      if (id === USER_ID) return Promise.resolve([{ id: "card1" }, { id: "card2" }, { id: "card3" }]);
+      return Promise.resolve([]);
+    });
+    const res = await GET(makeRequest("X7K2NP"));
+    expect(res.status).toBe(200);
+    const body = await res.json() as { userCardCount: number; targetHouseholdCardCount: number };
+    expect(body.userCardCount).toBe(3);
+    expect(body.targetHouseholdCardCount).toBe(0);
   });
 });

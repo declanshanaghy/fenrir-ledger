@@ -1,10 +1,17 @@
 /**
- * Dashboard — unit tests for issue #1695.
+ * Dashboard — canonical unit tests
+ *
+ * Consolidates issue-numbered test clusters:
+ *   - dashboard-1695.test.tsx (Regression: #1695)
+ *   - dashboard-1741.test.tsx (Regression: #1741)
  *
  * Covers: empty state, tab rendering, tab panel visibility,
- * howl urgency bar presence, thrall card limit gate, trash tab actions.
+ * howl urgency bar presence, thrall card limit gate, trash tab actions,
+ * Idle label rename (#1741), tab order (#1741).
  *
  * Heavy mocking strategy: child components are stubbed to isolate Dashboard logic.
+ *
+ * @ref Issue #1695, #1741
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -112,6 +119,36 @@ vi.mock("@/components/dashboard/TrashView", () => ({
   ),
 }));
 
+vi.mock("@/hooks/useLokiMode", () => ({
+  useLokiMode: (cards: unknown[]) => ({
+    lokiActive: false,
+    lokiOrder: cards,
+    lokiLabels: {},
+  }),
+}));
+
+// DashboardTabButton mock: renders the label so we can assert on it
+// Regression: #1741 — exports data-tab-id for order assertions
+vi.mock("@/components/dashboard/DashboardTabButton", () => ({
+  DashboardTabButton: ({
+    tab,
+    onClick,
+  }: {
+    tab: { id: string; label: string };
+    isActive: boolean;
+    onClick: () => void;
+  }) => (
+    <button
+      role="tab"
+      data-testid={`tab-btn-${tab.id}`}
+      data-tab-id={tab.id}
+      onClick={onClick}
+    >
+      {tab.label}
+    </button>
+  ),
+}));
+
 // useDashboardTabs: mutable so individual tests can override
 let mockActiveTab = "active";
 const mockHandleTabClick = vi.fn((tabId: string) => {
@@ -144,29 +181,6 @@ vi.mock("@/hooks/useDashboardTabs", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useLokiMode", () => ({
-  useLokiMode: (cards: unknown[]) => ({
-    lokiActive: false,
-    lokiOrder: cards,
-    lokiLabels: {},
-  }),
-}));
-
-vi.mock("@/components/dashboard/DashboardTabButton", () => ({
-  DashboardTabButton: ({
-    tab,
-    onClick,
-  }: {
-    tab: { id: string; label: string };
-    isActive: boolean;
-    onClick: () => void;
-  }) => (
-    <button role="tab" data-testid={`tab-btn-${tab.id}`} onClick={onClick}>
-      {tab.label}
-    </button>
-  ),
-}));
-
 // ── Fixture builder ────────────────────────────────────────────────────────
 
 function makeCard(id: string, status: Card["status"], name?: string): Card {
@@ -188,8 +202,9 @@ function makeCard(id: string, status: Card["status"], name?: string): Card {
   };
 }
 
-// ── Tests ──────────────────────────────────────────────────────────────────
+// ── Tests: empty state ─────────────────────────────────────────────────────
 
+// Regression: #1695
 describe("Dashboard — empty state", () => {
   it("renders EmptyState when there are no cards at all", () => {
     render(<Dashboard cards={[]} />);
@@ -208,6 +223,9 @@ describe("Dashboard — empty state", () => {
   });
 });
 
+// ── Tests: tab bar ─────────────────────────────────────────────────────────
+
+// Regression: #1695, #1741
 describe("Dashboard — tab bar renders", () => {
   beforeEach(() => {
     mockActiveTab = "active";
@@ -224,7 +242,7 @@ describe("Dashboard — tab bar renders", () => {
     expect(tabs.length).toBe(6);
   });
 
-  it("renders expected tab labels", () => {
+  it("renders expected tab buttons by testid", () => {
     render(<Dashboard cards={[makeCard("a1", "active")]} />);
     expect(screen.getByTestId("tab-btn-all")).toBeDefined();
     expect(screen.getByTestId("tab-btn-active")).toBeDefined();
@@ -233,9 +251,62 @@ describe("Dashboard — tab bar renders", () => {
     expect(screen.getByTestId("tab-btn-valhalla")).toBeDefined();
     expect(screen.getByTestId("tab-btn-trash")).toBeDefined();
   });
+
+  // Regression: #1741 — tab order changed to hunt → howl → active → valhalla → all → trash
+  it("renders tabs in correct DOM order per #1741 spec", () => {
+    render(<Dashboard cards={[makeCard("a1", "active")]} />);
+    const tabs = screen.getAllByRole("tab");
+    const ids = tabs.map((t) => t.getAttribute("data-tab-id"));
+    expect(ids).toEqual(["hunt", "howl", "active", "valhalla", "all", "trash"]);
+  });
+
+  it("hunt tab is first (index 0)", () => {
+    render(<Dashboard cards={[makeCard("a1", "active")]} />);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs[0].getAttribute("data-tab-id")).toBe("hunt");
+  });
+
+  it("trash tab is last (index 5)", () => {
+    render(<Dashboard cards={[makeCard("a1", "active")]} />);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs[tabs.length - 1].getAttribute("data-tab-id")).toBe("trash");
+  });
+
+  it("active (Idle) tab is at index 2, between howl and valhalla", () => {
+    render(<Dashboard cards={[makeCard("a1", "active")]} />);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs[2].getAttribute("data-tab-id")).toBe("active");
+    expect(tabs[1].getAttribute("data-tab-id")).toBe("howl");
+    expect(tabs[3].getAttribute("data-tab-id")).toBe("valhalla");
+  });
 });
 
-describe("Dashboard — active tab panel", () => {
+// ── Tests: Idle label (#1741) ──────────────────────────────────────────────
+
+// Regression: #1741 — "Active" tab renamed to "Idle" (display label only)
+describe("Dashboard — Idle label (renamed from Active, #1741)", () => {
+  beforeEach(() => {
+    mockActiveTab = "active";
+  });
+
+  it("renders 'Idle' as the label for the active tab button", () => {
+    render(<Dashboard cards={[makeCard("a1", "active")]} />);
+    const tabBtn = screen.getByTestId("tab-btn-active");
+    expect(tabBtn.textContent).toBe("Idle");
+  });
+
+  it("does NOT render 'Active' as a tab label", () => {
+    render(<Dashboard cards={[makeCard("a1", "active")]} />);
+    const tabs = screen.getAllByRole("tab");
+    const labels = tabs.map((t) => t.textContent);
+    expect(labels).not.toContain("Active");
+  });
+});
+
+// ── Tests: active tab panel ─────────────────────────────────────────────────
+
+// Regression: #1695, #1741
+describe("Dashboard — active/Idle tab panel", () => {
   beforeEach(() => {
     mockActiveTab = "active";
   });
@@ -255,7 +326,6 @@ describe("Dashboard — active tab panel", () => {
   it("renders active cards in the active panel", () => {
     const cards = [makeCard("a1", "active", "Chase Sapphire")];
     render(<Dashboard cards={cards} />);
-    // Card appears in active panel and all panel — check at least one exists
     expect(screen.getAllByTestId("card-tile-Chase Sapphire").length).toBeGreaterThan(0);
   });
 
@@ -264,8 +334,44 @@ describe("Dashboard — active tab panel", () => {
     expect(screen.getByTestId("tab-header-active")).toBeDefined();
     expect(screen.getByTestId("tab-summary-active")).toBeDefined();
   });
+
+  // Regression: #1741 — Idle tab empty state text
+  it("shows 'No idle cards' when active panel is empty", () => {
+    render(<Dashboard cards={[makeCard("v1", "closed")]} />);
+    const panel = document.getElementById("panel-active");
+    expect(panel?.textContent).toContain("No idle cards");
+  });
+
+  it("does NOT show 'No active cards' (old label) in empty state", () => {
+    render(<Dashboard cards={[makeCard("v1", "closed")]} />);
+    const panel = document.getElementById("panel-active");
+    expect(panel?.textContent).not.toContain("No active cards");
+  });
+
+  // Regression: #1741 — Idle tab filter: CardStatus unchanged
+  it("shows status=active cards when Idle tab is active", () => {
+    const cards = [
+      makeCard("a1", "active", "Active Chase"),
+      makeCard("c1", "closed", "Closed Citi"),
+    ];
+    render(<Dashboard cards={cards} />);
+    expect(screen.getAllByTestId("card-tile-Active Chase").length).toBeGreaterThan(0);
+  });
+
+  it("does not show closed cards in the Idle/active panel", () => {
+    const cards = [
+      makeCard("a1", "active", "Active Chase"),
+      makeCard("c1", "closed", "Closed Citi"),
+    ];
+    render(<Dashboard cards={cards} />);
+    const panel = document.getElementById("panel-active");
+    expect(panel?.textContent).not.toContain("Closed Citi");
+  });
 });
 
+// ── Tests: howl tab panel ──────────────────────────────────────────────────
+
+// Regression: #1695
 describe("Dashboard — howl tab panel", () => {
   beforeEach(() => {
     mockActiveTab = "howl";
@@ -286,11 +392,13 @@ describe("Dashboard — howl tab panel", () => {
   it("renders howl cards in a grid when howl cards exist", () => {
     const cards = [makeCard("h1", "fee_approaching", "Overdue Card")];
     render(<Dashboard cards={cards} />);
-    // Card appears in howl panel and all panel — multiple grids is expected
     expect(screen.getAllByTestId("card-grid").length).toBeGreaterThan(0);
   });
 });
 
+// ── Tests: all tab panel ───────────────────────────────────────────────────
+
+// Regression: #1695
 describe("Dashboard — all tab panel", () => {
   beforeEach(() => {
     mockActiveTab = "all";
@@ -308,12 +416,14 @@ describe("Dashboard — all tab panel", () => {
       makeCard("v1", "closed", "Valhalla Card"),
     ];
     render(<Dashboard cards={cards} />);
-    // Cards appear in multiple panels — verify both are present at least once
     expect(screen.getAllByTestId("card-tile-Active Card").length).toBeGreaterThan(0);
     expect(screen.getAllByTestId("card-tile-Valhalla Card").length).toBeGreaterThan(0);
   });
 });
 
+// ── Tests: valhalla tab panel ──────────────────────────────────────────────
+
+// Regression: #1695
 describe("Dashboard — valhalla tab panel", () => {
   beforeEach(() => {
     mockActiveTab = "valhalla";
@@ -334,7 +444,6 @@ describe("Dashboard — valhalla tab panel", () => {
   it("renders closed cards in the valhalla panel", () => {
     const cards = [makeCard("v1", "closed", "Old Card")];
     render(<Dashboard cards={cards} />);
-    // Card appears in valhalla panel and all panel
     expect(screen.getAllByTestId("card-tile-Old Card").length).toBeGreaterThan(0);
   });
 
@@ -345,6 +454,9 @@ describe("Dashboard — valhalla tab panel", () => {
   });
 });
 
+// ── Tests: trash tab panel ─────────────────────────────────────────────────
+
+// Regression: #1695
 describe("Dashboard — trash tab panel", () => {
   beforeEach(() => {
     mockActiveTab = "trash";
@@ -375,6 +487,9 @@ describe("Dashboard — trash tab panel", () => {
   });
 });
 
+// ── Tests: hunt tab panel ──────────────────────────────────────────────────
+
+// Regression: #1695
 describe("Dashboard — hunt tab panel", () => {
   beforeEach(() => {
     mockActiveTab = "hunt";

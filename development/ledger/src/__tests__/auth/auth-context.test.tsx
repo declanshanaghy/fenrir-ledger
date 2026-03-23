@@ -1,14 +1,18 @@
 /**
- * AuthContext — Issue #1671 regression tests
+ * AuthContext — canonical regression tests
  *
- * Validates the refactored model introduced in #1671:
+ * Consolidates issue-numbered test clusters:
+ *   - auth-context-1670.test.tsx (Regression: #1670, #1671)
+ *   - auth-context-1671.test.tsx (Regression: #1671)
+ *
+ * Validated model (#1671):
  *   - AuthContext returns householdId = null for ALL anonymous users
  *   - No UUID household is created for anonymous users
  *   - ensureHouseholdId() returns ANON_HOUSEHOLD_ID ("anon") for anonymous users
  *   - ensureHouseholdId() returns session.user.sub for authenticated users
  *   - signOut() sets householdId = null (no UUID restoration)
  *
- * @ref Issue #1671
+ * @ref Issue #1670, #1671
  */
 
 import React from "react";
@@ -54,7 +58,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe("AuthContext — Issue #1671: null householdId for anonymous users", () => {
+describe("AuthContext — regression: null householdId for anonymous users (#1670, #1671)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default: no session (brand-new anonymous user)
@@ -62,8 +66,9 @@ describe("AuthContext — Issue #1671: null householdId for anonymous users", ()
     mockIsSessionValid.mockReturnValue(false);
   });
 
-  // ── Core contract: null for anonymous ────────────────────────────────────────
+  // ── Core contract: null for anonymous (#1671) ─────────────────────────────
 
+  // Regression: #1670, #1671 — anonymous householdId must be null, not a UUID
   it("sets householdId = null for brand-new anonymous user", async () => {
     const { result } = renderHook(() => useAuthContext(), { wrapper });
 
@@ -74,6 +79,7 @@ describe("AuthContext — Issue #1671: null householdId for anonymous users", ()
     expect(result.current.householdId).toBeNull();
   });
 
+  // Regression: #1670 — legacy UUID in storage must not populate householdId
   it("sets householdId = null for returning anonymous user (legacy UUID ignored)", async () => {
     // Even if old fenrir:household UUID exists, new model always uses null
     const { result } = renderHook(() => useAuthContext(), { wrapper });
@@ -106,8 +112,9 @@ describe("AuthContext — Issue #1671: null householdId for anonymous users", ()
     expect(result.current.householdId).toBe("google-sub-abc123");
   });
 
-  // ── ensureHouseholdId: returns "anon" for anonymous ──────────────────────────
+  // ── ensureHouseholdId: returns "anon" for anonymous (#1671) ──────────────
 
+  // Regression: #1671 — ensureHouseholdId returns fixed "anon", not a new UUID
   it("ensureHouseholdId returns 'anon' for anonymous user (no UUID creation)", async () => {
     const { result } = renderHook(() => useAuthContext(), { wrapper });
 
@@ -120,6 +127,7 @@ describe("AuthContext — Issue #1671: null householdId for anonymous users", ()
       returnedId = result.current.ensureHouseholdId();
     });
 
+    // #1671: returns fixed "anon" instead of creating a UUID
     expect(returnedId).toBe("anon");
     // householdId stays null — ensureHouseholdId is a resolver, not a setter
     expect(result.current.householdId).toBeNull();
@@ -149,8 +157,9 @@ describe("AuthContext — Issue #1671: null householdId for anonymous users", ()
     expect(returnedId).toBe("google-sub-xyz");
   });
 
-  // ── signOut: sets householdId = null ─────────────────────────────────────────
+  // ── signOut: sets householdId = null (#1671) ──────────────────────────────
 
+  // Regression: #1671 — signOut must not restore a stale UUID
   it("signOut sets householdId = null (no UUID restoration)", async () => {
     const mockSession = {
       user: { sub: "google-sub-def", email: "user@example.com", name: "User", picture: "" },
@@ -175,6 +184,7 @@ describe("AuthContext — Issue #1671: null householdId for anonymous users", ()
     });
 
     expect(result.current.status).toBe("anonymous");
+    // #1671: null, not the old anon UUID
     expect(result.current.householdId).toBeNull();
   });
 });
