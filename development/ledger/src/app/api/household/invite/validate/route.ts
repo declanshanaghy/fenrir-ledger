@@ -89,6 +89,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // Check if caller is already in a non-solo household.
+  // Solo users always have householdId === their userId (Google sub).
+  // If they've already joined a household, block them before counting cards —
+  // getCards(callerUser.householdId) would otherwise return all members' shared
+  // cards, producing a wrong (inflated) userCardCount in the merge preview.
+  if (callerUser.householdId !== userId) {
+    log.debug("GET /api/household/invite/validate returning", { status: 409, reason: "already_in_household" });
+    return NextResponse.json(
+      { error: "already_in_household", error_description: "You are already in a household. Leave your current household before joining another." },
+      { status: 409 },
+    );
+  }
+
   // Check capacity
   if (household.memberIds.length >= MAX_HOUSEHOLD_MEMBERS) {
     log.debug("GET /api/household/invite/validate returning", { status: 409, reason: "household_full" });
@@ -106,9 +119,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     role: m.role,
   }));
 
-  // Count caller's existing cards
-  const userCards = await getCards(callerUser.householdId);
+  // Count caller's cards — userId === callerUser.householdId for solo users (verified above).
+  const userCards = await getCards(userId);
   const userCardCount = userCards.length;
+
+  // Count cards already in the target household (shown in merge confirmation UI).
+  const targetCards = await getCards(household.id);
+  const targetHouseholdCardCount = targetCards.length;
 
   log.debug("GET /api/household/invite/validate returning", { status: 200 });
   return NextResponse.json({
@@ -117,5 +134,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     memberCount: household.memberIds.length,
     members,
     userCardCount,
+    targetHouseholdCardCount,
   });
 }

@@ -28,6 +28,7 @@ const mockPreview = {
   memberCount: 1,
   members: [{ displayName: "Odin", email: "odin@asgard.com", role: "owner" }],
   userCardCount: 2,
+  targetHouseholdCardCount: 5,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

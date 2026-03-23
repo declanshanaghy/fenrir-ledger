@@ -44,7 +44,10 @@ import { GET } from "@/app/api/household/invite/validate/route";
 const USER_ID = "user_joiner";
 const OWNER_ID = "user_owner";
 const HOUSEHOLD_ID = "hh_target";
-const CALLER_HOUSEHOLD_ID = "hh_solo";
+// Fix #1820: solo users have householdId === their userId.
+// The old "hh_solo" value was incorrect and would now trigger the
+// already_in_household guard added in #1820.
+const CALLER_HOUSEHOLD_ID = USER_ID;
 
 function makeRequest(code: string | null): NextRequest {
   const url =
@@ -144,18 +147,16 @@ describe("GET /api/household/invite/validate — Loki edge cases", () => {
     expect(body.members[0]?.role).toBe("owner");
   });
 
-  it("200 response: caller already in target household — no guard, returns preview", async () => {
-    // Document current behaviour: validate does NOT block users already in the
-    // household. The transaction's "already_member" guard fires at join time.
+  it("409 already_in_household: caller already in a household (guard added in #1820)", async () => {
+    // Fix #1820: validate now blocks users whose householdId !== userId (already
+    // in a household).  This prevents getCards() returning shared household cards
+    // and producing a wrong (inflated) userCardCount in the merge preview.
     const callerAlreadyMember = { ...callerUser, householdId: HOUSEHOLD_ID };
     mockGetUser.mockResolvedValue(callerAlreadyMember);
-    mockFindHouseholdByInviteCode.mockResolvedValue({
-      ...targetHousehold,
-      memberIds: [USER_ID, OWNER_ID],
-    });
     const res = await GET(makeRequest("X7K2NP"));
-    // Currently returns 200 — the join transaction will reject with already_member
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(409);
+    const body = await res.json() as { error: string };
+    expect(body.error).toBe("already_in_household");
   });
 
   it("does not expose inviteCode field in response body", async () => {
