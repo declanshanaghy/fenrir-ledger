@@ -102,7 +102,7 @@ function useHouseholdRole(): { isOwner: boolean | null } {
         const json = (await res.json()) as { isOwner: boolean };
         if (!cancelled) setIsOwner(json.isOwner);
       } catch {
-        // Network error — leave isOwner as null (safe default: show button)
+        // Network error — leave isOwner as null (safe default: hide button to prevent FOUC)
       }
     }
     fetch_();
@@ -351,7 +351,8 @@ function KarlActivePanel({
   handleManage,
   isOwner,
 }: { formattedPeriodEnd: string | null } & ManageActionProps) {
-  const isMember = isOwner === false;
+  const showButton = isOwner === true;
+  const showMemberMsg = isOwner === false;
   return (
     <>
       <p
@@ -370,11 +371,11 @@ function KarlActivePanel({
 
       <div className="border-t border-border" />
 
-      {isMember ? (
+      {showMemberMsg ? (
         <p className="text-sm text-muted-foreground font-body">
           Contact your household owner to manage the subscription.
         </p>
-      ) : (
+      ) : showButton ? (
         <div className="flex flex-row flex-wrap gap-3">
           <Button
             onClick={handleManage}
@@ -386,7 +387,7 @@ function KarlActivePanel({
             Manage Subscription
           </Button>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
@@ -462,7 +463,8 @@ function CanceledPanel({
   isOwner,
 }: { formattedPeriodEnd: string | null } & SubscribeActionProps &
   ManageActionProps) {
-  const isMember = isOwner === false;
+  const showButton = isOwner === true;
+  const showMemberMsg = isOwner === false;
   return (
     <>
       <p
@@ -487,11 +489,11 @@ function CanceledPanel({
 
       <div className="border-t border-border" />
 
-      {isMember ? (
+      {showMemberMsg ? (
         <p className="text-sm text-muted-foreground font-body">
           Contact your household owner to manage the subscription.
         </p>
-      ) : (
+      ) : showButton ? (
         <div className="flex flex-row flex-wrap gap-3">
           <Button
             onClick={handleSubscribe}
@@ -513,7 +515,7 @@ function CanceledPanel({
             Manage Subscription
           </Button>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
