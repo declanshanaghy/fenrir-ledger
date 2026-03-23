@@ -87,15 +87,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   log.debug("POST /api/auth/token called", { ip });
 
   // Rate limit by IP — 10 requests per minute per IP address.
-  const { success } = rateLimit(`token:${ip}`, { limit: 10, windowMs: 60_000 });
+  const { success, retryAfter } = rateLimit(`token:${ip}`, { limit: 10, windowMs: 60_000 });
   if (!success) {
-    log.debug("POST /api/auth/token returning", { status: 429, error: "rate_limited" });
+    log.debug("POST /api/auth/token returning", { status: 429, error: "rate_limited", retryAfter });
     return NextResponse.json(
       {
         error: "rate_limited",
         error_description: "Too many requests. Try again later.",
       },
-      { status: 429 }
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfter ?? 60) },
+      }
     );
   }
 

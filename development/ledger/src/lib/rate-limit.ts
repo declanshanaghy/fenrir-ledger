@@ -24,12 +24,14 @@ const store = new Map<string, RateLimitEntry>();
  * @param key - Unique identifier for the rate-limited entity (e.g. `token:<ip>`)
  * @param options.limit - Maximum requests allowed per window (default: 10)
  * @param options.windowMs - Window duration in milliseconds (default: 60000 = 1 minute)
- * @returns `{ success: true, remaining }` if allowed, `{ success: false, remaining: 0 }` if rate limited
+ * @returns `{ success: true, remaining }` if allowed,
+ *          `{ success: false, remaining: 0, retryAfter }` if rate limited,
+ *          where `retryAfter` is seconds until the window resets (for Retry-After header)
  */
 export function rateLimit(
   key: string,
   { limit = 10, windowMs = 60_000 }: { limit?: number; windowMs?: number } = {}
-): { success: boolean; remaining: number } {
+): { success: boolean; remaining: number; retryAfter?: number } {
   log.debug("rateLimit called", { key, limit, windowMs });
 
   const now = Date.now();
@@ -44,7 +46,8 @@ export function rateLimit(
 
   entry.count++;
   if (entry.count > limit) {
-    const result = { success: false, remaining: 0 };
+    const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+    const result = { success: false, remaining: 0, retryAfter };
     log.debug("rateLimit returning", { key, ...result, reason: "exceeded" });
     return result;
   }
