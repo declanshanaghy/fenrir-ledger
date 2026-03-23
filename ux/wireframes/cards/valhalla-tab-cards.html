@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Valhalla Tab — Contextual Card Details (Issue #1808)</title>
+  <style>
+    /* ── Wireframe layout rules ONLY — no theme styling ──────────────────── */
+    /* No colors, no backgrounds, no border-radius, no box-shadow, no fonts   */
+    /* beyond sans-serif. Permitted: flex/grid, border, width/height,         */
+    /* padding/margin, font-size/weight.                                       */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 48px; }
+
+    /* ── Section headers ─────────────────────────────────────────────────── */
+    .section { display: flex; flex-direction: column; gap: 16px; }
+    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid; padding-bottom: 4px; }
+    .section-desc { font-size: 12px; font-style: italic; }
+
+    /* ── Note annotation style ────────────────────────────────────────────── */
+    .note { font-size: 11px; font-style: italic; border-left: 2px solid; padding: 4px 8px; margin-top: 6px; }
+    .note strong { font-style: normal; }
+
+    /* ── Tab bar ─────────────────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      background: none;
+      min-height: 44px;
+    }
+    .tab-btn.active { border-bottom: 3px solid; }
+    .tab-icon { font-size: 15px; line-height: 1; }
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      font-family: monospace;
+      border: 1px solid;
+      padding: 1px 6px;
+      min-width: 20px;
+    }
+
+    /* ── Summary bar ──────────────────────────────────────────────────────── */
+    .summary-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid;
+      border-top: none;
+      /* Implementation note: slightly darker background variant of --surface-raised */
+    }
+    .summary-stat {
+      flex: 1;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-right: 1px solid;
+    }
+    .summary-stat:last-child { border-right: none; }
+    .summary-stat-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; }
+    .summary-stat-value { font-size: 18px; font-weight: bold; }
+    .summary-stat-sub { font-size: 11px; }
+
+    /* ── Filter / sort bar ────────────────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    select {
+      border: 1px solid;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-family: inherit;
+      background: none;
+      min-height: 36px;
+    }
+
+    /* ── Card list ────────────────────────────────────────────────────────── */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Tombstone card row (Valhalla variant) ────────────────────────────── */
+    /*
+     * CHANGE FROM EXISTING VALHALLA: This is the DASHBOARD TAB view,
+     * not the standalone Valhalla page (ux/wireframes/app/valhalla.html).
+     * Cards appear as compact rows inside the main dashboard card list,
+     * consistent with how Active cards render on the default tab.
+     * Credit limit field is REMOVED (per issue #1808 spec).
+     */
+    .card-row {
+      border: 1px solid;
+      border-left: 4px solid; /* thicker left accent — var(--stone-hel) in impl */
+      padding: 14px 16px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      position: relative;
+    }
+
+    .card-row-body { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+    .card-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .card-name-row { display: flex; align-items: center; gap: 8px; }
+    .issuer-badge {
+      width: 28px; height: 28px; border: 1px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: bold; flex-shrink: 0;
+    }
+    .card-name { font-size: 14px; font-weight: bold; }
+    .card-issuer-meta { font-size: 12px; }
+
+    .card-closed-badge {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 1px solid;
+      padding: 2px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Contextual details grid ─────────────────────────────────────────── */
+    /*
+     * NEW IN #1808: Replaces generic metadata row.
+     * Shows: Sign-up bonus earned | Annual fee paid | Time held | Closed date
+     * Removed: Credit limit
+     */
+    .card-details {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px 12px;
+      padding-top: 8px;
+      border-top: 1px solid;
+    }
+    .detail-item { display: flex; flex-direction: column; gap: 1px; }
+    .detail-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+    .detail-value { font-size: 13px; font-weight: 500; }
+    .detail-value.earned { font-weight: bold; }
+    /* Implementation: .earned gets var(--success-text) color */
+
+    /* ── Rewards summary within card ─────────────────────────────────────── */
+    .rewards-summary {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding-top: 4px;
+    }
+    .rewards-total-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .rewards-total-value { font-size: 14px; font-weight: bold; }
+    .rewards-type { font-size: 11px; }
+
+    /* ── Card actions ─────────────────────────────────────────────────────── */
+    .card-row-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; align-items: flex-end; }
+    button {
+      border: 1px solid; padding: 6px 12px; cursor: pointer;
+      background: none; font-size: 12px; font-family: inherit;
+      min-height: 36px; white-space: nowrap;
+    }
+
+    /* ── Empty state ──────────────────────────────────────────────────────── */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      padding: 48px 24px; border: 1px dashed; text-align: center;
+    }
+    .empty-rune { font-size: 40px; line-height: 1; }
+    .empty-heading { font-size: 16px; font-weight: bold; }
+    .empty-sub { font-size: 13px; }
+
+    /* ── Mobile viewport: 375px ────────────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-frame .summary-bar {
+      flex-direction: column;
+      border: none;
+      border-bottom: 1px solid;
+    }
+    .mobile-frame .summary-stat {
+      border-right: none;
+      border-bottom: 1px solid;
+      padding: 10px 14px;
+    }
+    .mobile-frame .summary-stat:last-child { border-bottom: none; }
+    .mobile-frame .card-details {
+      grid-template-columns: 1fr 1fr;
+    }
+    .mobile-frame .card-row { flex-direction: column; gap: 10px; }
+    .mobile-frame .card-row-actions { flex-direction: row; align-items: center; }
+
+    /* ── Comparison: Before / After ─────────────────────────────────────── */
+    .compare-row { display: flex; gap: 32px; flex-wrap: wrap; }
+    .compare-col { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 10px; }
+    .compare-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em; padding-bottom: 4px; border-bottom: 1px dashed;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION A — Context: Tab bar showing Valhalla as active tab         -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-a">
+    <div class="section-title" id="sec-a">A — Tab Bar: Valhalla Active State (Desktop)</div>
+    <p class="section-desc">Shows Valhalla tab selected within the standard dashboard tab bar. Tab badge shows closed card count.</p>
+
+    <nav class="tab-bar" aria-label="Dashboard tabs" role="tablist">
+      <button class="tab-btn" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">ᚲ</span>
+        THE HOWL
+        <span class="tab-badge">2</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">ᚠ</span>
+        ACTIVE
+        <span class="tab-badge">7</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">ᚱ</span>
+        HUNT
+        <span class="tab-badge">3</span>
+      </button>
+      <button class="tab-btn active" role="tab" aria-selected="true">
+        <span class="tab-icon" aria-hidden="true">ᛏ</span>
+        VALHALLA
+        <span class="tab-badge">4</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">ᛞ</span>
+        TRASH
+        <span class="tab-badge">1</span>
+      </button>
+    </nav>
+
+    <p class="note"><strong>Tab order:</strong> The Howl · Active · Hunt · Valhalla · Trash. Valhalla active = border-bottom solid. Badge count = number of closed cards archived here. Implementation: tab panel id="tab-valhalla".</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION B — Summary Bar: Total Rewards Reaped                       -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-b">
+    <div class="section-title" id="sec-b">B — Summary Bar: Total Rewards Reaped</div>
+    <p class="section-desc">Aggregate stats across all cards in Valhalla. Appears immediately below tab bar, above filter row. Dismissible (persists preference in localStorage key: "valhalla-summary-dismissed").</p>
+
+    <!-- Summary bar: populated state -->
+    <div>
+      <p class="section-desc" style="margin-bottom: 8px;">Populated state (4 cards in Valhalla):</p>
+      <div role="region" aria-label="Valhalla summary — total rewards reaped">
+        <div class="summary-bar">
+          <div class="summary-stat">
+            <span class="summary-stat-label">Rewards Reaped</span>
+            <span class="summary-stat-value">142,000 pts</span>
+            <span class="summary-stat-sub">≈ $1,420 est. value</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-label">Total Cashback</span>
+            <span class="summary-stat-value">$340</span>
+            <span class="summary-stat-sub">across 2 cashback cards</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-label">Fees Paid</span>
+            <span class="summary-stat-value">$285</span>
+            <span class="summary-stat-sub">total annual fees across closed cards</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-label">Cards Closed</span>
+            <span class="summary-stat-value">4</span>
+            <span class="summary-stat-sub">over 18 months</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note"><strong>Rewards Reaped stat:</strong> If mix of points+cashback, show points first then "+ $X cashback" in sub-line. If all cashback, show total cashback in stat-value. If all points/miles, show point total. Implementation: SummaryBar component, same pattern as Hunt tab min-spend summary. Dismiss button (×) top-right of bar — aria-label="Dismiss Valhalla summary". Summary re-shows when new card closed.</p>
+
+    <!-- Summary bar: empty state (no cards in Valhalla yet) -->
+    <div>
+      <p class="section-desc" style="margin-bottom: 8px;">No cards in Valhalla yet (summary bar hidden):</p>
+      <p class="note">Summary bar is hidden when Valhalla is empty. No empty bar placeholder. The empty state (Section E) replaces the card list instead.</p>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION C — Before/After: Card Row Comparison                       -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-c">
+    <div class="section-title" id="sec-c">C — Card Row: Before vs After (Contextual Details Change)</div>
+    <p class="section-desc">Shows what changes. Credit limit is REMOVED. Sign-up bonus earned, Annual fee paid, Time held, Closed date are ADDED as the contextual detail row.</p>
+
+    <div class="compare-row">
+
+      <!-- BEFORE -->
+      <div class="compare-col">
+        <div class="compare-label">BEFORE (existing — generic metadata only)</div>
+        <article class="card-row" aria-label="Chase Freedom Unlimited — BEFORE">
+          <div class="card-row-body">
+            <div class="card-row-header">
+              <div class="card-name-row">
+                <div class="issuer-badge" aria-hidden="true">C</div>
+                <div>
+                  <div class="card-name">CHASE FREEDOM UNLIMITED</div>
+                  <div class="card-issuer-meta">Chase · Opened Jan 2024 · Held 9 months</div>
+                </div>
+              </div>
+              <span class="card-closed-badge">Closed Oct 2024</span>
+            </div>
+            <!-- OLD: Single metadata line with credit limit -->
+            <div style="font-size: 12px; padding-top: 8px; border-top: 1px solid;">
+              Credit limit: $5,000 &nbsp;·&nbsp; Rewards: 45,000 pts &nbsp;·&nbsp; Fee avoided: $95
+            </div>
+          </div>
+        </article>
+        <p class="note"><strong>Problem:</strong> Credit limit is irrelevant for a closed card. The user cannot spend on it. Showing it is noise. Rewards data is cramped into one line with no hierarchy.</p>
+      </div>
+
+      <!-- AFTER -->
+      <div class="compare-col">
+        <div class="compare-label">AFTER (issue #1808 — contextual Valhalla details)</div>
+        <article class="card-row" aria-label="Chase Freedom Unlimited — AFTER">
+          <div class="card-row-body">
+            <div class="card-row-header">
+              <div class="card-name-row">
+                <div class="issuer-badge" aria-hidden="true">C</div>
+                <div>
+                  <div class="card-name">CHASE FREEDOM UNLIMITED</div>
+                  <div class="card-issuer-meta">Chase · Rewards: Points/Miles</div>
+                </div>
+              </div>
+              <span class="card-closed-badge">CLOSED</span>
+            </div>
+            <!-- NEW: Contextual 4-field detail grid -->
+            <div class="card-details" role="list">
+              <div class="detail-item" role="listitem">
+                <span class="detail-label">Sign-up Bonus</span>
+                <span class="detail-value earned">45,000 pts</span>
+              </div>
+              <div class="detail-item" role="listitem">
+                <span class="detail-label">Annual Fee Paid</span>
+                <span class="detail-value">$95</span>
+              </div>
+              <div class="detail-item" role="listitem">
+                <span class="detail-label">Time Held</span>
+                <span class="detail-value">9 months</span>
+              </div>
+              <div class="detail-item" role="listitem">
+                <span class="detail-label">Closed</span>
+                <span class="detail-value">Oct 2024</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-row-actions">
+            <button aria-label="View full record for Chase Freedom Unlimited">View record</button>
+          </div>
+        </article>
+        <p class="note"><strong>Changes:</strong> Credit limit removed. 4-column detail grid added. Sign-up bonus value uses success text color in impl. "Closed" date shown inline in detail grid (not as a badge up top — badge demoted or removed). "View record" CTA links to tombstone detail view.</p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION D — Full Valhalla Tab: Desktop Card List                    -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-d">
+    <div class="section-title" id="sec-d">D — Full Valhalla Tab: Desktop (740px+)</div>
+    <p class="section-desc">Complete tab panel including summary bar, filter row, and card list. 4 sample cards covering: points, miles, cashback, and no bonus earned.</p>
+
+    <!-- Tab bar (Valhalla active) -->
+    <nav class="tab-bar" aria-label="Dashboard tabs" role="tablist">
+      <button class="tab-btn" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">ᚲ</span> THE HOWL <span class="tab-badge">2</span></button>
+      <button class="tab-btn" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">ᚠ</span> ACTIVE <span class="tab-badge">7</span></button>
+      <button class="tab-btn" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">ᚱ</span> HUNT <span class="tab-badge">3</span></button>
+      <button class="tab-btn active" role="tab" aria-selected="true"><span class="tab-icon" aria-hidden="true">ᛏ</span> VALHALLA <span class="tab-badge">4</span></button>
+      <button class="tab-btn" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">ᛞ</span> TRASH <span class="tab-badge">1</span></button>
+    </nav>
+
+    <!-- Summary bar -->
+    <div role="region" aria-label="Valhalla summary">
+      <div class="summary-bar">
+        <div class="summary-stat">
+          <span class="summary-stat-label">Rewards Reaped</span>
+          <span class="summary-stat-value">142,000 pts</span>
+          <span class="summary-stat-sub">+ $340 cashback</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-label">Fees Paid Total</span>
+          <span class="summary-stat-value">$285</span>
+          <span class="summary-stat-sub">across 4 cards</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-label">Avg. Time Held</span>
+          <span class="summary-stat-value">11 mo</span>
+          <span class="summary-stat-sub">range: 6–14 months</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-label">Net Reward Value</span>
+          <span class="summary-stat-value">$1,475</span>
+          <span class="summary-stat-sub">rewards − fees (est.)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <select aria-label="Filter by issuer">
+        <option>All issuers</option>
+        <option>Chase</option>
+        <option>American Express</option>
+        <option>Citi</option>
+      </select>
+      <select aria-label="Sort by">
+        <option>Sort: Closed date (newest)</option>
+        <option>Sort: Rewards earned (most)</option>
+        <option>Sort: Annual fee paid (highest)</option>
+        <option>Sort: Time held (longest)</option>
+      </select>
+    </div>
+
+    <!-- Card list -->
+    <div class="card-list" role="list" aria-label="Cards in Valhalla">
+
+      <!-- Card 1: Points card with large SUB -->
+      <article class="card-row" role="listitem" aria-label="Chase Sapphire Preferred">
+        <div class="card-row-body">
+          <div class="card-row-header">
+            <div class="card-name-row">
+              <div class="issuer-badge" aria-hidden="true">C</div>
+              <div>
+                <div class="card-name">CHASE SAPPHIRE PREFERRED</div>
+                <div class="card-issuer-meta">Chase · Points/Miles</div>
+              </div>
+            </div>
+            <span class="card-closed-badge">CLOSED</span>
+          </div>
+          <div class="card-details" role="list">
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Sign-up Bonus</span>
+              <span class="detail-value earned">60,000 pts</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Annual Fee Paid</span>
+              <span class="detail-value">$95</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Time Held</span>
+              <span class="detail-value">14 months</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Closed</span>
+              <span class="detail-value">Jan 2025</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-row-actions">
+          <button aria-label="View full record for Chase Sapphire Preferred">View record</button>
+        </div>
+      </article>
+
+      <!-- Card 2: Miles card, no fee -->
+      <article class="card-row" role="listitem" aria-label="Capital One Venture One">
+        <div class="card-row-body">
+          <div class="card-row-header">
+            <div class="card-name-row">
+              <div class="issuer-badge" aria-hidden="true">V</div>
+              <div>
+                <div class="card-name">CAPITAL ONE VENTURE ONE</div>
+                <div class="card-issuer-meta">Capital One · Points/Miles</div>
+              </div>
+            </div>
+            <span class="card-closed-badge">CLOSED</span>
+          </div>
+          <div class="card-details" role="list">
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Sign-up Bonus</span>
+              <span class="detail-value earned">20,000 miles</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Annual Fee Paid</span>
+              <span class="detail-value">$0 (no fee)</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Time Held</span>
+              <span class="detail-value">11 months</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Closed</span>
+              <span class="detail-value">Oct 2024</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-row-actions">
+          <button aria-label="View full record for Capital One Venture One">View record</button>
+        </div>
+      </article>
+
+      <!-- Card 3: Cashback card -->
+      <article class="card-row" role="listitem" aria-label="Citi Double Cash">
+        <div class="card-row-body">
+          <div class="card-row-header">
+            <div class="card-name-row">
+              <div class="issuer-badge" aria-hidden="true">C</div>
+              <div>
+                <div class="card-name">CITI DOUBLE CASH</div>
+                <div class="card-issuer-meta">Citi · Cashback</div>
+              </div>
+            </div>
+            <span class="card-closed-badge">CLOSED</span>
+          </div>
+          <div class="card-details" role="list">
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Sign-up Bonus</span>
+              <span class="detail-value earned">$200 cashback</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Annual Fee Paid</span>
+              <span class="detail-value">$0 (no fee)</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Time Held</span>
+              <span class="detail-value">6 months</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Closed</span>
+              <span class="detail-value">Jun 2024</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-row-actions">
+          <button aria-label="View full record for Citi Double Cash">View record</button>
+        </div>
+      </article>
+
+      <!-- Card 4: No bonus earned (bonus requirement missed) -->
+      <article class="card-row" role="listitem" aria-label="Chase Freedom Unlimited — bonus not earned">
+        <div class="card-row-body">
+          <div class="card-row-header">
+            <div class="card-name-row">
+              <div class="issuer-badge" aria-hidden="true">C</div>
+              <div>
+                <div class="card-name">CHASE FREEDOM UNLIMITED</div>
+                <div class="card-issuer-meta">Chase · Cashback</div>
+              </div>
+            </div>
+            <span class="card-closed-badge">CLOSED</span>
+          </div>
+          <div class="card-details" role="list">
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Sign-up Bonus</span>
+              <!-- No bonus earned: show "—" with note, not the failed-to-earn amount -->
+              <span class="detail-value">— (not earned)</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Annual Fee Paid</span>
+              <span class="detail-value">$95</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Time Held</span>
+              <span class="detail-value">8 months</span>
+            </div>
+            <div class="detail-item" role="listitem">
+              <span class="detail-label">Closed</span>
+              <span class="detail-value">Apr 2024</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-row-actions">
+          <button aria-label="View full record for Chase Freedom Unlimited">View record</button>
+        </div>
+      </article>
+
+    </div><!-- /.card-list -->
+
+    <p class="note"><strong>Card row left-border:</strong> Implementation uses var(--stone-hel) color (muted/gray-toned) for Valhalla cards, vs. the active card accent. This signals "past / archived" state. The 4px left border is the primary visual differentiator from Active tab cards.</p>
+    <p class="note"><strong>Karl bling:</strong> Rune corner accents still appear on Valhalla cards for Karl/trial tier, but at reduced opacity (0.35) — same pattern as Trash tab. See karl-card-bling.html.</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION E — Empty State                                              -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-e">
+    <div class="section-title" id="sec-e">E — Empty State (No Closed Cards Yet)</div>
+    <p class="section-desc">Shown when user has not closed any cards. Summary bar is hidden.</p>
+
+    <section class="empty-state" aria-label="Valhalla empty state">
+      <div class="empty-rune" aria-hidden="true">ᛏ</div>
+      <div class="empty-heading">Valhalla Awaits</div>
+      <p class="empty-sub">Close a card to archive it here. Your rewards and history will be preserved.</p>
+    </section>
+
+    <p class="note"><strong>Rune ᛏ (Tiwaz)</strong> — justice, sacrifice, honorable closure. Already established in existing valhalla.html. Consistent with mythology.</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION F — Mobile 375px Layout                                      -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-f">
+    <div class="section-title" id="sec-f">F — Mobile 375px Layout</div>
+    <p class="section-desc">Summary bar stacks vertically (each stat full-width). Card details collapse to 2-column grid. Card actions inline below details.</p>
+
+    <div class="mobile-frame" role="region" aria-label="Mobile 375px wireframe">
+
+      <!-- Tab bar: scrollable on mobile -->
+      <nav style="display: flex; overflow-x: auto; border-bottom: 1px solid;" aria-label="Dashboard tabs" role="tablist">
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᚲ</span> HOWL <span class="tab-badge">2</span></button>
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᚠ</span> ACTIVE</button>
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᚱ</span> HUNT</button>
+        <button class="tab-btn active" role="tab" aria-selected="true" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᛏ</span> VALHALLA <span class="tab-badge">4</span></button>
+        <button class="tab-btn" role="tab" aria-selected="false" style="padding: 8px 12px; font-size: 11px;"><span class="tab-icon" aria-hidden="true">ᛞ</span> TRASH</button>
+      </nav>
+
+      <!-- Summary bar: stacked on mobile -->
+      <div class="summary-bar" role="region" aria-label="Valhalla summary">
+        <div class="summary-stat">
+          <span class="summary-stat-label">Rewards Reaped</span>
+          <span class="summary-stat-value" style="font-size: 16px;">142,000 pts + $340</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-label">Fees Paid</span>
+          <span class="summary-stat-value" style="font-size: 16px;">$285</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-label">Cards Closed</span>
+          <span class="summary-stat-value" style="font-size: 16px;">4</span>
+        </div>
+      </div>
+
+      <!-- Card row on mobile: 2-col detail grid -->
+      <div style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+        <article class="card-row" aria-label="Chase Sapphire Preferred" style="flex-direction: column; gap: 10px; border: 1px solid; border-left: 4px solid; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="card-name-row">
+              <div class="issuer-badge" aria-hidden="true">C</div>
+              <div>
+                <div class="card-name" style="font-size: 13px;">CHASE SAPPHIRE PREFERRED</div>
+                <div class="card-issuer-meta">Chase · Points</div>
+              </div>
+            </div>
+            <span class="card-closed-badge" style="font-size: 10px;">CLOSED</span>
+          </div>
+          <!-- 2-col on mobile -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding-top: 8px; border-top: 1px solid;">
+            <div class="detail-item">
+              <span class="detail-label">Sign-up Bonus</span>
+              <span class="detail-value earned">60,000 pts</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Annual Fee Paid</span>
+              <span class="detail-value">$95</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Time Held</span>
+              <span class="detail-value">14 months</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Closed</span>
+              <span class="detail-value">Jan 2025</span>
+            </div>
+          </div>
+          <!-- Action inline below on mobile -->
+          <div style="display: flex; justify-content: flex-end;">
+            <button style="font-size: 11px; padding: 5px 10px;">View record</button>
+          </div>
+        </article>
+
+        <p class="note">Second and further cards follow same 2-col detail grid pattern.</p>
+      </div>
+
+    </div><!-- /.mobile-frame -->
+
+    <p class="note"><strong>Mobile tab bar:</strong> Scrollable horizontally. Tab labels may truncate to icon-only below 320px if needed — but 375px keeps abbreviated labels. Touch target min-height: 44px preserved.</p>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION G — Accessibility & Implementation Notes                     -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <section class="section" aria-labelledby="sec-g">
+    <div class="section-title" id="sec-g">G — Accessibility &amp; Implementation Notes for FiremanDecko</div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; font-size: 13px;">
+
+      <div>
+        <strong style="display: block; margin-bottom: 8px;">Accessibility (WCAG 2.1 AA)</strong>
+        <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <li>Tab panel: role="tabpanel", aria-labelledby pointing to Valhalla tab button</li>
+          <li>Card list: role="list" on wrapper, role="listitem" on each article</li>
+          <li>Card details grid: role="list" / role="listitem" — each detail-item announces label+value pair to screen reader</li>
+          <li>Sign-up bonus "earned" color: must pass 4.5:1 contrast on card background. Do not rely on color alone — label "Sign-up Bonus" already disambiguates</li>
+          <li>Empty state: aria-label="Valhalla empty state". Rune aria-hidden="true"</li>
+          <li>Summary bar: role="region", aria-label="Valhalla summary — total rewards reaped"</li>
+          <li>"View record" buttons: aria-label includes card name to disambiguate duplicate labels</li>
+          <li>Sort/filter selects: aria-label on each select element</li>
+        </ul>
+      </div>
+
+      <div>
+        <strong style="display: block; margin-bottom: 8px;">Component / Data Notes</strong>
+        <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <li>Data fields needed per card: signupBonusEarned (number+type), annualFeePaid (number), timeHeld (months), closedDate (Date), rewardsType ("points"|"miles"|"cashback")</li>
+          <li>signupBonusEarned = null when bonus was not earned — render as "— (not earned)"</li>
+          <li>annualFeePaid = 0 renders as "$0 (no fee)"</li>
+          <li>Summary bar totals: sum all signupBonusEarned by type, sum all annualFeePaid, calculate avg timeHeld, compute netRewardValue (est. value − fees)</li>
+          <li>Summary bar dismiss: localStorage key "valhalla-summary-dismissed", re-shows when new card is closed</li>
+          <li>Card sort default: closedDate descending (newest first)</li>
+          <li>Relevant component: ValhallTab.tsx (or similar) within DashboardTabs</li>
+          <li>Left border color token: var(--stone-hel) — the muted/archive tone already used in app/valhalla.html tombstones</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <p class="note"><strong>Scope:</strong> This wireframe covers the DASHBOARD TAB card row view for Valhalla. The standalone full-page Valhalla archive (app/valhalla.html) is separate — it may link here or be reached via "View record". The tombstone detail view is out of scope for #1808.</p>
+  </section>
+
+</div><!-- /.page -->
+
+</body>
+</html>
