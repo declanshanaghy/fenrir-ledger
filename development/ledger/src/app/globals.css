@@ -18,16 +18,16 @@
    * shadcn/ui component tokens are remapped to the Norse palette.
    */
 
-  /* ── Light Theme (Lightning Norse) ─────────────────────────── */
+  /* ── Light Theme (Parchment Norse) ─────────────────────────── */
   :root {
     /* ── Surfaces ───────────────────────────────────────────── */
-    --background:           210 40% 98%;    /* #f7fafc — pure white with ice-blue whisper */
+    --background:           38  35% 94%;    /* #f2ede0 — warm parchment, Norse daylight */
     --foreground:           220 40% 8%;     /* #0f1419 — ink-black, almost obsidian */
 
-    --card:                 0   0%  100%;   /* #ffffff — PURE WHITE, no compromise */
+    --card:                 40  25% 97%;    /* #faf8f2 — light cream card surface */
     --card-foreground:      220 40% 8%;
 
-    --popover:              0   0%  100%;   /* #ffffff — PURE WHITE */
+    --popover:              40  25% 97%;    /* #faf8f2 — light cream popover */
     --popover-foreground:   220 40% 8%;
 
     /* ── Brand ──────────────────────────────────────────────── */
@@ -35,30 +35,30 @@
     --primary-foreground:   0   0%  100%;   /* pure white on gold */
 
     /* ── Secondary / Muted ──────────────────────────────────── */
-    --secondary:            210 18% 85%;    /* #d5dde3 — ice-blue grey */
+    --secondary:            38  18% 83%;    /* #d8d0c0 — warm parchment grey */
     --secondary-foreground: 220 40% 8%;
 
-    --muted:                210 24% 92%;    /* #e8eff4 — frost white */
-    --muted-foreground:     215 20% 35%;    /* #475569 — cold slate */
+    --muted:                38  20% 90%;    /* #ece7da — warm muted surface */
+    --muted-foreground:     30  15% 38%;    /* #6b5f4e — warm slate */
 
-    --accent:               210 24% 92%;
+    --accent:               38  20% 90%;
     --accent-foreground:    220 40% 8%;
 
     /* ── Status / Destructive ───────────────────────────────── */
-    --destructive:          0   72% 38%;    /* #a91b1b — dark blood red for white bg */
+    --destructive:          0   72% 38%;    /* #a91b1b — dark blood red */
     --destructive-foreground: 0  0% 100%;
 
     /* ── Structure ──────────────────────────────────────────── */
-    --border:               214 32% 88%;    /* #d0dce5 — cold frost border */
-    --input:                210 40% 96%;    /* #f1f7fa — ice-white input */
+    --border:               38  22% 84%;    /* #d6ccb8 — warm parchment border */
+    --input:                38  28% 93%;    /* #ede8db — warm parchment input */
     --ring:                 38  80% 28%;    /* dark burnt gold focus ring */
     --radius:               0.25rem;        /* sharp, angular — not pill */
 
     /* ── Card Hover (Issue #298) ──────────────────────────── */
     /* Opaque equivalents of semi-transparent hover overlays.
-     * Avoids white flash from transitioning opaque → transparent colors.
-     * Computed: gold @ 5% over card white #ffffff ≈ #fefcf6 */
-    --card-hover:           40 50% 98%;     /* #fefcf6 — opaque gold/5-on-white */
+     * Avoids flash from transitioning opaque → transparent colors.
+     * Computed: gold @ 5% over card cream #faf8f2 ≈ #faf6ec */
+    --card-hover:           40 50% 96%;     /* #faf6ec — opaque gold/5-on-cream */
 
     /* ── Charts (thunder palette for white backgrounds) ───────── */
     --chart-1:              38  80% 28%;    /* dark burnt gold */
