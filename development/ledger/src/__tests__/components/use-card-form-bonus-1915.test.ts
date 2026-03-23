@@ -10,7 +10,6 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import type { Mock } from "vitest";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -18,9 +17,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-const mockSaveCard = vi.fn();
 vi.mock("@/lib/storage", () => ({
-  saveCard: mockSaveCard,
+  saveCard: vi.fn(),
   deleteCard: vi.fn(),
   closeCard: vi.fn(),
   getCards: vi.fn().mockReturnValue([]),
@@ -74,6 +72,7 @@ vi.mock("@/lib/issuer-utils", () => ({
 
 // ── Imports ───────────────────────────────────────────────────────────────────
 
+import { saveCard } from "@/lib/storage";
 import { useCardForm } from "@/components/cards/useCardForm";
 import {
   getValhallaSignupBonusLabel,
@@ -180,18 +179,7 @@ describe("formatBonusReward — issue #1915", () => {
 
 describe("useCardForm onSubmit — bonus amount storage (issue #1915)", () => {
   beforeEach(() => {
-    mockSaveCard.mockClear();
-    // Stub localStorage to avoid 'not defined' errors in test environment
-    if (typeof globalThis.localStorage === "undefined") {
-      Object.defineProperty(globalThis, "localStorage", {
-        value: {
-          getItem: vi.fn().mockReturnValue("0"),
-          setItem: vi.fn(),
-          removeItem: vi.fn(),
-        },
-        writable: true,
-      });
-    }
+    vi.mocked(saveCard).mockClear();
   });
 
   it("stores miles bonus as whole units (65000 → 65000, not 6500000)", () => {
@@ -214,8 +202,8 @@ describe("useCardForm onSubmit — bonus amount storage (issue #1915)", () => {
         notes: "",
       });
     });
-    expect(mockSaveCard).toHaveBeenCalledOnce();
-    const saved = (mockSaveCard as Mock).mock.calls[0][0] as Card;
+    expect(vi.mocked(saveCard)).toHaveBeenCalledOnce();
+    const saved = vi.mocked(saveCard).mock.calls[0]![0] as Card;
     expect(saved.signUpBonus?.amount).toBe(65000);
   });
 
@@ -239,8 +227,8 @@ describe("useCardForm onSubmit — bonus amount storage (issue #1915)", () => {
         notes: "",
       });
     });
-    expect(mockSaveCard).toHaveBeenCalledOnce();
-    const saved = (mockSaveCard as Mock).mock.calls[0][0] as Card;
+    expect(vi.mocked(saveCard)).toHaveBeenCalledOnce();
+    const saved = vi.mocked(saveCard).mock.calls[0]![0] as Card;
     expect(saved.signUpBonus?.amount).toBe(1000000);
   });
 
@@ -264,8 +252,8 @@ describe("useCardForm onSubmit — bonus amount storage (issue #1915)", () => {
         notes: "",
       });
     });
-    expect(mockSaveCard).toHaveBeenCalledOnce();
-    const saved = (mockSaveCard as Mock).mock.calls[0][0] as Card;
+    expect(vi.mocked(saveCard)).toHaveBeenCalledOnce();
+    const saved = vi.mocked(saveCard).mock.calls[0]![0] as Card;
     expect(saved.signUpBonus?.amount).toBe(50000);
   });
 
@@ -289,8 +277,8 @@ describe("useCardForm onSubmit — bonus amount storage (issue #1915)", () => {
         notes: "",
       });
     });
-    expect(mockSaveCard).toHaveBeenCalledOnce();
-    const saved = (mockSaveCard as Mock).mock.calls[0][0] as Card;
+    expect(vi.mocked(saveCard)).toHaveBeenCalledOnce();
+    const saved = vi.mocked(saveCard).mock.calls[0]![0] as Card;
     expect(saved.annualFee).toBe(9500);
   });
 });
