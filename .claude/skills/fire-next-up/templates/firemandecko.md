@@ -25,6 +25,7 @@ Then create your todo list via TodoWrite. Every todo below is required:
   - Rebase + final push
   - Create/update PR
   - Post handoff comment
+  - CHAIN CONTINUATION: run /fire-next-up --resume #<NUMBER>
 
 **Issue details:**
 
@@ -90,10 +91,16 @@ gh issue comment <NUMBER> --body "## FiremanDecko → Loki Handoff
 - <Tricky scenarios>
 
 **Build:** tsc + build PASS. Ready for QA."
-**Step 8 — Chain continuation (DONE only):**
-If tsc + build both PASS and handoff comment is posted:
+
+**Step 8 — CHAIN CONTINUATION (MANDATORY — DO NOT SKIP):**
+⚠️ THIS STEP IS NOT OPTIONAL. Your session is NOT complete until this runs.
+⚠️ If you stop after Step 7 without running Step 8, Loki never gets dispatched and the issue stalls.
+
+If tsc + build both PASS and handoff comment is posted, you MUST run this command:
+
   /fire-next-up --resume #<NUMBER>
-This dispatches Loki (QA) on the same branch to validate the implementation.
+
+This dispatches Loki (QA) on the same branch. Without it, the chain is broken.
 If ANY verify step FAILED: do NOT run this step — stop and leave the issue for manual triage.
 
 {{DECREE_TEMPLATE}}
