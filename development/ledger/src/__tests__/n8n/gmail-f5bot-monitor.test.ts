@@ -49,11 +49,10 @@ const REQUIRED_NODE_NAMES = [
   "Filter — F5Bot Emails",
   "Extract — Reddit Links",
   "Filter — Has Links?",
-  "HTTP — Get Reddit Post",
-  "Extract — Post Content",
   "Claude API — Draft Reply",
   "Merge — Context + Draft",
   "Gmail — Create Draft",
+  "Gmail — Mark as Read",
   "No Emails Found",
   "No Reddit Links",
 ];
@@ -88,7 +87,7 @@ function makeEmailItem(subject: string, html: string): N8nItem {
 describe("gmail-f5bot-monitor — workflow structure", () => {
   it("has exactly 12 nodes and all required node names", () => {
     const wf = loadWorkflow();
-    expect(wf.nodes).toHaveLength(12);
+    expect(wf.nodes).toHaveLength(11);
     const names = wf.nodes.map((n) => n.name);
     for (const required of REQUIRED_NODE_NAMES) {
       expect(names).toContain(required);
@@ -118,27 +117,19 @@ describe("gmail-f5bot-monitor — workflow structure", () => {
     expect(node!.credentials?.gmailOAuth2?.id).toBe("Eck5j1Xj1x6zyc9A");
   });
 
-  it("HTTP Reddit node sends User-Agent: fenrir-ledger-n8n/1.0", () => {
-    const wf = loadWorkflow();
-    const node = getNodeByName(wf, "HTTP — Get Reddit Post");
-    expect(node).toBeDefined();
-    const params = node!.parameters as {
-      headerParameters: { parameters: Array<{ name: string; value: string }> };
-    };
-    const ua = params.headerParameters.parameters.find((h) => h.name === "User-Agent");
-    expect(ua).toBeDefined();
-    expect(ua!.value).toBe("fenrir-ledger-n8n/1.0");
-  });
-
-  it("Claude API node uses model claude-3-5-haiku-20241022", () => {
+  it("Claude API node uses langchain anthropic with stored credential", () => {
     const wf = loadWorkflow();
     const node = getNodeByName(wf, "Claude API — Draft Reply");
     expect(node).toBeDefined();
-    // jsonBody is an n8n expression string; model field has no template expressions
-    const jsonBody = node!.parameters.jsonBody as string;
-    const modelMatch = jsonBody.match(/"model":\s*"([^"]+)"/);
-    expect(modelMatch).not.toBeNull();
-    expect(modelMatch![1]).toBe("claude-3-5-haiku-20241022");
+    expect(node!.type).toBe("@n8n/n8n-nodes-langchain.anthropic");
+    expect(node!.credentials?.anthropicApi?.id).toBe("anthropic-fenrir");
+  });
+
+  it("Gmail Mark as Read node exists and uses correct credential", () => {
+    const wf = loadWorkflow();
+    const node = getNodeByName(wf, "Gmail — Mark as Read");
+    expect(node).toBeDefined();
+    expect(node!.credentials?.gmailOAuth2?.id).toBe("Eck5j1Xj1x6zyc9A");
   });
 });
 
@@ -147,9 +138,14 @@ describe("gmail-f5bot-monitor — workflow structure", () => {
 // ---------------------------------------------------------------------------
 
 describe("Extract — Reddit Links code node", () => {
-  const POST_URL = "https://reddit.com/r/churning/comments/abc123/some_title";
-  const COMMENT_URL =
-    "https://reddit.com/r/churning/comments/abc123/some_title/cmt999";
+  // F5Bot wraps Reddit URLs as: f5bot.com/url?u=<url-encoded-reddit-url>&i=...&h=...
+  const POST_URL = "https://www.reddit.com/r/churning/comments/abc123/some_title";
+  const COMMENT_URL = "https://www.reddit.com/r/churning/comments/abc123/some_title/cmt999";
+
+  function f5botLink(redditUrl: string, title: string, author: string, type: string = "Posts", sub: string = "churning"): string {
+    const encoded = encodeURIComponent(redditUrl);
+    return `<p style='margin-left:10px'>  Reddit ${type} (/r/${sub}/): <a href='https://f5bot.com/url?u=${encoded}&i=12345&h=abcdef'>${title}</a> by ${author}<br>\n<span style='font-family: monospace'>Some snippet text here</span></p>`;
+  }
 
   it("emits 0 items when HTML body has no Reddit URLs", () => {
     const result = runExtractRedditLinks([
@@ -159,44 +155,45 @@ describe("Extract — Reddit Links code node", () => {
   });
 
   it("emits 1 item with correct keyword for a single Reddit URL", () => {
+    const html = f5botLink(POST_URL, "Some Post Title", "testuser");
     const result = runExtractRedditLinks([
-      makeEmailItem(
-        "F5Bot found something: churning",
-        `Check this out: ${POST_URL}/`
-      ),
+      makeEmailItem("F5Bot found something: churning", html),
     ]);
     expect(result).toHaveLength(1);
     expect(result[0].json.keyword).toBe("churning");
     expect(result[0].json.redditUrl).toBe(POST_URL);
+    expect(result[0].json.postTitle).toBe("Some Post Title");
+    expect(result[0].json.author).toBe("testuser");
   });
 
   it("emits N items for multiple distinct Reddit URLs", () => {
-    const url1 = "https://reddit.com/r/churning/comments/abc123/post_a/";
-    const url2 = "https://reddit.com/r/creditcards/comments/xyz789/post_b/";
+    const url1 = "https://www.reddit.com/r/churning/comments/abc123/post_a";
+    const url2 = "https://www.reddit.com/r/creditcards/comments/xyz789/post_b";
+    const html = f5botLink(url1, "Post A", "user1", "Posts", "churning") +
+      f5botLink(url2, "Post B", "user2", "Posts", "creditcards");
     const result = runExtractRedditLinks([
-      makeEmailItem("F5Bot found something: churning", `${url1} ${url2}`),
+      makeEmailItem("F5Bot found something: churning", html),
     ]);
     expect(result).toHaveLength(2);
   });
 
   it("deduplicates URLs within a single email", () => {
-    const dupeUrl = `${POST_URL}/`;
+    const html = f5botLink(POST_URL, "Same Post", "user1") +
+      f5botLink(POST_URL, "Same Post Again", "user1");
     const result = runExtractRedditLinks([
-      makeEmailItem(
-        "F5Bot found something: churning",
-        `${dupeUrl} ${dupeUrl} ${dupeUrl}`
-      ),
+      makeEmailItem("F5Bot found something: churning", html),
     ]);
     expect(result).toHaveLength(1);
   });
 
-  it("marks comment URL (6+ path segments) as isComment true, post URL as false", () => {
-    const html = `${POST_URL}/ ${COMMENT_URL}/`;
+  it("marks comment URL as isComment true, post URL as false", () => {
+    const html = f5botLink(POST_URL, "A Post", "user1", "Posts") +
+      f5botLink(COMMENT_URL, "A Comment", "user2", "Comments");
     const result = runExtractRedditLinks([
       makeEmailItem("F5Bot found something: churning", html),
     ]);
     expect(result).toHaveLength(2);
-    const postItem = result.find((r) => (r.json.redditUrl as string).includes("cmt999") === false);
+    const postItem = result.find((r) => !(r.json.redditUrl as string).includes("cmt999"));
     const commentItem = result.find((r) => (r.json.redditUrl as string).includes("cmt999"));
     expect(postItem?.json.isComment).toBe(false);
     expect(commentItem?.json.isComment).toBe(true);
