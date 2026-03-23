@@ -19,6 +19,8 @@ import { MembersList } from "./MembersList";
 import { InviteCodeDisplay } from "./InviteCodeDisplay";
 import { HouseholdFullBanner } from "./HouseholdFullBanner";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import { getSession } from "@/lib/auth/session";
+import { setAllCards } from "@/lib/storage";
 import Link from "next/link";
 
 interface HouseholdMember {
@@ -54,6 +56,9 @@ export function HouseholdSettingsSection() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchHousehold = useCallback(async () => {
@@ -117,6 +122,43 @@ export function HouseholdSettingsSection() {
       setIsRegenerating(false);
     }
   }, []);
+
+  const handleLeave = useCallback(async () => {
+    setIsLeaving(true);
+    setLeaveError(null);
+    try {
+      const token = await ensureFreshToken();
+      if (!token) {
+        setLeaveError("Authentication error. Please sign in again.");
+        setIsLeaving(false);
+        return;
+      }
+      const res = await fetch("/api/household/leave", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ confirm: true }),
+      });
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error_description?: string };
+        setLeaveError(json.error_description ?? "Failed to leave household. Please try again.");
+        setIsLeaving(false);
+        return;
+      }
+      // Clear local card cache so dashboard shows the empty solo household
+      const session = getSession();
+      if (session?.user?.sub) {
+        setAllCards(session.user.sub, []);
+      }
+      // Navigate back to dashboard — fresh pull will reflect the new solo household
+      router.push("/ledger");
+    } catch {
+      setLeaveError("Connection error. Please try again.");
+      setIsLeaving(false);
+    }
+  }, [router]);
 
   if (isLoading) {
     return (
@@ -284,15 +326,73 @@ export function HouseholdSettingsSection() {
             ) : null
           )}
 
-          {/* Member: informational note — owner name for context */}
+          {/* Member: informational note + Leave Household button */}
           {!isOwner && (
-            <div className="border border-dashed border-border p-3 text-xs text-muted-foreground font-body">
-              Ask{" "}
-              <strong className="text-foreground">
-                {data.members.find((m) => m.role === "owner")?.displayName ?? "the owner"}
-              </strong>{" "}
-              for an invite code to share with others.
-            </div>
+            <>
+              <div className="border border-dashed border-border p-3 text-xs text-muted-foreground font-body">
+                Ask{" "}
+                <strong className="text-foreground">
+                  {data.members.find((m) => m.role === "owner")?.displayName ?? "the owner"}
+                </strong>{" "}
+                for an invite code to share with others.
+              </div>
+
+              {/* Leave Household — member only */}
+              {!showLeaveConfirm ? (
+                <div className="border border-dashed border-destructive/40 p-3 flex flex-col gap-2">
+                  <p className="text-xs text-muted-foreground font-body">
+                    Leaving will remove you from this household. A new solo household will be created for you.
+                    Your shared cards will remain with this household.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setShowLeaveConfirm(true); setLeaveError(null); }}
+                    className="self-start min-h-[44px] px-4 py-2 border border-destructive/60 text-sm font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    aria-label="Leave this household"
+                  >
+                    Leave Household
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="border border-destructive/60 p-3 flex flex-col gap-3"
+                  role="alertdialog"
+                  aria-label="Confirm leaving household"
+                >
+                  <p className="text-sm font-heading font-bold text-destructive">
+                    Are you sure you want to leave?
+                  </p>
+                  <p className="text-xs text-muted-foreground font-body">
+                    You will lose access to all shared cards. This cannot be undone.
+                  </p>
+                  {leaveError && (
+                    <p className="text-xs text-destructive font-body" role="alert">
+                      {leaveError}
+                    </p>
+                  )}
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={handleLeave}
+                      disabled={isLeaving}
+                      className="min-h-[44px] px-4 py-2 border border-destructive text-sm font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Confirm leaving the household"
+                    >
+                      {isLeaving ? "Leaving…" : "Confirm Leave"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowLeaveConfirm(false); setLeaveError(null); }}
+                      disabled={isLeaving}
+                      className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+                      aria-label="Cancel leaving the household"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Solo Karl owner: secondary Join CTA — can still join another household */}
