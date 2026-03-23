@@ -1,6 +1,6 @@
 ---
 name: coverage-report
-description: "Generate code coverage reports. Supports Vitest (--unit-only), Playwright E2E (--e2e-only), and combined (default) modes. Outputs HTML + text-summary + LCOV reports. Includes automatic overlap analysis and coverage gap detection."
+description: "Generate code coverage reports. Always runs combined mode (Vitest + Playwright + merge + cyclomatic complexity). Outputs HTML + text-summary + LCOV reports. Includes automatic overlap analysis, complexity analysis, and coverage gap detection."
 ---
 
 # Coverage Report
@@ -10,14 +10,13 @@ Generate code coverage reports via `coverage.mjs` directly.
 ## Usage
 
 ```
-/coverage-report                    # Full run: Vitest + Playwright + merge (default)
-/coverage-report --unit-only        # Vitest only (fast, no browser)
-/coverage-report --e2e-only         # Playwright only (needs build)
+/coverage-report                    # Full run: Vitest + Playwright + merge + complexity
 ```
 
-**No args = full combined run.** Always runs both Vitest and Playwright with coverage
-AND HTML test reporters enabled. No partial reports — all or nothing every time.
-`--combined` is accepted but redundant (it's the default).
+**Always runs combined mode.** Every invocation runs Vitest + Playwright with coverage
+AND HTML test reporters, merges into combined report, runs cyclomatic complexity
+analysis, and generates the quality report. No partial modes, no flags needed.
+`--combined`, `--unit-only`, `--e2e-only` are accepted but ignored — combined always runs.
 
 ## Modes
 

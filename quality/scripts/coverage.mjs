@@ -34,8 +34,10 @@ const REPORTS_DIR = path.join(REPO_ROOT, "quality/reports/coverage");
 const V8_COVERAGE_DIR = path.join(REPO_ROOT, "quality/.coverage-tmp");
 
 const args = process.argv.slice(2);
-const unitOnly = args.includes("--unit-only");
-const combined = unitOnly ? false : !args.includes("--e2e-only"); // default: combined (unless --unit-only or --e2e-only)
+// Always run combined mode — Vitest + Playwright + merge + complexity.
+// Flags --unit-only and --e2e-only are accepted but ignored.
+const unitOnly = false;
+const combined = true;
 const skipBuild = args.includes("--skip-build");
 const skipTests = args.includes("--skip-tests");
 const dashDashIdx = args.indexOf("--");
@@ -388,19 +390,19 @@ function ensureDeps() {
   if (!existsSync(rollupNative) && existsSync(nodeModules)) {
     log("Rollup native module missing — running clean reinstall...");
     rmSync(nodeModules, { recursive: true });
-    run("npm ci", { cwd: LEDGER_DIR });
+    run("pnpm install", { cwd: LEDGER_DIR });
     return;
   }
 
   // If @vitest/coverage-v8 is missing, install it
   if (!existsSync(coverageV8)) {
     log("@vitest/coverage-v8 missing — installing...");
-    run("npm install --save-dev @vitest/coverage-v8", { cwd: LEDGER_DIR });
+    run("pnpm add -D @vitest/coverage-v8", { cwd: LEDGER_DIR });
     // Verify rollup didn't break
     if (!existsSync(rollupNative)) {
       log("Rollup native module broken after install — clean reinstall...");
       rmSync(nodeModules, { recursive: true });
-      run("npm i", { cwd: LEDGER_DIR });
+      run("pnpm install", { cwd: LEDGER_DIR });
     }
   }
 }
