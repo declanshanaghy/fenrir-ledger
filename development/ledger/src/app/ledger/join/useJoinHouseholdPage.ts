@@ -13,6 +13,8 @@ import { useRouter } from "next/navigation";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { getSession } from "@/lib/auth/session";
 import { clearHouseholdLocalStorage, setStoredHouseholdId } from "@/lib/storage";
+import { useEntitlement } from "@/hooks/useEntitlement";
+import { clearEntitlementCache } from "@/lib/entitlement/cache";
 
 // ---------------------------------------------------------------------------
 // Types (re-exported so page.tsx and tests can import from one place)
@@ -88,6 +90,7 @@ export interface JoinHouseholdPageState {
 
 export function useJoinHouseholdPage(): JoinHouseholdPageState {
   const router = useRouter();
+  const { refreshEntitlement } = useEntitlement();
 
   // Code input state
   const [chars, setChars] = useState<string[]>(Array(CODE_LENGTH).fill(""));
@@ -263,6 +266,15 @@ export function useJoinHouseholdPage(): JoinHouseholdPageState {
           clearHouseholdLocalStorage(session.user.sub);
         }
         setStoredHouseholdId(data.householdId);
+
+        // Issue #1823: invalidate entitlement cache so isKarl reflects the
+        // new household's tier. router.push() is a client-side nav — the
+        // EntitlementContext stays mounted and refreshEntitlement() won't be
+        // called again automatically. Clear the stale localStorage cache first
+        // (safety net for hard-reload paths), then force a fresh server fetch
+        // so isKarl transitions true before the /ledger redirect fires.
+        clearEntitlementCache();
+        void refreshEntitlement();
 
         setStep("success");
       } else if (res.status === 409) {
