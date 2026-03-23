@@ -38,7 +38,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { getRawAllCards, setAllCards } from "@/lib/storage";
+import { getRawAllCards, setAllCards, getEffectiveHouseholdId } from "@/lib/storage";
 import { hasMigrated, runMigration } from "@/lib/sync/migration";
 import type { FenrirSession } from "@/lib/types";
 import type { Card } from "@/lib/types";
@@ -212,7 +212,9 @@ export function useCloudSync(): CloudSyncState {
     const session = getSession();
     if (!session?.id_token || !session?.user?.sub) return;
 
-    const householdId = session.user.sub;
+    // Resolve actual householdId — for solo users this equals session.user.sub;
+    // after joining a shared household it is the new household's ID (#1796).
+    const householdId = getEffectiveHouseholdId(session.user.sub);
     const idToken = session.id_token;
 
     syncInProgressRef.current = true;
@@ -317,7 +319,8 @@ export function useCloudSync(): CloudSyncState {
     const session = getSession();
     if (!session?.id_token || !session?.user?.sub) return;
 
-    const householdId = session.user.sub;
+    // Resolve actual householdId — same rationale as performSync (#1796).
+    const householdId = getEffectiveHouseholdId(session.user.sub);
     const idToken = session.id_token;
 
     syncInProgressRef.current = true;
@@ -407,7 +410,8 @@ export function useCloudSync(): CloudSyncState {
     const session = getSession();
     if (!session?.id_token || !session?.user?.sub) return;
 
-    const householdId = session.user.sub;
+    // Resolve actual householdId — same rationale as performSync (#1796).
+    const householdId = getEffectiveHouseholdId(session.user.sub);
     const idToken = session.id_token;
 
     if (hasMigrated()) {

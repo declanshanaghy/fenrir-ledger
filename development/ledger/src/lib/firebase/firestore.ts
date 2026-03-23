@@ -264,11 +264,12 @@ export interface JoinHouseholdResult {
  * Steps (all-or-nothing):
  *   1. Re-validate invite code is still valid and not expired
  *   2. Check household still has capacity (≤ 2 members currently, max 3)
- *   3. Fetch all non-deleted cards from the user's old household
- *   4. Copy each card to the new household (update householdId)
- *   5. Delete the old solo household document
- *   6. Add the user to the new household's memberIds
- *   7. Update the user's householdId and role
+ *   3. Fetch current user doc + old household doc (transactional reads)
+ *   4. Fetch all non-deleted cards from the user's old household
+ *   5. Copy each card to the new household (update householdId)
+ *   6. Delete the old solo household doc — only if user is owner and it was solo
+ *   7. Add the user to the new household's memberIds
+ *   8. Update the user's householdId and role
  *
  * If the transaction fails for any reason, Firestore rolls back automatically —
  * the user's original household remains intact (idempotent).
@@ -323,6 +324,20 @@ export async function joinHouseholdTransaction(
       throw new Error("already_member");
     }
 
+    // 4b. Fetch old household doc to determine whether deletion is authorized.
+    // Must be a transactional read (tx.get) so Firestore retries if it changes mid-flight.
+    const oldHouseholdRef = db.doc(FIRESTORE_PATHS.household(oldHouseholdId));
+    const oldHouseholdSnap = await tx.get(oldHouseholdRef);
+    const oldHousehold = oldHouseholdSnap.exists
+      ? (oldHouseholdSnap.data() as FirestoreHousehold)
+      : null;
+    // Only delete if: user is the owner AND it was a solo household (1 member).
+    // Prevents deleting a multi-member household when a member leaves.
+    const canDeleteOldHousehold =
+      user.role === "owner" &&
+      oldHousehold !== null &&
+      oldHousehold.memberIds.length === 1;
+
     // 5. Fetch old household's non-deleted cards (outside transaction reads must be done before writes)
     const oldCardsSnap = await db
       .collection(FIRESTORE_PATHS.cards(oldHouseholdId))
@@ -348,9 +363,10 @@ export async function joinHouseholdTransaction(
       movedCardIds.push(card.id);
     }
 
-    // 7. Delete old household doc (solo household cleaned up)
-    const oldHouseholdRef = db.doc(FIRESTORE_PATHS.household(oldHouseholdId));
-    tx.delete(oldHouseholdRef);
+    // 7. Delete old household doc — only when user is sole owner (authz guard)
+    if (canDeleteOldHousehold) {
+      tx.delete(oldHouseholdRef);
+    }
 
     // 8. Add user to new household's memberIds
     const updatedMemberIds = [...targetHousehold.memberIds, userId];
