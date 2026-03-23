@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heimdall Security Report — fenrirledger.com External Pen Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Palette ────────────────────────────────────────────────────────── */
+    :root {
+      --void:        #07070d;
+      --void-mid:    #0d0d18;
+      --void-light:  #141424;
+      --void-border: #1e1e35;
+      --gold:        #c9920a;
+      --gold-light:  #e8ab12;
+      --gold-dim:    #8a6207;
+      --silver:      #b0b8cc;
+      --silver-dim:  #6b7490;
+      --rune:        #4a4a7a;
+
+      --sev-critical: #e53e3e;
+      --sev-high:     #dd6b20;
+      --sev-medium:   #d69e2e;
+      --sev-low:      #3182ce;
+      --sev-info:     #4a5568;
+
+      --sev-critical-bg: rgba(229, 62, 62, 0.08);
+      --sev-high-bg:     rgba(221, 107, 32, 0.08);
+      --sev-medium-bg:   rgba(214, 158, 46, 0.08);
+      --sev-low-bg:      rgba(49, 130, 206, 0.08);
+      --sev-info-bg:     rgba(74, 85, 104, 0.08);
+
+      --font-display: 'Cinzel Decorative', serif;
+      --font-body:    'Cinzel', serif;
+      --font-prose:   'Source Serif 4', serif;
+      --font-code:    'JetBrains Mono', monospace;
+    }
+
+    /* ── Base ───────────────────────────────────────────────────────────── */
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--void);
+      color: var(--silver);
+      font-family: var(--font-prose);
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────────────── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ── Hero ───────────────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(180deg, var(--void-mid) 0%, var(--void) 100%);
+      border-bottom: 1px solid var(--void-border);
+      padding: 4rem 2rem 3rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: 'ᚺᛖᛁᛗᛞᚨᛚᛚ';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-code);
+      font-size: 8rem;
+      color: var(--rune);
+      opacity: 0.07;
+      letter-spacing: 0.3em;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 30px rgba(201, 146, 10, 0.3);
+      margin-bottom: 0.5rem;
+    }
+    .hero-sub {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--silver-dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+    .hero-meta {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      color: var(--silver-dim);
+      letter-spacing: 0.06em;
+    }
+    .hero-meta span { display: flex; align-items: center; gap: 0.4rem; }
+    .hero-meta strong { color: var(--silver); }
+
+    /* ── Nav ────────────────────────────────────────────────────────────── */
+    .toc {
+      background: var(--void-mid);
+      border-bottom: 1px solid var(--void-border);
+      padding: 0.75rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .toc-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0.5rem 1.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .toc a {
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      color: var(--silver-dim);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .toc a:hover { color: var(--gold); }
+
+    /* ── Sections ───────────────────────────────────────────────────────── */
+    .section {
+      padding: 3rem 0;
+      border-bottom: 1px solid var(--void-border);
+    }
+    .section:last-child { border-bottom: none; }
+
+    .section-title {
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--gold-dim);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .section-heading {
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+      font-weight: 700;
+      color: var(--gold-light);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--void-border);
+    }
+
+    /* ── Prose ──────────────────────────────────────────────────────────── */
+    p { margin-bottom: 1rem; color: var(--silver); }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── Risk Matrix ────────────────────────────────────────────────────── */
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      background: var(--void-border);
+      border: 1px solid var(--void-border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+    .risk-cell {
+      padding: 1.5rem 1rem;
+      text-align: center;
+      background: var(--void-light);
+    }
+    .risk-cell.critical { background: var(--sev-critical-bg); border-top: 3px solid var(--sev-critical); }
+    .risk-cell.high     { background: var(--sev-high-bg);     border-top: 3px solid var(--sev-high); }
+    .risk-cell.medium   { background: var(--sev-medium-bg);   border-top: 3px solid var(--sev-medium); }
+    .risk-cell.low      { background: var(--sev-low-bg);      border-top: 3px solid var(--sev-low); }
+    .risk-cell.info     { background: var(--sev-info-bg);     border-top: 3px solid var(--sev-info); }
+    .risk-label {
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .risk-cell.critical .risk-label { color: var(--sev-critical); }
+    .risk-cell.high     .risk-label { color: var(--sev-high); }
+    .risk-cell.medium   .risk-label { color: var(--sev-medium); }
+    .risk-cell.low      .risk-label { color: var(--sev-low); }
+    .risk-cell.info     .risk-label { color: var(--sev-info); }
+    .risk-count {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .risk-cell.critical .risk-count { color: var(--sev-critical); }
+    .risk-cell.high     .risk-count { color: var(--sev-high); }
+    .risk-cell.medium   .risk-count { color: var(--sev-medium); }
+    .risk-cell.low      .risk-count { color: var(--sev-low); }
+    .risk-cell.info     .risk-count { color: var(--sev-info); }
+    .risk-note {
+      font-size: 0.7rem;
+      color: var(--silver-dim);
+      margin-top: 0.3rem;
+    }
+
+    /* ── Finding Cards ──────────────────────────────────────────────────── */
+    .finding {
+      background: var(--void-light);
+      border: 1px solid var(--void-border);
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .finding-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--void-border);
+    }
+    .sev-badge {
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.65rem;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+    .sev-critical { background: var(--sev-critical-bg); color: var(--sev-critical); border: 1px solid rgba(229,62,62,0.3); }
+    .sev-high     { background: var(--sev-high-bg);     color: var(--sev-high);     border: 1px solid rgba(221,107,32,0.3); }
+    .sev-medium   { background: var(--sev-medium-bg);   color: var(--sev-medium);   border: 1px solid rgba(214,158,46,0.3); }
+    .sev-low      { background: var(--sev-low-bg);      color: var(--sev-low);      border: 1px solid rgba(49,130,206,0.3); }
+    .sev-info     { background: var(--sev-info-bg);     color: #a0aec0;             border: 1px solid rgba(74,85,104,0.3); }
+
+    .finding-id {
+      font-family: var(--font-code);
+      font-size: 0.7rem;
+      color: var(--silver-dim);
+      white-space: nowrap;
+    }
+    .finding-title {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--silver);
+      flex: 1;
+    }
+    .finding-body { padding: 1.5rem; }
+    .finding-body dl { display: grid; grid-template-columns: 120px 1fr; gap: 0.75rem 1rem; }
+    .finding-body dt {
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--silver-dim);
+      padding-top: 0.15rem;
+    }
+    .finding-body dd { font-size: 0.9rem; color: var(--silver); }
+
+    /* ── Code blocks ────────────────────────────────────────────────────── */
+    pre, code {
+      font-family: var(--font-code);
+      font-size: 0.78rem;
+    }
+    pre {
+      background: #090914;
+      border: 1px solid var(--void-border);
+      border-radius: 4px;
+      padding: 1rem 1.2rem;
+      overflow-x: auto;
+      color: #a8b4d0;
+      line-height: 1.6;
+      margin: 0.75rem 0;
+    }
+    code {
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      padding: 0.15em 0.4em;
+      color: #a8c4f0;
+      font-size: 0.82em;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+    /* ── Evidence blocks ────────────────────────────────────────────────── */
+    .evidence {
+      margin-top: 0.75rem;
+    }
+    .evidence-label {
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 0.35rem;
+    }
+
+    /* ── Tables ─────────────────────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin: 1rem 0;
+    }
+    th {
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--silver-dim);
+      background: var(--void-mid);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--void-border);
+    }
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(30,30,53,0.5);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .pass { color: #68d391; }
+    .fail { color: var(--sev-critical); }
+    .warn { color: var(--sev-medium); }
+    .na   { color: var(--silver-dim); }
+
+    /* ── OWASP Table ────────────────────────────────────────────────────── */
+    .owasp-table { border: 1px solid var(--void-border); border-radius: 6px; overflow: hidden; }
+
+    /* ── Rune divider ───────────────────────────────────────────────────── */
+    .rune-divider {
+      text-align: center;
+      color: var(--rune);
+      font-family: var(--font-code);
+      letter-spacing: 0.5em;
+      font-size: 1.1rem;
+      margin: 2rem 0;
+    }
+
+    /* ── Callout boxes ──────────────────────────────────────────────────── */
+    .callout {
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .callout-critical { background: var(--sev-critical-bg); border-left: 3px solid var(--sev-critical); }
+    .callout-pass     { background: rgba(104, 211, 145, 0.06); border-left: 3px solid #68d391; }
+    .callout strong { display: block; font-family: var(--font-body); font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.3rem; }
+    .callout-critical strong { color: var(--sev-critical); }
+    .callout-pass strong     { color: #68d391; }
+
+    /* ── Recommendations ────────────────────────────────────────────────── */
+    .rec-list { list-style: none; }
+    .rec-list li {
+      display: flex;
+      gap: 1rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--void-border);
+      align-items: flex-start;
+    }
+    .rec-list li:last-child { border-bottom: none; }
+    .rec-priority {
+      font-family: var(--font-body);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 3px;
+      white-space: nowrap;
+      margin-top: 0.1rem;
+      flex-shrink: 0;
+    }
+    .rec-body { font-size: 0.9rem; }
+    .rec-body strong { color: var(--silver); font-family: var(--font-body); font-size: 0.85rem; display: block; margin-bottom: 0.2rem; }
+    .rec-body span { color: var(--silver-dim); }
+
+    /* ── Seal / Footer ──────────────────────────────────────────────────── */
+    .seal {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: var(--void-mid);
+      border-top: 1px solid var(--void-border);
+    }
+    .seal-runes {
+      font-family: var(--font-code);
+      font-size: 1.4rem;
+      color: var(--rune);
+      letter-spacing: 0.3em;
+      margin-bottom: 0.75rem;
+    }
+    .seal-title {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      color: var(--gold);
+      letter-spacing: 0.15em;
+      margin-bottom: 0.5rem;
+    }
+    .seal-line {
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      color: var(--silver-dim);
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<header class="hero">
+  <div class="hero-title">Heimdall Security Report</div>
+  <div class="hero-sub">External Penetration Test — Fenrir Ledger</div>
+  <div class="hero-meta">
+    <span><strong>Targets:</strong> fenrirledger.com &amp; odins-throne.fenrirledger.com</span>
+    <span><strong>Date:</strong> 2026-03-23</span>
+    <span><strong>Issue:</strong> #1879</span>
+    <span><strong>Analyst:</strong> Heimdall · ᚺᛖᛁᛗᛞᚨᛚᛚ</span>
+    <span><strong>Scope:</strong> OWASP A01–A10, Auth, API, Headers, Infra</span>
+  </div>
+</header>
+
+<!-- ── Nav ───────────────────────────────────────────────────────────────── -->
+<nav class="toc">
+  <div class="toc-inner">
+    <a href="#summary">Executive Summary</a>
+    <a href="#risk">Risk Matrix</a>
+    <a href="#findings">Findings</a>
+    <a href="#owasp">OWASP Top 10</a>
+    <a href="#headers">Headers &amp; Config</a>
+    <a href="#api-audit">API Audit</a>
+    <a href="#recommendations">Recommendations</a>
+    <a href="#seal">Seal</a>
+  </div>
+</nav>
+
+<main class="container">
+
+<!-- ── Executive Summary ─────────────────────────────────────────────────── -->
+<section class="section" id="summary">
+  <div class="section-title">The Watcher Speaks</div>
+  <div class="section-heading">Executive Summary</div>
+
+  <p>Heimdall's gaze swept across the ramparts of <strong>fenrirledger.com</strong> and the hidden tower of <strong>Odin's Throne</strong> on 2026-03-23. The Ledger wall stands largely firm — nineteen of twenty-one API gates are properly sealed, transport encryption is strong, and the main application's security posture has improved markedly since the March 2026 audits. However, a breach of critical severity has been discovered in the watchtower itself.</p>
+
+  <p>The <strong>Odin's Throne monitor UI</strong> at <code>odins-throne.fenrirledger.com</code> is fully accessible to the unauthenticated public. An <code>oauth2-proxy</code> sidecar meant to guard this internal interface has been misconfigured with <code>--skip-auth-regex=.*</code>, a flag that instructs the proxy to skip authentication for <em>every route without exception</em>. Any visitor on the open internet may read all active and completed GKE agent job metadata, session IDs, branch names, PR titles, internal namespace names, and base64-encoded task prompts. This constitutes an unauthorized window into the realm's internal operations and must be sealed immediately.</p>
+
+  <p>Beyond the watchtower breach, this audit also confirms that several findings from the March 2026 pen tests remain open: an unpatched SheetJS library (HIGH), unsafe-inline in CSP (MEDIUM), and rate-limiting gaps on key endpoints (MEDIUM). These are documented herein with remediation paths. All new findings discovered in this audit are summarized below.</p>
+
+  <div class="callout callout-critical">
+    <strong>Immediate Action Required</strong>
+    The Odin's Throne oauth2-proxy misconfiguration is externally confirmed. Remove <code>--skip-auth-regex=.*</code> from the oauth2-proxy deployment and redeploy immediately. This is the only CRITICAL finding from this audit.
+  </div>
+</section>
+
+<!-- ── Risk Matrix ───────────────────────────────────────────────────────── -->
+<section class="section" id="risk">
+  <div class="section-title">The Weight of Ruin</div>
+  <div class="section-heading">Risk Matrix — New Findings This Audit</div>
+
+  <div class="risk-grid">
+    <div class="risk-cell critical">
+      <div class="risk-label">Critical</div>
+      <div class="risk-count">1</div>
+      <div class="risk-note">NEW</div>
+    </div>
+    <div class="risk-cell high">
+      <div class="risk-label">High</div>
+      <div class="risk-count">0</div>
+      <div class="risk-note">carry-forward</div>
+    </div>
+    <div class="risk-cell medium">
+      <div class="risk-label">Medium</div>
+      <div class="risk-count">0</div>
+      <div class="risk-note">carry-forward</div>
+    </div>
+    <div class="risk-cell low">
+      <div class="risk-label">Low</div>
+      <div class="risk-count">2</div>
+      <div class="risk-note">NEW</div>
+    </div>
+    <div class="risk-cell info">
+      <div class="risk-label">Info</div>
+      <div class="risk-count">2</div>
+      <div class="risk-note">NEW</div>
+    </div>
+  </div>
+
+  <p>Combined open finding count across all active reports (including carry-forwards): <strong>1 CRITICAL · 1 HIGH · 5 MEDIUM · 7 LOW · 5 INFO</strong>. See Open Findings Tracker in <code>security/README.md</code> for full inventory.</p>
+</section>
+
+<!-- ── Findings ──────────────────────────────────────────────────────────── -->
+<section class="section" id="findings">
+  <div class="section-title">Breaches in the Wall</div>
+  <div class="section-heading">Detailed Findings — New (This Audit)</div>
+
+  <!-- CRITICAL-001 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-critical">Critical</span>
+      <span class="finding-id">PT2026-CRIT-001</span>
+      <span class="finding-title">Odin's Throne: oauth2-proxy Auth Bypass via <code>--skip-auth-regex=.*</code></span>
+    </div>
+    <div class="finding-body">
+      <dl>
+        <dt>Category</dt><dd>A01 Broken Access Control / Authentication Bypass</dd>
+        <dt>Target</dt><dd><code>odins-throne.fenrirledger.com</code></dd>
+        <dt>File</dt><dd><code>infrastructure/helm/odin-throne/templates/deployment.yaml</code> line 78</dd>
+        <dt>CVSS</dt><dd>9.1 (AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N) — estimated</dd>
+        <dt>Description</dt>
+        <dd>The Odin's Throne monitor is deployed behind an <code>oauth2-proxy</code> sidecar container configured with the argument <code>--skip-auth-regex=.*</code>. This flag instructs the proxy to skip authentication validation for any request path matching the provided regex. The pattern <code>.*</code> matches every path, rendering the proxy's authentication gate completely inert. All requests — regardless of whether they carry a valid session cookie — are forwarded directly to the upstream Hono server without any identity check.</dd>
+        <dt>Impact</dt>
+        <dd>Any unauthenticated actor on the public internet can access the full Odin's Throne UI and API without credentials. The exposed surface includes: all GKE agent job names and session IDs, job start/completion times and status, branch names and PR/issue titles from job annotations, base64-encoded task prompts (TASK_PROMPT env var) embedded in job <code>kubectl.kubernetes.io/last-applied-configuration</code> annotations, internal K8s namespace names (<code>fenrir-agents</code>), and live agent log WebSocket streams. At time of test, 7 agent jobs were enumerated, including 1 active job.</dd>
+        <dt>Status</dt><dd>OPEN — confirmed externally on 2026-03-23</dd>
+      </dl>
+
+      <div class="evidence">
+        <div class="evidence-label">Evidence — oauth2-proxy misconfiguration</div>
+        <pre><code># infrastructure/helm/odin-throne/templates/deployment.yaml, lines 75-79
+args:
+  - --skip-auth-route=GET=^/healthz$   # intentional: K8s health probe exemption
+  - --skip-auth-regex=.*               # BUG: skips auth for ALL routes
+  - --cookie-secure=true</code></pre>
+      </div>
+
+      <div class="evidence">
+        <div class="evidence-label">Evidence — unauthenticated access confirmed via curl</div>
+        <pre><code>$ curl -sI https://odins-throne.fenrirledger.com/
+HTTP/2 200
+content-type: text/html; charset=utf-8
+# No oauth2-proxy redirect, no authentication challenge — direct 200
+
+$ curl -s https://odins-throne.fenrirledger.com/api/jobs | head -1
+{"jobs":[{"name":"agent-issue-1874-step1-luna-501975d4","namespace":"fenrir-agents",
+ "status":"succeeded",...,"annotations":{"fenrir/branch":"ux/issue-1874-light-theme-contrast",
+ "TASK_PROMPT":"WW91IGFyZSBMdW5hLCB0aGUgVVgg..."}},...]}
+# 7 jobs exposed — 1 active, session IDs, branches, encoded prompts all visible</code></pre>
+      </div>
+
+      <div class="evidence">
+        <div class="evidence-label">Forging the Fix</div>
+        <pre><code># Remove the --skip-auth-regex=.* line entirely.
+# The --skip-auth-route=GET=^/healthz$ line must be preserved for K8s probes.
+# After removing the offending arg, redeploy:
+helm upgrade odin-throne ./infrastructure/helm/odin-throne \
+  -f ./infrastructure/helm/odin-throne/values-prod.yaml \
+  --set app.image.tag=$IMAGE_TAG
+
+# Verify auth is enforced post-deploy:
+curl -sI https://odins-throne.fenrirledger.com/
+# Expected: HTTP/2 302 → Location: /oauth2/start?rd=...</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOW-001 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <span class="finding-id">PT2026-LOW-001</span>
+      <span class="finding-title">Technology Disclosure via <code>x-powered-by: Next.js</code> Header</span>
+    </div>
+    <div class="finding-body">
+      <dl>
+        <dt>Category</dt><dd>A05 Security Misconfiguration / Information Disclosure</dd>
+        <dt>Target</dt><dd><code>https://www.fenrirledger.com/</code></dd>
+        <dt>Description</dt>
+        <dd>The application returns an <code>x-powered-by: Next.js</code> header on all responses. This discloses the underlying framework to potential attackers, assisting in reconnaissance for framework-specific CVE targeting.</dd>
+        <dt>Impact</dt>
+        <dd>Low. Aids attacker fingerprinting. Combined with version-specific CVEs, an attacker could target known vulnerabilities more precisely. Mitigated by the application being on Next.js 16.x (upgraded per issue #475).</dd>
+        <dt>Status</dt><dd>OPEN — new finding</dd>
+      </dl>
+      <div class="evidence">
+        <div class="evidence-label">Evidence</div>
+        <pre><code>$ curl -sI https://www.fenrirledger.com/ | grep -i powered
+x-powered-by: Next.js</code></pre>
+      </div>
+      <div class="evidence">
+        <div class="evidence-label">Forging the Fix</div>
+        <pre><code># In next.config.ts, add:
+const nextConfig: NextConfig = {
+  poweredByHeader: false,   // suppress x-powered-by: Next.js
+  ...
+};</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOW-002 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <span class="finding-id">PT2026-LOW-002</span>
+      <span class="finding-title">Build Commit Hash Exposed in <code>/api/health</code> Response</span>
+    </div>
+    <div class="finding-body">
+      <dl>
+        <dt>Category</dt><dd>A05 Security Misconfiguration / Version Disclosure</dd>
+        <dt>Target</dt><dd><code>https://www.fenrirledger.com/api/health</code></dd>
+        <dt>Description</dt>
+        <dd>The health endpoint returns <code>version</code> and <code>buildId</code> fields populated from <code>NEXT_PUBLIC_APP_VERSION</code> and <code>NEXT_PUBLIC_BUILD_ID</code>. At time of test these contained the full git commit SHA of the deployed build.</dd>
+        <dt>Impact</dt>
+        <dd>Low. Allows attackers to precisely identify the deployed commit, cross-reference against public git history for vulnerability research, and confirm whether security patches have been applied. The endpoint is intentionally public (required for K8s liveness/readiness probes).</dd>
+        <dt>Status</dt><dd>OPEN — new finding</dd>
+      </dl>
+      <div class="evidence">
+        <div class="evidence-label">Evidence</div>
+        <pre><code>$ curl -s https://www.fenrirledger.com/api/health
+{"status":"ok","timestamp":"2026-03-23T18:47:18.185Z",
+ "version":"d4d91c9f6bb7d90b0b9a2f71dab3f1b2e8374b9a",
+ "buildId":"d4d91c9f6bb7d90b0b9a2f71dab3f1b2e8374b9a"}</code></pre>
+      </div>
+      <div class="evidence">
+        <div class="evidence-label">Forging the Fix</div>
+        <pre><code>// Option A: Return only timestamp (preferred — K8s only needs 200 OK)
+return NextResponse.json({ status: "ok", timestamp: new Date().toISOString() });
+
+// Option B: Return a short, opaque build token rather than full commit SHA
+// e.g., first 8 chars only, or a build date YYYY-MM-DD</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO-001 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <span class="finding-id">PT2026-INFO-001</span>
+      <span class="finding-title">No <code>/.well-known/security.txt</code> File</span>
+    </div>
+    <div class="finding-body">
+      <dl>
+        <dt>Category</dt><dd>Responsible Disclosure</dd>
+        <dt>Description</dt>
+        <dd>The <code>/.well-known/security.txt</code> path returns a 404. Per RFC 9116, a <code>security.txt</code> file provides a standardized mechanism for security researchers to report vulnerabilities responsibly.</dd>
+        <dt>Status</dt><dd>INFO — no immediate risk, recommended improvement</dd>
+      </dl>
+      <div class="evidence">
+        <div class="evidence-label">Forging the Fix</div>
+        <pre><code># Create public/security.txt (Next.js serves public/ at root):
+Contact: mailto:security@fenrirledger.com
+Expires: 2027-01-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://www.fenrirledger.com/.well-known/security.txt</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO-002 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <span class="finding-id">PT2026-INFO-002</span>
+      <span class="finding-title">Naked Domain Redirect Includes Explicit Port 443</span>
+    </div>
+    <div class="finding-body">
+      <dl>
+        <dt>Category</dt><dd>Configuration / Info</dd>
+        <dt>Description</dt>
+        <dd>HTTP requests to <code>fenrirledger.com</code> (naked domain) redirect to <code>https://www.fenrirledger.com:443/</code> — the port 443 is explicitly included in the Location header. While RFC 2616 allows this, explicitly including the default port is non-standard and may cause issues with strict URL validators or proxy chains.</dd>
+        <dt>Status</dt><dd>INFO — no security impact, cosmetic improvement</dd>
+      </dl>
+      <div class="evidence">
+        <div class="evidence-label">Evidence</div>
+        <pre><code>$ curl -sI https://fenrirledger.com/
+HTTP/2 301
+location: https://www.fenrirledger.com:443/   # port 443 is redundant for HTTPS</code></pre>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ── OWASP Top 10 ──────────────────────────────────────────────────────── -->
+<section class="section" id="owasp">
+  <div class="section-title">The Ten Gates of Bifrost</div>
+  <div class="section-heading">OWASP Top 10 — Systematic Coverage</div>
+
+  <table class="owasp-table">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Test Performed</th>
+        <th>Result</th>
+        <th>Finding</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>A01</strong> Broken Access Control</td>
+        <td>All 21 API routes tested without auth; Odin's Throne tested without auth; path traversal attempted; IDOR on household/sync routes verified</td>
+        <td><span class="fail">FINDINGS</span></td>
+        <td>PT2026-CRIT-001 (Throne auth bypass). Ledger IDOR previously resolved (PRs #1203, #1207). No new IDOR in Ledger.</td>
+      </tr>
+      <tr>
+        <td><strong>A02</strong> Cryptographic Failures</td>
+        <td>TLS enforced (HTTPS redirect), HSTS header, secure cookie flags on Throne oauth2-proxy, token transport</td>
+        <td><span class="pass">PASS</span></td>
+        <td>HSTS: <code>max-age=63072000; includeSubDomains; preload</code>. HTTP/2 enforced. No plaintext credential exposure detected.</td>
+      </tr>
+      <tr>
+        <td><strong>A03</strong> Injection</td>
+        <td>CSV import SSRF probe, sheets/import with file:// and internal IP, OAuth callback parameter injection, SQL/NoSQL injection not applicable (Firestore)</td>
+        <td><span class="warn">OPEN (carry-forward)</span></td>
+        <td>SSRF via CSV fetch (MEDIUM-002, issue #478) and CSV Unicode bypass (MEDIUM-003, issue #479) remain open from previous audit. SSRF blocked by requireAuth gate from external access.</td>
+      </tr>
+      <tr>
+        <td><strong>A04</strong> Insecure Design</td>
+        <td>Auth flow reviewed (PKCE, nonce, state), token endpoint error handling, household invite flow</td>
+        <td><span class="warn">OPEN (carry-forward)</span></td>
+        <td>Open redirect in OAuth callback (SEV-001, HIGH, from 2026-03-02 report) remains open. No new design flaws found.</td>
+      </tr>
+      <tr>
+        <td><strong>A05</strong> Security Misconfiguration</td>
+        <td>Headers audited, .env access attempted, error responses reviewed, Odin's Throne oauth2-proxy config reviewed</td>
+        <td><span class="fail">FINDINGS</span></td>
+        <td>PT2026-CRIT-001 (Throne auth bypass), PT2026-LOW-001 (x-powered-by), PT2026-LOW-002 (build hash in health). No .env files exposed. No stack traces in error responses.</td>
+      </tr>
+      <tr>
+        <td><strong>A06</strong> Vulnerable Components</td>
+        <td>Cross-referenced known open CVEs from previous audits against current deployment</td>
+        <td><span class="warn">OPEN (carry-forward)</span></td>
+        <td>SheetJS (HIGH-001, issue #476) remains unpatched. Next.js CVEs resolved (upgraded to 16.x per issue #475). Minimatch ReDoS (LOW-001, issue #480) still open in ESLint deps (dev-only).</td>
+      </tr>
+      <tr>
+        <td><strong>A07</strong> Identification &amp; Authentication Failures</td>
+        <td>auth/token tested with invalid params and rapid requests; requireAuth coverage verified on all routes; session token handling reviewed in source</td>
+        <td><span class="warn">OPEN (carry-forward)</span></td>
+        <td>No rate limiting on <code>/api/auth/token</code> (SEV-003, MEDIUM, from 2026-03-02 report) remains open. All 19 protected routes properly enforce requireAuth. auth/token error messages are non-leaking.</td>
+      </tr>
+      <tr>
+        <td><strong>A08</strong> Software &amp; Data Integrity</td>
+        <td>Stripe webhook HMAC signature check verified (stripe-signature header required), no CI/CD bypass surfaces found externally</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Webhook returns <code>missing_signature</code> without HMAC header. Stripe event deduplication (LOW-002, issue #481) remains open but is low risk.</td>
+      </tr>
+      <tr>
+        <td><strong>A09</strong> Security Logging &amp; Monitoring Failures</td>
+        <td>Health endpoint checked, error response format audited, no stack traces or internal paths in error bodies</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Error responses consistently return structured JSON with non-leaking error codes. No stack traces, file paths, or internal service names observed in any response body.</td>
+      </tr>
+      <tr>
+        <td><strong>A10</strong> Server-Side Request Forgery</td>
+        <td>sheets/import probed with http://169.254.169.254 (GCP metadata) and file:// URLs; redirect follow behavior from previous audit</td>
+        <td><span class="warn">OPEN (carry-forward)</span></td>
+        <td>External SSRF attempt blocked by requireAuth gate. Internal SSRF via CSV fetch (MEDIUM-002, issue #478) remains open as code-level risk. No new external SSRF paths discovered.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── Headers ───────────────────────────────────────────────────────────── -->
+<section class="section" id="headers">
+  <div class="section-title">The Armour of the Gate</div>
+  <div class="section-heading">Security Headers &amp; Transport Configuration</div>
+
+  <table>
+    <thead>
+      <tr><th>Header</th><th>Value</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>strict-transport-security</code></td>
+        <td><code>max-age=63072000; includeSubDomains; preload</code></td>
+        <td><span class="pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td><code>x-frame-options</code></td>
+        <td><code>DENY</code></td>
+        <td><span class="pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td><code>x-content-type-options</code></td>
+        <td><code>nosniff</code></td>
+        <td><span class="pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td><code>referrer-policy</code></td>
+        <td><code>strict-origin-when-cross-origin</code></td>
+        <td><span class="pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td><code>permissions-policy</code></td>
+        <td><code>camera=(), microphone=(), geolocation=()</code></td>
+        <td><span class="pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td><code>cross-origin-opener-policy</code></td>
+        <td><code>same-origin-allow-popups</code></td>
+        <td><span class="pass">PASS</span> (required for Google OAuth popup)</td>
+      </tr>
+      <tr>
+        <td><code>content-security-policy</code></td>
+        <td>Present with Google, Stripe, Anthropic domains. <code>unsafe-inline</code> in script-src and style-src.</td>
+        <td><span class="warn">PARTIAL</span> — open issue #477</td>
+      </tr>
+      <tr>
+        <td><code>x-powered-by</code></td>
+        <td><code>Next.js</code></td>
+        <td><span class="warn">LOW</span> — PT2026-LOW-001</td>
+      </tr>
+      <tr>
+        <td>CORS (<code>Access-Control-Allow-Origin</code>)</td>
+        <td>Not present for external origin (tested: <code>evil.com</code>)</td>
+        <td><span class="pass">PASS</span> — no wildcard CORS</td>
+      </tr>
+      <tr>
+        <td><code>cache-control</code> on API routes</td>
+        <td><code>no-store</code></td>
+        <td><span class="pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td>TLS Protocol</td>
+        <td>HTTP/2 enforced; HTTP/3 (QUIC) advertised via <code>alt-svc</code></td>
+        <td><span class="pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td>HTTP → HTTPS redirect</td>
+        <td>301 on naked domain; 308 on www path redirects</td>
+        <td><span class="pass">PASS</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="evidence">
+    <div class="evidence-label">CSP Detail (from live response)</div>
+    <pre><code>content-security-policy:
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com
+             https://js.stripe.com https://analytics.fenrirledger.com https://www.googletagmanager.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com
+            https://apis.google.com;
+  img-src 'self' https://lh3.googleusercontent.com https://img.youtube.com data:;
+  font-src 'self' https://fonts.gstatic.com data:;
+  connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com
+              https://www.googleapis.com https://sheets.googleapis.com
+              https://content.googleapis.com https://docs.google.com
+              https://apis.google.com https://api.stripe.com https://hooks.stripe.com
+              https://api.anthropic.com https://api.openai.com https://analytics.fenrirledger.com;
+  frame-src https://accounts.google.com https://docs.google.com https://drive.google.com
+            https://js.stripe.com https://hooks.stripe.com https://www.youtube.com;
+  form-action 'self';
+  base-uri 'self';
+
+NOTE: unsafe-inline in script-src and style-src — open finding (issue #477)</code></pre>
+  </div>
+</section>
+
+<!-- ── API Audit ─────────────────────────────────────────────────────────── -->
+<section class="section" id="api-audit">
+  <div class="section-title">The Toll of the Bridge</div>
+  <div class="section-heading">API Route requireAuth Audit</div>
+
+  <p>All 21 API route handlers were tested. 19 are protected by <code>requireAuth</code> or <code>requireAuthz</code>. The two unprotected routes are intentionally exempt by design.</p>
+
+  <table>
+    <thead>
+      <tr><th>Route</th><th>Method(s)</th><th>Auth Guard</th><th>Status</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>/api/health</code></td><td>GET</td><td>None</td><td><span class="na">EXEMPT</span></td><td>K8s liveness/readiness probe — intentional</td></tr>
+      <tr><td><code>/api/auth/token</code></td><td>POST</td><td>None</td><td><span class="na">EXEMPT</span></td><td>PKCE token exchange — cannot require prior auth</td></tr>
+      <tr><td><code>/api/config/picker</code></td><td>GET</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 on missing token confirmed</td></tr>
+      <tr><td><code>/api/sync</code></td><td>GET, PUT</td><td>requireAuthz (tier:karl)</td><td><span class="pass">PASS</span></td><td>Higher-level auth with subscription tier check</td></tr>
+      <tr><td><code>/api/sync/pull</code></td><td>GET</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 on missing token confirmed</td></tr>
+      <tr><td><code>/api/sync/push</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 on missing token confirmed</td></tr>
+      <tr><td><code>/api/household/members</code></td><td>GET</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/household/invite</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/household/invite/validate</code></td><td>GET</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/household/join</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/household/kick</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/household/leave</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/sheets/import</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/stripe/checkout</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/stripe/membership</code></td><td>GET</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/stripe/portal</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/stripe/unlink</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/stripe/webhook</code></td><td>POST</td><td>Stripe HMAC</td><td><span class="pass">PASS</span></td><td>Requires <code>stripe-signature</code> header; returns <code>missing_signature</code> without it</td></tr>
+      <tr><td><code>/api/trial/init</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/trial/convert</code></td><td>POST</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+      <tr><td><code>/api/trial/status</code></td><td>POST</td><td>requireAuth (graceful)</td><td><span class="pass">PASS</span></td><td>Returns <code>{"status":"none"}</code> for unauthenticated — intentional design for UI pre-auth polling</td></tr>
+      <tr><td><code>/api/admin/pack-status</code></td><td>GET</td><td>requireAuth</td><td><span class="pass">PASS</span></td><td>401 confirmed</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-pass">
+    <strong>requireAuth Coverage: PASS</strong>
+    All 19 non-exempt API routes properly enforce authentication. Error responses are consistent (<code>{"error":"missing_token","error_description":"..."})</code>) and contain no stack traces, internal paths, or service metadata.
+  </div>
+</section>
+
+<!-- ── Recommendations ──────────────────────────────────────────────────────── -->
+<section class="section" id="recommendations">
+  <div class="section-title">Forging the Fix</div>
+  <div class="section-heading">Remediation Recommendations — Prioritized</div>
+
+  <ul class="rec-list">
+    <li>
+      <span class="sev-badge sev-critical rec-priority">Critical</span>
+      <div class="rec-body">
+        <strong>Remove --skip-auth-regex=.* from Odin's Throne oauth2-proxy (PT2026-CRIT-001)</strong>
+        <span>Delete line 78 from <code>infrastructure/helm/odin-throne/templates/deployment.yaml</code> and run <code>helm upgrade</code>. Verify with a curl check that unauthenticated requests to <code>odins-throne.fenrirledger.com</code> receive a 302 redirect to the OAuth2 login page rather than a 200 with data. File a GitHub issue and assign to FiremanDecko for immediate resolution.</span>
+      </div>
+    </li>
+    <li>
+      <span class="sev-badge sev-high rec-priority">High</span>
+      <div class="rec-body">
+        <strong>Patch or replace SheetJS (HIGH-001 carry-forward, issue #476)</strong>
+        <span>GHSA-4r6h (prototype pollution) and GHSA-5pgg (ReDoS) affect the current SheetJS version. Upgrade to xlsx v0.20.x or migrate to an alternative (e.g., <code>exceljs</code>). This has been open since the March 10 pentest.</span>
+      </div>
+    </li>
+    <li>
+      <span class="sev-badge sev-medium rec-priority">Medium</span>
+      <div class="rec-body">
+        <strong>Resolve CSP unsafe-inline (MEDIUM-001 carry-forward, issue #477)</strong>
+        <span>Restore nonce-based CSP or adopt a strict hash-based policy compatible with Next.js RSC streaming. The nonce-based approach attempted previously was reverted due to CDN caching incompatibility — consider serving CSP headers only via middleware (already in place) and disabling edge caching for HTML responses.</span>
+      </div>
+    </li>
+    <li>
+      <span class="sev-badge sev-medium rec-priority">Medium</span>
+      <div class="rec-body">
+        <strong>Add rate limiting to /api/auth/token (SEV-003 carry-forward)</strong>
+        <span>The PKCE token exchange endpoint has no rate limiting. Implement IP-based rate limiting (e.g., 10 requests/minute per IP) using the existing <code>rateLimit()</code> utility already used in <code>/api/trial/status</code>.</span>
+      </div>
+    </li>
+    <li>
+      <span class="sev-badge sev-medium rec-priority">Medium</span>
+      <div class="rec-body">
+        <strong>Fix SSRF in CSV fetch / validate URL before following redirects (MEDIUM-002 carry-forward, issue #478)</strong>
+        <span>The CSV import pipeline follows HTTP redirects without validating that the final destination is a safe external URL. Add an allowlist or SSRF validator that blocks private IP ranges (10.x, 172.16.x, 192.168.x, 169.254.x) before each fetch in the redirect chain.</span>
+      </div>
+    </li>
+    <li>
+      <span class="sev-badge sev-low rec-priority">Low</span>
+      <div class="rec-body">
+        <strong>Suppress x-powered-by header (PT2026-LOW-001)</strong>
+        <span>Add <code>poweredByHeader: false</code> to <code>next.config.ts</code>. One-line fix, zero functional impact.</span>
+      </div>
+    </li>
+    <li>
+      <span class="sev-badge sev-low rec-priority">Low</span>
+      <div class="rec-body">
+        <strong>Redact commit SHA from /api/health (PT2026-LOW-002)</strong>
+        <span>Return only a short build token or date rather than the full git SHA. K8s probes only require a 200 status code — the body content is unused by Kubernetes itself.</span>
+      </div>
+    </li>
+    <li>
+      <span class="sev-badge sev-info rec-priority">Info</span>
+      <div class="rec-body">
+        <strong>Add /.well-known/security.txt (PT2026-INFO-001)</strong>
+        <span>Create <code>public/security.txt</code> with a contact email, expiry date, and canonical URL. This enables responsible disclosure and signals to security researchers that reports are welcome.</span>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<!-- ── Compliance Checklist ──────────────────────────────────────────────── -->
+<section class="section" id="compliance">
+  <div class="section-title">The Runes of Compliance</div>
+  <div class="section-heading">Security Compliance Summary</div>
+
+  <table>
+    <thead><tr><th>Control</th><th>Status</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>requireAuth on all API routes</td><td><span class="pass">PASS</span></td><td>19/19 non-exempt routes verified</td></tr>
+      <tr><td>HSTS with preload</td><td><span class="pass">PASS</span></td><td>max-age=63072000 with preload</td></tr>
+      <tr><td>X-Frame-Options: DENY</td><td><span class="pass">PASS</span></td><td>Confirmed on all responses</td></tr>
+      <tr><td>No wildcard CORS</td><td><span class="pass">PASS</span></td><td>No Access-Control-Allow-Origin: * on any route</td></tr>
+      <tr><td>No secrets in env/responses</td><td><span class="pass">PASS</span></td><td>No .env files committed; no secrets in response bodies</td></tr>
+      <tr><td>No stack traces in errors</td><td><span class="pass">PASS</span></td><td>All error responses are structured JSON with safe codes</td></tr>
+      <tr><td>Stripe webhook HMAC</td><td><span class="pass">PASS</span></td><td>stripe-signature required; stripe.webhooks.constructEvent() used</td></tr>
+      <tr><td>PKCE OAuth flow</td><td><span class="pass">PASS</span></td><td>code_verifier required; state parameter enforced</td></tr>
+      <tr><td>Firestore IDOR mitigations</td><td><span class="pass">PASS</span></td><td>householdId derived server-side (PRs #1203, #1207)</td></tr>
+      <tr><td>CSP present</td><td><span class="warn">PARTIAL</span></td><td>unsafe-inline remains; issue #477 open</td></tr>
+      <tr><td>Rate limiting</td><td><span class="warn">PARTIAL</span></td><td>trial/status has rate limiting; auth/token and invite/sync routes do not</td></tr>
+      <tr><td>SheetJS dependencies patched</td><td><span class="fail">FAIL</span></td><td>HIGH-001 (issue #476) remains open</td></tr>
+      <tr><td>Odin's Throne access control</td><td><span class="fail">FAIL</span></td><td>PT2026-CRIT-001 — auth bypass via --skip-auth-regex=.*</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="rune-divider">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+
+</main>
+
+<!-- ── Seal ──────────────────────────────────────────────────────────────── -->
+<footer class="seal" id="seal">
+  <div class="seal-runes">ᚺᛖᛁᛗᛞᚨᛚᛚ</div>
+  <div class="seal-title">Heimdall — Security Specialist · Fenrir Ledger</div>
+  <div class="seal-line">Report generated: 2026-03-23 · Issue #1879 · Branch: security/issue-1879-pen-test</div>
+  <div class="seal-line" style="margin-top:0.5rem; color: var(--rune);">The bridge holds — none shall pass unvetted</div>
+</footer>
+
+</body>
+</html>
