@@ -69,15 +69,15 @@
 /* Derived from globals.css light palette (Lightning Norse / Stone Marble).
  * Applied when <html data-theme="light"> is set by useTheme hook. */
 [data-theme="light"] {
-  --void:              #f5f0e8;   /* body bg     — warm beige/cream (hsl 40 30% 95.5%) */
-  --forge:             #faf7f1;   /* sidebar bg  — slightly lighter warm panel surface */
-  --chain:             #ede8dc;   /* card hover  — warm hover/active surface */
+  --void:              hsl(38, 40%, 89%);   /* body bg     — aged parchment */
+  --forge:             hsl(42, 30%, 95%);   /* sidebar bg  — fresh vellum */
+  --chain:             hsl(36, 24%, 85%);   /* card hover  — warm muted well */
   --gold:              #8f6e0e;   /* accent gold — globals.css --primary: 38 80% 28% */
   --gold-bright:       #d97706;   /* bright gold — globals.css --realm-hati: 38 92% 42% */
-  --text-saga:         #0f1419;   /* primary txt — globals.css --foreground: 220 40% 8% */
-  --text-rune:         #475569;   /* sec. text   — globals.css --muted-foreground: 215 20% 35% */
-  --text-void:         #94a3b8;   /* tertiary    — derived */
-  --rune-border:       #d0dce5;   /* borders     — globals.css --border: 214 32% 88% */
+  --text-saga:         hsl(25, 55%, 10%);   /* primary txt — iron-gall ink */
+  --text-rune:         hsl(28, 28%, 35%);   /* sec. text   — warm brown */
+  --text-void:         hsl(30, 20%, 52%);   /* tertiary    — warm muted tan */
+  --rune-border:       hsl(35, 28%, 74%);   /* borders     — warm tan border */
   --teal-asgard:       #077558;   /* status teal — globals.css --realm-asgard: 163 83% 25% */
   --mayo-red:          #CF2734;   /* unchanged — readable on white */
   --mayo-green:        #005a00;   /* darkened for white bg */
@@ -103,12 +103,12 @@
   --write-badge-text: #7c3aed;
   --read-badge-bg:    #e8eef8;
   --read-badge-text:  #2e4a7a;
-  --mist-tool-bg:     rgba(220, 224, 235, 0.55);
-  --mist-tool-border: rgba(80, 80, 120, 0.25);
-  --mist-tool-hover:  rgba(200, 204, 220, 0.80);
+  --mist-tool-bg:     rgba(185, 162, 115, 0.30);
+  --mist-tool-border: rgba(120, 95, 55, 0.25);
+  --mist-tool-hover:  rgba(165, 142, 95, 0.50);
 
-  --tool-batch-header-bg:    rgba(80, 80, 120, 0.08);
-  --tool-batch-header-hover: rgba(80, 80, 120, 0.16);
+  --tool-batch-header-bg:    rgba(100, 80, 45, 0.08);
+  --tool-batch-header-hover: rgba(100, 80, 45, 0.16);
   --bubble-header-bg:        rgba(0, 0, 0, 0.03);
 
   /* light-mode gold is #8f6e0e = rgb(143,110,14) */

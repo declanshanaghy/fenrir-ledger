@@ -18,47 +18,47 @@
    * shadcn/ui component tokens are remapped to the Norse palette.
    */
 
-  /* ── Light Theme (Parchment Norse) ─────────────────────────── */
+  /* ── Light Theme (Vellum Norse) ────────────────────────────── */
   :root {
     /* ── Surfaces ───────────────────────────────────────────── */
-    --background:           38  35% 94%;    /* #f2ede0 — warm parchment, Norse daylight */
-    --foreground:           220 40% 8%;     /* #0f1419 — ink-black, almost obsidian */
+    --background:           38  40% 89%;    /* #e5d6b5 — aged parchment */
+    --foreground:           25  55% 10%;    /* #271409 — iron-gall ink */
 
-    --card:                 40  25% 97%;    /* #faf8f2 — light cream card surface */
-    --card-foreground:      220 40% 8%;
+    --card:                 42  30% 95%;    /* #f4efdf — fresh vellum card */
+    --card-foreground:      25  55% 10%;
 
-    --popover:              40  25% 97%;    /* #faf8f2 — light cream popover */
-    --popover-foreground:   220 40% 8%;
+    --popover:              42  30% 97%;    /* #f7f4ea — popover surface */
+    --popover-foreground:   25  55% 10%;
 
     /* ── Brand ──────────────────────────────────────────────── */
     --primary:              38  80% 28%;    /* #8f6e0e — dark burnt gold, thunderstrike */
     --primary-foreground:   0   0%  100%;   /* pure white on gold */
 
     /* ── Secondary / Muted ──────────────────────────────────── */
-    --secondary:            38  18% 83%;    /* #d8d0c0 — warm parchment grey */
-    --secondary-foreground: 220 40% 8%;
+    --secondary:            35  22% 80%;    /* #cdc0a0 — warm tan secondary */
+    --secondary-foreground: 25  55% 10%;
 
-    --muted:                38  20% 90%;    /* #ece7da — warm muted surface */
-    --muted-foreground:     30  15% 38%;    /* #6b5f4e — warm slate */
+    --muted:                36  24% 85%;    /* #dad0b6 — warm muted surface */
+    --muted-foreground:     28  28% 35%;    /* #6f5238 — warm brown */
 
-    --accent:               38  20% 90%;
-    --accent-foreground:    220 40% 8%;
+    --accent:               42  35% 87%;    /* #dfd1af — gold-wash accent */
+    --accent-foreground:    25  55% 10%;
 
     /* ── Status / Destructive ───────────────────────────────── */
     --destructive:          0   72% 38%;    /* #a91b1b — dark blood red */
     --destructive-foreground: 0  0% 100%;
 
     /* ── Structure ──────────────────────────────────────────── */
-    --border:               38  22% 84%;    /* #d6ccb8 — warm parchment border */
-    --input:                38  28% 93%;    /* #ede8db — warm parchment input */
+    --border:               35  28% 74%;    /* #c8ad88 — warm tan border */
+    --input:                38  25% 91%;    /* #ebdfcb — parchment input */
     --ring:                 38  80% 28%;    /* dark burnt gold focus ring */
     --radius:               0.25rem;        /* sharp, angular — not pill */
 
     /* ── Card Hover (Issue #298) ──────────────────────────── */
     /* Opaque equivalents of semi-transparent hover overlays.
      * Avoids flash from transitioning opaque → transparent colors.
-     * Computed: gold @ 5% over card cream #faf8f2 ≈ #faf6ec */
-    --card-hover:           40 50% 96%;     /* #faf6ec — opaque gold/5-on-cream */
+     * Vellum Norse: gold-wash on card surface ≈ #ede3cc */
+    --card-hover:           42  40% 92%;    /* #ede3cc — opaque card hover */
 
     /* ── Charts (thunder palette for white backgrounds) ───────── */
     --chart-1:              38  80% 28%;    /* dark burnt gold */
