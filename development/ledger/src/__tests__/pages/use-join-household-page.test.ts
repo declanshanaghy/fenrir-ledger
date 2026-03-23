@@ -22,6 +22,16 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn().mockResolvedValue("mock-token"),
 }));
 
+const mockRefreshEntitlement = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+vi.mock("@/hooks/useEntitlement", () => ({
+  useEntitlement: () => ({ refreshEntitlement: mockRefreshEntitlement }),
+}));
+
+const mockClearEntitlementCache = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/entitlement/cache", () => ({
+  clearEntitlementCache: mockClearEntitlementCache,
+}));
+
 const mockPreview = {
   householdId: "hh-1",
   householdName: "Valhalla",
@@ -228,6 +238,8 @@ describe("useJoinHouseholdPage — handleConfirmJoin", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockPush.mockClear();
+    mockRefreshEntitlement.mockResolvedValue(undefined);
+    mockClearEntitlementCache.mockClear();
   });
 
   async function setupWithPreview() {
@@ -320,5 +332,119 @@ describe("useJoinHouseholdPage — handleConfirmJoin", () => {
 
     expect(result.current.step).toBe("merge_error");
     expect(result.current.mergeError).toMatch(/authentication error/i);
+  });
+});
+
+// Issue #1823 — stale isKarl after joining a Karl household
+// After a successful join the entitlement cache must be cleared and
+// refreshEntitlement() called so isKarl transitions true before the /ledger
+// redirect fires (router.push is client-side; EntitlementContext stays mounted).
+describe("useJoinHouseholdPage — entitlement refresh on join success (#1823)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPush.mockClear();
+    mockRefreshEntitlement.mockResolvedValue(undefined);
+    mockClearEntitlementCache.mockClear();
+  });
+
+  async function setupWithPreview() {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => mockPreview });
+
+    const { result } = renderHook(() => useJoinHouseholdPage());
+    fillChars(result);
+    await waitFor(() => expect(result.current.validationStatus).toBe("valid"));
+    return result;
+  }
+
+  it("clears entitlement cache after successful join", async () => {
+    const result = await setupWithPreview();
+
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        householdId: "hh-karl",
+        householdName: "Valhalla",
+        movedCardCount: 3,
+      }),
+    });
+
+    await act(async () => {
+      await result.current.handleConfirmJoin();
+    });
+
+    expect(result.current.step).toBe("success");
+    expect(mockClearEntitlementCache).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls refreshEntitlement after successful join", async () => {
+    const result = await setupWithPreview();
+
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        householdId: "hh-karl",
+        householdName: "Valhalla",
+        movedCardCount: 3,
+      }),
+    });
+
+    await act(async () => {
+      await result.current.handleConfirmJoin();
+    });
+
+    expect(result.current.step).toBe("success");
+    expect(mockRefreshEntitlement).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT refresh entitlement or clear cache on join failure (409)", async () => {
+    const result = await setupWithPreview();
+
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({}),
+    });
+
+    await act(async () => {
+      await result.current.handleConfirmJoin();
+    });
+
+    expect(result.current.step).toBe("race_full");
+    expect(mockClearEntitlementCache).not.toHaveBeenCalled();
+    expect(mockRefreshEntitlement).not.toHaveBeenCalled();
+  });
+
+  it("does NOT refresh entitlement or clear cache on join failure (500)", async () => {
+    const result = await setupWithPreview();
+
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    });
+
+    await act(async () => {
+      await result.current.handleConfirmJoin();
+    });
+
+    expect(result.current.step).toBe("merge_error");
+    expect(mockClearEntitlementCache).not.toHaveBeenCalled();
+    expect(mockRefreshEntitlement).not.toHaveBeenCalled();
+  });
+
+  it("does NOT refresh entitlement or clear cache on network error (fetch throws)", async () => {
+    const result = await setupWithPreview();
+
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error("offline"));
+
+    await act(async () => {
+      await result.current.handleConfirmJoin();
+    });
+
+    expect(result.current.step).toBe("merge_error");
+    expect(mockClearEntitlementCache).not.toHaveBeenCalled();
+    expect(mockRefreshEntitlement).not.toHaveBeenCalled();
   });
 });
