@@ -144,10 +144,10 @@ export function KarlUpsellDialog({
         {/* ── Two-column body ────────────────────────────────────────── */}
         <div className="flex flex-col md:grid md:grid-cols-2 md:gap-0">
 
-          {/* ── Left column: image + icon + name + tagline + teaser ──── */}
+          {/* ── Left column: image only ─────────────────────────────── */}
           <div className="flex flex-col md:border-r md:border-border">
             {/* Feature image — same artwork as /features page */}
-            <div className="w-full border-b border-border overflow-hidden">
+            <div className="w-full overflow-hidden">
               <ThemedFeatureImage
                 image={featureImage}
                 alt={`${featureName} feature artwork`}
@@ -158,59 +158,28 @@ export function KarlUpsellDialog({
                 className="rounded-none border-0"
               />
             </div>
-            {/* Feature hero — prop-driven */}
-            <div className="flex flex-col items-center gap-2.5 px-5 pt-4 pb-5 border-b border-border md:border-b-0 md:flex-1 md:justify-center">
-              {/* Feature icon with lock badge */}
-              <div
-                className="relative w-[56px] h-[56px] sm:w-[72px] sm:h-[72px] border border-dashed border-border flex items-center justify-center"
-                aria-hidden="true"
-              >
-                <span
-                  className="text-2xl sm:text-[32px] text-primary leading-none select-none"
-                  style={{ fontFamily: "serif" }}
-                >
-                  {featureIcon}
-                </span>
-                {/* Lock badge */}
-                <span
-                  className="absolute -bottom-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 border border-border bg-background flex items-center justify-center text-[8px] sm:text-[10px] rounded-sm"
-                  aria-hidden="true"
-                >
-                  &#128274;
-                </span>
-              </div>
-
-              {/* Feature name */}
-              <DialogTitle className="font-display text-xl sm:text-[20px] font-bold text-center uppercase tracking-wide text-foreground">
-                {featureName}
-              </DialogTitle>
-
-              {/* Feature tagline — Voice 2 atmospheric */}
-              <p
-                className="text-[11px] italic text-muted-foreground/80 text-center font-body"
-                aria-hidden="true"
-              >
-                {featureTagline}
-              </p>
-
-              {/* Feature teaser — what user is missing (Voice 1) */}
-              <div className="border border-dashed border-border p-3 sm:p-3.5 w-full mt-1">
-                <strong className="block text-[11px] font-mono uppercase tracking-[0.06em] text-muted-foreground mb-1">
-                  What you&apos;re missing
-                </strong>
-                <DialogDescription className="text-xs sm:text-[12px] text-foreground/90 leading-relaxed font-body">
-                  {featureTeaser}
-                </DialogDescription>
-              </div>
-            </div>
+            {/* Visually hidden title for accessibility */}
+            <DialogTitle className="sr-only">
+              {featureName}
+            </DialogTitle>
           </div>
 
-          {/* ── Right column: benefits + CTA ─────────────────────────── */}
-          <div className="flex flex-col px-5 py-5 gap-4">
+          {/* ── Right column: teaser + benefits + CTA ──────────────── */}
+          <div className="flex flex-col px-5 py-4 gap-3">
+
+            {/* Feature teaser — what user is missing (Voice 1) */}
+            <div className="border border-dashed border-border p-3 w-full">
+              <strong className="block text-[11px] font-mono uppercase tracking-[0.06em] text-muted-foreground mb-1">
+                What you&apos;re missing
+              </strong>
+              <DialogDescription className="text-xs sm:text-[12px] text-foreground/90 leading-relaxed font-body">
+                {featureTeaser}
+              </DialogDescription>
+            </div>
 
             {/* Feature benefits checklist */}
             <ul
-              className="flex flex-col gap-2 text-sm"
+              className="flex flex-col gap-1.5 text-sm"
               aria-label={`${featureName} features`}
             >
               {featureBenefits.map((benefit) => (
@@ -273,7 +242,7 @@ export function KarlUpsellDialog({
         </div>
 
         {/* ── Footer — "Not now" dismiss ─────────────────────────────── */}
-        <div className="border-t border-border px-5 py-3 flex justify-center">
+        <div className="border-t border-border px-5 py-2 flex justify-center">
           <button
             type="button"
             onClick={onDismiss}
