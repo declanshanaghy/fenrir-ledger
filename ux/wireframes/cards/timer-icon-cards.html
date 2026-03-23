@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Timer Icon on Card Views — Issue #1850</title>
+  <style>
+    /* ── Wireframe layout rules ONLY — no theme styling ──────────────────────
+       No colors, no backgrounds, no border-radius, no box-shadow, no custom
+       fonts beyond sans-serif. Permitted: flex/grid, border, width/height,
+       padding/margin, font-size/weight. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 48px; }
+
+    /* ── Document header ──────────────────────────────────────────────────── */
+    .doc-header { border-bottom: 2px solid; padding-bottom: 16px; }
+    .doc-header h1 { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+    .doc-header .meta { font-size: 12px; }
+
+    /* ── Section structure ────────────────────────────────────────────────── */
+    .section { display: flex; flex-direction: column; gap: 20px; }
+    .section-title {
+      font-size: 12px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.1em; border-bottom: 2px solid; padding-bottom: 4px;
+    }
+    .section-desc { font-size: 12px; font-style: italic; }
+
+    /* ── Note / annotation ────────────────────────────────────────────────── */
+    .note {
+      font-size: 11px; font-style: italic; border-left: 2px solid;
+      padding: 4px 8px; margin-top: 6px;
+    }
+    .note strong { font-style: normal; }
+    .spec-block {
+      border: 1px dashed; padding: 12px; font-size: 12px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .spec-block h3 { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .spec-row { display: flex; gap: 8px; }
+    .spec-label { font-weight: bold; min-width: 120px; }
+
+    /* ── Comparison columns ───────────────────────────────────────────────── */
+    .compare-row { display: flex; gap: 24px; flex-wrap: wrap; }
+    .compare-col { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 8px; }
+    .compare-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em; padding-bottom: 4px; border-bottom: 1px dashed;
+    }
+
+    /* ── Mobile frame (375px) ─────────────────────────────────────────────── */
+    .mobile-frame {
+      width: 375px; border: 2px solid; padding: 12px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .mobile-label {
+      font-size: 10px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.1em; padding-bottom: 6px; border-bottom: 1px solid;
+    }
+
+    /* ── Card tile base ───────────────────────────────────────────────────── */
+    .card-tile {
+      border: 1px solid; padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      position: relative;
+    }
+    .card-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; gap: 8px;
+    }
+    .card-icons { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .card-name-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .card-name { font-size: 14px; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .card-issuer { font-size: 11px; }
+    .status-badge {
+      font-size: 10px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.06em; border: 1px solid; padding: 2px 6px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .card-body { display: flex; flex-direction: column; gap: 6px; }
+    .data-row { display: flex; justify-content: space-between; font-size: 12px; }
+    .data-label { }
+    .data-value { font-weight: 500; }
+    .data-value.urgent { font-weight: bold; }
+
+    /* ── Spend progress bar (inline) ──────────────────────────────────────── */
+    .spend-bar-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .spend-bar-track { height: 4px; width: 100%; border: 1px solid; }
+    .spend-bar-fill { height: 100%; }
+    .spend-bar-fill-60 { width: 60%; border-right: 1px solid; }
+    .spend-bar-fill-100 { width: 100%; }
+
+    /* ── Icon ring base (SVG placeholder in wireframe) ────────────────────── */
+    /*
+     * Two rings sit side-by-side inside .card-icons:
+     *   1. spend-ring  — existing StatusRing (spend vs minSpend ratio for Hunt,
+     *                    fee days vs totalDays for others)
+     *   2. timer-ring  — NEW TimerRing (elapsed days / totalWindow clamped 0-1)
+     *
+     * Both rings are 40×40px in wireframe. In implementation they match the
+     * existing StatusRing SIZE=48px. Stacking option is annotated below.
+     */
+    .ring-pair { display: flex; gap: 4px; align-items: center; }
+
+    /* Generic ring placeholder (wireframe border-only) */
+    .ring-svg {
+      width: 40px; height: 40px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .ring-svg svg { width: 40px; height: 40px; }
+
+    /* Ring label below icon (contextual — used in icon anatomy section) */
+    .ring-caption {
+      font-size: 9px; text-align: center; font-style: italic;
+      white-space: nowrap;
+    }
+    .ring-col { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+
+    /* ── Karl rune corners (decorative) ──────────────────────────────────── */
+    .rune-corner { position: absolute; font-size: 9px; font-weight: bold; line-height: 1; }
+    .rune-tl { top: 4px; left: 5px; }
+    .rune-tr { top: 4px; right: 5px; }
+    .rune-bl { bottom: 4px; left: 5px; }
+    .rune-br { bottom: 4px; right: 5px; }
+
+    /* ── Urgency variants (wireframe: using border weight, not color) ──────── */
+    /*
+     * In implementation urgency coloring is achieved through realm color tokens:
+     *   - Healthy   (>60d): realm-asgard (teal)
+     *   - Hati      (≤60d): realm-hati   (amber)
+     *   - Muspel    (≤30d): realm-muspel (blood orange) + ring--urgent pulse
+     *   - Ragnarok  (≤0d):  realm-ragnarok (overdue red)
+     * In wireframe we use border weight variation + text labels to convey urgency.
+     */
+    .ring-healthy svg circle.progress { stroke-width: 3; stroke-dashoffset: 30; } /* ~75% filled */
+    .ring-warn svg circle.progress    { stroke-width: 4; }
+    .ring-urgent svg circle.progress  { stroke-width: 5; }
+
+    /* ── Action row (Howl) ────────────────────────────────────────────────── */
+    .action-row {
+      border-top: 1px solid; padding-top: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px;
+    }
+    .action-label { font-style: italic; }
+    .action-btn { border: 1px solid; padding: 4px 10px; font-size: 11px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
+
+    /* ── Tooltip callout ──────────────────────────────────────────────────── */
+    .tooltip-callout {
+      border: 1px solid; padding: 6px 10px; font-size: 11px;
+      max-width: 200px; position: absolute; right: 0; top: 44px; z-index: 1;
+    }
+    .tooltip-callout::before { content: "▲"; font-size: 9px; display: block; text-align: center; }
+    .tooltip-wrap { position: relative; display: inline-block; }
+
+    /* ── Responsive grid (desktop) ────────────────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── All-tab mixing indicator ─────────────────────────────────────────── */
+    .tab-origin-tag {
+      font-size: 9px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.08em; border: 1px solid; padding: 1px 5px;
+      position: absolute; top: 4px; right: 48px; /* left of status badge */
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ── Document header ──────────────────────────────────────────────────── -->
+  <header class="doc-header">
+    <h1>Timer Icon on Card Views — Issue #1850</h1>
+    <p class="meta">
+      Wireframe · Luna UX · 2026-03-23 · Covers: Hunt, Howl, Valhalla, All tabs · Mobile-first 375px+
+    </p>
+    <p class="note" style="margin-top: 12px;">
+      <strong>Scope:</strong> Adds a second progress indicator (the <em>Timer Ring</em>) beside the
+      existing spend/status ring on every card view. The timer fills from left to right (clockwise
+      from 12 o'clock) based on elapsed time from openDate to the relevant deadline. The existing
+      spend ring is unchanged.
+    </p>
+  </header>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 1 — ICON ANATOMY: SPEND RING + TIMER RING
+       ═════════════════════════════════════════════════════════════════════== -->
+  <section class="section">
+    <h2 class="section-title">1 — Icon Anatomy: Spend Ring + Timer Ring</h2>
+    <p class="section-desc">
+      Two 48×48px SVG rings sit side-by-side in the card header icon area.
+      The left ring is the existing StatusRing (spend or fee progress).
+      The right ring is the new TimerRing (time elapsed vs total window).
+    </p>
+
+    <div class="compare-row">
+
+      <!-- Existing spend ring -->
+      <div class="compare-col">
+        <p class="compare-label">Existing: Spend Ring (StatusRing)</p>
+        <div class="ring-col">
+          <div class="ring-svg" aria-label="Spend ring showing issuer initial C, 60% spent">
+            <svg viewBox="0 0 48 48" role="img" aria-label="Spend ring: 60% of min spend met">
+              <!-- Track ring -->
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+              <!-- Progress ring — 60% filled (offset = 113.097 * 0.4 = 45.24) -->
+              <circle class="progress" cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                stroke-dasharray="113.097" stroke-dashoffset="45"
+                stroke-linecap="round"
+                style="transform: rotate(-90deg); transform-origin: center;"/>
+              <!-- Issuer initial -->
+              <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
+                font-size="13" font-weight="600" fill="#000">C</text>
+            </svg>
+          </div>
+          <p class="ring-caption">Spend ring<br/>Issuer initial inside</p>
+        </div>
+        <p class="note">
+          <strong>No change.</strong> Existing StatusRing component. For Hunt: filled by
+          amountSpent / spendRequired. For other tabs: filled by daysRemaining / totalDays.
+          Color: realm-alfheim (Hunt bonus_open), realm-hati/muspel (fee urgency), etc.
+        </p>
+      </div>
+
+      <!-- New timer ring -->
+      <div class="compare-col">
+        <p class="compare-label">New: Timer Ring (TimerRing)</p>
+        <div class="ring-col">
+          <div class="ring-svg" aria-label="Timer ring showing 75% of time elapsed, clock icon inside">
+            <svg viewBox="0 0 48 48" role="img" aria-label="Timer: 75% of deadline window elapsed">
+              <!-- Track ring -->
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+              <!-- Timer progress ring — 75% elapsed -->
+              <circle class="progress" cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                stroke-dasharray="113.097" stroke-dashoffset="28"
+                stroke-linecap="round"
+                style="transform: rotate(-90deg); transform-origin: center;"/>
+              <!-- Clock glyph inside (⏱ simplified as hands) -->
+              <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1.5"/>
+              <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <p class="ring-caption">Timer ring<br/>Clock face inside</p>
+        </div>
+        <p class="note">
+          <strong>New component: TimerRing.</strong> Arc fills clockwise from 12 o'clock.
+          Fill ratio = <code>(today − openDate) / (deadlineDate − openDate)</code>, clamped [0, 1].
+          For Valhalla: ratio = <code>(closedAt − openDate) / (deadlineDate − openDate)</code>, fully filled at 1.
+          Inner icon: simplified clock face (circle + hour/minute hands as SVG lines) — no text inside.
+          <br/><strong>Color mapping by tab:</strong>
+          Hunt = realm-alfheim (teal), Howl = urgency thresholds (asgard/hati/muspel), Valhalla = realm-stone (muted).
+        </p>
+      </div>
+
+      <!-- Side-by-side layout (preferred) -->
+      <div class="compare-col">
+        <p class="compare-label">Preferred Layout: Side-by-Side (4px gap)</p>
+        <div class="ring-pair" aria-label="Spend ring and Timer ring side by side">
+          <div class="ring-col">
+            <div class="ring-svg">
+              <svg viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                <circle class="progress" cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                  stroke-dasharray="113.097" stroke-dashoffset="45" stroke-linecap="round"
+                  style="transform: rotate(-90deg); transform-origin: center;"/>
+                <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#000">C</text>
+              </svg>
+            </div>
+            <p class="ring-caption">Spend</p>
+          </div>
+          <div class="ring-col">
+            <div class="ring-svg">
+              <svg viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                <circle class="progress" cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                  stroke-dasharray="113.097" stroke-dashoffset="28" stroke-linecap="round"
+                  style="transform: rotate(-90deg); transform-origin: center;"/>
+                <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1.5"/>
+                <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <p class="ring-caption">Timer</p>
+          </div>
+        </div>
+        <p class="note">
+          <strong>Decision: side-by-side.</strong> Two 48×48 rings, 4px gap.
+          Total icon footprint: ~100px wide × 48px tall. At 375px mobile this
+          leaves ~275px for card name + status badge — sufficient.
+          Alternative stacked (timer above spend, each 32px) is noted below
+          but not preferred — reduces ring legibility.
+        </p>
+      </div>
+
+    </div><!-- /.compare-row -->
+
+    <!-- Timer ring tooltip spec -->
+    <div class="spec-block">
+      <h3>Timer Ring Tooltip Spec</h3>
+      <div class="spec-row"><span class="spec-label">Hunt / active:</span>
+        <span>"X days elapsed · Y days remaining until [bonus deadline]"</span></div>
+      <div class="spec-row"><span class="spec-label">Howl (urgent):</span>
+        <span>"X days elapsed · Y days until annual fee due"</span></div>
+      <div class="spec-row"><span class="spec-label">Valhalla:</span>
+        <span>"Held for X days (opened [date] → closed [date])"</span></div>
+      <div class="spec-row"><span class="spec-label">Trigger:</span>
+        <span>Native HTML title="" on the wrapper div (matches existing StatusRing pattern)</span></div>
+      <div class="spec-row"><span class="spec-label">ARIA:</span>
+        <span>role="img" aria-label="Timer: X of Y days elapsed toward [deadline]"</span></div>
+    </div>
+
+    <!-- Alternative: stacked rings -->
+    <div class="spec-block">
+      <h3>Alternative: Stacked Rings (not preferred — annotated for engineering reference)</h3>
+      <div class="ring-pair" style="gap: 0; flex-direction: column; align-items: flex-start;">
+        <div class="ring-col" style="flex-direction: row; gap: 8px; align-items: center;">
+          <!-- stacked: spend on top at 32px, timer below at 32px -->
+          <div class="ring-svg" style="width: 32px; height: 32px;">
+            <svg viewBox="0 0 48 48" width="32" height="32">
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                stroke-dasharray="113.097" stroke-dashoffset="45" stroke-linecap="round"
+                style="transform: rotate(-90deg); transform-origin: center;"/>
+              <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#000">C</text>
+            </svg>
+          </div>
+          <div class="ring-svg" style="width: 32px; height: 32px;">
+            <svg viewBox="0 0 48 48" width="32" height="32">
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                stroke-dasharray="113.097" stroke-dashoffset="28" stroke-linecap="round"
+                style="transform: rotate(-90deg); transform-origin: center;"/>
+              <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1.5"/>
+              <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span style="font-size: 11px; font-style: italic;">
+            Stacked: spend (left) + timer (right) both at 32px. Saves horizontal space
+            but rings become harder to read. Not preferred.
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 2 — HUNT TAB CARD (bonus_open)
+       ═════════════════════════════════════════════════════════════════════== -->
+  <section class="section">
+    <h2 class="section-title">2 — Hunt Tab Card (status: bonus_open)</h2>
+    <p class="section-desc">
+      Extends HuntCardTile. Spend ring shows amountSpent/minSpend.
+      Timer ring shows elapsed time from openDate toward bonusDeadline.
+      Both rings in realm-alfheim teal (Hunt color).
+    </p>
+
+    <div class="compare-row">
+
+      <!-- Mobile 375px -->
+      <div class="compare-col">
+        <p class="compare-label">Mobile 375px — Hunt Card</p>
+        <div class="mobile-frame">
+          <p class="mobile-label">The Hunt · bonus_open</p>
+
+          <!-- Card: healthy — 60% spent, 75% time elapsed -->
+          <div class="card-tile">
+            <span aria-hidden="true" class="rune-corner rune-tl">ᚠ</span>
+            <span aria-hidden="true" class="rune-corner rune-tr">ᚱ</span>
+            <span aria-hidden="true" class="rune-corner rune-bl">ᛁ</span>
+            <span aria-hidden="true" class="rune-corner rune-br">ᚾ</span>
+
+            <div class="card-header">
+              <div class="card-icons">
+                <!-- Spend ring: 60% of min spend met -->
+                <div class="ring-svg" title="$1,800 remaining to spend · 45 days left">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Chase Sapphire: 60% of min spend complete. $1,800 remaining · 45 days left" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                      stroke-dasharray="113.097" stroke-dashoffset="45"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center;"/>
+                    <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#000">C</text>
+                  </svg>
+                </div>
+                <!-- Timer ring: 75% of bonus window elapsed -->
+                <div class="ring-svg" title="68 days elapsed · 45 days remaining until bonus deadline">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Timer: 68 of 113 days elapsed toward bonus deadline" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                      stroke-dasharray="113.097" stroke-dashoffset="28"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center;"/>
+                    <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1.5"/>
+                    <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="card-name-col">
+                <span class="card-issuer">Chase</span>
+                <span class="card-name">Sapphire Preferred</span>
+              </div>
+              <span class="status-badge">Bonus Open</span>
+            </div>
+
+            <div class="card-body">
+              <div class="data-row">
+                <span class="data-label">Min spend</span>
+                <span class="data-value">$4,500</span>
+              </div>
+              <div class="spend-bar-wrap">
+                <div class="data-row">
+                  <span class="data-label">Spent</span>
+                  <span class="data-value">$2,700 <span style="font-size: 11px; font-weight: normal;">(60%)</span></span>
+                </div>
+                <div class="spend-bar-track" role="progressbar" aria-valuenow="2700" aria-valuemin="0" aria-valuemax="4500" aria-label="Min spend progress: 60%">
+                  <div class="spend-bar-fill spend-bar-fill-60"></div>
+                </div>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Bonus deadline</span>
+                <span class="data-value">May 7, 2026</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Opened</span>
+                <span class="data-value">Jan 14, 2026</span>
+              </div>
+            </div>
+          </div><!-- /.card-tile -->
+
+          <!-- Card: urgent — 95% time elapsed, <30d remaining -->
+          <div class="card-tile">
+            <div class="card-header">
+              <div class="card-icons">
+                <!-- Spend ring: 40% spent (behind pace) -->
+                <div class="ring-svg" title="$2,700 remaining to spend · 14 days left">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Amex Gold: 40% of min spend complete. $2,700 remaining · 14 days left — URGENT" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                      stroke-dasharray="113.097" stroke-dashoffset="68"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center;"/>
+                    <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#000">A</text>
+                  </svg>
+                </div>
+                <!-- Timer ring: 95% elapsed — URGENT -->
+                <div class="ring-svg" title="99 days elapsed · 14 days remaining — deadline approaching!">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Timer: 99 of 113 days elapsed — 14 days remaining, urgent" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <!-- Urgent: heavier stroke weight in wireframe to convey urgency -->
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="5"
+                      stroke-dasharray="113.097" stroke-dashoffset="5"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center;"/>
+                    <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1.5"/>
+                    <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="card-name-col">
+                <span class="card-issuer">Amex</span>
+                <span class="card-name">Gold Card</span>
+              </div>
+              <span class="status-badge">Bonus Open</span>
+            </div>
+
+            <div class="card-body">
+              <div class="data-row">
+                <span class="data-label">Min spend</span>
+                <span class="data-value">$4,500</span>
+              </div>
+              <div class="spend-bar-wrap">
+                <div class="data-row">
+                  <span class="data-label">Spent</span>
+                  <span class="data-value">$1,800 <span style="font-size: 11px; font-weight: normal;">(40%)</span></span>
+                </div>
+                <div class="spend-bar-track" role="progressbar" aria-valuenow="1800" aria-valuemin="0" aria-valuemax="4500" aria-label="Min spend progress: 40%">
+                  <div class="spend-bar-fill" style="width: 40%; border-right: 1px solid;"></div>
+                </div>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Bonus deadline</span>
+                <span class="data-value urgent">Apr 6, 2026 (14d)</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Opened</span>
+                <span class="data-value">Dec 14, 2025</span>
+              </div>
+            </div>
+          </div><!-- /.card-tile urgent -->
+
+        </div><!-- /.mobile-frame -->
+        <p class="note">
+          <strong>Urgent state:</strong> Timer ring stroke weight increases in wireframe (in impl: ring--urgent pulse animation + realm-muspel color).
+          Bonus deadline row shows countdown in parentheses when &lt;30d.
+        </p>
+      </div><!-- /.compare-col mobile -->
+
+      <!-- Annotations column -->
+      <div class="compare-col">
+        <p class="compare-label">Hunt Card — Design Decisions</p>
+
+        <div class="spec-block">
+          <h3>Icon Area Layout</h3>
+          <div class="spec-row"><span class="spec-label">Order:</span><span>Spend ring (left) · Timer ring (right)</span></div>
+          <div class="spec-row"><span class="spec-label">Gap:</span><span>4px between rings</span></div>
+          <div class="spec-row"><span class="spec-label">Size:</span><span>Both 48×48px (matches existing StatusRing)</span></div>
+          <div class="spec-row"><span class="spec-label">Timer color:</span><span>realm-alfheim teal (matches spend ring for cohesion on Hunt)</span></div>
+          <div class="spec-row"><span class="spec-label">Urgent override:</span><span>Timer ring switches to realm-muspel (≤30d) / realm-hati (≤60d)</span></div>
+        </div>
+
+        <div class="spec-block">
+          <h3>Timer Fill Logic — Hunt</h3>
+          <div class="spec-row"><span class="spec-label">Numerator:</span><span>today − openDate (days elapsed)</span></div>
+          <div class="spec-row"><span class="spec-label">Denominator:</span><span>bonusDeadline − openDate (total window)</span></div>
+          <div class="spec-row"><span class="spec-label">Clamped:</span><span>[0, 1]</span></div>
+          <div class="spec-row"><span class="spec-label">SVG offset:</span><span>CIRCUMFERENCE × (1 − ratio) [same math as StatusRing]</span></div>
+          <div class="spec-row"><span class="spec-label">Tooltip:</span><span>"X days elapsed · Y days remaining until bonus deadline"</span></div>
+        </div>
+
+        <div class="spec-block">
+          <h3>Hunt Card Data Rows (unchanged from HuntCardTile)</h3>
+          <div class="spec-row"><span class="spec-label">Min spend:</span><span>card.signUpBonus.spendRequirement</span></div>
+          <div class="spec-row"><span class="spec-label">Spent:</span><span>card.amountSpent + % + progress bar</span></div>
+          <div class="spec-row"><span class="spec-label">Bonus deadline:</span><span>formatDate(deadline) + countdown if ≤30d</span></div>
+          <div class="spec-row"><span class="spec-label">Opened:</span><span>formatDate(card.openDate)</span></div>
+        </div>
+
+        <p class="note">
+          <strong>Implementation note:</strong> HuntCardTile currently passes
+          <code>amountSpent/spendRequired</code> as the ring numerator/denominator (reusing StatusRing math).
+          The new TimerRing is a separate component — do NOT repurpose StatusRing for the timer.
+          Both rings should be composable independently.
+        </p>
+      </div><!-- /.compare-col annotations -->
+
+    </div><!-- /.compare-row -->
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 3 — HOWL TAB CARD (fee_approaching / promo_expiring)
+       ═════════════════════════════════════════════════════════════════════== -->
+  <section class="section">
+    <h2 class="section-title">3 — Howl Tab Card (fee_approaching / promo_expiring)</h2>
+    <p class="section-desc">
+      Howl shows the timer ring only (no spend ring — fee cards don't have a spend ratio).
+      Timer fills from openDate toward annualFeeDate. Urgency colors dominate.
+      Red (&lt;30d remaining), amber (30–60d), teal (&gt;60d).
+      If a bonus window is also closing without meeting min spend, a fee warning row appears.
+    </p>
+
+    <div class="compare-row">
+
+      <!-- Mobile: Howl cards -->
+      <div class="compare-col">
+        <p class="compare-label">Mobile 375px — Howl Cards</p>
+        <div class="mobile-frame">
+          <p class="mobile-label">The Howl · fee_approaching</p>
+
+          <!-- Howl card: amber — 45d remaining -->
+          <div class="card-tile">
+            <div class="card-header">
+              <div class="card-icons">
+                <!-- Timer only (no spend ring on Howl) -->
+                <div class="ring-svg" title="320 days elapsed · 45 days remaining until annual fee">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Timer: 320 of 365 days elapsed. 45 days until annual fee — warning" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <!-- Amber urgency: medium stroke weight in wireframe -->
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="4"
+                      stroke-dasharray="113.097" stroke-dashoffset="14"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center;"/>
+                    <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1.5"/>
+                    <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="card-name-col">
+                <span class="card-issuer">Chase</span>
+                <span class="card-name">Freedom Unlimited</span>
+              </div>
+              <span class="status-badge">Fee Due</span>
+            </div>
+
+            <div class="card-body">
+              <div class="data-row">
+                <span class="data-label">Annual fee</span>
+                <span class="data-value">$95</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Due date</span>
+                <span class="data-value urgent">May 7, 2026 (45d)</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Opened</span>
+                <span class="data-value">Mar 23, 2025</span>
+              </div>
+            </div>
+
+            <div class="action-row">
+              <span class="action-label">Renew or cancel?</span>
+              <button class="action-btn">Manage</button>
+            </div>
+          </div><!-- /.card-tile amber -->
+
+          <!-- Howl card: red — 18d remaining, also bonus closing -->
+          <div class="card-tile">
+            <div class="card-header">
+              <div class="card-icons">
+                <div class="ring-svg" title="347 days elapsed · 18 days remaining until annual fee — URGENT">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Timer: 347 of 365 days elapsed. 18 days until annual fee — urgent" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <!-- Red urgency: heaviest stroke -->
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="5"
+                      stroke-dasharray="113.097" stroke-dashoffset="5"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center;"/>
+                    <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1.5"/>
+                    <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="card-name-col">
+                <span class="card-issuer">Capital One</span>
+                <span class="card-name">Venture X</span>
+              </div>
+              <span class="status-badge">Fee Due</span>
+            </div>
+
+            <div class="card-body">
+              <div class="data-row">
+                <span class="data-label">Annual fee</span>
+                <span class="data-value">$395</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Due date</span>
+                <span class="data-value urgent">Apr 10, 2026 (18d) ⚠</span>
+              </div>
+              <!-- Bonus warning row (optional — appears when bonus window also closing without met spend) -->
+              <div class="data-row" style="border-top: 1px dashed; padding-top: 6px; margin-top: 2px;">
+                <span class="data-label">Bonus closing</span>
+                <span class="data-value urgent">$1,200 still needed</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Opened</span>
+                <span class="data-value">Mar 23, 2025</span>
+              </div>
+            </div>
+
+            <div class="action-row">
+              <span class="action-label">Action needed soon</span>
+              <button class="action-btn">Review</button>
+            </div>
+          </div><!-- /.card-tile red -->
+
+        </div><!-- /.mobile-frame -->
+        <p class="note">
+          <strong>Howl uses timer ring only</strong> — no spend ring.
+          Fee cards don't have a spend requirement to track.
+          The single larger timer ring visually dominates, appropriate for urgency focus.
+        </p>
+      </div><!-- /.compare-col -->
+
+      <!-- Annotations -->
+      <div class="compare-col">
+        <p class="compare-label">Howl Card — Design Decisions</p>
+
+        <div class="spec-block">
+          <h3>Icon Area Layout — Howl</h3>
+          <div class="spec-row"><span class="spec-label">Rings shown:</span><span>Timer ring ONLY (no spend ring)</span></div>
+          <div class="spec-row"><span class="spec-label">Ring size:</span><span>48×48px (full size — no spend ring to pair with)</span></div>
+          <div class="spec-row"><span class="spec-label">Position:</span><span>Same left position as dual-ring area on Hunt cards — consistent header height</span></div>
+        </div>
+
+        <div class="spec-block">
+          <h3>Timer Fill Logic — Howl</h3>
+          <div class="spec-row"><span class="spec-label">Numerator:</span><span>today − openDate (or lastFeeDate if available)</span></div>
+          <div class="spec-row"><span class="spec-label">Denominator:</span><span>annualFeeDate − openDate (365d fallback)</span></div>
+          <div class="spec-row"><span class="spec-label">Color thresholds:</span><span>&gt;60d → realm-asgard · ≤60d → realm-hati (amber) · ≤30d → realm-muspel (red)</span></div>
+          <div class="spec-row"><span class="spec-label">Urgent pulse:</span><span>ring--urgent CSS class applied when ≤30d (same as StatusRing)</span></div>
+        </div>
+
+        <div class="spec-block">
+          <h3>Howl Card Data Rows</h3>
+          <div class="spec-row"><span class="spec-label">Annual fee:</span><span>card.annualFee (formatted currency)</span></div>
+          <div class="spec-row"><span class="spec-label">Due date:</span><span>formatDate(annualFeeDate) + "(Xd)" countdown when ≤60d</span></div>
+          <div class="spec-row"><span class="spec-label">Bonus closing*:</span><span>Shown only when bonus window ≤60d AND amountSpent &lt; spendRequired</span></div>
+          <div class="spec-row"><span class="spec-label">Opened:</span><span>formatDate(card.openDate)</span></div>
+          <div class="spec-row"><span class="spec-label">Action row:</span><span>"Renew or cancel?" / "Action needed" + Manage/Review button</span></div>
+        </div>
+
+        <p class="note">
+          <strong>* Bonus closing row:</strong> Only appears when the card has both an upcoming annual fee
+          AND an unmet bonus deadline within the same &lt;60d window. This surfaces the double-urgency
+          scenario where the user needs to act on both fee renewal AND bonus spend simultaneously.
+        </p>
+
+        <div class="spec-block">
+          <h3>Urgency Color Reference (Howl Timer Ring)</h3>
+          <div class="spec-row" style="font-size: 11px;"><span>🔵 &gt;60d</span><span>realm-asgard (teal) — standard</span></div>
+          <div class="spec-row" style="font-size: 11px;"><span>🟡 ≤60d</span><span>realm-hati (amber) — approaching</span></div>
+          <div class="spec-row" style="font-size: 11px;"><span>🔴 ≤30d</span><span>realm-muspel (red) + ring--urgent pulse</span></div>
+          <p class="note" style="margin-top: 6px;">
+            <strong>Wireframe note:</strong> Color is conveyed here via emoji label only.
+            In implementation use existing realm CSS tokens — do not hardcode colors.
+          </p>
+        </div>
+      </div><!-- /.compare-col annotations -->
+
+    </div><!-- /.compare-row -->
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 4 — VALHALLA TAB CARD (closed / graduated)
+       ═════════════════════════════════════════════════════════════════════== -->
+  <section class="section">
+    <h2 class="section-title">4 — Valhalla Tab Card (status: closed / graduated)</h2>
+    <p class="section-desc">
+      Valhalla shows a completed timeline: timer ring fully filled (ratio = 1.0),
+      in muted realm-stone color. Spend ring shows final spend state — full with checkmark
+      overlay if bonus was met, partial if not.
+    </p>
+
+    <div class="compare-row">
+
+      <!-- Mobile: Valhalla cards -->
+      <div class="compare-col">
+        <p class="compare-label">Mobile 375px — Valhalla Cards</p>
+        <div class="mobile-frame">
+          <p class="mobile-label">Valhalla · closed</p>
+
+          <!-- Valhalla card: bonus earned, fully filled rings -->
+          <div class="card-tile">
+            <div class="card-header">
+              <div class="card-icons">
+                <!-- Spend ring: 100% — bonus earned — checkmark overlay -->
+                <div class="ring-svg" title="Bonus earned: $4,500 spent of $4,500 required">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Chase Sapphire: bonus earned — full spend ring" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                      stroke-dasharray="113.097" stroke-dashoffset="0"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center;"/>
+                    <!-- Checkmark inside (✓) -->
+                    <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="bold" fill="#000">✓</text>
+                  </svg>
+                </div>
+                <!-- Timer ring: fully filled, muted -->
+                <div class="ring-svg" title="Held for 247 days (opened Jan 14, 2025 → closed Sep 18, 2025)">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Timer: held for 247 days — complete" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <!-- Fully filled, muted (thinner stroke to indicate closed/inactive) -->
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2"
+                      stroke-dasharray="113.097" stroke-dashoffset="0"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center; opacity: 0.5;"/>
+                    <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1" opacity="0.5"/>
+                    <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+                    <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="card-name-col">
+                <span class="card-issuer">Chase</span>
+                <span class="card-name">Sapphire Preferred</span>
+              </div>
+              <span class="status-badge">Valhalla</span>
+            </div>
+
+            <div class="card-body">
+              <div class="data-row">
+                <span class="data-label">Bonus earned</span>
+                <span class="data-value">60,000 pts</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Annual fee paid</span>
+                <span class="data-value">$95</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Time held</span>
+                <span class="data-value">247 days</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Closed</span>
+                <span class="data-value">Sep 18, 2025</span>
+              </div>
+            </div>
+          </div><!-- /.card-tile valhalla bonus earned -->
+
+          <!-- Valhalla card: bonus NOT earned — partial spend ring -->
+          <div class="card-tile">
+            <div class="card-header">
+              <div class="card-icons">
+                <!-- Spend ring: 55% — bonus not earned -->
+                <div class="ring-svg" title="Bonus not earned: $2,475 of $4,500 spent (55%)">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Amex Gold: bonus not earned — 55% of spend reached before closure" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2"
+                      stroke-dasharray="113.097" stroke-dashoffset="51"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center; opacity: 0.5;"/>
+                    <!-- X inside — bonus not earned -->
+                    <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="bold" fill="#000" opacity="0.5">✗</text>
+                  </svg>
+                </div>
+                <!-- Timer ring: fully filled, muted -->
+                <div class="ring-svg" title="Held for 98 days (opened Dec 14, 2025 → closed Mar 22, 2026)">
+                  <svg viewBox="0 0 48 48" role="img" aria-label="Timer: held for 98 days — complete, closed" width="40" height="40">
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                    <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2"
+                      stroke-dasharray="113.097" stroke-dashoffset="0"
+                      stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center; opacity: 0.5;"/>
+                    <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1" opacity="0.5"/>
+                    <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+                    <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="card-name-col">
+                <span class="card-issuer">Amex</span>
+                <span class="card-name">Gold Card</span>
+              </div>
+              <span class="status-badge">Valhalla</span>
+            </div>
+
+            <div class="card-body">
+              <div class="data-row">
+                <span class="data-label">Bonus earned</span>
+                <span class="data-value">None ✗</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Annual fee paid</span>
+                <span class="data-value">$250</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Time held</span>
+                <span class="data-value">98 days</span>
+              </div>
+              <div class="data-row">
+                <span class="data-label">Closed</span>
+                <span class="data-value">Mar 22, 2026</span>
+              </div>
+            </div>
+          </div><!-- /.card-tile valhalla no bonus -->
+
+        </div><!-- /.mobile-frame -->
+      </div><!-- /.compare-col -->
+
+      <!-- Valhalla annotations -->
+      <div class="compare-col">
+        <p class="compare-label">Valhalla Card — Design Decisions</p>
+
+        <div class="spec-block">
+          <h3>Icon Area Layout — Valhalla</h3>
+          <div class="spec-row"><span class="spec-label">Rings shown:</span><span>Spend ring (left) + Timer ring (right) — same as Hunt</span></div>
+          <div class="spec-row"><span class="spec-label">Opacity:</span><span>Both rings at ~50% opacity (realm-stone muted — card is closed/inactive)</span></div>
+          <div class="spec-row"><span class="spec-label">Stroke weight:</span><span>Reduced to 2px (vs 3px active) — conveys historical / archived state</span></div>
+          <div class="spec-row"><span class="spec-label">No pulse:</span><span>ring--urgent never applied to Valhalla cards</span></div>
+        </div>
+
+        <div class="spec-block">
+          <h3>Spend Ring — Valhalla States</h3>
+          <div class="spec-row"><span class="spec-label">Bonus earned:</span><span>Full ring (dashOffset=0) + ✓ inside</span></div>
+          <div class="spec-row"><span class="spec-label">Bonus not met:</span><span>Partial ring at final spend% + ✗ inside</span></div>
+          <div class="spec-row"><span class="spec-label">No bonus:</span><span>Ring hidden (card had no signUpBonus) — timer ring only</span></div>
+        </div>
+
+        <div class="spec-block">
+          <h3>Timer Fill Logic — Valhalla</h3>
+          <div class="spec-row"><span class="spec-label">Numerator:</span><span>closedAt − openDate</span></div>
+          <div class="spec-row"><span class="spec-label">Denominator:</span><span>bonusDeadline − openDate (or annualFeeDate − openDate)</span></div>
+          <div class="spec-row"><span class="spec-label">Always clamped to 1:</span><span>Timer always shows fully filled (card is done)</span></div>
+          <div class="spec-row"><span class="spec-label">Tooltip:</span><span>"Held for X days (opened [date] → closed [date])"</span></div>
+          <div class="spec-row"><span class="spec-label">Color:</span><span>realm-stone (muted gray) — static, no urgency</span></div>
+        </div>
+
+        <div class="spec-block">
+          <h3>Valhalla Card Data Rows</h3>
+          <div class="spec-row"><span class="spec-label">Bonus earned:</span><span>Points/miles/cashback value (or "None ✗" if not met)</span></div>
+          <div class="spec-row"><span class="spec-label">Annual fee paid:</span><span>Last fee paid amount</span></div>
+          <div class="spec-row"><span class="spec-label">Time held:</span><span>closedAt − openDate in human-readable days/months</span></div>
+          <div class="spec-row"><span class="spec-label">Closed:</span><span>formatDate(closedAt)</span></div>
+        </div>
+      </div><!-- /.compare-col annotations -->
+
+    </div><!-- /.compare-row -->
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 5 — ALL TAB (mixed card styles)
+       ═════════════════════════════════════════════════════════════════════== -->
+  <section class="section">
+    <h2 class="section-title">5 — All Tab (Mixed Card Styles)</h2>
+    <p class="section-desc">
+      The All tab renders each card in its home tab's visual style.
+      A small tab-origin tag (invisible in light reading, available for a11y) indicates
+      which tab the card belongs to. No separate All-tab card component — each card
+      delegates rendering to its HuntCardTile / HowlCardTile / ValhallaCardTile.
+    </p>
+
+    <div class="card-grid">
+
+      <!-- Hunt-style card in All tab -->
+      <div class="card-tile">
+        <span class="tab-origin-tag" aria-label="Hunt tab card">Hunt</span>
+        <span aria-hidden="true" class="rune-corner rune-tl">ᚠ</span>
+        <span aria-hidden="true" class="rune-corner rune-tr">ᚱ</span>
+        <span aria-hidden="true" class="rune-corner rune-bl">ᛁ</span>
+        <span aria-hidden="true" class="rune-corner rune-br">ᚾ</span>
+        <div class="card-header">
+          <div class="card-icons">
+            <div class="ring-svg" title="$1,800 remaining · 45 days left" style="width: 36px; height: 36px;">
+              <svg viewBox="0 0 48 48" width="36" height="36">
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                  stroke-dasharray="113.097" stroke-dashoffset="45" stroke-linecap="round"
+                  style="transform: rotate(-90deg); transform-origin: center;"/>
+                <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#000">C</text>
+              </svg>
+            </div>
+            <div class="ring-svg" title="68 days elapsed · 45 remaining" style="width: 36px; height: 36px;">
+              <svg viewBox="0 0 48 48" width="36" height="36">
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="3"
+                  stroke-dasharray="113.097" stroke-dashoffset="28" stroke-linecap="round"
+                  style="transform: rotate(-90deg); transform-origin: center;"/>
+                <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1.5"/>
+                <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="card-name-col">
+            <span class="card-issuer">Chase</span>
+            <span class="card-name">Sapphire Preferred</span>
+          </div>
+          <span class="status-badge">Bonus Open</span>
+        </div>
+        <div class="card-body">
+          <div class="data-row"><span class="data-label">Min spend</span><span class="data-value">$4,500</span></div>
+          <div class="spend-bar-wrap">
+            <div class="data-row"><span class="data-label">Spent</span><span class="data-value">$2,700 (60%)</span></div>
+            <div class="spend-bar-track"><div class="spend-bar-fill spend-bar-fill-60"></div></div>
+          </div>
+          <div class="data-row"><span class="data-label">Bonus deadline</span><span class="data-value">May 7, 2026</span></div>
+          <div class="data-row"><span class="data-label">Opened</span><span class="data-value">Jan 14, 2026</span></div>
+        </div>
+      </div><!-- Hunt-style in All -->
+
+      <!-- Howl-style card in All tab -->
+      <div class="card-tile">
+        <span class="tab-origin-tag" aria-label="Howl tab card">Howl</span>
+        <div class="card-header">
+          <div class="card-icons">
+            <div class="ring-svg" title="320 days elapsed · 45 days until annual fee" style="width: 36px; height: 36px;">
+              <svg viewBox="0 0 48 48" width="36" height="36">
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="4"
+                  stroke-dasharray="113.097" stroke-dashoffset="14" stroke-linecap="round"
+                  style="transform: rotate(-90deg); transform-origin: center;"/>
+                <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1.5"/>
+                <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="card-name-col">
+            <span class="card-issuer">Chase</span>
+            <span class="card-name">Freedom Unlimited</span>
+          </div>
+          <span class="status-badge">Fee Due</span>
+        </div>
+        <div class="card-body">
+          <div class="data-row"><span class="data-label">Annual fee</span><span class="data-value">$95</span></div>
+          <div class="data-row"><span class="data-label">Due date</span><span class="data-value urgent">May 7, 2026 (45d)</span></div>
+          <div class="data-row"><span class="data-label">Opened</span><span class="data-value">Mar 23, 2025</span></div>
+        </div>
+        <div class="action-row">
+          <span class="action-label">Renew or cancel?</span>
+          <button class="action-btn">Manage</button>
+        </div>
+      </div><!-- Howl-style in All -->
+
+      <!-- Valhalla-style card in All tab -->
+      <div class="card-tile" style="opacity: 0.75;">
+        <span class="tab-origin-tag" aria-label="Valhalla tab card">Valhalla</span>
+        <div class="card-header">
+          <div class="card-icons">
+            <div class="ring-svg" style="width: 36px; height: 36px;">
+              <svg viewBox="0 0 48 48" width="36" height="36">
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2"
+                  stroke-dasharray="113.097" stroke-dashoffset="0" stroke-linecap="round"
+                  style="transform: rotate(-90deg); transform-origin: center; opacity: 0.5;"/>
+                <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="bold" fill="#000" opacity="0.5">✓</text>
+              </svg>
+            </div>
+            <div class="ring-svg" style="width: 36px; height: 36px;">
+              <svg viewBox="0 0 48 48" width="36" height="36">
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2" opacity="0.2"/>
+                <circle cx="24" cy="24" r="18" fill="none" stroke="#000" stroke-width="2"
+                  stroke-dasharray="113.097" stroke-dashoffset="0" stroke-linecap="round"
+                  style="transform: rotate(-90deg); transform-origin: center; opacity: 0.5;"/>
+                <circle cx="24" cy="24" r="6" fill="none" stroke="#000" stroke-width="1" opacity="0.5"/>
+                <line x1="24" y1="24" x2="24" y2="19" stroke="#000" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+                <line x1="24" y1="24" x2="27" y2="24" stroke="#000" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="card-name-col">
+            <span class="card-issuer">Chase</span>
+            <span class="card-name">Sapphire Preferred</span>
+          </div>
+          <span class="status-badge">Valhalla</span>
+        </div>
+        <div class="card-body">
+          <div class="data-row"><span class="data-label">Bonus earned</span><span class="data-value">60,000 pts</span></div>
+          <div class="data-row"><span class="data-label">Annual fee paid</span><span class="data-value">$95</span></div>
+          <div class="data-row"><span class="data-label">Time held</span><span class="data-value">247 days</span></div>
+          <div class="data-row"><span class="data-label">Closed</span><span class="data-value">Sep 18, 2025</span></div>
+        </div>
+      </div><!-- Valhalla-style in All -->
+
+    </div><!-- /.card-grid -->
+
+    <p class="note">
+      <strong>All tab implementation approach:</strong> The All tab does NOT render its own card component.
+      Instead, the dashboard maps each card to its home tab's tile component:
+      <code>bonus_open → HuntCardTile</code>, <code>fee_approaching | promo_expiring → HowlCardTile</code>,
+      <code>closed | graduated → ValhallaCardTile</code>, idle → IdleCardTile (no timer needed).
+      The <code>tab-origin-tag</code> visual label is purely for this wireframe — not required in implementation
+      unless the All tab needs a visual grouping indicator.
+    </p>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 6 — RESPONSIVE BREAKPOINTS
+       ═════════════════════════════════════════════════════════════════════== -->
+  <section class="section">
+    <h2 class="section-title">6 — Responsive Behavior</h2>
+
+    <div class="compare-row">
+      <div class="compare-col">
+        <p class="compare-label">Mobile ≤375px — Ring Pair</p>
+        <div class="spec-block">
+          <div class="spec-row"><span class="spec-label">Ring size:</span><span>40×40px each (slightly reduced from 48px)</span></div>
+          <div class="spec-row"><span class="spec-label">Gap between rings:</span><span>4px</span></div>
+          <div class="spec-row"><span class="spec-label">Total icon width:</span><span>~84px</span></div>
+          <div class="spec-row"><span class="spec-label">Name area remaining:</span><span>~225px (sufficient for card name + status badge)</span></div>
+          <div class="spec-row"><span class="spec-label">Card name:</span><span>Truncates with ellipsis if needed</span></div>
+        </div>
+      </div>
+      <div class="compare-col">
+        <p class="compare-label">Tablet 600–1024px — Ring Pair</p>
+        <div class="spec-block">
+          <div class="spec-row"><span class="spec-label">Ring size:</span><span>48×48px (full, matches existing)</span></div>
+          <div class="spec-row"><span class="spec-label">Card grid:</span><span>2 columns (auto-fill 280px min)</span></div>
+          <div class="spec-row"><span class="spec-label">Icon area:</span><span>Rings side-by-side — no stacking</span></div>
+        </div>
+      </div>
+      <div class="compare-col">
+        <p class="compare-label">Desktop &gt;1024px — Ring Pair</p>
+        <div class="spec-block">
+          <div class="spec-row"><span class="spec-label">Ring size:</span><span>48×48px (full)</span></div>
+          <div class="spec-row"><span class="spec-label">Card grid:</span><span>3–4 columns (auto-fill 280px)</span></div>
+          <div class="spec-row"><span class="spec-label">Tooltip:</span><span>Visible on hover via native title="" (no additional JS tooltip needed)</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 7 — ACCESSIBILITY SPEC
+       ═════════════════════════════════════════════════════════════════════== -->
+  <section class="section">
+    <h2 class="section-title">7 — Accessibility</h2>
+
+    <div class="spec-block">
+      <h3>TimerRing ARIA</h3>
+      <div class="spec-row"><span class="spec-label">role:</span><span>role="img"</span></div>
+      <div class="spec-row"><span class="spec-label">aria-label (active):</span><span>"Timer: X of Y days elapsed toward [deadline description]"</span></div>
+      <div class="spec-row"><span class="spec-label">aria-label (Valhalla):</span><span>"Timer: held for X days — closed [date]"</span></div>
+      <div class="spec-row"><span class="spec-label">Clock face:</span><span>aria-hidden="true" on the inner clock SVG lines (decorative)</span></div>
+      <div class="spec-row"><span class="spec-label">Wrapper title:</span><span>Native HTML title="" for mouse/pointer tooltip (matches StatusRing pattern)</span></div>
+    </div>
+
+    <div class="spec-block">
+      <h3>Color Independence</h3>
+      <div class="spec-row"><span class="spec-label">Urgency:</span><span>Conveyed by both color (realm tokens) AND stroke weight variation AND text countdown in data rows</span></div>
+      <div class="spec-row"><span class="spec-label">WCAG 2.1 AA:</span><span>Information must not be conveyed by color alone — the countdown text (e.g., "(18d)") satisfies this</span></div>
+    </div>
+
+    <div class="spec-block">
+      <h3>Reduced Motion</h3>
+      <div class="spec-row"><span class="spec-label">ring--urgent pulse:</span><span>Suppressed via @media prefers-reduced-motion (same as existing StatusRing)</span></div>
+      <div class="spec-row"><span class="spec-label">Timer ring:</span><span>No animation — static arc; no additional motion considerations</span></div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SECTION 8 — COMPONENT SPEC SUMMARY FOR FIREMAN DECKO
+       ═════════════════════════════════════════════════════════════════════== -->
+  <section class="section">
+    <h2 class="section-title">8 — Component Spec Summary (FiremanDecko Handoff)</h2>
+
+    <div class="spec-block">
+      <h3>New Component: TimerRing</h3>
+      <div class="spec-row"><span class="spec-label">File:</span><span>src/components/dashboard/TimerRing.tsx</span></div>
+      <div class="spec-row"><span class="spec-label">Props:</span>
+        <span>
+          openDate: string (ISO) · deadlineDate: string (ISO) · referenceDate?: string (ISO, defaults today) ·
+          closedAt?: string (ISO, Valhalla only) · tab: "hunt" | "howl" | "valhalla" · cardName?: string
+        </span>
+      </div>
+      <div class="spec-row"><span class="spec-label">Fill ratio:</span><span>(referenceDate − openDate) / (deadlineDate − openDate) clamped [0, 1]</span></div>
+      <div class="spec-row"><span class="spec-label">Valhalla ratio:</span><span>Math.min(1, (closedAt − openDate) / (deadlineDate − openDate))</span></div>
+      <div class="spec-row"><span class="spec-label">SIZE:</span><span>48 (matches StatusRing constant)</span></div>
+      <div class="spec-row"><span class="spec-label">RADIUS:</span><span>18 (matches StatusRing)</span></div>
+      <div class="spec-row"><span class="spec-label">Color token map:</span><span>tab=hunt → realm-alfheim · tab=howl → urgency thresholds · tab=valhalla → realm-stone</span></div>
+      <div class="spec-row"><span class="spec-label">Inner icon:</span><span>SVG clock face: circle r=6, hour hand (vertical line 12 o'clock), minute hand (horizontal right)</span></div>
+      <div class="spec-row"><span class="spec-label">Urgent class:</span><span>ring--urgent applied when tab=howl AND daysRemaining ≤ 30</span></div>
+    </div>
+
+    <div class="spec-block">
+      <h3>Modified Components</h3>
+      <div class="spec-row"><span class="spec-label">HuntCardTile:</span><span>Add TimerRing beside StatusRing in icon area. Pass openDate + bonusDeadline. Tab="hunt".</span></div>
+      <div class="spec-row"><span class="spec-label">HowlCardTile (new):</span><span>New component (fee_approaching / promo_expiring). Timer ring only. Show annual fee, due date, optional bonus warning row, action row.</span></div>
+      <div class="spec-row"><span class="spec-label">ValhallaCardTile (new):</span><span>New component (closed/graduated). Both rings at 50% opacity + realm-stone. Bonus earned/✓/✗ state. Time held, closed date.</span></div>
+      <div class="spec-row"><span class="spec-label">CardTile (base):</span><span>Not modified — Hunt/Howl/Valhalla each use their own tile. All tab delegates to per-status tile.</span></div>
+      <div class="spec-row"><span class="spec-label">Dashboard / DashboardTabs:</span><span>All tab maps each card to its home tab tile component (no new All-specific tile).</span></div>
+    </div>
+
+    <p class="note">
+      <strong>Related issues:</strong> Builds on #1792 (Hunt min spend progress) and #1808 (Valhalla + Howl contextual cards).
+      TimerRing is self-contained and can be developed independently of HowlCardTile / ValhallaCardTile.
+    </p>
+  </section>
+
+</div><!-- /.page -->
+</body>
+</html>
