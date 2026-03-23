@@ -790,6 +790,14 @@ body {
 }
 .copy-session-btn:hover { color: var(--gold); border-color: var(--gold); }
 .copy-session-btn.copied { color: var(--teal-asgard); border-color: var(--teal-asgard); }
+
+/* ── Light mode: button icon contrast ─────────── */
+/* .card-pin-btn and .copy-session-btn default to --text-void which is marginal for
+ * small 11–14 px stroke icons on the parchment bg. Upgrade to --text-rune (~7:1). */
+[data-theme="light"] .card-pin-btn { color: var(--text-rune); }
+[data-theme="light"] .pin-btn { color: var(--text-rune); }
+[data-theme="light"] .copy-session-btn { color: var(--text-rune); }
+
 .ws-badge {
   font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
   padding: 0.15rem 0.5rem; border-radius: 3px;
