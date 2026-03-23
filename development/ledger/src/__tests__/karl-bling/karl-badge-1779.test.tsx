@@ -66,20 +66,20 @@ describe("KarlBadge — karl tier", () => {
   it("renders a span with karl-bling-badge class", () => {
     const { container } = render(<KarlBadge />);
     const badge = container.querySelector(".karl-bling-badge");
-    expect(badge).not.toBeNull();
+    expect(badge).toBeInTheDocument();
     expect(badge!.tagName.toLowerCase()).toBe("span");
   });
 
   it("has role=img and aria-label for screen readers", () => {
     render(<KarlBadge />);
     const badge = screen.getByRole("img", { name: "Karl subscriber" });
-    expect(badge).toBeDefined();
+    expect(badge).toBeInTheDocument();
   });
 
   it("contains KARL text", () => {
     render(<KarlBadge />);
     const badge = screen.getByRole("img", { name: "Karl subscriber" });
-    expect(badge.textContent).toContain("KARL");
+    expect(badge).toHaveTextContent("KARL");
   });
 
   it("has two aria-hidden runic accent spans (ᚷ Gebo)", () => {
@@ -87,14 +87,14 @@ describe("KarlBadge — karl tier", () => {
     const runes = container.querySelectorAll(".karl-badge-rune");
     expect(runes).toHaveLength(2);
     runes.forEach((rune) => {
-      expect(rune.getAttribute("aria-hidden")).toBe("true");
-      expect(rune.textContent).toBe("ᚷ");
+      expect(rune).toHaveAttribute("aria-hidden", "true");
+      expect(rune).toHaveTextContent("ᚷ");
     });
   });
 
   it("does not render an anchor element", () => {
     const { container } = render(<KarlBadge />);
-    expect(container.querySelector("a")).toBeNull();
+    expect(container.querySelector("a")).not.toBeInTheDocument();
   });
 });
 
@@ -106,40 +106,42 @@ describe("KarlBadge — trial tier", () => {
   });
 
   it("renders an anchor linking to /pricing", () => {
-    const { container } = render(<KarlBadge />);
-    const link = container.querySelector("a");
-    expect(link).not.toBeNull();
-    expect(link!.getAttribute("href")).toBe("/pricing");
+    render(<KarlBadge />);
+    const link = screen.getByRole("link");
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/pricing");
   });
 
   it("has karl-bling-badge class on the anchor", () => {
-    const { container } = render(<KarlBadge />);
-    const link = container.querySelector("a.karl-bling-badge");
-    expect(link).not.toBeNull();
+    render(<KarlBadge />);
+    const link = screen.getByRole("link");
+    expect(link).toHaveClass("karl-bling-badge");
   });
 
   it("has accessible aria-label for upgrade intent", () => {
-    const { container } = render(<KarlBadge />);
-    const link = container.querySelector("a");
-    expect(link!.getAttribute("aria-label")).toBe("Karl trial — upgrade to Karl");
+    render(<KarlBadge />);
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("aria-label", "Karl trial — upgrade to Karl");
   });
 
   it("contains KARL text", () => {
-    const { container } = render(<KarlBadge />);
-    const link = container.querySelector("a.karl-bling-badge");
-    expect(link!.textContent).toContain("KARL");
+    render(<KarlBadge />);
+    const link = screen.getByRole("link");
+    expect(link).toHaveTextContent("KARL");
   });
 
   it("has two aria-hidden runic accents", () => {
     const { container } = render(<KarlBadge />);
     const runes = container.querySelectorAll(".karl-badge-rune");
     expect(runes).toHaveLength(2);
-    runes.forEach((r) => expect(r.getAttribute("aria-hidden")).toBe("true"));
+    runes.forEach((r) => expect(r).toHaveAttribute("aria-hidden", "true"));
   });
 
   it("does not render role=img span", () => {
     render(<KarlBadge />);
-    expect(screen.queryByRole("img", { name: "Karl subscriber" })).toBeNull();
+    expect(
+      screen.queryByRole("img", { name: "Karl subscriber" })
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -149,14 +151,21 @@ describe("KarlBadge — thrall / no trial", () => {
   it("renders span (CSS will hide it) — not a link", () => {
     mockTrialStatus = "none";
     const { container } = render(<KarlBadge />);
-    expect(container.querySelector(".karl-bling-badge")).not.toBeNull();
-    expect(container.querySelector("a")).toBeNull();
+    expect(container.querySelector(".karl-bling-badge")).toBeInTheDocument();
+    expect(container.querySelector("a")).not.toBeInTheDocument();
   });
 
   it("expired trial renders span (not a link)", () => {
     mockTrialStatus = "expired";
     const { container } = render(<KarlBadge />);
-    expect(container.querySelector("a")).toBeNull();
-    expect(container.querySelector(".karl-bling-badge")).not.toBeNull();
+    expect(container.querySelector("a")).not.toBeInTheDocument();
+    expect(container.querySelector(".karl-bling-badge")).toBeInTheDocument();
+  });
+
+  it("converted trial renders span (not a link) — upsell link only for active trial", () => {
+    mockTrialStatus = "converted";
+    const { container } = render(<KarlBadge />);
+    expect(container.querySelector("a")).not.toBeInTheDocument();
+    expect(container.querySelector(".karl-bling-badge")).toBeInTheDocument();
   });
 });
