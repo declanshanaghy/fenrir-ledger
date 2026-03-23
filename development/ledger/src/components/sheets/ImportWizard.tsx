@@ -279,9 +279,10 @@ function ErrorStepContent({ errorCode, errorMessage, onClose, onReset }: ErrorSt
 
 interface SuccessStepContentProps {
   importMethod: ImportMethod | null;
+  onClose: () => void;
 }
 
-function SuccessStepContent({ importMethod }: SuccessStepContentProps) {
+function SuccessStepContent({ importMethod, onClose }: SuccessStepContentProps) {
   return (
     <div className="flex flex-col items-center gap-4 py-6">
       <div className="text-4xl" aria-hidden="true">
@@ -295,6 +296,13 @@ function SuccessStepContent({ importMethod }: SuccessStepContentProps) {
           <SafetyBanner variant="post-share" />
         </div>
       )}
+      <button
+        type="button"
+        onClick={onClose}
+        className="inline-flex items-center justify-center w-full rounded-sm font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 h-11 px-6 min-w-[44px]"
+      >
+        Continue
+      </button>
     </div>
   );
 }
@@ -490,7 +498,7 @@ function ImportWizardStepContent(props: ImportWizardStepContentProps) {
               Your cards have been successfully imported to Fenrir Ledger
             </DialogDescription>
           </DialogHeader>
-          <SuccessStepContent importMethod={props.importMethod} />
+          <SuccessStepContent importMethod={props.importMethod} onClose={props.onClose} />
         </>
       );
 
