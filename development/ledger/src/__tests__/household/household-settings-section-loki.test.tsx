@@ -383,7 +383,7 @@ describe("HouseholdSettingsSection — Join a Household visibility (issue #1945)
     render(<HouseholdSettingsSection />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /leave household/i })).toBeDefined();
+      expect(screen.getByRole("button", { name: /leave this household/i })).toBeDefined();
     });
   });
 
