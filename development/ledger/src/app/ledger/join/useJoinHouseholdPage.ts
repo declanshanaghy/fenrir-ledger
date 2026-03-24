@@ -15,6 +15,7 @@ import { getSession } from "@/lib/auth/session";
 import { clearHouseholdLocalStorage, setStoredHouseholdId, getCards } from "@/lib/storage";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { clearEntitlementCache } from "@/lib/entitlement/cache";
+import { clearTrialStatusCache } from "@/hooks/useTrialStatus";
 
 // ---------------------------------------------------------------------------
 // Types (re-exported so page.tsx and tests can import from one place)
@@ -278,14 +279,14 @@ export function useJoinHouseholdPage(): JoinHouseholdPageState {
         }
         setStoredHouseholdId(data.householdId);
 
-        // Issue #1823: invalidate entitlement cache so isKarl reflects the
-        // new household's tier. router.push() is a client-side nav — the
-        // EntitlementContext stays mounted and refreshEntitlement() won't be
-        // called again automatically. Clear the stale localStorage cache first
-        // (safety net for hard-reload paths), then force a fresh server fetch
-        // so isKarl transitions true before the /ledger redirect fires.
+        // Issue #1971: await entitlement refresh so the cache has the joined
+        // household's tier before navigation. If Odin's household is Karl, the
+        // membership API auto-converts Freya's trial (markTrialConverted).
+        // Clear both caches so EntitlementContext and TrialStatusContext both
+        // reflect the new Karl tier with no trial flash on the /ledger redirect.
         clearEntitlementCache();
-        void refreshEntitlement();
+        await refreshEntitlement();
+        clearTrialStatusCache();
 
         setStep("success");
       } else if (res.status === 409) {
@@ -302,7 +303,7 @@ export function useJoinHouseholdPage(): JoinHouseholdPageState {
       );
       setStep("merge_error");
     }
-  }, [preview, currentCode]);
+  }, [preview, currentCode, refreshEntitlement]);
 
   // -------------------------------------------------------------------------
   // Derived UI flags

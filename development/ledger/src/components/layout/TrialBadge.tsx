@@ -18,6 +18,7 @@
 
 import { useState } from "react";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
+import { useEntitlement } from "@/hooks/useEntitlement";
 import { TRIAL_DURATION_DAYS } from "@/lib/trial-utils";
 import { TrialStatusPanel } from "@/components/trial/TrialStatusPanel";
 
@@ -73,10 +74,12 @@ function getBadgeStyle(remainingDays: number, status: string): { label: string; 
 
 export function TrialBadge() {
   const { remainingDays, status, isLoading } = useTrialStatus();
+  const { tier, isActive } = useEntitlement();
   const [panelOpen, setPanelOpen] = useState(false);
 
-  // Don't render if loading, no trial, or converted
-  if (isLoading || status === "none" || status === "converted") {
+  // Don't render if loading, no trial, converted, or Karl tier (issue #1971:
+  // guard against trial flash when trial status cache is stale after household join).
+  if (isLoading || status === "none" || status === "converted" || (tier === "karl" && isActive)) {
     return null;
   }
 
