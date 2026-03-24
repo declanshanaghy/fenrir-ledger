@@ -27,7 +27,7 @@ import { StatusBadge } from "./StatusBadge";
 import { StatusRing } from "./StatusRing";
 import type { Card as CreditCard } from "@/lib/types";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/card-utils";
-import { getIssuerBadgeChar, getIssuerMeta } from "@/lib/issuer-utils";
+import { getIssuerBadgeChar, getIssuerName } from "@/lib/issuer-utils";
 import { IssuerLogo } from "@/components/shared/IssuerLogo";
 
 interface CardTileProps {
@@ -151,7 +151,6 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
   const ringDaysRemaining = getRingDaysRemaining(card.status, feeDays, bonusDays);
   const ringTotalDays = getTotalDays(card.openDate, ringDeadlineIso);
   const ringBadgeChar = getIssuerBadgeChar(card.issuerId);
-  const issuerMeta = getIssuerMeta(card.issuerId);
 
   return (
     /*
@@ -191,7 +190,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
                 <div className="min-w-0">
                   <CardDescription
                     className="text-sm uppercase tracking-wide mb-1"
-                    title={issuerMeta ? `${issuerMeta.rune} ${issuerMeta.runeName} — ${issuerMeta.runeConnection}` : undefined}
+                    title={getIssuerName(card.issuerId)}
                   >
                     <IssuerLogo issuerId={card.issuerId} className="inline-flex align-middle opacity-90" showLabel />
                   </CardDescription>

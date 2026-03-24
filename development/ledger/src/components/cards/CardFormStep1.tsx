@@ -22,8 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { KNOWN_ISSUERS } from "@/lib/constants";
-import { IssuerLogo } from "@/components/shared/IssuerLogo";
+import { IssuerSelect } from "./IssuerSelect";
 import type { CardFormValues } from "./useCardForm";
 
 interface CardFormStep1Props {
@@ -60,25 +59,11 @@ export function CardFormStep1({
         {/* Issuer */}
         <div className="space-y-1.5">
           <Label htmlFor="issuerId">Issuer *</Label>
-          <Select
+          <IssuerSelect
             value={issuerId ?? ""}
-            onValueChange={(v) => setValue("issuerId", v)}
-          >
-            <SelectTrigger
-              id="issuerId"
-              aria-required="true"
-              className="min-h-[44px]"
-            >
-              <SelectValue placeholder="Select issuer" />
-            </SelectTrigger>
-            <SelectContent>
-              {KNOWN_ISSUERS.map((issuer) => (
-                <SelectItem key={issuer.id} value={issuer.id}>
-                  <IssuerLogo issuerId={issuer.id} showLabel />
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(v) => setValue("issuerId", v)}
+            required
+          />
           {errors.issuerId && (
             <p className="text-base text-destructive">
               {errors.issuerId.message}
