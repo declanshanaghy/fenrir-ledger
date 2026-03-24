@@ -8,7 +8,6 @@
  */
 
 import type { Metadata } from "next";
-import Link from "next/link";
 
 export const dynamic = "force-static";
 
@@ -36,14 +35,6 @@ const capsClass = "uppercase tracking-wide text-sm";
 export default function TermsPage() {
   return (
     <article className={prose}>
-      {/* Back link */}
-      <Link
-        href="/"
-        className="inline-block mb-6 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        ← Back to Fenrir Ledger
-      </Link>
-
       <h1 className="font-display text-3xl text-gold mb-1">Terms of Service</h1>
       <p className="text-sm text-muted-foreground mb-8">Last Updated: March 3, 2026</p>
 
