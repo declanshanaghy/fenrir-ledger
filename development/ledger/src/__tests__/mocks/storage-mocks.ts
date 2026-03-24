@@ -58,6 +58,11 @@ export const milestoneMock = {
 /** @/lib/issuer-utils */
 export const issuerUtilsMock = {
   getIssuerRune: vi.fn().mockReturnValue("ᚠ"),
+  getIssuerMeta: vi.fn().mockReturnValue(null),
+  getIssuerName: vi.fn().mockImplementation((id: string) => id),
+  getIssuerInitials: vi.fn().mockReturnValue("CK"),
+  getIssuerBadgeChar: vi.fn().mockReturnValue("ᚠ"),
+  getIssuerLogoPath: vi.fn().mockReturnValue(null),
 };
 
 // ── @/lib/entitlement ─────────────────────────────────────────────────────────
