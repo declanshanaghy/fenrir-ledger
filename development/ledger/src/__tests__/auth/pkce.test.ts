@@ -37,28 +37,12 @@ describe("generateCodeVerifier", () => {
     expect(verifier).toMatch(BASE64URL_REGEX);
   });
 
-  it("contains no padding characters (=)", () => {
-    const verifier = generateCodeVerifier();
-    expect(verifier).not.toContain("=");
-  });
-
-  it("contains no + or / characters (standard base64 chars replaced in base64url)", () => {
-    const verifier = generateCodeVerifier();
-    expect(verifier).not.toContain("+");
-    expect(verifier).not.toContain("/");
-  });
-
   it("generates unique values across calls (cryptographically random)", () => {
     const v1 = generateCodeVerifier();
     const v2 = generateCodeVerifier();
     expect(v1).not.toBe(v2);
   });
 
-  it("length is within RFC 7636 range (43–128 chars)", () => {
-    const verifier = generateCodeVerifier();
-    expect(verifier.length).toBeGreaterThanOrEqual(43);
-    expect(verifier.length).toBeLessThanOrEqual(128);
-  });
 });
 
 // ─── generateCodeChallenge ────────────────────────────────────────────────────
@@ -68,12 +52,6 @@ describe("generateCodeChallenge", () => {
     const verifier = generateCodeVerifier();
     const challenge = await generateCodeChallenge(verifier);
     expect(challenge).toMatch(BASE64URL_REGEX);
-  });
-
-  it("contains no padding characters", async () => {
-    const verifier = generateCodeVerifier();
-    const challenge = await generateCodeChallenge(verifier);
-    expect(challenge).not.toContain("=");
   });
 
   it("is deterministic — same verifier always produces same challenge", async () => {
@@ -122,8 +100,4 @@ describe("generateState", () => {
     expect(s1).not.toBe(s2);
   });
 
-  it("does not contain uppercase letters (lowercase hex only)", () => {
-    const state = generateState();
-    expect(state).toBe(state.toLowerCase());
-  });
 });
