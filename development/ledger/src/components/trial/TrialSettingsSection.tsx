@@ -14,14 +14,15 @@
  *
  * @see ux/wireframes/trial/trial-status.html (Scenario 3)
  * @see Issue #622
+ * @see Issue #1940 — Karl tier never renders; no-flash fix; Thrall expired upsell
  *
  * @module trial/TrialSettingsSection
  */
 
-import { useState, useCallback } from "react";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { useTrialMetrics } from "@/hooks/useTrialMetrics";
 import { useEntitlement } from "@/hooks/useEntitlement";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { TRIAL_DURATION_DAYS } from "@/lib/trial-utils";
 
 // ---------------------------------------------------------------------------
@@ -74,27 +75,28 @@ function computeTrialEndDate(remainingDays: number): string {
  * Shows trial details alongside StripeSettings component.
  */
 export function TrialSettingsSection() {
-  const { remainingDays, status, isLoading } = useTrialStatus();
+  const { remainingDays, status, isLoading: trialLoading } = useTrialStatus();
   const metrics = useTrialMetrics();
-  const { subscribeStripe } = useEntitlement();
-  const [isSubscribing, setIsSubscribing] = useState(false);
+  const { tier, isLoading: entitlementLoading } = useEntitlement();
+  const { status: authStatus } = useAuthContext();
 
-  const handleSubscribe = useCallback(async () => {
-    setIsSubscribing(true);
-    try {
-      await subscribeStripe();
-    } catch {
-      setIsSubscribing(false);
-    }
-  }, [subscribeStripe]);
-
-  // Don't render while loading or for paid subscribers (already converted)
-  if (isLoading || status === "converted") {
+  // Karl subscribers — never render this card (no flash, no loading state needed)
+  if (tier === "karl") {
     return null;
   }
 
-  // Anonymous / no-trial state: show Norse-themed "not started" box
-  if (status === "none") {
+  // Suppress until auth + trial data are settled — prevents flash
+  if (authStatus === "loading" || trialLoading || entitlementLoading) {
+    return null;
+  }
+
+  // Already converted to paid Karl via trial flow
+  if (status === "converted") {
+    return null;
+  }
+
+  // Anonymous / no-trial state: show Norse-themed "not started" box with sign-in CTA
+  if (status === "none" && authStatus === "anonymous") {
     return (
       <section
         className="relative border border-border p-5 flex flex-col gap-3"
@@ -131,10 +133,29 @@ export function TrialSettingsSection() {
     );
   }
 
-  const planLabel =
-    status === "expired"
-      ? "Karl Trial (Expired)"
-      : `Karl Trial (${remainingDays} day${remainingDays !== 1 ? "s" : ""} remaining)`;
+  // Thrall authenticated with no trial or expired trial — show Karl upsell (no button)
+  if (status === "none" || status === "expired") {
+    return (
+      <section
+        className="relative border border-border p-5 flex flex-col gap-3"
+        aria-label="Trial Status"
+      >
+        <h2 className="text-sm font-heading font-bold uppercase tracking-[0.08em] text-foreground">
+          Trial Status
+        </h2>
+        <div className="border border-gold/20 bg-gold/5 p-3 flex flex-col gap-1.5">
+          <p className="text-[13px] font-heading font-semibold text-foreground">
+            Thy trial hath ended
+          </p>
+          <p className="text-[12px] text-muted-foreground font-body leading-relaxed">
+            Ascend to Karl to unlock cloud sync, household sharing, and more.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const planLabel = `Karl Trial (${remainingDays} day${remainingDays !== 1 ? "s" : ""} remaining)`;
 
   return (
     <section
@@ -156,22 +177,18 @@ export function TrialSettingsSection() {
           <span className="font-medium text-foreground font-body">Current plan</span>
           <span className="text-muted-foreground font-body">{planLabel}</span>
         </div>
-        {status === "active" && (
-          <>
-            <div className="flex justify-between items-center py-2 text-[13px]">
-              <span className="font-medium text-foreground font-body">Trial started</span>
-              <span className="text-muted-foreground font-body">
-                {computeTrialStartDate(remainingDays)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 text-[13px]">
-              <span className="font-medium text-foreground font-body">Trial ends</span>
-              <span className="text-muted-foreground font-body">
-                {computeTrialEndDate(remainingDays)}
-              </span>
-            </div>
-          </>
-        )}
+        <div className="flex justify-between items-center py-2 text-[13px]">
+          <span className="font-medium text-foreground font-body">Trial started</span>
+          <span className="text-muted-foreground font-body">
+            {computeTrialStartDate(remainingDays)}
+          </span>
+        </div>
+        <div className="flex justify-between items-center py-2 text-[13px]">
+          <span className="font-medium text-foreground font-body">Trial ends</span>
+          <span className="text-muted-foreground font-body">
+            {computeTrialEndDate(remainingDays)}
+          </span>
+        </div>
         <div className="flex justify-between items-center py-2 text-[13px]">
           <span className="font-medium text-foreground font-body">Cards tracked</span>
           <span className="text-muted-foreground font-body">{metrics.cardCount}</span>
@@ -183,43 +200,6 @@ export function TrialSettingsSection() {
           </span>
         </div>
       </div>
-
-      {/* Returning user message — shown when trial expired (Issue #623) */}
-      {status === "expired" && (
-        <div className="border border-gold/20 bg-gold/5 p-3 flex flex-col gap-1.5">
-          <p className="text-[13px] font-heading font-semibold text-foreground">
-            Upgrade to Karl
-          </p>
-          <p className="text-[12px] text-muted-foreground font-body leading-relaxed">
-            Your trial ended. Subscribe to Karl to unlock all features including
-            The Howl, Valhalla, and unlimited cards &mdash; $3.99/mo.
-          </p>
-        </div>
-      )}
-
-      {/* Subscribe CTA — only shown when trial has expired (hidden during active trial) */}
-      {status === "expired" && (
-        <button
-          type="button"
-          onClick={handleSubscribe}
-          disabled={isSubscribing}
-          className={[
-            "inline-flex items-center justify-center gap-2",
-            "min-h-[44px] md:min-h-[40px] px-5 py-2",
-            "text-base font-heading font-semibold tracking-wide",
-            "bg-gold text-primary-foreground",
-            "hover:brightness-110 transition-colors",
-            "border border-gold rounded-sm karl-bling-btn",
-            "disabled:opacity-60 disabled:cursor-not-allowed",
-            "self-start",
-          ].join(" ")}
-          aria-label="Upgrade to Karl subscription"
-        >
-          {isSubscribing
-            ? "Redirecting\u2026"
-            : "Upgrade to Karl \u2014 $3.99/month"}
-        </button>
-      )}
     </section>
   );
 }
