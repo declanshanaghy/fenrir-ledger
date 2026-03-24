@@ -63,6 +63,34 @@ vi.mock("@/lib/sync/migration", () => ({
   MIGRATION_FLAG: "fenrir:migrated",
 }));
 
+// Issue #1925: ensureFreshToken reads id_token from localStorage dynamically.
+// authFetch mirrors real behavior — injects Authorization header from session token.
+vi.mock("@/lib/auth/refresh-session", () => ({
+  ensureFreshToken: vi.fn(async () => {
+    try {
+      const raw = localStorage.getItem("fenrir:auth");
+      if (!raw) return null;
+      return (JSON.parse(raw) as { id_token?: string })?.id_token ?? null;
+    } catch { return null; }
+  }),
+  refreshSession: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/auth/auth-fetch", () => ({
+  authFetch: vi.fn(async (url: string, opts?: RequestInit) => {
+    const raw = localStorage.getItem("fenrir:auth");
+    const token = raw ? (JSON.parse(raw) as { id_token?: string })?.id_token : null;
+    const merged: RequestInit = {
+      ...opts,
+      headers: {
+        ...(opts?.headers as Record<string, string> ?? {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    };
+    return globalThis.fetch(url, merged);
+  }),
+}));
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function makePushResponse(cards: unknown[] = [], syncedCount = 0) {

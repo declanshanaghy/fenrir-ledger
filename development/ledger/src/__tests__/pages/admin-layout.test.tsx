@@ -26,6 +26,11 @@ vi.mock("@/lib/auth/sign-in-url", () => ({
   buildSignInUrl: vi.fn((returnTo: string) => `/ledger/sign-in?returnTo=${returnTo}`),
 }));
 
+// Issue #1925: mock ensureFreshToken to return a valid token when session has id_token
+vi.mock("@/lib/auth/refresh-session", () => ({
+  ensureFreshToken: vi.fn().mockResolvedValue("tok-abc"),
+}));
+
 // Capture window.location.href assignments
 const originalLocation = window.location;
 

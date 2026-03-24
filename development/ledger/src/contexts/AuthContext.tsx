@@ -34,6 +34,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
   type ReactNode,
@@ -86,6 +87,9 @@ export interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/** Interval for proactive token refresh: 50 minutes in ms. */
+const REFRESH_INTERVAL_MS = 50 * 60 * 1000;
+
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 interface AuthProviderProps {
@@ -96,6 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<FenrirSession | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [householdId, setHouseholdId] = useState<string | null>(null);
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Evaluate the stored session once on mount (client-only).
   useEffect(() => {
@@ -141,6 +146,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     initializeAuth();
   }, []);
+
+  // Periodic proactive token refresh for authenticated sessions.
+  // Runs every 50 minutes so tokens never expire silently on long-lived pages.
+  // Google access tokens have a 1-hour TTL; refreshing at 50 min gives 10 min margin.
+  useEffect(() => {
+    if (status !== "authenticated") {
+      // Clear any existing interval when the user signs out or is not authenticated
+      if (refreshIntervalRef.current !== null) {
+        clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
+      return;
+    }
+
+    refreshIntervalRef.current = setInterval(async () => {
+      const refreshed = await refreshSession();
+      if (refreshed) {
+        setSession(refreshed);
+        setHouseholdId(getEffectiveHouseholdId(refreshed.user.sub));
+      }
+      // If refresh returns null (revoked/expired refresh token), leave the session
+      // as-is — the next API call will get a 401 and trigger sign-out via authFetch.
+    }, REFRESH_INTERVAL_MS);
+
+    return () => {
+      if (refreshIntervalRef.current !== null) {
+        clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
+    };
+  }, [status]);
 
   /**
    * Returns the effective storage ID for the current user.

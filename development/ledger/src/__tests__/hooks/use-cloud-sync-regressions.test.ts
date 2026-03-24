@@ -55,6 +55,36 @@ vi.mock("@/lib/sync/migration", () => ({
   MIGRATION_FLAG: "fenrir:migrated",
 }));
 
+// Issue #1925: ensureFreshToken returns the session's id_token from localStorage.
+// authFetch passes through to global fetch so existing mockFetch assertions still hold.
+vi.mock("@/lib/auth/refresh-session", () => ({
+  ensureFreshToken: vi.fn(async () => {
+    try {
+      const raw = localStorage.getItem("fenrir:auth");
+      if (!raw) return null;
+      return (JSON.parse(raw) as { id_token?: string })?.id_token ?? null;
+    } catch { return null; }
+  }),
+  refreshSession: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/auth/auth-fetch", () => ({
+  // Mirror real authFetch: inject Authorization header from session, then call fetch.
+  // This ensures tests that check Authorization header still work after #1925.
+  authFetch: vi.fn(async (url: string, opts?: RequestInit) => {
+    const raw = localStorage.getItem("fenrir:auth");
+    const token = raw ? (JSON.parse(raw) as { id_token?: string })?.id_token : null;
+    const merged: RequestInit = {
+      ...opts,
+      headers: {
+        ...(opts?.headers as Record<string, string> ?? {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    };
+    return globalThis.fetch(url, merged);
+  }),
+}));
+
 // ── Session helpers ────────────────────────────────────────────────────────────
 
 function makeSession(idToken: string, sub: string) {

@@ -50,6 +50,42 @@ vi.mock("@/lib/storage", () => ({
   getEffectiveHouseholdId: (fallback: string) => fallback,
 }));
 
+// Mock migration to prevent runMigration from calling fetch directly — the
+// tests here control fetch via syncNow()/performSync(), not via migration.
+vi.mock("@/lib/sync/migration", () => ({
+  hasMigrated: vi.fn().mockReturnValue(true),  // Skip migration path in these tests
+  runMigration: vi.fn().mockResolvedValue({ ran: false, cardCount: 0, direction: "empty" }),
+  MIGRATION_FLAG: "fenrir:migrated",
+}));
+
+// Issue #1925: ensureFreshToken returns the session's id_token from localStorage.
+// authFetch passes through to global fetch so existing mockFetch assertions still hold.
+vi.mock("@/lib/auth/refresh-session", () => ({
+  ensureFreshToken: vi.fn(async () => {
+    try {
+      const raw = localStorage.getItem("fenrir:auth");
+      if (!raw) return null;
+      return (JSON.parse(raw) as { id_token?: string })?.id_token ?? null;
+    } catch { return null; }
+  }),
+  refreshSession: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/auth/auth-fetch", () => ({
+  authFetch: vi.fn(async (url: string, opts?: RequestInit) => {
+    const raw = localStorage.getItem("fenrir:auth");
+    const token = raw ? (JSON.parse(raw) as { id_token?: string })?.id_token : null;
+    const merged: RequestInit = {
+      ...opts,
+      headers: {
+        ...(opts?.headers as Record<string, string> ?? {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    };
+    return globalThis.fetch(url, merged);
+  }),
+}));
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const FAKE_SESSION = { id_token: "tok-test", user: { sub: "hh-test" } };
@@ -147,9 +183,11 @@ describe("useCloudSync — Karl: state transitions", () => {
   });
 
   it("transitions syncing → synced on successful fetch", async () => {
-    setSession();
+    // Set session AFTER renderHook so the mount effect (handleLoginTransition)
+    // returns early at the session check — only syncNow() drives the fetch.
     mockFetch.mockReturnValue(successResponse(5));
     const { result } = renderHook(() => useCloudSync());
+    setSession();
     await act(async () => {
       await result.current.syncNow();
     });

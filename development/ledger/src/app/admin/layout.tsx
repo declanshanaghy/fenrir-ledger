@@ -18,6 +18,7 @@
 import { useEffect, useState, useCallback, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { buildSignInUrl } from "@/lib/auth/sign-in-url";
+import { ensureFreshToken } from "@/lib/auth/refresh-session";
 
 type AdminGateState =
   | { phase: "loading" }
@@ -33,11 +34,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const { data: session, status } = useAuth();
   const [gate, setGate] = useState<AdminGateState>({ phase: "loading" });
 
-  const checkAdmin = useCallback(async (idToken: string) => {
+  const checkAdmin = useCallback(async () => {
+    const token = await ensureFreshToken();
+    if (!token) {
+      setGate({ phase: "forbidden" });
+      return;
+    }
     try {
       const res = await fetch("/api/admin/pack-status", {
         method: "GET",
-        headers: { Authorization: `Bearer ${idToken}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.status === 403) {
@@ -68,13 +74,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Authenticated — check admin status via API probe
-    if (session.id_token) {
-      checkAdmin(session.id_token);
-    } else {
-      setGate({ phase: "forbidden" });
-    }
-  }, [status, session, checkAdmin]);
+    // Authenticated — check admin status via API probe (token refreshed inside checkAdmin)
+    checkAdmin();
+  }, [status, session, checkAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Loading state
   if (gate.phase === "loading" || gate.phase === "redirecting") {

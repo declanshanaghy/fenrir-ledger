@@ -40,6 +40,8 @@ import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { getRawAllCards, setAllCards, getEffectiveHouseholdId } from "@/lib/storage";
 import { hasMigrated, runMigration } from "@/lib/sync/migration";
+import { ensureFreshToken } from "@/lib/auth/refresh-session";
+import { authFetch } from "@/lib/auth/auth-fetch";
 import type { FenrirSession } from "@/lib/types";
 import type { Card } from "@/lib/types";
 import {
@@ -210,13 +212,15 @@ export function useCloudSync(): CloudSyncState {
     }
 
     const session = getSession();
-    if (!session?.id_token || !session?.user?.sub) return;
+    if (!session?.user?.sub) return;
 
     // Resolve actual householdId — for solo users this equals session.user.sub;
     // after joining a shared household it is the new household's ID (#1796).
     const householdId = getEffectiveHouseholdId(session.user.sub);
-    const idToken = session.id_token;
 
+    // Acquire the sync lock and set status synchronously (optimistic update).
+    // This must happen before any await so the re-entrant guard and UI state
+    // are correct even if ensureFreshToken triggers a network refresh.
     syncInProgressRef.current = true;
     setStatus("syncing");
     setErrorMessage(null);
@@ -230,17 +234,17 @@ export function useCloudSync(): CloudSyncState {
       const localCards = getRawAllCards(householdId);
       const localActiveCount = localCards.filter((c) => !c.deletedAt).length;
 
-      const response = await fetch("/api/sync/push", {
+      // authFetch ensures fresh token + retries on 401 for mid-flight token expiry
+      const response = await authFetch("/api/sync/push", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({ householdId, cards: localCards }),
       });
 
-      if (!response.ok) {
-        const { code, message } = await parseApiError(response);
+      if (!response || !response.ok) {
+        const { code, message } = response ? await parseApiError(response) : { code: "auth_error", message: "Authentication failed." };
         throw Object.assign(new Error(message), { code });
       }
 
@@ -317,12 +321,12 @@ export function useCloudSync(): CloudSyncState {
     if (syncInProgressRef.current) return;
 
     const session = getSession();
-    if (!session?.id_token || !session?.user?.sub) return;
+    if (!session?.user?.sub) return;
 
     // Resolve actual householdId — same rationale as performSync (#1796).
     const householdId = getEffectiveHouseholdId(session.user.sub);
-    const idToken = session.id_token;
 
+    // Acquire lock synchronously before any awaits.
     syncInProgressRef.current = true;
     setStatus("syncing");
     setErrorMessage(null);
@@ -331,17 +335,12 @@ export function useCloudSync(): CloudSyncState {
     setRetryIn(null);
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `/api/sync/pull?householdId=${encodeURIComponent(householdId)}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-          },
-        }
+        { method: "GET" }
       );
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         // Pull failed — stay idle rather than showing an error (non-critical path)
         setStatus("idle");
         return;
@@ -408,11 +407,10 @@ export function useCloudSync(): CloudSyncState {
     if (syncInProgressRef.current) return;
 
     const session = getSession();
-    if (!session?.id_token || !session?.user?.sub) return;
+    if (!session?.user?.sub) return;
 
     // Resolve actual householdId — same rationale as performSync (#1796).
     const householdId = getEffectiveHouseholdId(session.user.sub);
-    const idToken = session.id_token;
 
     if (hasMigrated()) {
       // Already migrated on a previous sign-in — pull from cloud (no push)
@@ -420,7 +418,7 @@ export function useCloudSync(): CloudSyncState {
       return;
     }
 
-    // First Karl sign-in: run migration (push+merge — correct for initial sync)
+    // First Karl sign-in: acquire lock synchronously before any awaits.
     syncInProgressRef.current = true;
     setStatus("syncing");
     setErrorMessage(null);
@@ -433,7 +431,14 @@ export function useCloudSync(): CloudSyncState {
     let migrationFailed = false;
 
     try {
-      const result = await runMigration(householdId, idToken);
+      // Get fresh token — may involve a network refresh if stale.
+      // Done inside the try block so a refresh failure falls through to the catch.
+      const migrationToken = await ensureFreshToken();
+      if (!migrationToken) {
+        throw Object.assign(new Error("Authentication expired."), { code: "auth_error" });
+      }
+
+      const result = await runMigration(householdId, migrationToken);
 
       setLastSyncedAt(new Date());
       setCardCount(result.cardCount);
