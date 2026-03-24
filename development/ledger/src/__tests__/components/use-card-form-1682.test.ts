@@ -67,7 +67,7 @@ vi.mock("@/components/cards/GleipnirBearSinews", () => ({
 }));
 
 vi.mock("@/lib/issuer-utils", () => ({
-  getIssuerRune: vi.fn().mockReturnValue("ᚠ"),
+  getIssuerBadgeChar: vi.fn().mockReturnValue("CK"),
 }));
 
 // ── Imports ───────────────────────────────────────────────────────────────────

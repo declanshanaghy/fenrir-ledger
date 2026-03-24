@@ -28,7 +28,7 @@ import { StatusRing } from "./StatusRing";
 import { TimerRing } from "./TimerRing";
 import type { Card as CreditCard } from "@/lib/types";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/card-utils";
-import { getIssuerBadgeChar, getIssuerMeta } from "@/lib/issuer-utils";
+import { getIssuerBadgeChar, getIssuerName } from "@/lib/issuer-utils";
 import { IssuerLogo } from "@/components/shared/IssuerLogo";
 
 // ── Pure helpers (exported for unit tests) ─────────────────────────────────────
@@ -103,7 +103,6 @@ export function HuntCardTile({ card, lokiLabel }: HuntCardTileProps) {
     card.signUpBonus?.deadline ? daysUntil(card.signUpBonus.deadline) : null;
 
   const ringBadgeChar = getIssuerBadgeChar(card.issuerId);
-  const issuerMeta = getIssuerMeta(card.issuerId);
 
   // Progress ring: pass amountSpent/spendRequired as the ratio numerator/denominator.
   // StatusRing computes progress = daysRemaining / totalDays — we reuse that math.
@@ -166,11 +165,7 @@ export function HuntCardTile({ card, lokiLabel }: HuntCardTileProps) {
                 <div className="min-w-0">
                   <CardDescription
                     className="text-sm uppercase tracking-wide mb-1"
-                    title={
-                      issuerMeta
-                        ? `${issuerMeta.rune} ${issuerMeta.runeName} — ${issuerMeta.runeConnection}`
-                        : undefined
-                    }
+                    title={getIssuerName(card.issuerId)}
                   >
                     <IssuerLogo
                       issuerId={card.issuerId}

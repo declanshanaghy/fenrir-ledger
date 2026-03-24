@@ -1,16 +1,15 @@
 /**
- * issuer-utils — Issue #1949
+ * issuer-utils — Issue #1949 (updated #1965)
  *
  * Unit tests for the issuer utility functions used by IssuerLogo,
  * card tiles, and the issuer dropdown.
  *
- * @ref #1949
+ * @ref #1949 #1965
  */
 
 import { describe, it, expect } from "vitest";
 import {
   getIssuerMeta,
-  getIssuerRune,
   getIssuerLogoPath,
   getIssuerName,
   getIssuerInitials,
@@ -19,23 +18,21 @@ import {
 
 describe("issuer-utils — issue #1949", () => {
   describe("getIssuerMeta", () => {
-    it("returns full metadata for chase", () => {
+    it("returns logo metadata for chase", () => {
       const meta = getIssuerMeta("chase");
       expect(meta).not.toBeNull();
-      expect(meta?.rune).toBe("ᚱ");
-      expect(meta?.runeName).toBe("Raidho");
       expect(meta?.logoPath).toBe("/issuers/chase.svg");
+      expect(meta?.brandColor).toBeTruthy();
     });
 
     it("returns null for an unknown issuer", () => {
       expect(getIssuerMeta("unknown_bank_xyz")).toBeNull();
     });
 
-    it("returns full metadata for amex", () => {
+    it("returns logo metadata for amex", () => {
       const meta = getIssuerMeta("amex");
-      expect(meta?.rune).toBe("ᛊ");
-      expect(meta?.runeName).toBe("Sowilo");
       expect(meta?.logoPath).toBe("/issuers/amex.svg");
+      expect(meta?.brandColor).toBeTruthy();
     });
 
     it("returns metadata for all 10 known issuers", () => {
@@ -54,19 +51,15 @@ describe("issuer-utils — issue #1949", () => {
       for (const id of known) {
         const meta = getIssuerMeta(id);
         expect(meta, `${id} should have meta`).not.toBeNull();
-        expect(meta?.rune, `${id} should have a rune`).toBeTruthy();
         expect(meta?.logoPath, `${id} should have a logoPath`).toMatch(/\/issuers\/.+\.svg$/);
       }
     });
-  });
 
-  describe("getIssuerRune", () => {
-    it("returns rune char for known issuer", () => {
-      expect(getIssuerRune("capital_one")).toBe("ᚦ");
-    });
-
-    it("returns null for unknown issuer", () => {
-      expect(getIssuerRune("my_weird_bank")).toBeNull();
+    it("meta does not contain rune or runeName fields", () => {
+      const meta = getIssuerMeta("chase") as Record<string, unknown>;
+      expect(meta).not.toBeNull();
+      expect("rune" in meta).toBe(false);
+      expect("runeName" in meta).toBe(false);
     });
   });
 
@@ -111,18 +104,20 @@ describe("issuer-utils — issue #1949", () => {
   });
 
   describe("getIssuerBadgeChar", () => {
-    it("returns rune for known issuer", () => {
-      expect(getIssuerBadgeChar("chase")).toBe("ᚱ");
+    it("returns initials for known issuer", () => {
+      expect(getIssuerBadgeChar("chase")).toBe("C");
     });
 
-    it("returns initials for unknown issuer (no rune available)", () => {
+    it("returns initials for capital_one", () => {
+      expect(getIssuerBadgeChar("capital_one")).toBe("CO");
+    });
+
+    it("returns initials for unknown issuer", () => {
       const badge = getIssuerBadgeChar("my_weird_issuer");
-      // Falls back to initials
       expect(badge).toBeTruthy();
-      expect(badge).not.toContain("ᚱ"); // not chase's rune
     });
 
-    it("all known issuers return unique rune chars", () => {
+    it("all known issuers return non-empty badge chars", () => {
       const known = [
         "chase",
         "bank_of_america",
@@ -135,9 +130,19 @@ describe("issuer-utils — issue #1949", () => {
         "barclays",
         "hsbc",
       ];
-      const runes = known.map(getIssuerBadgeChar);
-      const uniqueRunes = new Set(runes);
-      expect(uniqueRunes.size).toBe(known.length);
+      for (const id of known) {
+        const badge = getIssuerBadgeChar(id);
+        expect(badge, `${id} should have a badge char`).toBeTruthy();
+      }
+    });
+
+    it("badge chars are initials, not rune characters", () => {
+      const known = ["chase", "amex", "capital_one", "wells_fargo"];
+      const RUNE_CHARS = ["ᚱ", "ᚠ", "ᚦ", "ᚹ", "ᛊ", "ᛁ", "ᚾ", "ᚢ", "ᚷ", "ᛇ"];
+      for (const id of known) {
+        const badge = getIssuerBadgeChar(id);
+        expect(RUNE_CHARS, `${id} badge should not be a rune char`).not.toContain(badge);
+      }
     });
   });
 });

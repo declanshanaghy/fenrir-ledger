@@ -1,10 +1,10 @@
 /**
- * IssuerLogo showLabel — Issue #1949
+ * IssuerLogo showLabel — Issue #1949 (updated #1965)
  *
- * Verifies that IssuerLogo renders the rune character and rune name
- * when showLabel=true, and only the logo (or text fallback) when false.
+ * Verifies that IssuerLogo renders the real issuer name when showLabel=true,
+ * and only the logo (or text fallback) when false.
  *
- * @ref #1949
+ * @ref #1949 #1965
  */
 
 import React from "react";
@@ -14,27 +14,27 @@ import { IssuerLogo } from "@/components/shared/IssuerLogo";
 
 describe("IssuerLogo — showLabel", () => {
   describe("known issuer (chase)", () => {
-    it("renders logo img without rune label by default", () => {
+    it("renders logo img without label by default", () => {
       const { container } = render(<IssuerLogo issuerId="chase" />);
       const img = container.querySelector("img");
       expect(img).not.toBeNull();
       expect(img?.src).toContain("/issuers/chase.svg");
+      expect(screen.queryByTestId("issuer-name")).toBeNull();
+    });
+
+    it("renders logo + real issuer name when showLabel=true", () => {
+      render(<IssuerLogo issuerId="chase" showLabel />);
+      const nameEl = screen.getByTestId("issuer-name");
+      expect(nameEl.textContent).toBe("Chase");
+    });
+
+    it("does not render rune name when showLabel=true", () => {
+      render(<IssuerLogo issuerId="chase" showLabel />);
       expect(screen.queryByTestId("issuer-rune")).toBeNull();
       expect(screen.queryByTestId("issuer-rune-name")).toBeNull();
-    });
-
-    it("renders logo + rune char + rune name when showLabel=true", () => {
-      render(<IssuerLogo issuerId="chase" showLabel />);
-      const runeEl = screen.getByTestId("issuer-rune");
-      const runeNameEl = screen.getByTestId("issuer-rune-name");
-      expect(runeEl.textContent).toBe("ᚱ");
-      expect(runeNameEl.textContent).toBe("Raidho");
-    });
-
-    it("rune char span is aria-hidden", () => {
-      render(<IssuerLogo issuerId="chase" showLabel />);
-      const runeEl = screen.getByTestId("issuer-rune");
-      expect(runeEl.getAttribute("aria-hidden")).toBe("true");
+      // Verify rune words are absent
+      const logo = screen.getByTestId("issuer-logo");
+      expect(logo.textContent).not.toContain("Raidho");
     });
 
     it("img has alt text = issuer name", () => {
@@ -51,25 +51,28 @@ describe("IssuerLogo — showLabel", () => {
   });
 
   describe("known issuer (amex)", () => {
-    it("shows Sowilo rune and runeName when showLabel=true", () => {
+    it("shows real name American Express when showLabel=true", () => {
       render(<IssuerLogo issuerId="amex" showLabel />);
-      expect(screen.getByTestId("issuer-rune").textContent).toBe("ᛊ");
-      expect(screen.getByTestId("issuer-rune-name").textContent).toBe("Sowilo");
+      expect(screen.getByTestId("issuer-name").textContent).toBe("American Express");
+    });
+
+    it("does not show rune name Sowilo", () => {
+      render(<IssuerLogo issuerId="amex" showLabel />);
+      expect(screen.getByTestId("issuer-logo").textContent).not.toContain("Sowilo");
     });
   });
 
   describe("unknown issuer", () => {
-    it("falls back to text name without rune elements", () => {
+    it("falls back to text name without logo or name element", () => {
       render(<IssuerLogo issuerId="other" showLabel />);
-      // No img, no rune, shows issuer name text
-      expect(screen.queryByTestId("issuer-rune")).toBeNull();
-      expect(screen.queryByTestId("issuer-rune-name")).toBeNull();
+      // No img, no issuer-name testid, shows issuer name text directly
+      expect(screen.queryByTestId("issuer-name")).toBeNull();
       expect(screen.getByTestId("issuer-logo").textContent).toContain("Other");
     });
 
     it("showLabel=false also falls back to text name for unknown issuer", () => {
       render(<IssuerLogo issuerId="other" />);
-      expect(screen.queryByTestId("issuer-rune")).toBeNull();
+      expect(screen.queryByTestId("issuer-name")).toBeNull();
       expect(screen.getByTestId("issuer-logo").textContent).toContain("Other");
     });
   });
