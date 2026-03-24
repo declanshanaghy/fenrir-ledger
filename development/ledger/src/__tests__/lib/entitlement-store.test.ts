@@ -18,6 +18,7 @@ const mockSetUserStripeCustomerId = vi.hoisted(() => vi.fn());
 const mockGetStripeSubscription = vi.hoisted(() => vi.fn());
 const mockSetStripeSubscription = vi.hoisted(() => vi.fn());
 const mockDeleteStripeSubscription = vi.hoisted(() => vi.fn());
+const mockUpdateHouseholdTier = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getUser: (...args: unknown[]) => mockGetUser(...args),
@@ -26,6 +27,7 @@ vi.mock("@/lib/firebase/firestore", () => ({
   getStripeSubscription: (...args: unknown[]) => mockGetStripeSubscription(...args),
   setStripeSubscription: (...args: unknown[]) => mockSetStripeSubscription(...args),
   deleteStripeSubscription: (...args: unknown[]) => mockDeleteStripeSubscription(...args),
+  updateHouseholdTier: (...args: unknown[]) => mockUpdateHouseholdTier(...args),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -104,6 +106,7 @@ describe("entitlement-store", () => {
     mockSetStripeSubscription.mockResolvedValue(undefined);
     mockDeleteStripeSubscription.mockResolvedValue(undefined);
     mockSetUserStripeCustomerId.mockResolvedValue(undefined);
+    mockUpdateHouseholdTier.mockResolvedValue(undefined);
   });
 
   // ── Pure helpers ──────────────────────────────────────────────────────
