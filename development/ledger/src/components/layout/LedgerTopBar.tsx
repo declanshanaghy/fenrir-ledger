@@ -562,7 +562,7 @@ export function LedgerTopBar() {
       </div>
 
       {/* RIGHT: Controls cluster */}
-      <div className="relative flex items-center gap-1" ref={panelRef}>
+      <div className="relative flex items-center gap-2" ref={panelRef}>
 
         {/* Trial badge — shows remaining days with color urgency (Issue #621) */}
         <TrialBadge />
