@@ -299,3 +299,111 @@ describe("HouseholdSettingsSection — solo Karl owner (issue #1780)", () => {
     });
   });
 });
+
+// ── Tests: issue #1945 — Join a Household visibility ─────────────────────────
+
+const memberHouseholdData = {
+  householdId: "hh_multi",
+  householdName: "Multi Saga",
+  ownerId: "u_owner",
+  memberCount: 2,
+  maxMembers: 3,
+  isSolo: false,
+  isFull: false,
+  isOwner: false,
+  isKarl: true,
+  inviteCode: undefined,
+  inviteCodeExpiresAt: undefined,
+  members: [
+    {
+      userId: "u_owner",
+      displayName: "Odin",
+      email: "odin@saga.com",
+      role: "owner" as const,
+      isCurrentUser: false,
+    },
+    {
+      userId: "u_member",
+      displayName: "Loki",
+      email: "loki@saga.com",
+      role: "member" as const,
+      isCurrentUser: true,
+    },
+  ],
+};
+
+const karlMultiOwnerData = {
+  householdId: "hh_karlmulti",
+  householdName: "Karl Multi Saga",
+  ownerId: "u_me",
+  memberCount: 2,
+  maxMembers: 3,
+  isSolo: false,
+  isFull: false,
+  isOwner: true,
+  isKarl: true,
+  inviteCode: "XYZ789",
+  inviteCodeExpiresAt: "2026-04-01T00:00:00.000Z",
+  members: [
+    {
+      userId: "u_me",
+      displayName: "Björn",
+      email: "bjorn@saga.com",
+      role: "owner" as const,
+      isCurrentUser: true,
+    },
+    {
+      userId: "u_other",
+      displayName: "Sigrid",
+      email: "sigrid@saga.com",
+      role: "member" as const,
+      isCurrentUser: false,
+    },
+  ],
+};
+
+describe("HouseholdSettingsSection — Join a Household visibility (issue #1945)", () => {
+  beforeEach(() => {
+    mockEnsureFreshToken.mockResolvedValue("valid-token");
+  });
+
+  it("household member (non-owner) does NOT see Join a Household button", async () => {
+    mockFetchSuccess(memberHouseholdData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /join a household/i })).toBeNull();
+    });
+  });
+
+  it("household member sees Leave Household button instead", async () => {
+    mockFetchSuccess(memberHouseholdData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /leave household/i })).toBeDefined();
+    });
+  });
+
+  it("Karl multi-member owner does NOT see Join a Household button", async () => {
+    mockFetchSuccess(karlMultiOwnerData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /join a household/i })).toBeNull();
+    });
+  });
+
+  it("Karl multi-member owner sees invite code", async () => {
+    mockFetchSuccess(karlMultiOwnerData);
+
+    render(<HouseholdSettingsSection />);
+
+    await waitFor(() => {
+      expect(screen.getByText("XYZ789")).toBeDefined();
+    });
+  });
+});
