@@ -12,34 +12,18 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { getCards, getClosedCards } from "@/lib/storage";
 import { ANON_HOUSEHOLD_ID } from "@/lib/constants";
-import type { Card, BonusType } from "@/lib/types";
-
-interface BonusTotals {
-  points: number;
-  miles: number;
-  cashback: number; // in cents
-}
-
-function aggregateBonuses(cards: Card[]): BonusTotals {
-  const totals: BonusTotals = { points: 0, miles: 0, cashback: 0 };
-  for (const card of cards) {
-    if (card.signUpBonus && card.signUpBonus.met) {
-      const { type, amount } = card.signUpBonus;
-      totals[type] += amount;
-    }
-  }
-  return totals;
-}
+import type { BonusType } from "@/lib/types";
+import { aggregateBonuses, type BonusTotals } from "@/lib/bonus-utils";
 
 function formatBonusLine(type: BonusType, amount: number): string {
   if (type === "cashback") {
-    // amount is in cents
+    // amount is in dollars (shared lib converts cents → dollars)
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount / 100) + " cashback";
+    }).format(amount) + " cashback";
   }
   const label = type === "miles" ? "miles" : "points";
   return new Intl.NumberFormat("en-US").format(amount) + " " + label;
