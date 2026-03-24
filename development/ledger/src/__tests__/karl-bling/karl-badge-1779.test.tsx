@@ -1,15 +1,13 @@
 /**
- * KarlBadge (#1779) — unit tests
+ * KarlBadge (#1779, #1943) — unit tests
  *
  * Verifies the shared KarlBadge component (KarlBadge.tsx) behaviour:
- *   - Karl tier:  renders <span role="img"> with gold badge class
- *   - Trial tier: renders <a> Link to /pricing with trial badge class
- *   - Thrall/none: renders <span> (CSS hides it — display:none)
+ *   - Karl tier (active):  renders <span role="img"> with gold badge class
+ *   - Karl tier (inactive): returns null — no badge rendered
+ *   - Trial tier: returns null — badge not shown (issue #1943)
+ *   - Thrall/none: returns null — badge not shown
  *
- * CSS visibility is not asserted here (JSDOM doesn't compute stylesheets).
- * The CSS cascade contract is covered by data-tier.test.tsx.
- *
- * @ref #1779
+ * @ref #1779 #1943
  */
 
 import React from "react";
@@ -19,48 +17,30 @@ import { KarlBadge } from "@/components/layout/KarlBadge";
 
 // ── Mock state ────────────────────────────────────────────────────────────────
 
-let mockTrialStatus = "none" as "none" | "active" | "expired" | "converted";
+let mockTier = "thrall" as "thrall" | "karl";
+let mockIsActive = false;
 
-vi.mock("@/hooks/useTrialStatus", () => ({
-  useTrialStatus: () => ({
-    status: mockTrialStatus,
-    remainingDays: 0,
-    isLoading: false,
-    refresh: vi.fn(),
+vi.mock("@/hooks/useEntitlement", () => ({
+  useEntitlement: () => ({
+    tier: mockTier,
+    isActive: mockIsActive,
+    hasFeature: vi.fn(() => false),
+    subscribeStripe: vi.fn(),
+    isLinked: false,
   }),
-  clearTrialStatusCache: vi.fn(),
-}));
-
-// next/link renders as <a> in tests
-vi.mock("next/link", () => ({
-  default: ({
-    href,
-    children,
-    className,
-    "aria-label": ariaLabel,
-    title,
-  }: {
-    href: string;
-    children: React.ReactNode;
-    className?: string;
-    "aria-label"?: string;
-    title?: string;
-  }) => (
-    <a href={href} className={className} aria-label={ariaLabel} title={title}>
-      {children}
-    </a>
-  ),
 }));
 
 beforeEach(() => {
-  mockTrialStatus = "none";
+  mockTier = "thrall";
+  mockIsActive = false;
 });
 
-// ── Karl tier ─────────────────────────────────────────────────────────────────
+// ── Karl tier (active) ────────────────────────────────────────────────────────
 
-describe("KarlBadge — karl tier", () => {
+describe("KarlBadge — karl tier (active)", () => {
   beforeEach(() => {
-    mockTrialStatus = "none"; // not trial; karl CSS handled by data-tier attribute
+    mockTier = "karl";
+    mockIsActive = true;
   });
 
   it("renders a span with karl-bling-badge class", () => {
@@ -99,74 +79,39 @@ describe("KarlBadge — karl tier", () => {
   });
 });
 
-// ── Trial tier ────────────────────────────────────────────────────────────────
+// ── Karl tier (inactive) ──────────────────────────────────────────────────────
 
-describe("KarlBadge — trial tier", () => {
-  beforeEach(() => {
-    mockTrialStatus = "active";
-  });
-
-  it("renders an anchor linking to /pricing", () => {
-    render(<KarlBadge />);
-    const link = screen.getByRole("link");
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute("href", "/pricing");
-  });
-
-  it("has karl-bling-badge class on the anchor", () => {
-    render(<KarlBadge />);
-    const link = screen.getByRole("link");
-    expect(link).toHaveClass("karl-bling-badge");
-  });
-
-  it("has accessible aria-label for upgrade intent", () => {
-    render(<KarlBadge />);
-    const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("aria-label", "Karl trial — upgrade to Karl");
-  });
-
-  it("contains KARL text", () => {
-    render(<KarlBadge />);
-    const link = screen.getByRole("link");
-    expect(link).toHaveTextContent("KARL");
-  });
-
-  it("has two aria-hidden runic accents", () => {
+describe("KarlBadge — karl tier (inactive subscription)", () => {
+  it("renders nothing when karl tier but not active", () => {
+    mockTier = "karl";
+    mockIsActive = false;
     const { container } = render(<KarlBadge />);
-    const runes = container.querySelectorAll(".karl-badge-rune");
-    expect(runes).toHaveLength(2);
-    runes.forEach((r) => expect(r).toHaveAttribute("aria-hidden", "true"));
-  });
-
-  it("does not render role=img span", () => {
-    render(<KarlBadge />);
-    expect(
-      screen.queryByRole("img", { name: "Karl subscriber" })
-    ).not.toBeInTheDocument();
+    expect(container.querySelector(".karl-bling-badge")).not.toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 });
 
-// ── Thrall / no trial ─────────────────────────────────────────────────────────
+// ── Trial tier — badge hidden (#1943) ─────────────────────────────────────────
 
-describe("KarlBadge — thrall / no trial", () => {
-  it("renders span (CSS will hide it) — not a link", () => {
-    mockTrialStatus = "none";
+describe("KarlBadge — trial tier (no badge)", () => {
+  it("renders nothing for thrall tier (trial is represented as thrall in EntitlementTier)", () => {
+    mockTier = "thrall";
+    mockIsActive = false;
     const { container } = render(<KarlBadge />);
-    expect(container.querySelector(".karl-bling-badge")).toBeInTheDocument();
-    expect(container.querySelector("a")).not.toBeInTheDocument();
+    expect(container.querySelector(".karl-bling-badge")).not.toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
+});
 
-  it("expired trial renders span (not a link)", () => {
-    mockTrialStatus = "expired";
-    const { container } = render(<KarlBadge />);
-    expect(container.querySelector("a")).not.toBeInTheDocument();
-    expect(container.querySelector(".karl-bling-badge")).toBeInTheDocument();
-  });
+// ── Thrall / no subscription ──────────────────────────────────────────────────
 
-  it("converted trial renders span (not a link) — upsell link only for active trial", () => {
-    mockTrialStatus = "converted";
+describe("KarlBadge — thrall / no subscription", () => {
+  it("renders nothing for thrall tier", () => {
+    mockTier = "thrall";
+    mockIsActive = false;
     const { container } = render(<KarlBadge />);
+    expect(container.querySelector(".karl-bling-badge")).not.toBeInTheDocument();
     expect(container.querySelector("a")).not.toBeInTheDocument();
-    expect(container.querySelector(".karl-bling-badge")).toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 });
