@@ -192,6 +192,13 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
     );
   } else if (activeTab === 0) {
     mainContent = (
+      <UsersTab
+        cmdStatus={cmdStatus}
+        onJumpToHousehold={(householdId) => { setJumpHouseholdId(householdId); setActiveTab(1); }}
+      />
+    );
+  } else {
+    mainContent = (
       <HouseholdsTab
         cmdStatus={cmdStatus}
         initialHouseholdId={jumpHouseholdId}
@@ -202,13 +209,6 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
           const cmd = getCommands().find((c) => c.name === "trial-adjust");
           if (cmd) handleTrialInput(cmd);
         }}
-      />
-    );
-  } else {
-    mainContent = (
-      <UsersTab
-        cmdStatus={cmdStatus}
-        onJumpToHousehold={(householdId) => { setJumpHouseholdId(householdId); setActiveTab(0); }}
       />
     );
   }
