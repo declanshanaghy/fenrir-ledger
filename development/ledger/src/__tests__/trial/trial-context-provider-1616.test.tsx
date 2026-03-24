@@ -100,9 +100,10 @@ describe("TrialStatusProvider — single-fetch per page load (Issue #1616)", () 
     const { result: resultA } = renderHook(() => useTrialStatus(), { wrapper });
     const { result: resultB } = renderHook(() => useTrialStatus(), { wrapper });
 
-    // Both hooks share the same provider context
+    // Both hooks share the same provider context — wait for both to load
     await waitFor(() => {
       expect(resultA.current.isLoading).toBe(false);
+      expect(resultB.current.isLoading).toBe(false);
     });
 
     expect(resultA.current.status).toBe(resultB.current.status);

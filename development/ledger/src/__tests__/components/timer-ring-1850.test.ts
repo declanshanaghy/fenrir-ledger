@@ -113,7 +113,7 @@ describe("getTimerColor", () => {
 // ── getTimerTooltip ───────────────────────────────────────────────────────────
 
 describe("getTimerTooltip", () => {
-  it("returns valhalla held-for format when tab=valhalla and closedAt provided", () => {
+  it("returns valhalla held-for format with days count when tab=valhalla and closedAt provided", () => {
     const tooltip = getTimerTooltip(
       "valhalla",
       "2026-01-01",
@@ -122,8 +122,7 @@ describe("getTimerTooltip", () => {
     );
     // daysBetween Jan 1 → Mar 1 = 59 days
     expect(tooltip).toContain("59 days");
-    expect(tooltip).toContain("opened");
-    expect(tooltip).toContain("closed");
+    expect(tooltip).toMatch(/^Held 59 days/);
   });
 
   it("uses singular 'day' when held for exactly 1 day (valhalla)", () => {
@@ -135,6 +134,68 @@ describe("getTimerTooltip", () => {
     );
     expect(tooltip).toContain("1 day");
     expect(tooltip).not.toContain("1 days");
+  });
+
+  it("appends bonus label when bonusLabel provided (valhalla)", () => {
+    const tooltip = getTimerTooltip(
+      "valhalla",
+      "2026-01-01",
+      "2026-04-01",
+      "2026-03-01",
+      "60,000 pts"
+    );
+    expect(tooltip).toContain("Earned 60,000 pts");
+    expect(tooltip).toMatch(/^Held 59 days · Earned 60,000 pts$/);
+  });
+
+  it("appends annual fee when annualFee > 0 (valhalla)", () => {
+    // annualFee stored in cents: 69500 = $695/yr
+    const tooltip = getTimerTooltip(
+      "valhalla",
+      "2026-01-01",
+      "2026-04-01",
+      "2026-03-01",
+      undefined,
+      69500
+    );
+    expect(tooltip).toContain("Saved $695/yr");
+    expect(tooltip).toMatch(/^Held 59 days · Saved \$695\/yr$/);
+  });
+
+  it("appends both bonus and fee when both provided (valhalla)", () => {
+    // annualFee stored in cents: 69500 = $695/yr
+    const tooltip = getTimerTooltip(
+      "valhalla",
+      "2026-01-01",
+      "2026-04-01",
+      "2026-03-01",
+      "60,000 pts",
+      69500
+    );
+    expect(tooltip).toBe("Held 59 days · Earned 60,000 pts · Saved $695/yr");
+  });
+
+  it("does not append fee segment when annualFee is 0 (valhalla no-fee card)", () => {
+    const tooltip = getTimerTooltip(
+      "valhalla",
+      "2026-01-01",
+      "2026-04-01",
+      "2026-03-01",
+      undefined,
+      0
+    );
+    expect(tooltip).toBe("Held 59 days");
+    expect(tooltip).not.toContain("Saved");
+  });
+
+  it("does not include bonus or fee segments when neither provided (valhalla baseline)", () => {
+    const tooltip = getTimerTooltip(
+      "valhalla",
+      "2026-01-01",
+      "2026-04-01",
+      "2026-03-01"
+    );
+    expect(tooltip).toBe("Held 59 days");
   });
 
   it("returns howl fee format when tab=howl (no closedAt)", () => {

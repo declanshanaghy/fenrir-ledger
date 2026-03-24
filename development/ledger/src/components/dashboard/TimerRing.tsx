@@ -17,7 +17,7 @@
  * Spec: ux/wireframes/cards/timer-icon-cards.html — Sections 1–4
  */
 
-import { daysUntil, formatDate } from "@/lib/card-utils";
+import { daysUntil, formatCurrency } from "@/lib/card-utils";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -103,17 +103,25 @@ export function getTimerColor(tab: TimerTab, daysRemaining: number): string {
  *
  * Hunt:     "X days elapsed · Y days remaining until bonus deadline"
  * Howl:     "X days elapsed · Y days until annual fee due"
- * Valhalla: "Held for X days (opened [date] → closed [date])"
+ * Valhalla: "Held X days[· Earned Y pts][· Saved $Z/yr]"
+ *
+ * @param bonusLabel  - Valhalla only: earned bonus label e.g. "60,000 pts". Omit if not earned.
+ * @param annualFee   - Valhalla only: annual fee saved by closing e.g. 695. Omit or 0 for no fee.
  */
 export function getTimerTooltip(
   tab: TimerTab,
   openDateIso: string,
   deadlineDateIso: string,
   closedAtIso?: string,
+  bonusLabel?: string,
+  annualFee?: number,
 ): string {
   if (tab === "valhalla" && closedAtIso) {
     const daysHeld = daysBetween(openDateIso, closedAtIso);
-    return `Held for ${daysHeld} day${daysHeld === 1 ? "" : "s"} (opened ${formatDate(openDateIso)} → closed ${formatDate(closedAtIso)})`;
+    let tooltip = `Held ${daysHeld} day${daysHeld === 1 ? "" : "s"}`;
+    if (bonusLabel) tooltip += ` · Earned ${bonusLabel}`;
+    if (annualFee && annualFee > 0) tooltip += ` · Saved ${formatCurrency(annualFee)}/yr`;
+    return tooltip;
   }
 
   const todayIso = new Date().toISOString();
@@ -141,6 +149,10 @@ interface TimerRingProps {
   closedAt?: string;
   /** Card name — used for aria-label on the SVG. Omit for decorative-only. */
   cardName?: string;
+  /** Valhalla only: earned bonus label e.g. "60,000 pts". Shown in tooltip when provided. */
+  bonusLabel?: string;
+  /** Valhalla only: annual fee saved by closing e.g. 695. Shown in tooltip when > 0. */
+  annualFee?: number;
 }
 
 /**
@@ -159,6 +171,8 @@ export function TimerRing({
   tab,
   closedAt,
   cardName,
+  bonusLabel,
+  annualFee,
 }: TimerRingProps) {
   // Reference date: closedAt for Valhalla, today otherwise
   const referenceIso =
@@ -176,7 +190,7 @@ export function TimerRing({
   // Valhalla rings are muted at 50% opacity
   const ringOpacity = tab === "valhalla" ? 0.5 : 1;
 
-  const tooltip = getTimerTooltip(tab, openDate, deadlineDate, closedAt);
+  const tooltip = getTimerTooltip(tab, openDate, deadlineDate, closedAt, bonusLabel, annualFee);
 
   const ariaLabel = cardName
     ? `Timer: ${tooltip}`

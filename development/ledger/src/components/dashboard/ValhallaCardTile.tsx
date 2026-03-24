@@ -236,6 +236,8 @@ export function ValhallaCardTile({ card, lokiLabel }: ValhallaCardTileProps) {
                     tab="valhalla"
                     closedAt={card.closedAt}
                     cardName={card.cardName}
+                    bonusLabel={bonusEarned ? bonusLabel : undefined}
+                    annualFee={card.annualFee}
                   />
                 </div>
 
