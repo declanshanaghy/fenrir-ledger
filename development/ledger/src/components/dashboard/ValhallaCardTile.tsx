@@ -35,7 +35,7 @@ import { TimerRing } from "./TimerRing";
 import { daysBetween } from "./TimerRing";
 import type { Card as CreditCard } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/card-utils";
-import { getIssuerMeta } from "@/lib/issuer-utils";
+import { getIssuerName } from "@/lib/issuer-utils";
 import { IssuerLogo } from "@/components/shared/IssuerLogo";
 
 // ── Pure helpers (exported for unit tests) ─────────────────────────────────────
@@ -157,8 +157,6 @@ interface ValhallaCardTileProps {
 export function ValhallaCardTile({ card, lokiLabel }: ValhallaCardTileProps) {
   const reducedMotion = useReducedMotion() ?? false;
 
-  const issuerMeta = getIssuerMeta(card.issuerId);
-
   const bonusLabel = getValhallaSignupBonusLabel(card);
   const bonusEarned = !!(card.signUpBonus?.met);
   const annualFeeLabel = getValhallaAnnualFeeLabel(card.annualFee);
@@ -244,11 +242,7 @@ export function ValhallaCardTile({ card, lokiLabel }: ValhallaCardTileProps) {
                 <div className="min-w-0">
                   <CardDescription
                     className="text-sm uppercase tracking-wide mb-1"
-                    title={
-                      issuerMeta
-                        ? `${issuerMeta.rune} ${issuerMeta.runeName} — ${issuerMeta.runeConnection}`
-                        : undefined
-                    }
+                    title={getIssuerName(card.issuerId)}
                   >
                     <IssuerLogo
                       issuerId={card.issuerId}

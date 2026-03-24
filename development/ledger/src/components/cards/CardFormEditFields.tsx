@@ -24,8 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { KNOWN_ISSUERS } from "@/lib/constants";
-import { getIssuerRune } from "@/lib/issuer-utils";
+import { IssuerSelect } from "./IssuerSelect";
 import type { CardFormValues } from "./useCardForm";
 
 interface CardFormEditFieldsProps {
@@ -61,25 +60,11 @@ export function CardFormEditFields({
 
         <div className="space-y-1.5">
           <Label htmlFor="issuerId">Issuer *</Label>
-          <Select
+          <IssuerSelect
             value={issuerId ?? ""}
-            onValueChange={(v) => setValue("issuerId", v)}
-          >
-            <SelectTrigger id="issuerId" aria-required="true">
-              <SelectValue placeholder="Select issuer" />
-            </SelectTrigger>
-            <SelectContent>
-              {KNOWN_ISSUERS.map((issuer) => {
-                const rune = getIssuerRune(issuer.id);
-                return (
-                  <SelectItem key={issuer.id} value={issuer.id}>
-                    {rune ? `${rune} ` : ""}
-                    {issuer.name}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+            onChange={(v) => setValue("issuerId", v)}
+            required
+          />
           {errors.issuerId && (
             <p className="text-base text-destructive">
               {errors.issuerId.message}
