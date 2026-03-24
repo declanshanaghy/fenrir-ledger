@@ -26,7 +26,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import type { Card } from "@/lib/types";
 import { daysUntil, formatDate, formatCurrency } from "@/lib/card-utils";
-import { getIssuerRune } from "@/lib/issuer-utils";
 import { IssuerLogo } from "@/components/shared/IssuerLogo";
 import { cn } from "@/lib/utils";
 import { useRagnarok } from "@/contexts/RagnarokContext";
@@ -129,12 +128,7 @@ function UrgentRow({ row }: UrgentRowProps) {
           {card.cardName}
         </p>
         <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5">
-          {getIssuerRune(card.issuerId) && (
-            <span className="text-gold/70 text-[0.7rem]" aria-hidden="true">
-              {getIssuerRune(card.issuerId)}
-            </span>
-          )}
-          <IssuerLogo issuerId={card.issuerId} className="inline-block align-middle opacity-80" />
+          <IssuerLogo issuerId={card.issuerId} className="inline-flex align-middle opacity-80" showLabel />
         </p>
       </div>
 

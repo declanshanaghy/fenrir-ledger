@@ -252,7 +252,8 @@ export function ValhallaCardTile({ card, lokiLabel }: ValhallaCardTileProps) {
                   >
                     <IssuerLogo
                       issuerId={card.issuerId}
-                      className="inline-block align-middle opacity-90"
+                      className="inline-flex align-middle opacity-90"
+                      showLabel
                     />
                   </CardDescription>
                   <CardTitle className="text-base font-semibold leading-tight truncate">
