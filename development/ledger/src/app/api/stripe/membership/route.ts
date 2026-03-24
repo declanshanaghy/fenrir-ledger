@@ -24,6 +24,7 @@ import { getStripeEntitlement, setStripeEntitlement } from "@/lib/kv/entitlement
 import { stripe } from "@/lib/stripe/api";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
+import { markTrialConverted } from "@/lib/kv/trial-store";
 import type { StripeMembershipResponse } from "@/lib/stripe/types";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -56,8 +57,23 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const googleSub = authz.user.sub;
 
-  // Fetch entitlement from household doc
+  // Fetch entitlement from household doc.
+  // getStripeEntitlement always resolves the user's current household from
+  // Firestore users/{sub}.householdId — never falls back to googleSub as householdId.
   const cached = await getStripeEntitlement(googleSub);
+
+  // Auto-convert trial when household has Karl tier (issue #1971).
+  // Handles joined members: when Freya joins Odin's Karl household, her trial
+  // should be converted so the trial sidebar never shows for Karl members.
+  // Fire-and-forget — trial conversion is best-effort and must not block the response.
+  if (cached?.tier === "karl" && cached.active) {
+    void markTrialConverted(googleSub).catch((err: unknown) => {
+      log.debug("GET /api/stripe/membership: trial auto-convert failed (non-blocking)", {
+        googleSub,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
+  }
 
   // If no subscription exists, user has not subscribed via Stripe
   if (!cached) {
