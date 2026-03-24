@@ -1,0 +1,7 @@
+A minimal, flat vector-style icon of a stagecoach pulled by galloping horses, viewed from the side in silhouette. The stagecoach is a simple Old West four-wheeled coach with a driver on top holding reins. Six horses run in front in a dynamic galloping pose, legs extended. The entire illustration is rendered as a clean gold/yellow silhouette (#FFCD11) on a solid deep red square background (#D71E28) with slightly rounded corners. No gradients, no shading, no text, no outlines — pure flat filled shapes only. The style is extremely simplified and geometric, suitable for reproduction as an SVG icon at 16-24px. Think of it as a bold, minimal pictogram: the coach is a simple rectangle with two circular wheels, the horses are abstracted into a flowing horizontal shape suggesting motion. The composition is horizontally centered within the square, sitting in the lower two-thirds of the frame. Clean negative space above. White or transparent background outside the red square.
+
+Brand color reference:
+- Red: #D71E28 (primary background)
+- Gold/Yellow: #FFCD11 (icon fill)
+- White: #FFFFFF (alternate text color, not used here)
+- Dark Red: #CD1409 (legacy/classic red variant)

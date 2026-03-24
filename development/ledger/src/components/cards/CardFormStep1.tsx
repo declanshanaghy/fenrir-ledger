@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 
 import { KNOWN_ISSUERS } from "@/lib/constants";
-import { getIssuerRune } from "@/lib/issuer-utils";
+import { IssuerLogo } from "@/components/shared/IssuerLogo";
 import type { CardFormValues } from "./useCardForm";
 
 interface CardFormStep1Props {
@@ -72,15 +72,11 @@ export function CardFormStep1({
               <SelectValue placeholder="Select issuer" />
             </SelectTrigger>
             <SelectContent>
-              {KNOWN_ISSUERS.map((issuer) => {
-                const rune = getIssuerRune(issuer.id);
-                return (
-                  <SelectItem key={issuer.id} value={issuer.id}>
-                    {rune ? `${rune} ` : ""}
-                    {issuer.name}
-                  </SelectItem>
-                );
-              })}
+              {KNOWN_ISSUERS.map((issuer) => (
+                <SelectItem key={issuer.id} value={issuer.id}>
+                  <IssuerLogo issuerId={issuer.id} showLabel />
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {errors.issuerId && (

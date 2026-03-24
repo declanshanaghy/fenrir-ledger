@@ -1,0 +1,15 @@
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bank of America waving flag: 3 navy + 3 red curved stripes -->
+  <!-- Navy stripe 1 -->
+  <path d="M14 8 Q32 4 54 12 L54 16 Q32 8 14 12 Z" fill="#012169"/>
+  <!-- Navy stripe 2 -->
+  <path d="M12 15 Q30 11 52 19 L52 23 Q30 15 12 19 Z" fill="#012169"/>
+  <!-- Navy stripe 3 -->
+  <path d="M10 22 Q28 18 50 26 L50 30 Q28 22 10 26 Z" fill="#012169"/>
+  <!-- Red stripe 1 -->
+  <path d="M8 31 Q26 27 48 35 L48 39 Q26 31 8 35 Z" fill="#E31837"/>
+  <!-- Red stripe 2 -->
+  <path d="M6 38 Q24 34 46 42 L46 46 Q24 38 6 42 Z" fill="#E31837"/>
+  <!-- Red stripe 3 -->
+  <path d="M4 45 Q22 41 44 49 L44 53 Q22 45 4 49 Z" fill="#E31837"/>
+</svg>

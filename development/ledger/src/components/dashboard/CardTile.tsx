@@ -193,7 +193,7 @@ export function CardTile({ card, lokiLabel }: CardTileProps) {
                     className="text-sm uppercase tracking-wide mb-1"
                     title={issuerMeta ? `${issuerMeta.rune} ${issuerMeta.runeName} — ${issuerMeta.runeConnection}` : undefined}
                   >
-                    <IssuerLogo issuerId={card.issuerId} className="inline-block align-middle opacity-90" />
+                    <IssuerLogo issuerId={card.issuerId} className="inline-flex align-middle opacity-90" showLabel />
                   </CardDescription>
                   <CardTitle className="text-base font-semibold leading-tight truncate">
                     {card.cardName}

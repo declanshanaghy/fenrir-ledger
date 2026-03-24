@@ -42,70 +42,70 @@ const ISSUER_META: Record<string, IssuerMeta> = {
     rune: "ᚱ",       // Raidho
     runeName: "Raidho",
     runeConnection: "Journeys, movement (sapphire travel cards)",
-    logoPath: "/static/logos/issuers/chase.svg",
+    logoPath: "/issuers/chase.svg",
     brandColor: "#0060A9",
   },
   bank_of_america: {
     rune: "ᚠ",       // Fehu
     runeName: "Fehu",
     runeConnection: "Wealth, cattle (America's bank)",
-    logoPath: "/static/logos/issuers/bank-of-america.svg",
+    logoPath: "/issuers/bank-of-america.svg",
     brandColor: "#E31837",
   },
   capital_one: {
     rune: "ᚦ",       // Thurisaz
     runeName: "Thurisaz",
     runeConnection: "Power, force (what's in your wallet)",
-    logoPath: "/static/logos/issuers/capital-one.svg",
+    logoPath: "/issuers/capital-one.svg",
     brandColor: "#D03027",
   },
   wells_fargo: {
     rune: "ᚹ",       // Wunjo
     runeName: "Wunjo",
     runeConnection: "Joy, prosperity (stagecoach)",
-    logoPath: "/static/logos/issuers/wells-fargo.svg",
+    logoPath: "/issuers/wells-fargo.svg",
     brandColor: "#D71E28",
   },
   amex: {
     rune: "ᛊ",       // Sowilo
     runeName: "Sowilo",
     runeConnection: "Sun, success (premium)",
-    logoPath: "/static/logos/issuers/amex.svg",
+    logoPath: "/issuers/amex.svg",
     brandColor: "#006FCF",
   },
   citibank: {
     rune: "ᛁ",       // Isa
     runeName: "Isa",
     runeConnection: "Ice, focus (global reach)",
-    logoPath: "/static/logos/issuers/citi.svg",
+    logoPath: "/issuers/citi.svg",
     brandColor: "#003B70",
   },
   discover: {
     rune: "ᚾ",       // Naudiz
     runeName: "Naudiz",
     runeConnection: "Need, discovery",
-    logoPath: "/static/logos/issuers/discover.svg",
+    logoPath: "/issuers/discover.svg",
     brandColor: "#FF6600",
   },
   us_bank: {
     rune: "ᚢ",       // Uruz
     runeName: "Uruz",
     runeConnection: "Strength, endurance",
-    logoPath: "/static/logos/issuers/us-bank.svg",
+    logoPath: "/issuers/us-bank.svg",
     brandColor: "#D50032",
   },
   barclays: {
     rune: "ᚷ",       // Gebo
     runeName: "Gebo",
     runeConnection: "Gift, partnership (global banking)",
-    logoPath: "/static/logos/issuers/barclays.svg",
+    logoPath: "/issuers/barclays.svg",
     brandColor: "#00AEEF",
   },
   hsbc: {
     rune: "ᛇ",       // Ehwaz
     runeName: "Ehwaz",
     runeConnection: "Horse, movement (worldwide presence)",
-    logoPath: "/static/logos/issuers/hsbc.svg",
+    logoPath: "/issuers/hsbc.svg",
     brandColor: "#DB0011",
   },
 };
