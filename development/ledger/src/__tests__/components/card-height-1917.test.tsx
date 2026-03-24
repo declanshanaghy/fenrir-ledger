@@ -218,3 +218,38 @@ describe("AnimatedCardGrid motion.div wrapper has h-full (#1917)", () => {
     }
   });
 });
+
+// ── Tests: HuntCardTile progress bar accessibility (#1917) ────────────────────
+
+describe("HuntCardTile progress bar accessibility (#1917)", () => {
+  it("renders progressbar role when spendRequired > 0", () => {
+    const { container } = render(<HuntCardTile card={baseCard} />);
+    const bar = container.querySelector('[role="progressbar"]');
+    expect(bar).not.toBeNull();
+  });
+
+  it("progressbar aria-valuemin is 0", () => {
+    const { container } = render(<HuntCardTile card={baseCard} />);
+    const bar = container.querySelector('[role="progressbar"]');
+    expect(bar!.getAttribute("aria-valuemin")).toBe("0");
+  });
+
+  it("progressbar aria-valuemax equals spendRequirement", () => {
+    const { container } = render(<HuntCardTile card={baseCard} />);
+    const bar = container.querySelector('[role="progressbar"]');
+    expect(bar!.getAttribute("aria-valuemax")).toBe(
+      String(baseCard.signUpBonus!.spendRequirement),
+    );
+  });
+
+  it("omits progressbar when spendRequired is 0", () => {
+    const noSpendCard: Card = {
+      ...baseCard,
+      id: "card-1917-nospend",
+      signUpBonus: { ...baseCard.signUpBonus!, spendRequirement: 0 },
+    };
+    const { container } = render(<HuntCardTile card={noSpendCard} />);
+    const bar = container.querySelector('[role="progressbar"]');
+    expect(bar).toBeNull();
+  });
+});
