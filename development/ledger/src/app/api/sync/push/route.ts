@@ -33,7 +33,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthz } from "@/lib/auth/authz";
-import { getAllFirestoreCards, setCards } from "@/lib/firebase/firestore";
+import { getAllFirestoreCards, setCards, deleteCards } from "@/lib/firebase/firestore";
 import { mergeCardsWithStats } from "@/lib/sync/sync-engine";
 import { log } from "@/lib/logger";
 import type { Card } from "@/lib/types";
@@ -104,8 +104,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Fetch all remote cards (including tombstones) for LWW merge
     const remoteCards = await getAllFirestoreCards(verifiedHouseholdId);
 
-    // Merge: per-card last-write-wins
-    const { merged, stats } = mergeCardsWithStats(localCards, remoteCards);
+    // Identify expunged cards: present in Firestore but absent from local.
+    // localStorage is authoritative — a remote-only card was expunged locally
+    // (expungeCard / expungeAllCards removes it entirely, no tombstone).
+    // Delete these from Firestore so they cannot reappear on the next pull.
+    // Issue #1974.
+    const localIds = new Set(localCards.map((c) => c.id));
+    const expungedIds = remoteCards
+      .filter((c) => !localIds.has(c.id))
+      .map((c) => c.id);
+
+    if (expungedIds.length > 0) {
+      await deleteCards(verifiedHouseholdId, expungedIds);
+    }
+
+    // Merge only non-expunged remote cards with local (LWW per-card)
+    const nonExpungedRemote = remoteCards.filter((c) => localIds.has(c.id));
+    const { merged, stats } = mergeCardsWithStats(localCards, nonExpungedRemote);
 
     // Write merged result back to Firestore
     await setCards(merged);

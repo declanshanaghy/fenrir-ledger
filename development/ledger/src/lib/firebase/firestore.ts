@@ -169,6 +169,31 @@ export async function softDeleteCard(
 }
 
 /**
+ * Batch-deletes multiple card documents from Firestore by card ID.
+ * Used by the sync push route to permanently remove cards that were expunged
+ * from localStorage (issue #1974). Firestore batches are limited to 500
+ * operations; this helper chunks automatically for larger sets.
+ */
+export async function deleteCards(
+  householdId: string,
+  cardIds: string[]
+): Promise<void> {
+  if (cardIds.length === 0) return;
+  const db = getFirestore();
+
+  const BATCH_LIMIT = 500;
+  for (let i = 0; i < cardIds.length; i += BATCH_LIMIT) {
+    const chunk = cardIds.slice(i, i + BATCH_LIMIT);
+    const batch = db.batch();
+    for (const cardId of chunk) {
+      const ref = db.doc(FIRESTORE_PATHS.card(householdId, cardId));
+      batch.delete(ref);
+    }
+    await batch.commit();
+  }
+}
+
+/**
  * Batch-writes multiple cards. Firestore batches are limited to 500 operations.
  * This helper chunks automatically for larger sets.
  */
