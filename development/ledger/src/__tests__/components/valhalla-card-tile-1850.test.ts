@@ -22,9 +22,9 @@ describe("formatBonusReward", () => {
     expect(formatBonusReward("miles", 75000)).toBe("75,000 mi");
   });
 
-  it("formats cashback reward as currency (cents)", () => {
-    // $500 = 50000 cents
-    expect(formatBonusReward("cashback", 50000)).toBe("$500");
+  it("formats cashback reward as currency (dollars)", () => {
+    // $500 stored as dollars
+    expect(formatBonusReward("cashback", 500)).toBe("$500");
   });
 
   it("formats large point amounts with comma separator", () => {

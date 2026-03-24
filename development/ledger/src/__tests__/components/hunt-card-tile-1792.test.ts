@@ -50,48 +50,48 @@ describe("getHuntPercentComplete", () => {
 
 describe("getHuntTooltipText", () => {
   it("shows only spend part when bonusDays is null", () => {
-    const text = getHuntTooltipText(0, 300000, null);
+    const text = getHuntTooltipText(0, 3000, null);
     expect(text).toBe("$3,000 remaining to spend");
   });
 
   it("shows $0 remaining when spend requirement is fully met", () => {
-    const text = getHuntTooltipText(300000, 300000, 10);
+    const text = getHuntTooltipText(3000, 3000, 10);
     expect(text).toBe("$0 remaining to spend · 10 days left");
   });
 
   it("shows plural days when bonusDays > 1", () => {
-    const text = getHuntTooltipText(0, 300000, 45);
+    const text = getHuntTooltipText(0, 3000, 45);
     expect(text).toBe("$3,000 remaining to spend · 45 days left");
   });
 
   it("shows singular day when bonusDays === 1", () => {
-    const text = getHuntTooltipText(0, 300000, 1);
+    const text = getHuntTooltipText(0, 3000, 1);
     expect(text).toBe("$3,000 remaining to spend · 1 day left");
   });
 
   it("shows 'deadline today' when bonusDays === 0", () => {
-    const text = getHuntTooltipText(0, 300000, 0);
+    const text = getHuntTooltipText(0, 3000, 0);
     expect(text).toBe("$3,000 remaining to spend · deadline today");
   });
 
   it("shows singular past day when bonusDays === -1", () => {
-    const text = getHuntTooltipText(0, 300000, -1);
+    const text = getHuntTooltipText(0, 3000, -1);
     expect(text).toBe("$3,000 remaining to spend · 1 day past deadline");
   });
 
   it("shows plural past days when bonusDays < -1", () => {
-    const text = getHuntTooltipText(0, 300000, -5);
+    const text = getHuntTooltipText(0, 3000, -5);
     expect(text).toBe("$3,000 remaining to spend · 5 days past deadline");
   });
 
   it("calculates remaining correctly for partial spend", () => {
     // $1,500 spent of $3,000 required → $1,500 remaining
-    const text = getHuntTooltipText(150000, 300000, 30);
+    const text = getHuntTooltipText(1500, 3000, 30);
     expect(text).toBe("$1,500 remaining to spend · 30 days left");
   });
 
   it("clamps remaining to 0 when overspent", () => {
-    const text = getHuntTooltipText(400000, 300000, 10);
+    const text = getHuntTooltipText(4000, 3000, 10);
     expect(text).toBe("$0 remaining to spend · 10 days left");
   });
 
