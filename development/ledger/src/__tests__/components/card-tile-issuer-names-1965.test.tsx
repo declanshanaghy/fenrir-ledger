@@ -109,7 +109,7 @@ describe("getIssuerName — real bank names (#1965)", () => {
     amex: "American Express",
     citibank: "Citibank",
     discover: "Discover",
-    us_bank: "U.S. Bank",
+    us_bank: "US Bank",
     barclays: "Barclays",
     hsbc: "HSBC",
   };
