@@ -228,6 +228,101 @@ function findLowCoverage(perFile, maxPct = 20, minLines = 10) {
 
 // ── Complexity analysis section ──────────────────────────────────────────────
 
+function renderTimingSection(data) {
+  const timerIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+
+  if (!data || !data.files || data.files.length === 0) {
+    return `
+  <div class="section">
+    <div class="section-header">${timerIcon}<h2>Test Timing</h2></div>
+    <p class="dim">No timing data available. Run <code>/coverage-report</code> to collect.</p>
+  </div>`;
+  }
+
+  const totalMs = data.totalDurationMs || 0;
+  const totalSec = (totalMs / 1000).toFixed(1);
+  const files = data.files;
+  const totalTests = data.totalTests || files.reduce((s, f) => s + f.tests, 0);
+  const p = data.parallelism || {};
+
+  // Slowest 30 files
+  const slowest = files.slice(0, 30);
+
+  // Duration distribution buckets
+  const buckets = [
+    { label: "> 1s", min: 1000, count: 0, tests: 0, totalMs: 0 },
+    { label: "500ms–1s", min: 500, max: 1000, count: 0, tests: 0, totalMs: 0 },
+    { label: "100–500ms", min: 100, max: 500, count: 0, tests: 0, totalMs: 0 },
+    { label: "< 100ms", min: 0, max: 100, count: 0, tests: 0, totalMs: 0 },
+  ];
+  for (const f of files) {
+    for (const b of buckets) {
+      if (f.duration >= b.min && (!b.max || f.duration < b.max)) {
+        b.count++;
+        b.tests += f.tests;
+        b.totalMs += f.duration;
+        break;
+      }
+    }
+  }
+
+  const fmtMs = (ms) => ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`;
+  const barMax = slowest[0]?.duration || 1;
+
+  return `
+  <div class="section">
+    <div class="section-header">${timerIcon}<h2>Test Timing</h2></div>
+
+    <div class="stats-grid">
+      <div class="stat-card gold"><div class="value">${totalSec}s</div><div class="label">Wall Clock</div></div>
+      <div class="stat-card gold"><div class="value">${files.length}</div><div class="label">Test Files</div></div>
+      <div class="stat-card gold"><div class="value">${totalTests}</div><div class="label">Tests</div></div>
+      <div class="stat-card gold"><div class="value">${totalTests > 0 ? (totalMs / totalTests).toFixed(0) : 0}ms</div><div class="label">Avg per Test</div></div>
+    </div>
+
+    <h3 style="color:var(--gold);margin:1.5rem 0 0.5rem;font-size:0.9rem;letter-spacing:0.1em">PARALLELISM SETTINGS</h3>
+    <table>
+      <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Pool</td><td><code>${p.pool || "—"}</code></td></tr>
+        <tr><td>Max Workers (local)</td><td><code>${p.maxWorkersLocal ?? "—"}</code></td></tr>
+        <tr><td>Max Workers (CI/GKE)</td><td><code>${p.maxWorkersCI ?? "—"}</code></td></tr>
+        <tr><td>Test Timeout</td><td><code>${p.testTimeout ? p.testTimeout + "ms" : "—"}</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="color:var(--gold);margin:1.5rem 0 0.5rem;font-size:0.9rem;letter-spacing:0.1em">DURATION DISTRIBUTION</h3>
+    <table>
+      <thead><tr><th>Bucket</th><th>Files</th><th>Tests</th><th>Total Time</th></tr></thead>
+      <tbody>
+        ${buckets.map(b => `<tr>
+          <td>${b.label}</td>
+          <td>${b.count}</td>
+          <td>${b.tests}</td>
+          <td class="${b.min >= 1000 ? 'lo' : b.min >= 500 ? 'med' : 'hi'}">${fmtMs(b.totalMs)}</td>
+        </tr>`).join("\n")}
+      </tbody>
+    </table>
+
+    <h3 style="color:var(--gold);margin:1.5rem 0 0.5rem;font-size:0.9rem;letter-spacing:0.1em">SLOWEST TEST FILES (top 30)</h3>
+    <table>
+      <thead><tr><th>File</th><th>Tests</th><th>Duration</th><th></th></tr></thead>
+      <tbody>
+        ${slowest.map(f => {
+          const pct = barMax > 0 ? (f.duration / barMax * 100).toFixed(0) : 0;
+          const color = f.duration >= 1000 ? "var(--red)" : f.duration >= 500 ? "var(--gold)" : "var(--green)";
+          return `<tr>
+            <td style="font-size:0.8rem"><code>${f.file}</code></td>
+            <td>${f.tests}</td>
+            <td class="${f.duration >= 1000 ? 'lo' : f.duration >= 500 ? 'med' : 'hi'}">${fmtMs(f.duration)}</td>
+            <td style="width:120px"><div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${color};border-radius:4px"></div></div></td>
+          </tr>`;
+        }).join("\n")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
 function renderComplexitySection(data) {
   const complexityIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9920a" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`;
 
@@ -529,6 +624,16 @@ async function main() {
   }
   const complexitySectionHtml = renderComplexitySection(complexityData);
 
+  // Test timing data — read from pre-generated JSON if available
+  const timingJsonPath = path.join(REPO_ROOT, "quality/reports/test-timing.json");
+  let timingData = null;
+  if (existsSync(timingJsonPath)) {
+    try {
+      timingData = JSON.parse(readFileSync(timingJsonPath, "utf-8"));
+    } catch { /* ignore parse errors */ }
+  }
+  const timingSectionHtml = renderTimingSection(timingData);
+
   const lcovVitest = parseLcov(path.join(COVERAGE_DIR, "vitest/lcov.info"));
   const lcovPlaywright = parseLcov(path.join(COVERAGE_DIR, "playwright/lcov.info"));
   const lcovCombined = parseLcov(path.join(COVERAGE_DIR, "combined/lcov.info"));
@@ -827,6 +932,8 @@ async function main() {
       </tbody>
     </table>
   </div>
+
+  ${timingSectionHtml}
 
   ${overlapSectionHtml}
 
