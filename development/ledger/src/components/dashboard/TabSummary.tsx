@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { DashboardTab } from "@/lib/constants";
 import type { Card } from "@/lib/types";
 import { daysUntil, formatCurrency } from "@/lib/card-utils";
+import { aggregateBonuses } from "@/lib/bonus-utils";
 
 /** localStorage key pattern for summary dismissal */
 function getSummaryStorageKey(tabId: DashboardTab): string {
@@ -69,20 +70,7 @@ function allSummary(cards: Card[]): React.ReactNode[] {
  * Issue #1808 — show total rewards reaped instead of generic closed/graduated counts.
  */
 function valhallaSummary(cards: Card[]): React.ReactNode[] {
-  const totalPoints = cards.reduce((sum, c) => {
-    if (c.signUpBonus?.met && c.signUpBonus.type !== "cashback") {
-      return sum + c.signUpBonus.amount;
-    }
-    return sum;
-  }, 0);
-
-  const totalCashback = cards.reduce((sum, c) => {
-    if (c.signUpBonus?.met && c.signUpBonus.type === "cashback") {
-      return sum + c.signUpBonus.amount;
-    }
-    return sum;
-  }, 0);
-
+  const { points, miles, cashback } = aggregateBonuses(cards);
   const totalFeesPaid = cards.reduce((sum, c) => sum + c.annualFee, 0);
 
   const parts: React.ReactNode[] = [];
@@ -92,21 +80,37 @@ function valhallaSummary(cards: Card[]): React.ReactNode[] {
     </span>
   );
 
-  if (totalPoints > 0) {
+  if (points > 0) {
     parts.push(" · ");
     parts.push(
       <span key="pts" className="font-bold">
-        {totalPoints.toLocaleString()} pts
+        {points.toLocaleString()} pts
       </span>
-      );
+    );
+  }
+
+  if (miles > 0) {
+    parts.push(" · ");
+    parts.push(
+      <span key="mi" className="font-bold">
+        {miles.toLocaleString()} mi
+      </span>
+    );
+    parts.push(" reaped");
+  } else if (points > 0) {
     parts.push(" reaped");
   }
 
-  if (totalCashback > 0) {
+  if (cashback > 0) {
     parts.push(" · ");
     parts.push(
       <span key="cash" className="font-bold">
-        {formatCurrency(totalCashback)}
+        {new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(cashback)}
       </span>
     );
     parts.push(" cashback");
