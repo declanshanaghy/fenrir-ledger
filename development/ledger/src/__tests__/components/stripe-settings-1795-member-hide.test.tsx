@@ -133,17 +133,16 @@ describe("StripeSettings — karl-active — owner (isOwner=true)", () => {
   });
 });
 
-describe("StripeSettings — karl-active — isOwner null (loading/solo)", () => {
-  it("shows Manage Subscription button when isOwner is null (safe default)", async () => {
+describe("StripeSettings — karl-active — isOwner null (loading/unresolved)", () => {
+  it("hides Manage Subscription button when isOwner is null (FOUC prevention)", async () => {
     mockEntitlement = { ...KARL_ACTIVE_ENTITLEMENT };
     mockIsOwner = null;
     renderStripeSettings();
-    // isOwner=null means the fetch hasn't resolved or user is solo
-    // The component renders with null initially — button should be visible
-    // (null is not false, so isMember=false)
+    // isOwner=null means auth hasn't resolved yet — button must NOT render
+    // to prevent flash-of-unauthorized-content (issue #1938)
     expect(
-      screen.getByRole("button", { name: /manage subscription/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /manage subscription/i })
+    ).not.toBeInTheDocument();
   });
 });
 

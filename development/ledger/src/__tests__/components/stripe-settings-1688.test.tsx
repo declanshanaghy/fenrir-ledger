@@ -13,8 +13,8 @@
  * Issue #1688
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { StripeSettings } from "@/components/entitlement/StripeSettings";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -46,7 +46,31 @@ vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
 
+vi.mock("@/lib/auth/refresh-session", () => ({
+  ensureFreshToken: () => Promise.resolve("tok_test"),
+}));
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Stub fetch to resolve as household owner — required for buttons gated on isOwner===true */
+const originalFetch = global.fetch;
+function installOwnerFetch() {
+  global.fetch = vi.fn((url: RequestInfo | URL) => {
+    if (String(url).includes("/api/household/members")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ isOwner: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    }
+    return originalFetch(url as RequestInfo);
+  }) as typeof global.fetch;
+}
+
+afterEach(() => {
+  global.fetch = originalFetch;
+});
 
 function renderStripeSettings() {
   return render(<StripeSettings />);
@@ -110,7 +134,8 @@ describe("StripeSettings", () => {
 
   // ── Karl active state ─────────────────────────────────────────────────────
 
-  it("renders Karl active state", () => {
+  it("renders Karl active state", async () => {
+    installOwnerFetch();
     mockEntitlement = {
       ...BASE_ENTITLEMENT,
       tier: "karl",
@@ -121,7 +146,9 @@ describe("StripeSettings", () => {
     };
     renderStripeSettings();
     expect(screen.getByText("KARL")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /manage subscription/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /manage subscription/i })).toBeInTheDocument();
+    });
     expect(screen.queryByRole("button", { name: /resubscribe/i })).not.toBeInTheDocument();
   });
 
@@ -190,7 +217,8 @@ describe("StripeSettings", () => {
 
   // ── Canceled state ────────────────────────────────────────────────────────
 
-  it("renders Canceled state when isActive is false for karl-linked user", () => {
+  it("renders Canceled state when isActive is false for karl-linked user", async () => {
+    installOwnerFetch();
     mockEntitlement = {
       ...BASE_ENTITLEMENT,
       tier: "karl",
@@ -201,10 +229,12 @@ describe("StripeSettings", () => {
     };
     renderStripeSettings();
     expect(screen.getByText("CANCELED")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /resubscribe/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /manage subscription/i })
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /resubscribe/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /manage subscription/i })
+      ).toBeInTheDocument();
+    });
   });
 
   it("shows access-until date in Canceled state when currentPeriodEnd is set", () => {
@@ -247,6 +277,7 @@ describe("StripeSettings", () => {
   });
 
   it("calls openPortal when Manage Subscription button is clicked", async () => {
+    installOwnerFetch();
     mockEntitlement = {
       ...BASE_ENTITLEMENT,
       tier: "karl",
@@ -256,6 +287,9 @@ describe("StripeSettings", () => {
       cancelAtPeriodEnd: false,
     };
     renderStripeSettings();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /manage subscription/i })).toBeInTheDocument();
+    });
     await act(async () => {
       fireEvent.click(
         screen.getByRole("button", { name: /manage subscription/i })
