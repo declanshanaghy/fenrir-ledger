@@ -15,6 +15,9 @@
  *
  * Sticky with backdrop-blur on scroll.
  *
+ * Issue #1853: aligned to LedgerTopBar — full-width, logo left, nav center
+ * (absolute), theme+CTA right. Removed max-w-[1100px] container.
+ *
  * Wireframe: ux/wireframes/marketing-site/layout-shell.html
  * Theme spec: ux/wireframes/marketing-site/theme-variants.html
  *
@@ -76,6 +79,7 @@ export function MarketingNavbar() {
         className={[
           "sticky top-0 z-[100] border-b border-border",
           "bg-background/90 backdrop-blur-sm",
+          "h-12 flex items-center justify-between px-4 relative",
         ].join(" ")}
         role="navigation"
         aria-label="Marketing site navigation"
@@ -87,12 +91,17 @@ export function MarketingNavbar() {
         >
           Skip to main content
         </a>
-        <div className="max-w-[1100px] mx-auto px-6 flex items-center justify-between h-12">
 
-          {/* Logo */}
+        {/* CENTER: Nav links — desktop only, absolute center (matches LedgerTopBar) */}
+        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6">
+          <MarketingNavLinks />
+        </div>
+
+        {/* LEFT: Logo + mobile hamburger */}
+        <div className="flex items-center gap-1">
           <Link
             href="/"
-            className="flex items-center gap-2 group"
+            className="flex items-center gap-2 group min-h-[44px] px-1"
             aria-label="Fenrir Ledger — home"
           >
             <span className="text-lg font-bold text-gold" aria-hidden="true">ᛟ</span>
@@ -100,28 +109,6 @@ export function MarketingNavbar() {
               FENRIR LEDGER
             </span>
           </Link>
-
-          {/* Desktop center nav links */}
-          <div className="hidden md:flex items-center gap-6" aria-label="Marketing site navigation">
-            <MarketingNavLinks />
-          </div>
-
-          {/* Desktop right: theme toggle + CTA */}
-          <div className="hidden md:flex items-center gap-4">
-            <ThemeToggle variant="inline" />
-            <Link
-              href="/ledger"
-              className={[
-                "inline-flex items-center justify-center px-5 py-1.5",
-                "font-heading text-sm tracking-wide",
-                "bg-primary text-primary-foreground",
-                "hover:bg-primary hover:brightness-110 transition-colors",
-                "rounded-sm",
-              ].join(" ")}
-            >
-              Open the Ledger →
-            </Link>
-          </div>
 
           {/* Mobile hamburger — 44×44px touch target (WCAG 2.5.5) */}
           <button
@@ -140,6 +127,23 @@ export function MarketingNavbar() {
           >
             <span className="text-base leading-none" aria-hidden="true">☰</span>
           </button>
+        </div>
+
+        {/* RIGHT: Theme toggle + CTA — desktop only */}
+        <div className="hidden md:flex items-center gap-4">
+          <ThemeToggle variant="inline" />
+          <Link
+            href="/ledger"
+            className={[
+              "inline-flex items-center justify-center px-5 py-1.5",
+              "font-heading text-sm tracking-wide",
+              "bg-primary text-primary-foreground",
+              "hover:bg-primary hover:brightness-110 transition-colors",
+              "rounded-sm",
+            ].join(" ")}
+          >
+            Open the Ledger →
+          </Link>
         </div>
       </nav>
 
