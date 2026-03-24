@@ -254,13 +254,13 @@ describe("HouseholdSettingsSection — solo Karl owner (issue #1780)", () => {
     });
   });
 
-  it("solo Karl owner sees secondary Join a Household button", async () => {
+  it("solo Karl owner does NOT see Join a Household button (issue #1945)", async () => {
     mockFetchSuccess(soloKarlHouseholdData);
 
     render(<HouseholdSettingsSection />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /join a household/i })).toBeDefined();
+      expect(screen.queryByRole("button", { name: /join a household/i })).toBeNull();
     });
   });
 

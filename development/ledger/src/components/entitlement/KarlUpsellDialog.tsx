@@ -80,9 +80,9 @@ export interface KarlUpsellDialogProps {
  * The dialog triggers Stripe Checkout directly — no intermediate /pricing page.
  */
 export function KarlUpsellDialog({
-  featureIcon,
+  featureIcon: _featureIcon,
   featureName,
-  featureTagline,
+  featureTagline: _featureTagline,
   featureTeaser,
   featureBenefits,
   featureImage,
