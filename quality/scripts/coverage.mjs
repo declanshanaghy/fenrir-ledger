@@ -55,6 +55,11 @@ function run(cmd, opts = {}) {
   execSync(cmd, { stdio: "inherit", ...opts });
 }
 
+function runCapture(cmd, opts = {}) {
+  log(`$ ${cmd}`);
+  return execSync(cmd, { encoding: "utf-8", maxBuffer: 50 * 1024 * 1024, ...opts });
+}
+
 function clean() {
   for (const d of [V8_COVERAGE_DIR, REPORTS_DIR]) {
     if (existsSync(d)) rmSync(d, { recursive: true });
@@ -418,6 +423,72 @@ function runUnitCoverage() {
   log(`Vitest coverage reports written to ${vitestReportsDir}`);
   log("  - HTML:  quality/reports/coverage/vitest/index.html");
   log("  - LCOV:  quality/reports/coverage/vitest/lcov.info");
+
+  // Collect per-file timing data via JSON reporter
+  collectTestTiming();
+}
+
+function collectTestTiming() {
+  log("Collecting per-file test timing data...");
+  const timingPath = path.join(REPO_ROOT, "quality/reports/test-timing.json");
+  const jsonTmpPath = path.join(REPO_ROOT, "quality/.coverage-tmp/vitest-results.json");
+  try {
+    // Write JSON to file to avoid stdout capture issues with non-zero exit codes
+    mkdirSync(path.dirname(jsonTmpPath), { recursive: true });
+    try {
+      run(`npx vitest run --reporter=json --outputFile="${jsonTmpPath}"`, { cwd: LEDGER_DIR });
+    } catch {
+      // vitest exits non-zero when tests fail — JSON file is still written
+    }
+    if (!existsSync(jsonTmpPath)) { log("No JSON output from vitest --reporter=json"); return; }
+    const raw = readFileSync(jsonTmpPath, "utf-8");
+    const jsonStart = raw.indexOf("{");
+    if (jsonStart < 0) { log("No JSON object in vitest output"); return; }
+    const data = JSON.parse(raw.slice(jsonStart));
+
+    // Read vitest config for parallelism settings
+    let vitestConfig = {};
+    const configPath = path.join(LEDGER_DIR, "vitest.config.ts");
+    if (existsSync(configPath)) {
+      const configContent = readFileSync(configPath, "utf-8");
+      const poolMatch = configContent.match(/pool:\s*['"](\w+)['"]/);
+      const workersMatch = configContent.match(/maxWorkers:\s*(?:process\.env\.CI\s*\?\s*(\d+)\s*:\s*(\d+)|(\d+))/);
+      const timeoutMatch = configContent.match(/testTimeout:\s*(\d+)/);
+      vitestConfig = {
+        pool: poolMatch ? poolMatch[1] : "unknown",
+        maxWorkersCI: workersMatch ? parseInt(workersMatch[1] || workersMatch[3], 10) : null,
+        maxWorkersLocal: workersMatch ? parseInt(workersMatch[2] || workersMatch[3], 10) : null,
+        testTimeout: timeoutMatch ? parseInt(timeoutMatch[1], 10) : null,
+      };
+    }
+
+    const results = (data.testResults || []).map(f => {
+      const rel = f.name.replace(/.*development\/ledger\//, "");
+      const duration = (f.endTime || 0) - (f.startTime || 0);
+      const testCount = (f.assertionResults || []).length;
+      const passed = (f.assertionResults || []).filter(a => a.status === "passed").length;
+      const failed = (f.assertionResults || []).filter(a => a.status === "failed").length;
+      return { file: rel, duration, tests: testCount, passed, failed };
+    }).sort((a, b) => b.duration - a.duration);
+
+    const totalDuration = data.startTime && data.testResults?.length
+      ? Math.max(...data.testResults.map(f => f.endTime || 0)) - data.startTime
+      : results.reduce((s, r) => s + r.duration, 0);
+
+    const timing = {
+      generated: new Date().toISOString(),
+      totalFiles: results.length,
+      totalTests: results.reduce((s, r) => s + r.tests, 0),
+      totalDurationMs: totalDuration,
+      parallelism: vitestConfig,
+      files: results,
+    };
+
+    writeFileSync(timingPath, JSON.stringify(timing, null, 2));
+    log(`Test timing data written to ${timingPath} (${results.length} files, ${(totalDuration / 1000).toFixed(1)}s total)`);
+  } catch (e) {
+    log(`Warning: failed to collect test timing — ${e.message}`);
+  }
 }
 
 function cleanReports() {
@@ -427,6 +498,7 @@ function cleanReports() {
     "test-report-vitest",
     "quality-report.html",
     "cull-list.json",
+    "test-timing.json",
     "coverage",
   ];
   for (const name of toDelete) {
@@ -479,6 +551,7 @@ async function main() {
       run("npm run test:unit:coverage", { cwd: LEDGER_DIR });
       applyFenrirTheme(vitestReportsDir);
       log("Vitest coverage complete.");
+      collectTestTiming();
     }
 
     // Phase 2: Playwright E2E coverage
