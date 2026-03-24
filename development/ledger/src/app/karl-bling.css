@@ -6,7 +6,7 @@
  *
  * Attribute values:
  *   data-tier="karl"   — active Karl subscriber (full bling)
- *   data-tier="trial"  — free trial (cards, buttons, sidebar only; no badge/nav)
+ *   data-tier="trial"  — free trial (cards, buttons, sidebar only; no badge)
  *   data-tier="thrall" — free tier (no bling)
  *
  * CSS approach:
@@ -191,12 +191,13 @@
  * .karl-bling-badge — Karl subscriber badge/indicator in the app header.
  * Hidden by default; shown via [data-tier] cascade:
  *   [data-tier="karl"]  — full gold badge (active subscriber)
- *   [data-tier="trial"] — dimmed/muted badge (trial user, links to /pricing)
+ *
+ * KarlBadge component returns null for trial/thrall — badge is Karl-only.
  *
  * Runic accent characters (ᚠ Fehu left, ᛟ Othala right, decorative) are rendered in HTML,
  * marked aria-hidden="true" — purely visual adornment.
  *
- * Issue: #1779
+ * Issue: #1779, #1943
  */
 .karl-bling-badge {
   display: none;
@@ -236,34 +237,7 @@
   border-color: var(--karl-gold);
 }
 
-/* Trial: dimmed/muted badge — links to /pricing as upsell nudge */
-[data-tier="trial"] .karl-bling-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  font-family: var(--font-heading, "Cinzel", serif);
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--karl-gold-dim);
-  border: 1px solid rgba(212, 165, 32, 0.22);
-  border-radius: 2px;
-  padding: 0.25rem 0.55rem;
-  opacity: 0.60;
-  white-space: nowrap;
-  vertical-align: middle;
-  text-decoration: none;
-  transition: opacity 200ms ease, border-color 200ms ease;
-}
-
-[data-tier="trial"] .karl-bling-badge:hover {
-  opacity: 0.85;
-  border-color: rgba(212, 165, 32, 0.40);
-}
-
-[data-tier="karl"] .karl-bling-badge .karl-badge-rune,
-[data-tier="trial"] .karl-bling-badge .karl-badge-rune {
+[data-tier="karl"] .karl-bling-badge .karl-badge-rune {
   font-family: serif;
   font-size: 0.85rem;
   line-height: 1;
@@ -366,11 +340,6 @@
   [data-tier="karl"] .karl-bling-badge,
   [data-tier="karl"] .karl-bling-badge:hover {
     animation: none;
-    transition: none;
-  }
-
-  /* Trial badge transition suppressed */
-  [data-tier="trial"] .karl-bling-badge {
     transition: none;
   }
 

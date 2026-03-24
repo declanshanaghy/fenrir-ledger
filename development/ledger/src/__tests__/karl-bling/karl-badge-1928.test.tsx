@@ -1,18 +1,18 @@
 /**
- * KarlBadge (#1928) — QA validation tests
+ * KarlBadge (#1928, #1943) — QA validation tests
  *
- * Validates the acceptance criteria for issue #1928:
+ * Validates the acceptance criteria for issues #1928 and #1943:
  *   - Different Norse runes on left vs right (ᚠ Fehu left, ᛟ Othala right)
  *   - Runes are visually distinct (different Unicode codepoints)
  *   - aria-hidden retained on both decorative rune spans
- *   - Trial badge is a link (no glow CSS class), Karl badge is a span
- *   - Thrall tier: badge is in DOM (CSS controls visibility)
+ *   - Karl badge is a span (non-interactive)
+ *   - Trial/Thrall tier: badge returns null (issue #1943)
  *   - karl-badge-rune class applied to both rune spans
  *
  * CSS-only properties (hover glow, padding, font-size) are not testable in JSDOM.
  * Those are validated by CI visual review.
  *
- * @ref #1928
+ * @ref #1928 #1943
  */
 
 import React from "react";
@@ -22,40 +22,22 @@ import { KarlBadge } from "@/components/layout/KarlBadge";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-let mockTrialStatus = "none" as "none" | "active" | "expired" | "converted";
+let mockTier = "thrall" as "thrall" | "karl";
+let mockIsActive = false;
 
-vi.mock("@/hooks/useTrialStatus", () => ({
-  useTrialStatus: () => ({
-    status: mockTrialStatus,
-    remainingDays: 0,
-    isLoading: false,
-    refresh: vi.fn(),
+vi.mock("@/hooks/useEntitlement", () => ({
+  useEntitlement: () => ({
+    tier: mockTier,
+    isActive: mockIsActive,
+    hasFeature: vi.fn(() => false),
+    subscribeStripe: vi.fn(),
+    isLinked: false,
   }),
-  clearTrialStatusCache: vi.fn(),
-}));
-
-vi.mock("next/link", () => ({
-  default: ({
-    href,
-    children,
-    className,
-    "aria-label": ariaLabel,
-    title,
-  }: {
-    href: string;
-    children: React.ReactNode;
-    className?: string;
-    "aria-label"?: string;
-    title?: string;
-  }) => (
-    <a href={href} className={className} aria-label={ariaLabel} title={title}>
-      {children}
-    </a>
-  ),
 }));
 
 beforeEach(() => {
-  mockTrialStatus = "none";
+  mockTier = "karl";
+  mockIsActive = true;
 });
 
 // ── AC: Distinct Norse runes on left vs right ─────────────────────────────────
@@ -104,52 +86,51 @@ describe("KarlBadge #1928 — aria accessibility", () => {
   });
 
   it("karl tier badge has role=img and accessible label", () => {
-    mockTrialStatus = "none";
     render(<KarlBadge />);
     const badge = screen.getByRole("img", { name: "Karl subscriber" });
     expect(badge).toBeInTheDocument();
   });
 
-  it("trial badge has accessible upgrade label", () => {
-    mockTrialStatus = "active";
-    render(<KarlBadge />);
-    const link = screen.getByRole("link", { name: /upgrade to Karl/i });
-    expect(link).toBeInTheDocument();
+  it("trial tier renders nothing (no badge — issue #1943)", () => {
+    mockTier = "thrall";
+    mockIsActive = false;
+    const { container } = render(<KarlBadge />);
+    expect(container.firstChild).toBeNull();
   });
 });
 
-// ── AC: Trial has no hover glow (structural — link vs span) ───────────────────
+// ── AC: Karl badge is a non-interactive span ──────────────────────────────────
 //
-// Trial badge is a <Link> (navigates to /pricing — no glow).
-// Karl badge is a <span role="img"> (non-interactive — glow via CSS on [data-tier="karl"]).
+// Karl badge is a <span role="img"> (non-interactive).
+// No anchor element should be rendered for any tier.
 
-describe("KarlBadge #1928 — trial vs karl element type", () => {
-  it("trial tier renders an anchor (no interactive hover glow expected)", () => {
-    mockTrialStatus = "active";
-    const { container } = render(<KarlBadge />);
-    const anchor = container.querySelector("a.karl-bling-badge");
-    expect(anchor).toBeInTheDocument();
-    expect(anchor?.getAttribute("href")).toBe("/pricing");
-  });
-
+describe("KarlBadge #1928 — element type (span only)", () => {
   it("karl tier renders a span (CSS delivers hover glow via data-tier)", () => {
-    mockTrialStatus = "none";
     const { container } = render(<KarlBadge />);
     const span = container.querySelector("span.karl-bling-badge");
     expect(span).toBeInTheDocument();
     expect(container.querySelector("a")).not.toBeInTheDocument();
   });
+
+  it("non-karl tier renders nothing (returns null)", () => {
+    mockTier = "thrall";
+    mockIsActive = false;
+    const { container } = render(<KarlBadge />);
+    expect(container.firstChild).toBeNull();
+    expect(container.querySelector("a")).not.toBeInTheDocument();
+  });
 });
 
-// ── AC: Thrall tier — badge in DOM, CSS hides ─────────────────────────────────
+// ── AC: Thrall tier — badge not rendered (#1943) ──────────────────────────────
 
-describe("KarlBadge #1928 — thrall tier (CSS-hidden)", () => {
-  it("badge is in DOM for thrall so CSS can control visibility", () => {
-    mockTrialStatus = "none";
+describe("KarlBadge #1928/#1943 — thrall tier (returns null)", () => {
+  it("badge is NOT in DOM for thrall (component returns null)", () => {
+    mockTier = "thrall";
+    mockIsActive = false;
     document.documentElement.setAttribute("data-tier", "thrall");
     const { container } = render(<KarlBadge />);
-    expect(container.querySelector(".karl-bling-badge")).toBeInTheDocument();
-    expect(container.querySelector("a")).not.toBeInTheDocument();
+    expect(container.querySelector(".karl-bling-badge")).not.toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
     document.documentElement.removeAttribute("data-tier");
   });
 });

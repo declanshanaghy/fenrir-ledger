@@ -1,24 +1,17 @@
 "use client";
 
 /**
- * KarlBadge — header badge for Karl-tier and trial users.
+ * KarlBadge — header badge for Karl-tier subscribers only.
  *
- * Always in the DOM when authenticated; CSS cascade controls visibility:
- *   [data-tier="karl"]  → full gold badge (active subscriber)
- *   [data-tier="trial"] → dimmed badge that links to /pricing (upsell nudge)
- *   [data-tier="thrall"] → hidden (display: none via CSS)
- *
- * Karl:  <span role="img"> — decorative, non-interactive
- * Trial: <Link href="/pricing"> — tappable upsell nudge to upgrade
- * Thrall: <span> in DOM but hidden by CSS (no JS branch needed)
+ * Renders ONLY for active Karl subscribers (tier === "karl" && isActive).
+ * Trial and Thrall users see nothing — this component returns null.
  *
  * Runic accents (ᚠ Fehu left, ᛟ Othala right) are aria-hidden — purely decorative.
  *
- * Issue: #1779
+ * Issue: #1779, #1943
  */
 
-import Link from "next/link";
-import { useTrialStatus } from "@/hooks/useTrialStatus";
+import { useEntitlement } from "@/hooks/useEntitlement";
 
 // ── Inner rune + text ────────────────────────────────────────────────────────
 
@@ -35,24 +28,12 @@ function BadgeInner() {
 // ── KarlBadge ────────────────────────────────────────────────────────────────
 
 export function KarlBadge() {
-  const { status } = useTrialStatus();
-  const isTrialActive = status === "active";
+  const { tier, isActive } = useEntitlement();
 
-  if (isTrialActive) {
-    // Trial: dimmed badge, links to pricing as upsell nudge
-    return (
-      <Link
-        href="/pricing"
-        className="karl-bling-badge"
-        aria-label="Karl trial — upgrade to Karl"
-        title="Upgrade to Karl"
-      >
-        <BadgeInner />
-      </Link>
-    );
+  if (tier !== "karl" || !isActive) {
+    return null;
   }
 
-  // Karl (and thrall — CSS hides for thrall): non-interactive badge
   return (
     <span
       className="karl-bling-badge"

@@ -8,9 +8,9 @@
  *   - CSS class `karl-bling-badge` is always applied (CSS controls show/hide)
  *   - Nav tab active class `karl-bling-nav-active` is applied to active tabs
  *
- * Note: CSS visibility ([data-tier="karl"] .karl-bling-badge { display: inline-flex })
- * is tested implicitly via the data-tier integration tests (data-tier.test.tsx).
- * These unit tests validate the DOM structure and class contract.
+ * Note: This file tests a locally-defined KarlBadge stub (DOM structure contract).
+ * For the real KarlBadge component behaviour (Karl-only, returns null for trial/thrall),
+ * see karl-badge-1779.test.tsx and karl-badge-1928.test.tsx.
  *
  * @ref #1087
  */
@@ -102,11 +102,12 @@ describe("KarlBadge — CSS class contract", () => {
 
 // ── data-tier attribute visibility contract ───────────────────────────────────
 //
-// Verifies that badge visibility tracks data-tier="karl" on <html> via CSS cascade.
-// In JSDOM these tests are structural only (JSDOM doesn't compute CSS).
+// This stub KarlBadge always renders a span (it does not gate on tier).
+// The real KarlBadge component returns null for non-Karl tiers (issue #1943).
+// These tests validate the DOM structure of the span element only.
 
-describe("KarlBadge — tier visibility contract", () => {
-  it("badge is always present in DOM regardless of data-tier", () => {
+describe("KarlBadge stub — DOM structure present regardless of data-tier", () => {
+  it("stub badge is always present in DOM regardless of data-tier", () => {
     // Karl
     document.documentElement.setAttribute("data-tier", "karl");
     const { unmount: u1 } = render(<KarlBadge />);
@@ -114,14 +115,7 @@ describe("KarlBadge — tier visibility contract", () => {
     u1();
     document.documentElement.removeAttribute("data-tier");
 
-    // Trial — badge in DOM but CSS hides it
-    document.documentElement.setAttribute("data-tier", "trial");
-    const { unmount: u2 } = render(<KarlBadge />);
-    expect(screen.getByRole("img", { name: "Karl subscriber" })).toBeDefined();
-    u2();
-    document.documentElement.removeAttribute("data-tier");
-
-    // Thrall — badge in DOM but CSS hides it
+    // Thrall — stub still in DOM (real component returns null)
     document.documentElement.setAttribute("data-tier", "thrall");
     render(<KarlBadge />);
     expect(screen.getByRole("img", { name: "Karl subscriber" })).toBeDefined();
