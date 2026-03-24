@@ -26,10 +26,12 @@ vi.mock("@/lib/auth/authz", () => ({
 
 const mockGetAllFirestoreCards = vi.hoisted(() => vi.fn());
 const mockSetCards = vi.hoisted(() => vi.fn());
+const mockDeleteCards = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getAllFirestoreCards: mockGetAllFirestoreCards,
   setCards: mockSetCards,
+  deleteCards: mockDeleteCards,
 }));
 
 // ── Import after mocks ────────────────────────────────────────────────────
@@ -63,6 +65,7 @@ function authzKarlSuccess(householdId = "hh-test") {
 
 beforeEach(() => {
   mockSetCards.mockResolvedValue(undefined);
+  mockDeleteCards.mockResolvedValue(undefined);
   mockGetAllFirestoreCards.mockResolvedValue([]);
 });
 
@@ -273,6 +276,116 @@ describe("POST /api/sync/push — merge and response", () => {
 
   it("returns 500 when Firestore throws", async () => {
     mockGetAllFirestoreCards.mockRejectedValue(new Error("Firestore unavailable"));
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+    expect(res.status).toBe(500);
+    const body = await res.json() as { error: string };
+    expect(body.error).toBe("internal_error");
+  });
+});
+
+// ── Expunge: issue #1974 ───────────────────────────────────────────────────
+//
+// When a card is expunged from localStorage (entirely removed — no tombstone),
+// the next push must delete it from Firestore and must NOT return it to the
+// client. Without this fix, remote-only cards were re-seeded into the merged
+// result, causing expunged cards to reappear after sync.
+
+describe("POST /api/sync/push — expunge (issue #1974)", () => {
+  beforeEach(() => {
+    mockRequireAuthz.mockResolvedValue(authzKarlSuccess("hh-test"));
+  });
+
+  it("deletes Firestore card that is absent from local (expunged)", async () => {
+    const expunged = makeCard({ id: "expunged-card" });
+    mockGetAllFirestoreCards.mockResolvedValue([expunged]);
+
+    // Local has NO cards — expunged-card was removed entirely
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+    expect(res.status).toBe(200);
+
+    expect(mockDeleteCards).toHaveBeenCalledOnce();
+    expect(mockDeleteCards).toHaveBeenCalledWith("hh-test", ["expunged-card"]);
+  });
+
+  it("does not return expunged card in response", async () => {
+    const expunged = makeCard({ id: "expunged-card" });
+    mockGetAllFirestoreCards.mockResolvedValue([expunged]);
+
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+    const body = await res.json() as { cards: Card[]; syncedCount: number };
+
+    expect(body.cards.find((c) => c.id === "expunged-card")).toBeUndefined();
+    expect(body.syncedCount).toBe(0);
+  });
+
+  it("expunged card is excluded from setCards write", async () => {
+    const expunged = makeCard({ id: "expunged-card" });
+    const kept = makeCard({ id: "kept-card" });
+    mockGetAllFirestoreCards.mockResolvedValue([expunged]);
+
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [kept] }));
+    expect(res.status).toBe(200);
+
+    // setCards should only receive the kept card
+    expect(mockSetCards).toHaveBeenCalledOnce();
+    const written = mockSetCards.mock.calls[0]?.[0] as Card[];
+    expect(written.map((c) => c.id)).not.toContain("expunged-card");
+    expect(written.map((c) => c.id)).toContain("kept-card");
+  });
+
+  it("does not call deleteCards when no remote-only cards", async () => {
+    const card = makeCard({ id: "card-1" });
+    mockGetAllFirestoreCards.mockResolvedValue([card]);
+
+    // Same card in both local and remote — nothing expunged
+    await POST(makeRequest({ householdId: "hh-test", cards: [card] }));
+
+    expect(mockDeleteCards).not.toHaveBeenCalled();
+  });
+
+  it("deletes multiple expunged cards in one call", async () => {
+    const expunged1 = makeCard({ id: "ex-1" });
+    const expunged2 = makeCard({ id: "ex-2" });
+    const kept = makeCard({ id: "kept" });
+    mockGetAllFirestoreCards.mockResolvedValue([expunged1, expunged2]);
+
+    await POST(makeRequest({ householdId: "hh-test", cards: [kept] }));
+
+    expect(mockDeleteCards).toHaveBeenCalledOnce();
+    const deletedIds = mockDeleteCards.mock.calls[0]?.[1] as string[];
+    expect(deletedIds).toHaveLength(2);
+    expect(deletedIds).toContain("ex-1");
+    expect(deletedIds).toContain("ex-2");
+  });
+
+  it("still merges kept remote cards correctly after expunge (LWW)", async () => {
+    const expunged = makeCard({ id: "expunged-card" });
+    const remoteKept = makeCard({
+      id: "kept",
+      cardName: "Remote version",
+      updatedAt: "2025-06-10T00:00:00.000Z",
+    });
+    mockGetAllFirestoreCards.mockResolvedValue([expunged, remoteKept]);
+
+    const localKept = makeCard({
+      id: "kept",
+      cardName: "Local version",
+      updatedAt: "2025-06-01T00:00:00.000Z",
+    });
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [localKept] }));
+    expect(res.status).toBe(200);
+    const body = await res.json() as { cards: Card[] };
+
+    // Remote was newer — remote version should win
+    expect(body.cards.find((c) => c.id === "kept")?.cardName).toBe("Remote version");
+    expect(body.cards.find((c) => c.id === "expunged-card")).toBeUndefined();
+  });
+
+  it("returns 500 when deleteCards throws", async () => {
+    const expunged = makeCard({ id: "expunged-card" });
+    mockGetAllFirestoreCards.mockResolvedValue([expunged]);
+    mockDeleteCards.mockRejectedValue(new Error("Firestore unavailable"));
+
     const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
     expect(res.status).toBe(500);
     const body = await res.json() as { error: string };
