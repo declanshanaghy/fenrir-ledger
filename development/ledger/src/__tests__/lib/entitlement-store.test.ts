@@ -217,6 +217,24 @@ describe("entitlement-store", () => {
       expect(mockSetUserStripeCustomerId).toHaveBeenCalledWith(GOOGLE_SUB, STRIPE_CUSTOMER_ID);
     });
 
+    it("calls updateHouseholdTier with 'karl' when entitlement tier is karl — issue #1966", async () => {
+      const ent = makeFakeEntitlement({ tier: "karl" });
+      mockGetUser.mockResolvedValueOnce(makeFakeUser());
+
+      await setStripeEntitlement(GOOGLE_SUB, ent);
+
+      expect(mockUpdateHouseholdTier).toHaveBeenCalledWith(HOUSEHOLD_ID, "karl");
+    });
+
+    it("calls updateHouseholdTier with 'free' when entitlement tier is thrall — issue #1966", async () => {
+      const ent = makeFakeEntitlement({ tier: "thrall", active: false });
+      mockGetUser.mockResolvedValueOnce(makeFakeUser());
+
+      await setStripeEntitlement(GOOGLE_SUB, ent);
+
+      expect(mockUpdateHouseholdTier).toHaveBeenCalledWith(HOUSEHOLD_ID, "free");
+    });
+
     it("writes tier 'free' to stripe subcollection when entitlement tier is 'thrall'", async () => {
       const ent = makeFakeEntitlement({ tier: "thrall", active: false });
       mockGetUser.mockResolvedValueOnce(makeFakeUser());
