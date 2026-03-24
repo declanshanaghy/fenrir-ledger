@@ -760,6 +760,25 @@ export async function setStripeSubscription(
 }
 
 /**
+ * Updates the top-level `tier` field on the household document.
+ * Called by the Stripe webhook after writing the stripe subcollection so that
+ * Odin's Spear and any direct household-doc readers stay in sync.
+ *
+ * @param householdId - The household document ID
+ * @param tier - "karl" | "free"
+ */
+export async function updateHouseholdTier(
+  householdId: string,
+  tier: "karl" | "free"
+): Promise<void> {
+  const db = getFirestore();
+  await db.doc(FIRESTORE_PATHS.household(householdId)).update({
+    tier,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+/**
  * Deletes the Stripe subscription document for a household.
  * Stored at /households/{householdId}/stripe/subscription.
  * Called when a household's Stripe entitlement is fully cleared.

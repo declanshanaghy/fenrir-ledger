@@ -240,12 +240,15 @@ export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React
         </Box>
       )}
 
-      {/* Stripe subscription — shown for karl tier; graceful no-op for free/thrall */}
+      {/* Stripe subscription — always fetched; shows mismatch warning if tier != karl */}
       <HSectionTitle title="Stripe" />
-      {household.tier !== "karl" ? (
+      {!stripeSubscriptionId ? (
         <Text color={GRAY} dimColor>No Stripe subscription (Thrall / free tier)</Text>
       ) : (
         <>
+          {household.tier !== "karl" && (
+            <Text color="yellow">⚠ tier mismatch: household.tier="{household.tier}" but stripe subscription exists</Text>
+          )}
           <HDetailRow
             label="Status"
             value={stripeStatusLabel(stripeStatus)}
@@ -281,7 +284,7 @@ export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React
       {/* Action hints */}
       <Box marginTop={1}>
         <Text color={DIM}>
-          {`[a] adjust trial  [c] cards  [k] kick  [o] xfer owner  [i] regen invite  ${household.tier === "karl" ? "[s] cancel sub  " : ""}[x] delete`}
+          {`[a] adjust trial  [c] cards  [k] kick  [o] xfer owner  [i] regen invite  ${stripeSubscriptionId ? "[s] cancel sub  " : ""}[x] delete`}
         </Text>
       </Box>
     </Box>
@@ -416,70 +419,72 @@ async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDeta
   let stripePaymentLast4: string | null = null;
   let stripePaymentBrand: string | null = null;
 
-  if (hh.tier === "karl") {
+  // Always fetch the stripe subcollection regardless of the household's tier field.
+  // The top-level tier field may lag behind the stripe subcollection (e.g. if the
+  // webhook wrote stripe data but failed to update the household doc). Fetching
+  // unconditionally lets us detect and surface tier mismatches in the UI.
+  try {
+    const stripeSnap = await firestoreClient
+      .collection("households")
+      .doc(hh.id)
+      .collection("stripe")
+      .doc("subscription")
+      .get();
+    if (stripeSnap.exists) {
+      const sd = stripeSnap.data() as Record<string, unknown>;
+      stripeCustomerId     = (sd["stripeCustomerId"] as string | null) || null;
+      stripeSubscriptionId = (sd["stripeSubscriptionId"] as string | null) || null;
+      stripeStatus         = (sd["stripeStatus"] as string | null) || null;
+      currentPeriodEnd     = (sd["currentPeriodEnd"] as string | null) || null;
+      cancelAtPeriodEnd    = typeof sd["cancelAtPeriodEnd"] === "boolean" ? sd["cancelAtPeriodEnd"] : null;
+    }
+  } catch (err) {
+    log.debug("loadHouseholdDetail: stripe subcollection fetch failed", err as Error);
+  }
+
+  // Live Stripe API fetch for plan name, period start, and payment method
+  if (stripeSubscriptionId) {
     try {
-      const stripeSnap = await firestoreClient
-        .collection("households")
-        .doc(hh.id)
-        .collection("stripe")
-        .doc("subscription")
-        .get();
-      if (stripeSnap.exists) {
-        const sd = stripeSnap.data() as Record<string, unknown>;
-        stripeCustomerId     = (sd["stripeCustomerId"] as string | null) || null;
-        stripeSubscriptionId = (sd["stripeSubscriptionId"] as string | null) || null;
-        stripeStatus         = (sd["stripeStatus"] as string | null) || null;
-        currentPeriodEnd     = (sd["currentPeriodEnd"] as string | null) || null;
-        cancelAtPeriodEnd    = typeof sd["cancelAtPeriodEnd"] === "boolean" ? sd["cancelAtPeriodEnd"] : null;
+      const { getStripeKey } = await import("../lib/stripe.js");
+      const key = await getStripeKey();
+      if (key) {
+        const { createRequire } = await import("module");
+        const require = createRequire(import.meta.url);
+        const Stripe = (require("stripe") as { default: typeof import("stripe").default }).default;
+        const stripe = new Stripe(key);
+        const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId, {
+          expand: ["default_payment_method", "items.data.price.product"],
+        });
+        // Billing cycle anchor = effective period start
+        if (sub.billing_cycle_anchor) {
+          stripePeriodStart = new Date(sub.billing_cycle_anchor * 1000).toISOString();
+        }
+        // Plan name from first subscription item
+        const item = sub.items?.data?.[0];
+        if (item) {
+          const price = item.price;
+          const product = price?.product;
+          const interval = price?.recurring?.interval;
+          const intervalLabel = interval === "year" ? "annual" : interval === "month" ? "monthly" : (interval ?? "");
+          if (product && typeof product === "object" && "name" in product) {
+            stripePlanName = `${(product as { name: string }).name}${intervalLabel ? ` (${intervalLabel})` : ""}`;
+          } else if (price?.nickname) {
+            stripePlanName = `${price.nickname}${intervalLabel ? ` (${intervalLabel})` : ""}`;
+          } else {
+            stripePlanName = intervalLabel ? `Karl (${intervalLabel})` : "Karl";
+          }
+        }
+        // Payment method
+        const pm = sub.default_payment_method;
+        if (pm && typeof pm === "object" && "card" in pm) {
+          const card = (pm as { card?: { last4?: string; brand?: string } }).card;
+          stripePaymentLast4 = card?.last4 ?? null;
+          stripePaymentBrand = card?.brand ?? null;
+        }
+        log.debug("loadHouseholdDetail: stripe live fetch ok", { stripeSubscriptionId, stripePlanName });
       }
     } catch (err) {
-      log.debug("loadHouseholdDetail: stripe subcollection fetch failed", err as Error);
-    }
-
-    // Live Stripe API fetch for plan name, period start, and payment method
-    if (stripeSubscriptionId) {
-      try {
-        const { getStripeKey } = await import("../lib/stripe.js");
-        const key = await getStripeKey();
-        if (key) {
-          const { createRequire } = await import("module");
-          const require = createRequire(import.meta.url);
-          const Stripe = (require("stripe") as { default: typeof import("stripe").default }).default;
-          const stripe = new Stripe(key);
-          const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId, {
-            expand: ["default_payment_method", "items.data.price.product"],
-          });
-          // Billing cycle anchor = effective period start
-          if (sub.billing_cycle_anchor) {
-            stripePeriodStart = new Date(sub.billing_cycle_anchor * 1000).toISOString();
-          }
-          // Plan name from first subscription item
-          const item = sub.items?.data?.[0];
-          if (item) {
-            const price = item.price;
-            const product = price?.product;
-            const interval = price?.recurring?.interval;
-            const intervalLabel = interval === "year" ? "annual" : interval === "month" ? "monthly" : (interval ?? "");
-            if (product && typeof product === "object" && "name" in product) {
-              stripePlanName = `${(product as { name: string }).name}${intervalLabel ? ` (${intervalLabel})` : ""}`;
-            } else if (price?.nickname) {
-              stripePlanName = `${price.nickname}${intervalLabel ? ` (${intervalLabel})` : ""}`;
-            } else {
-              stripePlanName = intervalLabel ? `Karl (${intervalLabel})` : "Karl";
-            }
-          }
-          // Payment method
-          const pm = sub.default_payment_method;
-          if (pm && typeof pm === "object" && "card" in pm) {
-            const card = (pm as { card?: { last4?: string; brand?: string } }).card;
-            stripePaymentLast4 = card?.last4 ?? null;
-            stripePaymentBrand = card?.brand ?? null;
-          }
-          log.debug("loadHouseholdDetail: stripe live fetch ok", { stripeSubscriptionId, stripePlanName });
-        }
-      } catch (err) {
-        log.debug("loadHouseholdDetail: stripe live API fetch failed (non-fatal)", err as Error);
-      }
+      log.debug("loadHouseholdDetail: stripe live API fetch failed (non-fatal)", err as Error);
     }
   }
 
@@ -784,9 +789,9 @@ export function HouseholdsTab({ cmdStatus, initialHouseholdId, onCardsView, onTr
     }
 
     if (input === "s") {
-      // Require Karl tier with a loaded Stripe subscription ID
-      if (hh.tier !== "karl" || !detail?.stripeSubscriptionId) {
-        setStatus("[s] requires a Karl household with a Stripe subscription");
+      // Require a loaded Stripe subscription ID (tier field may lag — use sub ID as source of truth)
+      if (!detail?.stripeSubscriptionId) {
+        setStatus("[s] requires a household with an active Stripe subscription");
         return;
       }
       setConfirm({ kind: "cancel-sub" });
