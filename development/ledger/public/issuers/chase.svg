@@ -1,4 +1,12 @@
-<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M7 2L2 7V17L7 22H17L22 17V7L17 2H7Z" fill="#0060A9" />
-  <path d="M9 6H15V9H18V15H15V18H9V15H6V9H9V6Z" fill="white" />
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#117ACA">
+    <!-- Top-left piece: L-shape pointing upward, outer corner clipped to form octagon edge -->
+    <path d="M14,2 L34,2 L34,20 L42,20 L42,30 L22,30 L22,14 Z"/>
+    <!-- Top-right piece: L-shape pointing rightward -->
+    <path d="M62,14 L62,34 L44,34 L44,42 L34,42 L34,22 L50,22 Z"/>
+    <!-- Bottom-right piece: L-shape pointing downward -->
+    <path d="M50,62 L30,62 L30,44 L22,44 L22,34 L42,34 L42,50 Z"/>
+    <!-- Bottom-left piece: L-shape pointing leftward -->
+    <path d="M2,50 L2,30 L20,30 L20,22 L30,22 L30,42 L14,42 Z"/>
+  </g>
 </svg>

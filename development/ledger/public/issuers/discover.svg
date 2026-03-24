@@ -1,4 +1,10 @@
 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="12" cy="12" r="8" fill="#FF6600" />
-  <circle cx="15" cy="12" r="5" fill="#FFC41F" opacity="0.8" />
+  <defs>
+    <radialGradient id="disc" cx="0.35" cy="0.35" r="0.65">
+      <stop offset="0%" stop-color="#FFAA00" />
+      <stop offset="50%" stop-color="#FF6600" />
+      <stop offset="100%" stop-color="#D45500" />
+    </radialGradient>
+  </defs>
+  <circle cx="12" cy="12" r="10" fill="url(#disc)" />
 </svg>

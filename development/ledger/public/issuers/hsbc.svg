@@ -1,5 +1,14 @@
-<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M12 2L4 12L12 22L20 12L12 2Z" fill="#DB0011" />
-  <path d="M12 6L8 12H16L12 6Z" fill="white" />
-  <path d="M12 18L16 12H8L12 18Z" fill="white" />
+<svg viewBox="0 0 36 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- HSBC hexagonal emblem: 4 red triangles with white X-gap -->
+  <!-- Hexagon vertices: top-left(6,0) top-right(30,0) right(36,12) bottom-right(30,24) bottom-left(6,24) left(0,12) -->
+  <!-- Center: (18,12). Gap width ~1.5px creates the white X cross -->
+
+  <!-- Top triangle -->
+  <polygon points="6,0 30,0 18.75,11.25 17.25,11.25" fill="#DB0011" />
+  <!-- Right triangle -->
+  <polygon points="30,0 36,12 30,24 18.75,12.75 18.75,11.25" fill="#DB0011" />
+  <!-- Bottom triangle -->
+  <polygon points="30,24 6,24 17.25,12.75 18.75,12.75" fill="#DB0011" />
+  <!-- Left triangle -->
+  <polygon points="6,24 0,12 6,0 17.25,11.25 17.25,12.75" fill="#DB0011" />
 </svg>
