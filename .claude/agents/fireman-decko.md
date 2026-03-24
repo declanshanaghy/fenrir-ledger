@@ -321,6 +321,13 @@ Push-triggered runs use `git diff --name-only HEAD~1 HEAD` with path patterns.
 
 ## Implementation Rules (UNBREAKABLE)
 
+- **NEVER run tests or builds in the background.** All `pnpm run verify:tsc`,
+  `pnpm run verify:build`, `npx vitest run`, and any other verify/test commands
+  MUST run in the foreground (blocking). Do NOT use `run_in_background: true` or
+  the Bash `&` operator for these commands. You MUST see the output directly and
+  confirm pass/fail before proceeding. Background verify = unverified = bug.
+  Do NOT poll background task output files with `sleep` — just run the command
+  in the foreground and read the result.
 - Mobile-friendly: min 375px, two-col collapse with `flex flex-col md:grid`.
 - **Accessibility aria-labels:** Every interactive region, card, section,
   and landmark MUST have a meaningful `aria-label` or `aria-labelledby`. Gate regions
