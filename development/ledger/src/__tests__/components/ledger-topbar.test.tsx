@@ -187,12 +187,12 @@ describe("LedgerTopBar — Issue #994: trial badge / profile spacing", () => {
     expect(avatarButton.className).toContain("ml-4");
   });
 
-  it("controls cluster uses gap-1 (was gap-0.5 before fix) for consistent item spacing", () => {
+  it("controls cluster uses gap-2 (was gap-1 before issue #1958 fix) for trial badge / theme toggle spacing", () => {
     mockAuthStatus = "anonymous";
     mockSession = null;
     const { container } = render(<LedgerTopBar />);
-    // The right-side controls cluster is the only flex container with gap-1 and relative positioning
-    const cluster = container.querySelector(".relative.flex.items-center.gap-1");
+    // The right-side controls cluster is the only flex container with gap-2 and relative positioning
+    const cluster = container.querySelector(".relative.flex.items-center.gap-2");
     expect(cluster).not.toBeNull();
   });
 
