@@ -6,8 +6,8 @@
  * For known issuers: renders an <img> pointing at /issuers/<name>.svg.
  * For unknown/custom issuers: renders the issuer name as plain text.
  *
- * When showLabel is true: renders logo + rune char + rune name inline.
- * Format: [logo] ᚱ Raidho
+ * When showLabel is true: renders logo + issuer name inline.
+ * Format: [logo] Chase
  */
 
 import { getIssuerMeta, getIssuerName } from "@/lib/issuer-utils";
@@ -18,9 +18,9 @@ interface IssuerLogoProps {
   /** Optional className for the container element. */
   className?: string;
   /**
-   * When true, displays the rune character and rune name after the logo.
-   * Format: [logo] <RuneChar> <RuneName>
-   * Unknown issuers show their name as text (no rune).
+   * When true, displays the issuer name after the logo.
+   * Format: [logo] <IssuerName>
+   * Unknown issuers show their name as text (no logo).
    */
   showLabel?: boolean;
 }
@@ -30,7 +30,7 @@ interface IssuerLogoProps {
  *
  * @param issuerId  - Issuer identifier from KNOWN_ISSUERS.
  * @param className - Optional CSS class for the wrapper.
- * @param showLabel - When true, renders rune char + rune name after the logo.
+ * @param showLabel - When true, renders the real issuer name after the logo.
  */
 export function IssuerLogo({ issuerId, className, showLabel = false }: IssuerLogoProps) {
   const issuerMeta = getIssuerMeta(issuerId);
@@ -58,10 +58,7 @@ export function IssuerLogo({ issuerId, className, showLabel = false }: IssuerLog
         style={{ height: "1em", width: "auto", flexShrink: 0 }}
       />
       {showLabel && (
-        <>
-          <span aria-hidden="true" data-testid="issuer-rune">{issuerMeta.rune}</span>
-          <span data-testid="issuer-rune-name">{issuerMeta.runeName}</span>
-        </>
+        <span data-testid="issuer-name">{issuerName}</span>
       )}
     </span>
   );

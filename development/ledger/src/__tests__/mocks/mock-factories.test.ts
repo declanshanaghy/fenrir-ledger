@@ -187,11 +187,6 @@ describe("storage-mocks — utility mocks", () => {
     expect(url).toContain("returnTo=/dashboard");
   });
 
-  it("issuerUtilsMock.getIssuerRune returns a rune string", () => {
-    expect(typeof issuerUtilsMock.getIssuerRune()).toBe("string");
-    expect(issuerUtilsMock.getIssuerRune().length).toBeGreaterThan(0);
-  });
-
   it("cardLimitMockAllowed.canAddCard returns allowed: true", () => {
     expect(cardLimitMockAllowed.canAddCard().allowed).toBe(true);
   });

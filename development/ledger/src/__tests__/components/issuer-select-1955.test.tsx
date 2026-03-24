@@ -108,7 +108,6 @@ describe("IssuerSelect — issue #1955", () => {
     it("does NOT show rune name 'Raidho' as text for Chase", () => {
       render(<IssuerSelect value="" onChange={noop} />);
       const chaseItem = screen.getByTestId("select-item-chase");
-      // The rune char ᚱ may appear, but the Norse rune name "Raidho" should NOT
       expect(chaseItem.textContent).not.toContain("Raidho");
     });
 
@@ -129,23 +128,6 @@ describe("IssuerSelect — issue #1955", () => {
       for (const id of knownIds) {
         expect(screen.getByTestId(`select-item-${id}`), `item for ${id}`).toBeDefined();
       }
-    });
-  });
-
-  describe("fixed-width rune containers", () => {
-    it("rune for Chase is inside a w-6 fixed-width span", () => {
-      const { container } = render(<IssuerSelect value="" onChange={noop} />);
-      const chaseItem = screen.getByTestId("select-item-chase");
-      // Find the span with w-6 class inside the chase item
-      const runeSpans = chaseItem.querySelectorAll("span.inline-flex.w-6.justify-center");
-      expect(runeSpans.length).toBeGreaterThanOrEqual(1);
-    });
-
-    it("rune span is aria-hidden", () => {
-      render(<IssuerSelect value="" onChange={noop} />);
-      const chaseItem = screen.getByTestId("select-item-chase");
-      const runeSpans = chaseItem.querySelectorAll("span[aria-hidden='true']");
-      expect(runeSpans.length).toBeGreaterThanOrEqual(1);
     });
   });
 

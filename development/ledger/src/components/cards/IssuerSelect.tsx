@@ -55,12 +55,6 @@ export function IssuerSelect({ value, onChange, required }: IssuerSelectProps) {
                     style={{ height: "1em", width: "auto", flexShrink: 0 }}
                   />
                 )}
-                <span
-                  className="inline-flex w-6 justify-center"
-                  aria-hidden="true"
-                >
-                  {meta?.rune ?? ""}
-                </span>
                 <span>{issuer.name}</span>
               </span>
             </SelectItem>
