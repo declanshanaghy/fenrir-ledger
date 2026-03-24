@@ -474,23 +474,6 @@ export function HouseholdSettingsSection() {
               )}
             </>
           )}
-
-          {/* Solo Karl owner: secondary Join CTA — can still join another household */}
-          {data.isSolo && isOwner && data.isKarl && (
-            <div className="border border-dashed border-border p-3 flex flex-col gap-2 items-start">
-              <p className="text-xs text-muted-foreground font-body">
-                You can also join an existing household instead.
-              </p>
-              <button
-                type="button"
-                onClick={() => router.push("/ledger/join")}
-                className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                aria-label="Join a Household"
-              >
-                Join a Household
-              </button>
-            </div>
-          )}
         </>
       )}
     </section>
