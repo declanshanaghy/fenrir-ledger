@@ -17,7 +17,7 @@
  *   - Touch-friendly: min 44x44px tap targets
  *
  * Styling:
- *   - border-border, text-muted-foreground baseline
+ *   - text-muted-foreground baseline (no border)
  *   - Active state: text-gold, bg-secondary
  *   - Norse aesthetic: sharp corners, gold accent
  */
@@ -110,7 +110,7 @@ export function ThemeToggle({ variant = "inline" }: ThemeToggleProps) {
       <button
         type="button"
         onClick={() => setTheme(cycleTheme(resolvedTheme ?? theme))}
-        className="flex items-center justify-center rounded-sm border border-border
+        className="flex items-center justify-center rounded-sm
                    text-muted-foreground hover:text-gold transition-colors"
         style={{ minWidth: 44, minHeight: 44 }}
         aria-label={`Theme: ${currentLabel}. Click to switch to ${nextLabel}.`}
