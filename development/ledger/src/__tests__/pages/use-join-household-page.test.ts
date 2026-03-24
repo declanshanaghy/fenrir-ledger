@@ -22,6 +22,22 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn().mockResolvedValue("mock-token"),
 }));
 
+const mockGetSession = vi.hoisted(() =>
+  vi.fn().mockReturnValue({
+    user: { sub: "user-solo-sub", email: "solo@example.com", name: "Solo", picture: "" },
+  })
+);
+vi.mock("@/lib/auth/session", () => ({
+  getSession: (...args: unknown[]) => mockGetSession(...args),
+}));
+
+const mockGetCards = vi.hoisted(() => vi.fn().mockReturnValue([]));
+vi.mock("@/lib/storage", () => ({
+  clearHouseholdLocalStorage: vi.fn(),
+  setStoredHouseholdId: vi.fn(),
+  getCards: (...args: unknown[]) => mockGetCards(...args),
+}));
+
 const mockRefreshEntitlement = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 vi.mock("@/hooks/useEntitlement", () => ({
   useEntitlement: () => ({ refreshEntitlement: mockRefreshEntitlement }),
@@ -78,6 +94,10 @@ describe("useJoinHouseholdPage — initial state", () => {
 describe("useJoinHouseholdPage — validateCode via handleCharChange", () => {
   beforeEach(() => {
     mockPush.mockClear();
+    mockGetCards.mockReturnValue([]);
+    mockGetSession.mockReturnValue({
+      user: { sub: "user-solo-sub", email: "solo@example.com", name: "Solo", picture: "" },
+    });
   });
 
   it("sets validationStatus to 'valid' on 200 response", async () => {
@@ -416,5 +436,104 @@ describe("useJoinHouseholdPage — entitlement refresh on join success (#1823)",
     expect(result.current.step).toBe("merge_error");
     expect(mockClearEntitlementCache).not.toHaveBeenCalled();
     expect(mockRefreshEntitlement).not.toHaveBeenCalled();
+  });
+});
+
+// Issue #1970 — Join confirmation shows correct card count when cards are only in localStorage
+// Thrall/trial users who haven't synced to Firestore have userCardCount=0 from the API but
+// cards only in localStorage.  The hook must use Math.max(api, local) so the confirm UI
+// reflects the real card count and the merge warning appears.
+describe("useJoinHouseholdPage — localStorage card count fallback (#1970)", () => {
+  beforeEach(() => {
+    mockPush.mockClear();
+    mockGetCards.mockReturnValue([]);
+    mockGetSession.mockReturnValue({
+      user: { sub: "user-solo-sub", email: "solo@example.com", name: "Solo", picture: "" },
+    });
+  });
+
+  it("uses API card count when localStorage has fewer cards (synced Karl user)", async () => {
+    // API says 3 cards; localStorage has 1 (stale) — API wins
+    mockGetCards.mockReturnValue([{ id: "c1" }]);
+    const apiPreview = { ...mockPreview, userCardCount: 3 };
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => apiPreview });
+
+    const { result } = renderHook(() => useJoinHouseholdPage());
+    fillChars(result);
+
+    await waitFor(() => {
+      expect(result.current.validationStatus).toBe("valid");
+    });
+    expect(result.current.preview?.userCardCount).toBe(3);
+  });
+
+  it("uses localStorage card count when API returns 0 but localStorage has cards (unsynced Thrall user)", async () => {
+    // API says 0 (not yet synced); localStorage has 4 cards — localStorage wins
+    mockGetCards.mockReturnValue([{ id: "c1" }, { id: "c2" }, { id: "c3" }, { id: "c4" }]);
+    const apiPreview = { ...mockPreview, userCardCount: 0 };
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => apiPreview });
+
+    const { result } = renderHook(() => useJoinHouseholdPage());
+    fillChars(result);
+
+    await waitFor(() => {
+      expect(result.current.validationStatus).toBe("valid");
+    });
+    expect(result.current.preview?.userCardCount).toBe(4);
+  });
+
+  it("uses localStorage card count when API count is lower (partially synced)", async () => {
+    // API says 2 synced; localStorage has 5 total — localStorage wins
+    mockGetCards.mockReturnValue(
+      Array.from({ length: 5 }, (_, i) => ({ id: `c${i}` }))
+    );
+    const apiPreview = { ...mockPreview, userCardCount: 2 };
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => apiPreview });
+
+    const { result } = renderHook(() => useJoinHouseholdPage());
+    fillChars(result);
+
+    await waitFor(() => {
+      expect(result.current.validationStatus).toBe("valid");
+    });
+    expect(result.current.preview?.userCardCount).toBe(5);
+  });
+
+  it("calls getCards with the user's solo householdId (user.sub)", async () => {
+    mockGetCards.mockReturnValue([]);
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => mockPreview });
+
+    const { result } = renderHook(() => useJoinHouseholdPage());
+    fillChars(result);
+
+    await waitFor(() => {
+      expect(result.current.validationStatus).toBe("valid");
+    });
+    expect(mockGetCards).toHaveBeenCalledWith("user-solo-sub");
+  });
+
+  it("falls back to 0 local cards when session has no sub", async () => {
+    mockGetSession.mockReturnValue(null);
+    const apiPreview = { ...mockPreview, userCardCount: 2 };
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => apiPreview });
+
+    const { result } = renderHook(() => useJoinHouseholdPage());
+    fillChars(result);
+
+    await waitFor(() => {
+      expect(result.current.validationStatus).toBe("valid");
+    });
+    // getCards not called with empty string; API count used directly
+    expect(result.current.preview?.userCardCount).toBe(2);
   });
 });

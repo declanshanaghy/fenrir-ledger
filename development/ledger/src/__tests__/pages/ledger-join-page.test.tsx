@@ -48,6 +48,19 @@ vi.mock("@/lib/auth/refresh-session", () => ({
   ensureFreshToken: vi.fn().mockResolvedValue("mock-token"),
 }));
 
+vi.mock("@/lib/auth/session", () => ({
+  getSession: vi.fn(() => ({
+    user: { sub: "user-solo-sub", email: "solo@example.com", name: "Solo", picture: "" },
+  })),
+}));
+
+vi.mock("@/lib/storage", () => ({
+  clearHouseholdLocalStorage: vi.fn(),
+  setStoredHouseholdId: vi.fn(),
+  // Issue #1970: return empty array so API userCardCount drives preview in these tests
+  getCards: vi.fn().mockReturnValue([]),
+}));
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("JoinHouseholdPage — code entry step", () => {

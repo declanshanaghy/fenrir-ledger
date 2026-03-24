@@ -66,6 +66,9 @@ vi.mock("@/lib/storage", () => ({
   clearHouseholdLocalStorage: vi.fn(),
   setStoredHouseholdId: vi.fn(),
   getEffectiveHouseholdId: (fallback: string) => fallback,
+  // Issue #1970: getCards used in validateCode to check localStorage card count.
+  // Return [] so the API userCardCount drives the preview in these UI tests.
+  getCards: vi.fn().mockReturnValue([]),
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

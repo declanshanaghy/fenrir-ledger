@@ -12,7 +12,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { getSession } from "@/lib/auth/session";
-import { clearHouseholdLocalStorage, setStoredHouseholdId } from "@/lib/storage";
+import { clearHouseholdLocalStorage, setStoredHouseholdId, getCards } from "@/lib/storage";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { clearEntitlementCache } from "@/lib/entitlement/cache";
 
@@ -145,7 +145,16 @@ export function useJoinHouseholdPage(): JoinHouseholdPageState {
       );
       if (res.ok) {
         const data = (await res.json()) as HouseholdPreview;
-        setPreview(data);
+        // Issue #1970: Thrall/trial users may have cards only in localStorage
+        // (not yet synced to Firestore). Use the higher of the two counts so the
+        // confirmation UI reflects cards that will actually be merged.
+        const session = getSession();
+        const soloHouseholdId = session?.user?.sub ?? "";
+        const localCardCount = soloHouseholdId
+          ? getCards(soloHouseholdId).length
+          : 0;
+        const effectiveCardCount = Math.max(data.userCardCount, localCardCount);
+        setPreview({ ...data, userCardCount: effectiveCardCount });
         setValidationStatus("valid");
         return;
       }
