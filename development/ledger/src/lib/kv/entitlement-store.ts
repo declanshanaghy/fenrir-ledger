@@ -24,6 +24,7 @@ import {
   getStripeSubscription,
   setStripeSubscription,
   deleteStripeSubscription,
+  updateHouseholdTier,
 } from "@/lib/firebase/firestore";
 import type { FirestoreStripeSubscription } from "@/lib/firebase/firestore-types";
 import type { StoredStripeEntitlement } from "@/lib/stripe/types";
@@ -157,6 +158,11 @@ export async function setStripeEntitlement(
       checkedAt: now,
     };
     await setStripeSubscription(user.householdId, stripeDoc);
+
+    // Keep the household doc's top-level tier field in sync so that Odin's Spear
+    // and any direct household-doc readers reflect the correct tier without
+    // having to fetch the stripe subcollection separately.
+    await updateHouseholdTier(user.householdId, stripeDoc.tier);
 
     // Maintain reverse index: set stripeCustomerId on user document
     await setUserStripeCustomerId(googleSub, entitlement.stripeCustomerId);
