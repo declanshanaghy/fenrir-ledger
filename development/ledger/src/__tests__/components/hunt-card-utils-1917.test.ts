@@ -44,13 +44,15 @@ describe("getHuntPercentComplete (#1917)", () => {
 describe("getHuntTooltipText (#1917)", () => {
   it("returns spend-only string when deadline is null", () => {
     const result = getHuntTooltipText(100000, 400000, null);
-    expect(result).toBe("$1,000.00 remaining to spend");
+    // remaining = 400000 - 100000 = 300000 cents = $3,000
+    // formatCurrency uses minimumFractionDigits:0, so whole dollars have no .00
+    expect(result).toBe("$3,000 remaining to spend");
   });
 
   it("shows 'X days left' for multiple days remaining", () => {
     const result = getHuntTooltipText(0, 100000, 15);
     expect(result).toContain("15 days left");
-    expect(result).toContain("$1,000.00 remaining to spend");
+    expect(result).toContain("$1,000 remaining to spend");
   });
 
   it("shows '1 day left' when exactly 1 day remains", () => {
@@ -75,6 +77,7 @@ describe("getHuntTooltipText (#1917)", () => {
 
   it("shows $0.00 remaining when spend is met", () => {
     const result = getHuntTooltipText(400000, 400000, 10);
-    expect(result).toContain("$0.00 remaining to spend");
+    // formatCurrency(0) returns "$0" (hardcoded, no .00)
+    expect(result).toContain("$0 remaining to spend");
   });
 });
