@@ -53,24 +53,24 @@ import { CardForm } from "@/components/cards/CardForm";
 
 import type { Card } from "@/lib/types";
 
-function makeCardWithBonus(amountSpentCents: number): Card {
+function makeCardWithBonus(amountSpentDollars: number): Card {
   return {
     id: "card-1",
     householdId: "hh-1",
     issuerId: "chase",
     cardName: "Sapphire Preferred",
     openDate: "2023-01-01T00:00:00.000Z",
-    creditLimit: 1000000,
-    annualFee: 9500,
+    creditLimit: 10000,   // dollars
+    annualFee: 95,         // dollars
     annualFeeDate: "2026-01-01T00:00:00.000Z",
     promoPeriodMonths: 0,
-    amountSpent: amountSpentCents,
+    amountSpent: amountSpentDollars,
     signUpBonus: {
       type: "points",
-      amount: 6000000,
-      spendRequirement: 400000,
+      amount: 60000,       // raw count (points)
+      spendRequirement: 4000,  // dollars
       deadline: "2023-04-01T00:00:00.000Z",
-      met: amountSpentCents >= 400000,
+      met: amountSpentDollars >= 4000,
     },
     status: "active",
     notes: "",
@@ -113,14 +113,14 @@ describe('CardForm — amount spent / computed minimum spend indicator — Issue
   });
 
   it("renders 'Amount spent' input in edit mode pre-populated from initialValues", () => {
-    const card = makeCardWithBonus(150000); // $1500
+    const card = makeCardWithBonus(1500); // $1500 in dollars
     render(<CardForm householdId="hh-1" initialValues={card} />);
     const input = screen.getByLabelText(/amount spent/i) as HTMLInputElement;
     expect(input.value).toBe("1500");
   });
 
   it("does NOT render a 'Minimum spend met' checkbox in edit mode", () => {
-    const card = makeCardWithBonus(400000); // fully met
+    const card = makeCardWithBonus(4000); // fully met ($4000 spend requirement)
     render(<CardForm householdId="hh-1" initialValues={card} />);
     const checkboxes = screen.queryAllByRole("checkbox", { name: /minimum spend met/i });
     expect(checkboxes.length).toBe(0);
@@ -130,7 +130,7 @@ describe('CardForm — amount spent / computed minimum spend indicator — Issue
     const card = makeCardWithBonus(0);
     render(<CardForm householdId="hh-1" initialValues={card} />);
     const input = screen.getByLabelText(/amount spent/i) as HTMLInputElement;
-    // centsToDollars(0) returns "" — new card default
+    // amountSpent=0 → "" (empty default for zero)
     expect(input.value === "" || input.value === "0").toBe(true);
   });
 });

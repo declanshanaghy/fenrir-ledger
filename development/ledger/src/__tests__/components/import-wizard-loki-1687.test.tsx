@@ -146,11 +146,11 @@ describe('ImportWizard step="picker"', () => {
 // ── formatFee via PreviewCardList ─────────────────────────────────────────────
 
 describe("PreviewCardList — formatFee", () => {
-  it("shows $95/yr for annualFee=9500", async () => {
+  it("shows $95/yr for annualFee=95 (dollars)", async () => {
     await renderWizard({
       step: "preview",
       cards: [
-        { id: "c1", cardName: "Chase Sapphire", issuerId: "chase", annualFee: 9500, openDate: "2023-01-01" },
+        { id: "c1", cardName: "Chase Sapphire", issuerId: "chase", annualFee: 95, openDate: "2023-01-01" },
       ],
     });
     expect(screen.getByText("$95/yr")).toBeDefined();
@@ -166,11 +166,11 @@ describe("PreviewCardList — formatFee", () => {
     expect(screen.getByText("No annual fee")).toBeDefined();
   });
 
-  it("shows $550/yr for annualFee=55000 (Amex Platinum range)", async () => {
+  it("shows $550/yr for annualFee=550 (Amex Platinum range, dollars)", async () => {
     await renderWizard({
       step: "preview",
       cards: [
-        { id: "c1", cardName: "Platinum Card", issuerId: "amex", annualFee: 55000, openDate: "2023-01-01" },
+        { id: "c1", cardName: "Platinum Card", issuerId: "amex", annualFee: 550, openDate: "2023-01-01" },
       ],
     });
     expect(screen.getByText("$550/yr")).toBeDefined();

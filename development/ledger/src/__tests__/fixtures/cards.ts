@@ -24,7 +24,7 @@ export function makeCard(overrides: Partial<Card> = {}): Card {
     issuerId: "chase",
     cardName: "Test Card",
     openDate: "2025-01-01T00:00:00.000Z",
-    creditLimit: 500000,
+    creditLimit: 5000,    // dollars
     annualFee: 0,
     annualFeeDate: "",
     promoPeriodMonths: 0,

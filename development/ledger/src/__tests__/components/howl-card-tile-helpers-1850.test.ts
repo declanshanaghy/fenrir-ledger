@@ -26,8 +26,8 @@ function makeCard(overrides: Partial<Card> = {}): Card {
     issuerId: "chase",
     cardName: "Freedom Unlimited",
     openDate: "2025-03-01T00:00:00.000Z",
-    creditLimit: 1000000,
-    annualFee: 9500,
+    creditLimit: 10000,   // dollars
+    annualFee: 95,         // dollars
     annualFeeDate: "2026-05-01T00:00:00.000Z",
     promoPeriodMonths: 0,
     signUpBonus: null,
@@ -53,7 +53,7 @@ describe("getHowlDaysUntilSoonest", () => {
 
   it("returns fee days when only annualFeeDate is present", () => {
     // 2026-05-01 is 39 days from 2026-03-23
-    const card = makeCard({ annualFeeDate: "2026-05-01T00:00:00.000Z", annualFee: 9500, signUpBonus: null });
+    const card = makeCard({ annualFeeDate: "2026-05-01T00:00:00.000Z", annualFee: 95, signUpBonus: null });
     expect(getHowlDaysUntilSoonest(card)).toBe(39);
   });
 
@@ -66,11 +66,11 @@ describe("getHowlDaysUntilSoonest", () => {
     // fee due 2026-05-01 (39d), bonus deadline 2026-04-01 (9d) — 9d wins
     const card = makeCard({
       annualFeeDate: "2026-05-01T00:00:00.000Z",
-      annualFee: 9500,
+      annualFee: 95,
       signUpBonus: {
         type: "points",
         amount: 60000,
-        spendRequirement: 400000,
+        spendRequirement: 4000,  // dollars
         deadline: "2026-04-01T00:00:00.000Z",
         met: false,
       },
@@ -82,11 +82,11 @@ describe("getHowlDaysUntilSoonest", () => {
     // met bonus should not compete — only fee days returned
     const card = makeCard({
       annualFeeDate: "2026-05-01T00:00:00.000Z",
-      annualFee: 9500,
+      annualFee: 95,
       signUpBonus: {
         type: "points",
         amount: 60000,
-        spendRequirement: 400000,
+        spendRequirement: 4000,  // dollars
         deadline: "2026-04-01T00:00:00.000Z",
         met: true,
       },
@@ -182,11 +182,11 @@ describe("getHowlActionText", () => {
   it("returns spend-met message for promo_expiring when requirement is met", () => {
     const card = makeCard({
       status: "promo_expiring",
-      amountSpent: 400000,
+      amountSpent: 4000,  // dollars
       signUpBonus: {
         type: "points",
         amount: 60000,
-        spendRequirement: 400000,
+        spendRequirement: 4000,  // dollars
         deadline: "2026-04-01T00:00:00.000Z",
         met: false,
       },
@@ -197,11 +197,11 @@ describe("getHowlActionText", () => {
   it("returns remaining-spend message for promo_expiring when days > 30", () => {
     const card = makeCard({
       status: "promo_expiring",
-      amountSpent: 100000,
+      amountSpent: 1000,  // dollars
       signUpBonus: {
         type: "points",
         amount: 60000,
-        spendRequirement: 400000,
+        spendRequirement: 4000,  // dollars
         deadline: "2026-06-01T00:00:00.000Z",
         met: false,
       },
@@ -241,11 +241,11 @@ describe("getHowlSpendPercent", () => {
 
   it("returns 50 when half the requirement is spent", () => {
     const card = makeCard({
-      amountSpent: 200000,
+      amountSpent: 2000,  // dollars
       signUpBonus: {
         type: "points",
         amount: 60000,
-        spendRequirement: 400000,
+        spendRequirement: 4000,  // dollars
         deadline: "2026-04-01T00:00:00.000Z",
         met: false,
       },
@@ -255,11 +255,11 @@ describe("getHowlSpendPercent", () => {
 
   it("clamps to 100 when amountSpent exceeds requirement", () => {
     const card = makeCard({
-      amountSpent: 600000,
+      amountSpent: 6000,  // dollars
       signUpBonus: {
         type: "points",
         amount: 60000,
-        spendRequirement: 400000,
+        spendRequirement: 4000,  // dollars
         deadline: "2026-04-01T00:00:00.000Z",
         met: false,
       },

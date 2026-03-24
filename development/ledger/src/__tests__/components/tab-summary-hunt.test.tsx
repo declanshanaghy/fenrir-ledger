@@ -86,8 +86,8 @@ describe("TabSummary hunt — aggregate spend logic", () => {
     // Card 2: $1,500 of $2,000 spent (75%)
     // Aggregate: $2,000 of $4,000 = 50%
     const cards: Card[] = [
-      makeHuntCard({ id: "c1", amountSpent: 50000, spendRequirement: 200000 }),
-      makeHuntCard({ id: "c2", amountSpent: 150000, spendRequirement: 200000 }),
+      makeHuntCard({ id: "c1", amountSpent: 500, spendRequirement: 2000 }),
+      makeHuntCard({ id: "c2", amountSpent: 1500, spendRequirement: 2000 }),
     ];
 
     await act(async () => {
@@ -101,7 +101,7 @@ describe("TabSummary hunt — aggregate spend logic", () => {
 
   it("shows 0% when nothing has been spent against a requirement", async () => {
     const cards: Card[] = [
-      makeHuntCard({ id: "c1", amountSpent: 0, spendRequirement: 300000 }),
+      makeHuntCard({ id: "c1", amountSpent: 0, spendRequirement: 3000 }),
     ];
 
     await act(async () => {

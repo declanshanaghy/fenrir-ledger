@@ -23,7 +23,7 @@ describe("makeCard", () => {
     expect(card.issuerId).toBe("chase");
     expect(card.cardName).toBe("Test Card");
     expect(card.openDate).toBe("2025-01-01T00:00:00.000Z");
-    expect(card.creditLimit).toBe(500000);
+    expect(card.creditLimit).toBe(5000);   // dollars
     expect(card.annualFee).toBe(0);
     expect(card.annualFeeDate).toBe("");
     expect(card.promoPeriodMonths).toBe(0);

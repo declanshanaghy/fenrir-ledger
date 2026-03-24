@@ -37,13 +37,13 @@ describe("computeTrialMetrics", () => {
 
   it("sums annual fees across all cards", () => {
     const cards = [
-      makeCard({ id: "1", annualFee: 9500 }), // $95
-      makeCard({ id: "2", annualFee: 55000 }), // $550
-      makeCard({ id: "3", annualFee: 0 }), // $0
+      makeCard({ id: "1", annualFee: 95 }),   // $95
+      makeCard({ id: "2", annualFee: 550 }),  // $550
+      makeCard({ id: "3", annualFee: 0 }),    // $0
     ];
     const result = computeTrialMetrics(cards);
 
-    expect(result.totalAnnualFees).toBe(64500);
+    expect(result.totalAnnualFees).toBe(645);
     expect(result.totalAnnualFeesFormatted).toBe("$645");
   });
 
@@ -70,21 +70,21 @@ describe("computeTrialMetrics", () => {
 
   it("computes potential savings from closed/graduated cards", () => {
     const cards = [
-      makeCard({ id: "1", annualFee: 9500, status: "active" }),
+      makeCard({ id: "1", annualFee: 95, status: "active" }),
       makeCard({
         id: "2",
-        annualFee: 55000,
+        annualFee: 550,
         status: "closed",
         closedAt: "2025-06-01T00:00:00.000Z",
       }),
       makeCard({
         id: "3",
-        annualFee: 25000,
+        annualFee: 250,
         status: "active",
         signUpBonus: {
           type: "points",
           amount: 60000,
-          spendRequirement: 400000,
+          spendRequirement: 4000,  // dollars
           deadline: "2025-12-01T00:00:00.000Z",
           met: true,
         },
@@ -93,7 +93,7 @@ describe("computeTrialMetrics", () => {
     const result = computeTrialMetrics(cards);
 
     // Only closed ($550) + graduated ($250) cards count
-    expect(result.potentialSavings).toBe(80000);
+    expect(result.potentialSavings).toBe(800);
     expect(result.potentialSavingsFormatted).toBe("$800");
   });
 
@@ -110,13 +110,13 @@ describe("computeTrialMetrics", () => {
       makeCard({ id: "1", status: "active" }),
       makeCard({
         id: "2",
-        annualFee: 9500,
+        annualFee: 95,  // dollars
         annualFeeDate: feeApproaching.toISOString(),
         status: "active",
       }),
       makeCard({
         id: "3",
-        annualFee: 25000,
+        annualFee: 250,  // dollars
         annualFeeDate: pastDate.toISOString(),
         status: "active",
       }),
@@ -130,14 +130,14 @@ describe("computeTrialMetrics", () => {
     const cards = [
       makeCard({
         id: "1",
-        annualFee: 9500,
+        annualFee: 95,  // dollars
         status: "active",
       }),
     ];
     const result = computeTrialMetrics(cards);
 
     expect(result.cardCount).toBe(1);
-    expect(result.totalAnnualFees).toBe(9500);
+    expect(result.totalAnnualFees).toBe(95);
     expect(result.totalAnnualFeesFormatted).toBe("$95");
     expect(result.feeAlertsCount).toBe(0);
     expect(result.closedCardsCount).toBe(0);

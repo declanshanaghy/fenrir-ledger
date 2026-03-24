@@ -89,8 +89,8 @@ function makeCard(overrides: Partial<Card> = {}): Card {
     issuerId: "chase",
     cardName: "Sapphire Preferred",
     openDate: "2023-01-01T00:00:00.000Z",
-    creditLimit: 1500000,
-    annualFee: 9500,
+    creditLimit: 15000,   // dollars
+    annualFee: 95,         // dollars
     annualFeeDate: "2026-01-01T00:00:00.000Z",
     promoPeriodMonths: 0,
     amountSpent: 0,
@@ -111,7 +111,7 @@ describe("getValhallaSignupBonusLabel — issue #1915", () => {
       signUpBonus: {
         type: "miles",
         amount: 65000,
-        spendRequirement: 400000,
+        spendRequirement: 4000,  // dollars
         deadline: "2023-04-01T00:00:00.000Z",
         met: true,
       },
@@ -124,7 +124,7 @@ describe("getValhallaSignupBonusLabel — issue #1915", () => {
       signUpBonus: {
         type: "points",
         amount: 1000000,
-        spendRequirement: 600000,
+        spendRequirement: 6000,  // dollars
         deadline: "2023-04-01T00:00:00.000Z",
         met: true,
       },
@@ -137,7 +137,7 @@ describe("getValhallaSignupBonusLabel — issue #1915", () => {
       signUpBonus: {
         type: "miles",
         amount: 65000,
-        spendRequirement: 400000,
+        spendRequirement: 4000,  // dollars
         deadline: "2023-04-01T00:00:00.000Z",
         met: true,
       },
@@ -145,12 +145,12 @@ describe("getValhallaSignupBonusLabel — issue #1915", () => {
     expect(getValhallaSignupBonusLabel(card)).not.toBe("6,500,000 mi");
   });
 
-  it("displays cashback amount as formatted currency (cents-based)", () => {
+  it("displays cashback amount as formatted currency (dollars-based)", () => {
     const card = makeCard({
       signUpBonus: {
         type: "cashback",
-        amount: 50000, // $500 in cents
-        spendRequirement: 300000,
+        amount: 500, // $500 in dollars
+        spendRequirement: 3000,
         deadline: "2023-04-01T00:00:00.000Z",
         met: true,
       },
@@ -170,8 +170,8 @@ describe("formatBonusReward — issue #1915", () => {
     expect(formatBonusReward("points", 1000000)).toBe("1,000,000 pts");
   });
 
-  it("formats cashback in cents — $695 = 69500 cents", () => {
-    expect(formatBonusReward("cashback", 69500)).toBe("$695");
+  it("formats cashback in dollars — $695", () => {
+    expect(formatBonusReward("cashback", 695)).toBe("$695");
   });
 });
 
@@ -232,7 +232,7 @@ describe("useCardForm onSubmit — bonus amount storage (issue #1915)", () => {
     expect(saved.signUpBonus?.amount).toBe(1000000);
   });
 
-  it("stores cashback bonus in cents (500 dollars → 50000 cents)", () => {
+  it("stores cashback bonus in dollars (500 → 500)", () => {
     const { result } = renderHook(() =>
       useCardForm({ householdId: "hh-1" })
     );
@@ -254,10 +254,10 @@ describe("useCardForm onSubmit — bonus amount storage (issue #1915)", () => {
     });
     expect(vi.mocked(saveCard)).toHaveBeenCalledOnce();
     const saved = vi.mocked(saveCard).mock.calls[0]![0] as Card;
-    expect(saved.signUpBonus?.amount).toBe(50000);
+    expect(saved.signUpBonus?.amount).toBe(500);
   });
 
-  it("stores annual fee in cents (95 dollars → 9500 cents)", () => {
+  it("stores annual fee in dollars (95 → 95)", () => {
     const { result } = renderHook(() =>
       useCardForm({ householdId: "hh-1" })
     );
@@ -279,7 +279,7 @@ describe("useCardForm onSubmit — bonus amount storage (issue #1915)", () => {
     });
     expect(vi.mocked(saveCard)).toHaveBeenCalledOnce();
     const saved = vi.mocked(saveCard).mock.calls[0]![0] as Card;
-    expect(saved.annualFee).toBe(9500);
+    expect(saved.annualFee).toBe(95);
   });
 });
 
@@ -291,7 +291,7 @@ describe("useCardForm defaultValues — bonus amount load (issue #1915)", () => 
       signUpBonus: {
         type: "miles",
         amount: 65000,
-        spendRequirement: 400000,
+        spendRequirement: 4000,  // dollars
         deadline: "2025-04-01T00:00:00.000Z",
         met: false,
       },
@@ -307,7 +307,7 @@ describe("useCardForm defaultValues — bonus amount load (issue #1915)", () => 
       signUpBonus: {
         type: "points",
         amount: 1000000,
-        spendRequirement: 600000,
+        spendRequirement: 6000,  // dollars
         deadline: "2025-04-01T00:00:00.000Z",
         met: false,
       },
@@ -318,12 +318,12 @@ describe("useCardForm defaultValues — bonus amount load (issue #1915)", () => 
     expect(result.current.defaultValues.bonusAmount).toBe("1000000");
   });
 
-  it("loads cashback bonus using centsToDollars (50000 cents → '500')", () => {
+  it("loads cashback bonus amount as string of dollar value (500 → '500')", () => {
     const card = makeCard({
       signUpBonus: {
         type: "cashback",
-        amount: 50000, // $500 in cents
-        spendRequirement: 150000,
+        amount: 500, // $500 in dollars
+        spendRequirement: 1500,
         deadline: "2025-04-01T00:00:00.000Z",
         met: false,
       },

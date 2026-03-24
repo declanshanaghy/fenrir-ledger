@@ -32,8 +32,8 @@ function makeClosedCard(opts: {
     issuerId: "chase",
     cardName: "Sapphire Preferred",
     openDate: opts.openDate ?? "2023-01-01T00:00:00.000Z",
-    creditLimit: 1000000,
-    annualFee: opts.annualFee ?? 9500,
+    creditLimit: 10000,    // dollars
+    annualFee: opts.annualFee ?? 95,  // dollars
     annualFeeDate: "",
     promoPeriodMonths: 0,
     signUpBonus:
@@ -41,7 +41,7 @@ function makeClosedCard(opts: {
         ? {
             type: opts.signUpBonusType ?? "points",
             amount: opts.signUpBonusAmount ?? 60000,
-            spendRequirement: 400000,
+            spendRequirement: 4000,  // dollars
             deadline: "2023-05-01T00:00:00.000Z",
             met: opts.signUpBonusMet,
           }
@@ -152,7 +152,7 @@ describe("getValhallaSignupBonusLabel", () => {
     const card = makeClosedCard({
       signUpBonusMet: true,
       signUpBonusType: "cashback",
-      signUpBonusAmount: 20000,
+      signUpBonusAmount: 200,  // $200 in dollars
     });
     // $200 cashback
     expect(getValhallaSignupBonusLabel(card)).toBe("$200 cashback");
@@ -166,12 +166,12 @@ describe("getValhallaAnnualFeeLabel", () => {
     expect(getValhallaAnnualFeeLabel(0)).toBe("$0 (no fee)");
   });
 
-  it("returns '$95/yr' for 9500 cents", () => {
-    expect(getValhallaAnnualFeeLabel(9500)).toBe("$95/yr");
+  it("returns '$95/yr' for 95 dollars", () => {
+    expect(getValhallaAnnualFeeLabel(95)).toBe("$95/yr");
   });
 
-  it("returns '$550/yr' for 55000 cents (Amex Plat)", () => {
-    expect(getValhallaAnnualFeeLabel(55000)).toBe("$550/yr");
+  it("returns '$550/yr' for 550 dollars (Amex Plat)", () => {
+    expect(getValhallaAnnualFeeLabel(550)).toBe("$550/yr");
   });
 });
 

@@ -546,20 +546,20 @@ describe("computeCardStatus", () => {
 // ── formatCurrency ────────────────────────────────────────────────────────
 
 describe("formatCurrency", () => {
-  it('formats 0 cents as "$0"', () => {
+  it('formats 0 as "$0"', () => {
     expect(formatCurrency(0)).toBe("$0");
   });
 
   it("formats whole dollars", () => {
-    expect(formatCurrency(9500)).toBe("$95");
+    expect(formatCurrency(95)).toBe("$95");
   });
 
-  it("formats dollars with cents", () => {
-    expect(formatCurrency(9550)).toBe("$95.5");
+  it("formats dollars with fractional cents", () => {
+    expect(formatCurrency(95.5)).toBe("$95.5");
   });
 
   it("formats large amounts", () => {
-    expect(formatCurrency(1000000)).toBe("$10,000");
+    expect(formatCurrency(10000)).toBe("$10,000");
   });
 });
 

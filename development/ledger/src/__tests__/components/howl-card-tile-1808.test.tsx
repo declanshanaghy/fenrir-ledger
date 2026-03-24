@@ -44,8 +44,8 @@ function makeHowlCard(opts: {
     issuerId: "chase",
     cardName: "Freedom Flex",
     openDate: "2024-01-01T00:00:00.000Z",
-    creditLimit: 1000000,
-    annualFee: opts.annualFee ?? 9500,
+    creditLimit: 10000,   // dollars
+    annualFee: opts.annualFee ?? 95,  // dollars
     annualFeeDate: opts.annualFeeDate ?? "",
     promoPeriodMonths: 0,
     signUpBonus:
@@ -53,7 +53,7 @@ function makeHowlCard(opts: {
         ? {
             type: "points",
             amount: 20000,
-            spendRequirement: opts.spendRequirement ?? 50000,
+            spendRequirement: opts.spendRequirement ?? 500,  // dollars
             deadline: opts.bonusDeadline,
             met: opts.bonusMet ?? false,
           }
@@ -184,11 +184,11 @@ describe("getHowlActionText", () => {
     const card = makeHowlCard({
       status: "promo_expiring",
       bonusDeadline: NEAR_ISO_45D,
-      spendRequirement: 100000,
-      amountSpent: 30000,
+      spendRequirement: 1000,  // dollars
+      amountSpent: 300,        // dollars
     });
     const text = getHowlActionText(card, 45);
-    // Should mention $700 remaining (100000 - 30000 = 70000 cents = $700)
+    // Should mention $700 remaining (1000 - 300 = 700 dollars)
     expect(text).toMatch(/\$700/);
   });
 
@@ -196,8 +196,8 @@ describe("getHowlActionText", () => {
     const card = makeHowlCard({
       status: "promo_expiring",
       bonusDeadline: NEAR_ISO_45D,
-      spendRequirement: 50000,
-      amountSpent: 50000,
+      spendRequirement: 500,   // dollars
+      amountSpent: 500,        // dollars
     });
     const text = getHowlActionText(card, 45);
     expect(text).toMatch(/met|awarded/i);
@@ -208,7 +208,7 @@ describe("getHowlActionText", () => {
 
 describe("getHowlSpendPercent", () => {
   it("returns 0 when no bonus requirement", () => {
-    const card = makeHowlCard({ annualFee: 9500, annualFeeDate: NEAR_ISO_10D });
+    const card = makeHowlCard({ annualFee: 95, annualFeeDate: NEAR_ISO_10D });
     expect(getHowlSpendPercent(card)).toBe(0);
   });
 
