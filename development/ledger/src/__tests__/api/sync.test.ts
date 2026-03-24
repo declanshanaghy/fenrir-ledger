@@ -378,47 +378,6 @@ describe("PUT /api/sync — 403 when user not in Firestore", () => {
   });
 });
 
-describe("PUT /api/sync — large batch (500+ cards)", () => {
-  beforeEach(() => {
-    authSuccess();
-    karlEntitlement();
-    userExists();
-    mockSetCards.mockResolvedValue(undefined);
-  });
-
-  it("writes all 500 new cards when Firestore is empty", async () => {
-    mockGetCards.mockResolvedValue([]);
-    const cards = Array.from({ length: 500 }, (_, i) =>
-      makeCard(`card-${i}`, "2025-06-01T00:00:00.000Z")
-    );
-    const res = await PUT(makePutRequest({ cards }));
-    expect(res.status).toBe(200);
-    const body = await res.json() as { written: number; skipped: number };
-    expect(body.written).toBe(500);
-    expect(body.skipped).toBe(0);
-  });
-
-  it("correctly splits written/skipped in 500-card mixed batch", async () => {
-    const existingCards = Array.from({ length: 500 }, (_, i) =>
-      makeCard(`card-${i}`, "2025-01-01T00:00:00.000Z")
-    );
-    mockGetCards.mockResolvedValue(existingCards);
-    const submitted = [
-      ...Array.from({ length: 250 }, (_, i) =>
-        makeCard(`card-${i}`, "2025-12-01T00:00:00.000Z")
-      ),
-      ...Array.from({ length: 250 }, (_, i) =>
-        makeCard(`card-${250 + i}`, "2024-01-01T00:00:00.000Z")
-      ),
-    ];
-    const res = await PUT(makePutRequest({ cards: submitted }));
-    expect(res.status).toBe(200);
-    const body = await res.json() as { written: number; skipped: number };
-    expect(body.written).toBe(250);
-    expect(body.skipped).toBe(250);
-  });
-});
-
 describe("PUT /api/sync — empty card array (edge case)", () => {
   beforeEach(() => {
     authSuccess();

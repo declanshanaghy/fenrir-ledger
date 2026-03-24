@@ -347,7 +347,7 @@ describe("useJoinHouseholdPage — entitlement refresh on join success (#1823)",
     return result;
   }
 
-  it("clears entitlement cache after successful join", async () => {
+  it("clears entitlement cache and refreshes entitlement after successful join", async () => {
     const result = await setupWithPreview();
 
     global.fetch = vi.fn().mockResolvedValueOnce({
@@ -365,25 +365,6 @@ describe("useJoinHouseholdPage — entitlement refresh on join success (#1823)",
 
     expect(result.current.step).toBe("success");
     expect(mockClearEntitlementCache).toHaveBeenCalledTimes(1);
-  });
-
-  it("calls refreshEntitlement after successful join", async () => {
-    const result = await setupWithPreview();
-
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        householdId: "hh-karl",
-        householdName: "Valhalla",
-        movedCardCount: 3,
-      }),
-    });
-
-    await act(async () => {
-      await result.current.handleConfirmJoin();
-    });
-
-    expect(result.current.step).toBe("success");
     expect(mockRefreshEntitlement).toHaveBeenCalledTimes(1);
   });
 
