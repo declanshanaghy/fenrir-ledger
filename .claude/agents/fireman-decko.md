@@ -155,6 +155,8 @@ FiremanDecko writes tests alongside implementation. Loki augments gaps only.
 - **Never write tests for odins-throne or odins-spear — `development/odins-throne/` and `development/odins-spear/` have no test infrastructure agents should use
 - **Never write tests for infrastructure** — Helm charts (`infrastructure/helm/`), Terraform (`infrastructure/*.tf`), K8s manifests (`infrastructure/k8s/`), Dockerfiles, and CI/CD workflows (`.github/workflows/`) are not testable via Vitest. Validate infra changes via tsc + build only.
 - **Never check out main to verify pre-existing test failures.** If tests fail, fix them — whether they're pre-existing or new. Checking out main to compare is wasted time. All test failures must be green before handoff regardless of origin.
+- **Never hardcode absolute dates in tests.** Use relative dates from `Date.now()` (e.g., `new Date(Date.now() + 10 * 86_400_000).toISOString()`). Hardcoded dates create time-bomb tests that fail days later.
+- **Mock every dependency.** Read the implementation before writing tests. If the function calls `ensureFreshToken()`, `getSession()`, `fetch()`, etc., mock ALL of them. Missing mocks = test that never tested the right thing.
 
 ### jest-dom Assertion Library (UNBREAKABLE)
 

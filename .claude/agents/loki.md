@@ -512,4 +512,23 @@ Pre-populate via `seedCards()` in `beforeEach`. Multi-step flows are the #1 flak
 
 **Group by feature:** `test.describe("Add Card — Validation", ...)` not `test.describe("CardForm renders", ...)`
 
-**Keep lean:** Max 10 tests per spec file. Use shared seed data helpers. Never use date-dependent assertions.
+**Keep lean:** Max 10 tests per spec file. Use shared seed data helpers.
+
+### No Hardcoded Dates or Stale Mocks (UNBREAKABLE)
+
+**Dates:** Never hardcode absolute dates in tests (e.g., `"2026-04-02T00:00:00.000Z"`).
+These create time-bomb tests that pass when written but fail days/weeks later.
+Always use relative dates computed from `Date.now()`:
+```typescript
+// WRONG — will fail after April 2, 2026
+const deadline = "2026-04-02T00:00:00.000Z";
+// RIGHT — always 10 days from now
+const deadline = new Date(Date.now() + 10 * 86_400_000).toISOString();
+```
+
+**Mocks:** Every dependency the code-under-test calls must be mocked. Read the
+implementation before writing the test — if the function calls `ensureFreshToken()`,
+`getSession()`, `fetch()`, etc., mock ALL of them. A test that fails because a mock
+is missing is a test that was never actually testing the right thing. When an
+implementation adds a new dependency (e.g., a token refresh step before fetch), all
+existing tests for that function must have their mock setup updated.
