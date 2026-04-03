@@ -278,7 +278,14 @@ export function watchAgentJobs(
           currentJobReq = null;
           if (!stopped) {
             if (err) onError(err);
-            setTimeout(() => void doJobWatch(), 5000);
+            // Re-seed on reconnect to catch jobs missed during disconnect gap.
+            // seedFromList() has internal error handling — failure is non-fatal.
+            setTimeout(async () => {
+              if (!stopped) {
+                await seedFromList();
+                void doJobWatch();
+              }
+            }, 5000);
           }
         }
       );
@@ -352,7 +359,14 @@ export function watchAgentJobs(
           currentPodReq = null;
           if (!stopped) {
             if (err) onError(err);
-            setTimeout(() => void doPodWatch(), 5000);
+            // Re-seed on reconnect to catch jobs missed during disconnect gap.
+            // seedFromList() has internal error handling — failure is non-fatal.
+            setTimeout(async () => {
+              if (!stopped) {
+                await seedFromList();
+                void doPodWatch();
+              }
+            }, 5000);
           }
         }
       );
@@ -371,8 +385,8 @@ export function watchAgentJobs(
 
   const doWatch = async (): Promise<void> => {
     if (stopped) return;
-    // Seed on first connect with accurate job + pod status
-    if (jobMap.size === 0) await seedFromList();
+    // Always seed on startup with accurate job + pod status
+    await seedFromList();
     void doJobWatch();
     void doPodWatch();
   };
