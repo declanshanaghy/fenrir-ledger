@@ -32,7 +32,7 @@ const C = {
 
 const REPO = "declanshanaghy/fenrir-ledger";
 const REPO_ROOT = execSync("git rev-parse --show-toplevel", { encoding: "utf8" }).trim();
-const ENV_FILE = join(REPO_ROOT, "development", "frontend", ".env.local");
+const ENV_FILE = join(REPO_ROOT, ".secrets");  // All secrets consolidated here (was development/frontend/.env.local)
 const SECRETS_FILE = join(REPO_ROOT, ".secrets");
 const K8S_AGENTS_NS = "fenrir-agents";
 const K8S_APP_NS = "fenrir-app";
