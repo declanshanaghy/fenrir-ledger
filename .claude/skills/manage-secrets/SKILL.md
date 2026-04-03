@@ -12,7 +12,7 @@ description: "Audit, sync, verify, and push secrets for Fenrir Ledger. Use this 
 Trigger on ANY of these:
 - "sync secrets", "push secret", "fix secret", "verify secrets"
 - "API key", "token", "credential", "401", "authentication error", "invalid key"
-- Any mention of `.env.local`, `.secrets`, `fenrir-app-secrets`, `agent-secrets`
+- Any mention of `.secrets`, `.secrets`, `fenrir-app-secrets`, `agent-secrets`
 - Any Anthropic/Stripe/Google key issue
 - Deploy failures caused by bad secret values
 - "manage secrets", "/manage-secrets"
@@ -48,12 +48,15 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 node "$REPO_ROOT/scripts/sync-secrets.mjs" <flag>
 ```
 
-### Secret Sources
+### Secret Source
 
-| File | Contains | Example keys |
-|------|----------|-------------|
-| `.env.local` | App secrets | `FENRIR_ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `GOOGLE_CLIENT_SECRET` |
-| `.secrets` | Agent/infra secrets | `CLAUDE_CODE_OAUTH_TOKEN`, `GITHUB_TOKEN_PAT_FINE_GRAINED` |
+All secrets live in a single file at the repo root:
+
+| File | Contains |
+|------|----------|
+| `.secrets` | ALL secrets — app, agent, infra, OAuth, Stripe, everything |
+
+There is no `.secrets` — it was consolidated into `.secrets`. The sync script reads everything from `.secrets`.
 
 ### Destinations
 
@@ -68,7 +71,7 @@ node "$REPO_ROOT/scripts/sync-secrets.mjs" <flag>
 
 `n8n-secrets` in `fenrir-marketing` namespace — referenced by n8n Helm values via `secretRefs.existingSecret`.
 
-| Key in K8s Secret | Source var in `.env.local` | Purpose |
+| Key in K8s Secret | Source var in `.secrets` | Purpose |
 |-------------------|---------------------------|---------|
 | `ANTHROPIC_API_KEY` | `FENRIR_ANTHROPIC_API_KEY` | Claude API for n8n AI nodes |
 | `GMAIL_CLIENT_ID` | `GMAIL_CLIENT_ID` | Gmail OAuth2 client ID for freyafenrir@gmail.com |
@@ -77,7 +80,7 @@ node "$REPO_ROOT/scripts/sync-secrets.mjs" <flag>
 
 **To provision n8n-secrets after deploy:**
 ```
-/manage-secrets sync   # pushes all k8s-n8n entries from .env.local → analytics namespace
+/manage-secrets sync   # pushes all k8s-n8n entries from .secrets → analytics namespace
 ```
 
 ### Common Scenarios
@@ -89,7 +92,7 @@ node "$REPO_ROOT/scripts/sync-secrets.mjs" <flag>
 ```
 
 **After rotating a key:**
-1. Update the value in `.env.local` or `.secrets`
+1. Update the value in `.secrets` or `.secrets`
 2. `/manage-secrets push <KEY_NAME>`
 
 **After a deploy overwrites a manual fix:**
@@ -106,7 +109,7 @@ node "$REPO_ROOT/scripts/sync-secrets.mjs" <flag>
 
 - **NEVER** use `kubectl create/patch secret` directly — always go through this script
 - **NEVER** use `gh secret set` directly — always go through this script
-- **NEVER** ask the user to paste secrets — read from `.env.local` or `.secrets`
+- **NEVER** ask the user to paste secrets — read from `.secrets` or `.secrets`
 - The script strips quotes and whitespace automatically
 - `--push` auto-restarts the deployment — no need to restart separately
 - After ANY secret change, always `--verify` to confirm it took effect
