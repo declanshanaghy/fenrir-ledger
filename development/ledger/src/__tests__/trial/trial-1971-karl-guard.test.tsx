@@ -146,6 +146,7 @@ vi.mock("@/lib/auth/session", () => ({
 vi.mock("@/lib/storage", () => ({
   clearHouseholdLocalStorage: vi.fn(),
   setStoredHouseholdId: vi.fn(),
+  getCards: vi.fn().mockReturnValue([]),
 }));
 
 const mockClearEntitlementCache2 = vi.hoisted(() => vi.fn());

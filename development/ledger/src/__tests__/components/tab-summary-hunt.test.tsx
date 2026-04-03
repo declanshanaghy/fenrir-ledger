@@ -113,8 +113,8 @@ describe("TabSummary hunt — aggregate spend logic", () => {
   });
 
   it("shows approaching deadline count for cards within 30 days", async () => {
-    // Deadline 10 days from now (2026-03-23 + 10 = 2026-04-02)
-    const urgentDeadline = "2026-04-02T00:00:00.000Z";
+    // Deadline 10 days from now (dynamic — avoids staleness as time passes)
+    const urgentDeadline = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
     const farDeadline = "2030-12-31T00:00:00.000Z";
 
     const cards: Card[] = [
@@ -136,7 +136,7 @@ describe("TabSummary hunt — aggregate spend logic", () => {
   });
 
   it("uses singular grammar for a single approaching card", async () => {
-    const urgentDeadline = "2026-04-02T00:00:00.000Z";
+    const urgentDeadline = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
     const cards: Card[] = [
       makeHuntCard({ id: "c1", spendRequirement: 100000, deadline: urgentDeadline }),
     ];
