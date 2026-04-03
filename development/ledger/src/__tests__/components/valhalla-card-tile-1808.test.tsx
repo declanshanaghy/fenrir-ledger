@@ -68,10 +68,11 @@ describe("getTimeHeldMonths", () => {
   });
 
   it("returns 0 for < 1 month held", () => {
+    // Use noon UTC to avoid timezone day-shift (UTC midnight → previous day in US timezones)
     expect(
       getTimeHeldMonths(
-        "2025-01-01T00:00:00.000Z",
-        "2025-01-15T00:00:00.000Z"
+        "2025-01-15T12:00:00.000Z",
+        "2025-01-25T12:00:00.000Z"
       )
     ).toBe(0);
   });

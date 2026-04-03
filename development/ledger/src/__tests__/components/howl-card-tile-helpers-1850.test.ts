@@ -52,8 +52,8 @@ describe("getHowlDaysUntilSoonest", () => {
   });
 
   it("returns fee days when only annualFeeDate is present", () => {
-    // 2026-05-01 is 39 days from 2026-03-23
-    const card = makeCard({ annualFeeDate: "2026-05-01T00:00:00.000Z", annualFee: 9500, signUpBonus: null });
+    // 2026-05-01 is 39 days from 2026-03-23 (use noon UTC to avoid timezone day-shift)
+    const card = makeCard({ annualFeeDate: "2026-05-01T12:00:00.000Z", annualFee: 9500, signUpBonus: null });
     expect(getHowlDaysUntilSoonest(card)).toBe(39);
   });
 
@@ -64,14 +64,15 @@ describe("getHowlDaysUntilSoonest", () => {
 
   it("returns bonus days when bonus is closer than fee", () => {
     // fee due 2026-05-01 (39d), bonus deadline 2026-04-01 (9d) — 9d wins
+    // Use noon UTC to avoid timezone day-shift
     const card = makeCard({
-      annualFeeDate: "2026-05-01T00:00:00.000Z",
+      annualFeeDate: "2026-05-01T12:00:00.000Z",
       annualFee: 9500,
       signUpBonus: {
         type: "points",
         amount: 60000,
         spendRequirement: 400000,
-        deadline: "2026-04-01T00:00:00.000Z",
+        deadline: "2026-04-01T12:00:00.000Z",
         met: false,
       },
     });
@@ -80,14 +81,15 @@ describe("getHowlDaysUntilSoonest", () => {
 
   it("ignores bonus deadline when bonus is already met", () => {
     // met bonus should not compete — only fee days returned
+    // Use noon UTC to avoid timezone day-shift
     const card = makeCard({
-      annualFeeDate: "2026-05-01T00:00:00.000Z",
+      annualFeeDate: "2026-05-01T12:00:00.000Z",
       annualFee: 9500,
       signUpBonus: {
         type: "points",
         amount: 60000,
         spendRequirement: 400000,
-        deadline: "2026-04-01T00:00:00.000Z",
+        deadline: "2026-04-01T12:00:00.000Z",
         met: true,
       },
     });
