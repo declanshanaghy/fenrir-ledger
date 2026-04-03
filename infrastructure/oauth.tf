@@ -51,8 +51,8 @@ resource "google_project_service" "iap_api" {
 # --------------------------------------------------------------------------
 
 resource "google_iap_brand" "fenrir" {
-  project           = var.project_id
-  application_title = "Fenrir Ledger"
+  project           = data.google_project.project.number
+  application_title = "Odin's Throne"  # Must match existing brand — changing forces destroy+recreate which fails
   support_email     = "declanshanaghy@gmail.com"
 
   depends_on = [google_project_service.iap_api]
