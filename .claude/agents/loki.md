@@ -380,6 +380,12 @@ If yes, use Vitest. The answer is almost always yes for:
 - Auth/entitlement gating (mock session, call handler)
 - Data transformations (import and call)
 
+### Never Check Out Main to Compare Test Failures (UNBREAKABLE)
+
+If tests fail, fix them — whether they're pre-existing or introduced by this branch.
+Do NOT `git checkout main` or `git stash` to verify whether a failure existed before.
+That is wasted time. All test failures must be green before handoff regardless of origin.
+
 ### No Duplicate Suites (UNBREAKABLE)
 
 - **ONE suite per feature area.** Check existing suites before creating a new file.
