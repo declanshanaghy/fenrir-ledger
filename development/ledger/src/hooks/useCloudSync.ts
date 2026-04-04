@@ -215,6 +215,69 @@ async function fetchPullResponse(householdId: string): Promise<PullResponseData 
   }
 }
 
+/**
+ * Pulls from cloud, LWW-merges with given local cards, persists the result.
+ * Returns the merged card array and the pulled syncVersion.
+ * If the pull fails, returns the original cards and null version (degrade gracefully).
+ */
+async function pullMergeApply(
+  householdId: string,
+  currentCards: Card[],
+): Promise<{ merged: Card[]; version: number | null }> {
+  const pullData = await fetchPullResponse(householdId);
+  if (!pullData) return { merged: currentCards, version: null };
+  const merged = lwwMerge(currentCards, pullData.cards);
+  setAllCards(householdId, merged);
+  return { merged, version: pullData.syncVersion };
+}
+
+/**
+ * Applies a pulled syncVersion to the ref and state setter if non-null.
+ * Returns the new version, or the provided fallback if version is null.
+ * This avoids null-coalescing at call sites, keeping callers branch-free.
+ */
+function applyPulledVersion(
+  version: number | null,
+  fallbackVersion: number | null,
+  syncVersionRef: { current: number | null },
+  setSyncVersion: (v: number) => void,
+): number | null {
+  if (version !== null) {
+    syncVersionRef.current = version;
+    setSyncVersion(version);
+    return version;
+  }
+  return fallbackVersion;
+}
+
+/**
+ * Handles the 409 "stale client" response: pulls latest cloud cards, merges,
+ * then retries the push with the updated payload.
+ * Extracted to keep performSync's cyclomatic complexity ≤ 19.
+ */
+async function retryPushAfter409(
+  householdId: string,
+  clientSyncVersion: number | null,
+  syncVersionRef: { current: number | null },
+  setSyncVersion: (v: number) => void,
+): Promise<Response | null> {
+  const currentCards = getRawAllCards(householdId);
+  const { merged, version } = await pullMergeApply(householdId, currentCards);
+  const resolvedVersion = applyPulledVersion(version, clientSyncVersion, syncVersionRef, setSyncVersion);
+
+  const body: { householdId: string; cards: Card[]; clientSyncVersion?: number } = {
+    householdId,
+    cards: merged,
+  };
+  if (resolvedVersion !== null) body.clientSyncVersion = resolvedVersion;
+
+  return authFetch("/api/sync/push", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
@@ -323,16 +386,10 @@ export function useCloudSync(): CloudSyncState {
 
         if (needsDownload || lastSyncedVersion < serverVersion) {
           // Server is ahead — pull first so our push has full context.
-          const pullData = await fetchPullResponse(householdId);
-          if (pullData) {
-            const merged = lwwMerge(localCards, pullData.cards);
-            // setAllCards dispatches "fenrir:sync" (not "fenrir:cards-changed") — no push loop.
-            setAllCards(householdId, merged);
-            localCards = merged;
-            clientSyncVersion = pullData.syncVersion;
-            syncVersionRef.current = pullData.syncVersion;
-            setSyncVersion(pullData.syncVersion);
-          }
+          // setAllCards dispatches "fenrir:sync" (not "fenrir:cards-changed") — no push loop.
+          const { merged, version } = await pullMergeApply(householdId, localCards);
+          localCards = merged;
+          clientSyncVersion = applyPulledVersion(version, clientSyncVersion, syncVersionRef, setSyncVersion);
         } else {
           // No pull needed — capture server's version as our clientSyncVersion.
           clientSyncVersion = serverVersion;
@@ -357,28 +414,9 @@ export function useCloudSync(): CloudSyncState {
       });
 
       // ── Step 3: Handle 409 — pull → retry push ───────────────────────────────
+      // retryPushAfter409 pulls, LWW-merges, updates syncVersionRef, and retries.
       if (response?.status === 409) {
-        const pullData = await fetchPullResponse(householdId);
-        if (pullData) {
-          const currentCards = getRawAllCards(householdId);
-          const merged = lwwMerge(currentCards, pullData.cards);
-          setAllCards(householdId, merged);
-          localCards = merged;
-          clientSyncVersion = pullData.syncVersion;
-          syncVersionRef.current = pullData.syncVersion;
-          setSyncVersion(pullData.syncVersion);
-        }
-
-        // Retry push with updated cards + version (even if pull failed, retry with latest local)
-        response = await authFetch("/api/sync/push", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            householdId,
-            cards: localCards,
-            ...(clientSyncVersion !== null ? { clientSyncVersion } : {}),
-          }),
-        });
+        response = await retryPushAfter409(householdId, clientSyncVersion, syncVersionRef, setSyncVersion);
       }
 
       if (!response || !response.ok) {

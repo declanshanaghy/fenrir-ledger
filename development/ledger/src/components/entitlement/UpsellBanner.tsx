@@ -76,6 +76,64 @@ function dismissBanner(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+interface BannerCtaButtonProps {
+  isAnonymous: boolean;
+  isSubscribing: boolean;
+  onSignIn: () => void;
+  onUpgrade: () => Promise<void>;
+  className?: string;
+}
+
+/** CTA button used in both desktop and mobile banner layouts. */
+function BannerCtaButton({ isAnonymous, isSubscribing, onSignIn, onUpgrade, className = "" }: BannerCtaButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={isAnonymous ? onSignIn : onUpgrade}
+      disabled={!isAnonymous && isSubscribing}
+      aria-busy={(!isAnonymous && isSubscribing) || undefined}
+      aria-disabled={(!isAnonymous && isSubscribing) || undefined}
+      className={[
+        "px-3.5 py-1.5 text-sm font-heading font-bold tracking-wide",
+        "border border-gold/50 text-gold",
+        "hover:bg-gold/10 hover:brightness-110",
+        "active:scale-[0.97] active:brightness-90",
+        "transition-[transform,filter,background-color,color] duration-150 ease-out",
+        "rounded-sm whitespace-nowrap min-h-[36px]",
+        "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
+        className,
+      ].join(" ")}
+      aria-label={isAnonymous ? "Sign in with Google to start your free 30-day trial" : undefined}
+    >
+      {!isAnonymous && isSubscribing ? (
+        <span className="inline-flex items-center gap-2">
+          <span className="btn-spinner" aria-hidden="true" />
+          Redirecting...
+        </span>
+      ) : isAnonymous ? (
+        "Sign in — free trial"
+      ) : (
+        "Upgrade to Karl"
+      )}
+    </button>
+  );
+}
+
+/** Value-prop text shown in both desktop and mobile layouts. */
+function BannerValueProp({ isAnonymous }: { isAnonymous: boolean }) {
+  return (
+    <span className="text-sm text-muted-foreground leading-snug font-body">
+      {isAnonymous
+        ? "Sign in to start your free 30-day trial \u2014 cloud sync, priority alerts, and advanced analytics."
+        : "Upgrade to Karl for cloud sync, priority alerts, and advanced analytics -- $3.99/month."}
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -139,7 +197,6 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
     >
       {/* Desktop layout: single row with inline dismiss */}
       <div className="hidden md:flex items-center gap-3 px-5 py-4">
-        {/* Content */}
         <div className="flex-1 flex flex-col gap-0.5 min-w-0">
           {/* Voice 2: atmospheric */}
           <span className="text-[13px] italic text-muted-foreground font-body">
@@ -148,44 +205,17 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
               : "The wolf hunts greater prey for those who forge the bond."}
           </span>
           {/* Voice 1: functional value prop */}
-          <span className="text-sm text-muted-foreground leading-snug font-body">
-            {isAnonymous
-              ? "Sign in to start your free 30-day trial \u2014 cloud sync, priority alerts, and advanced analytics."
-              : "Upgrade to Karl for cloud sync, priority alerts, and advanced analytics -- $3.99/month."}
-          </span>
+          <BannerValueProp isAnonymous={isAnonymous} />
         </div>
 
         {/* CTA + Dismiss inline */}
         <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={isAnonymous ? handleSignIn : handleStripeUpgrade}
-            disabled={!isAnonymous && isSubscribing}
-            aria-busy={(!isAnonymous && isSubscribing) || undefined}
-            aria-disabled={(!isAnonymous && isSubscribing) || undefined}
-            className={[
-              "px-3.5 py-1.5 text-sm font-heading font-bold tracking-wide",
-              "border border-gold/50 text-gold",
-              "hover:bg-gold/10 hover:brightness-110",
-              "active:scale-[0.97] active:brightness-90",
-              "transition-[transform,filter,background-color,color] duration-150 ease-out",
-              "rounded-sm whitespace-nowrap min-h-[36px]",
-              "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
-            ].join(" ")}
-            aria-label={isAnonymous ? "Sign in with Google to start your free 30-day trial" : undefined}
-          >
-            {!isAnonymous && isSubscribing ? (
-              <span className="inline-flex items-center gap-2">
-                <span className="btn-spinner" aria-hidden="true" />
-                Redirecting...
-              </span>
-            ) : isAnonymous ? (
-              "Sign in — free trial"
-            ) : (
-              "Upgrade to Karl"
-            )}
-          </button>
-
+          <BannerCtaButton
+            isAnonymous={isAnonymous}
+            isSubscribing={isSubscribing}
+            onSignIn={handleSignIn}
+            onUpgrade={handleStripeUpgrade}
+          />
           <button
             type="button"
             onClick={handleDismiss}
@@ -201,41 +231,16 @@ export function UpsellBanner({ feature = PROMOTED_FEATURE }: UpsellBannerProps) 
       {/* Mobile layout: stacked with dismiss at top-right */}
       <div className="md:hidden relative px-4 py-4 pr-14 flex flex-col gap-3">
         {/* Voice 1: functional value prop (atmospheric hidden on mobile) */}
-        <span className="text-sm text-muted-foreground leading-snug font-body">
-          {isAnonymous
-            ? "Sign in to start your free 30-day trial \u2014 cloud sync, priority alerts, and advanced analytics."
-            : "Upgrade to Karl for cloud sync, priority alerts, and advanced analytics -- $3.99/month."}
-        </span>
+        <BannerValueProp isAnonymous={isAnonymous} />
 
         {/* CTA — left-aligned, well away from the dismiss X */}
-        <button
-          type="button"
-          onClick={isAnonymous ? handleSignIn : handleStripeUpgrade}
-          disabled={!isAnonymous && isSubscribing}
-          aria-busy={(!isAnonymous && isSubscribing) || undefined}
-          aria-disabled={(!isAnonymous && isSubscribing) || undefined}
-          className={[
-            "self-start px-3.5 py-1.5 text-sm font-heading font-bold tracking-wide",
-            "border border-gold/50 text-gold",
-            "hover:bg-gold/10 hover:brightness-110",
-            "active:scale-[0.97] active:brightness-90",
-            "transition-[transform,filter,background-color,color] duration-150 ease-out",
-            "rounded-sm whitespace-nowrap min-h-[36px]",
-            "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
-          ].join(" ")}
-          aria-label={isAnonymous ? "Sign in with Google to start your free 30-day trial" : undefined}
-        >
-          {!isAnonymous && isSubscribing ? (
-            <span className="inline-flex items-center gap-2">
-              <span className="btn-spinner" aria-hidden="true" />
-              Redirecting...
-            </span>
-          ) : isAnonymous ? (
-            "Sign in — free trial"
-          ) : (
-            "Upgrade to Karl"
-          )}
-        </button>
+        <BannerCtaButton
+          isAnonymous={isAnonymous}
+          isSubscribing={isSubscribing}
+          onSignIn={handleSignIn}
+          onUpgrade={handleStripeUpgrade}
+          className="self-start"
+        />
 
         {/* Dismiss — absolute top-right, no overlap with CTA */}
         <button
