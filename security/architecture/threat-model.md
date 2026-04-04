@@ -1,7 +1,7 @@
 # Threat Model — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-20 (updated entitlement store references from Upstash Redis to Firestore — issue #1521)
+**Last reviewed**: 2026-04-04 (removed stale KV/SEV-008 row — Upstash Redis removed; updated deduplication recommendation to Firestore; Odin's Throne CRITICAL resolved PR #1896)
 **Methodology**: STRIDE-lite with OWASP Top 10 mapping
 
 ---
@@ -134,10 +134,9 @@
 | Attack | STRIDE | Mitigation | Residual Risk |
 |--------|--------|-----------|---------------|
 | Webhook forgery | Spoofing | SHA-256 HMAC via `stripe.webhooks.constructEvent()` | Low |
-| Webhook replay | Tampering | Not implemented (open — SEV-005 from 2026-03-04 report) | Low (KV writes idempotent currently) |
+| Webhook replay | Tampering | Not implemented (open — SEV-005 from 2026-03-04 report) | Low (Firestore writes currently idempotent) |
 | Open redirect post-checkout | Tampering | `APP_BASE_URL` only (fixed SEV-002) | Low |
 | Unlimited checkout session creation | DoS | In-memory rate limit (10/min) | Medium — not distributed (SEV-004) |
-| Entitlement tampering via KV error | Tampering | Partial-delete race condition (SEV-008) | Low (non-blocking) |
 | STRIPE_SECRET_KEY exposure | Information Disclosure | Server env only, never logged or serialized | Low |
 
 ---
@@ -208,4 +207,4 @@
 | Anonymous data merge without Zod | LOW | Malformed localStorage data merged without validation | Add `CardsArraySchema.safeParse()` |
 | No refresh token rotation | LOW | Refresh token never rotated; stolen token remains valid | Implement token refresh + rotation via server proxy |
 | LLM singleton caches stale key | LOW | API key rotation may not take effect until cold start | Document; add version check to invalidate singleton |
-| Stripe webhook no deduplication | LOW | At-least-once delivery; currently idempotent but fragile | Event ID deduplication in KV (SEV-005) |
+| Stripe webhook no deduplication | LOW | At-least-once delivery; currently idempotent but fragile | Event ID deduplication in Firestore (SEV-005) |
