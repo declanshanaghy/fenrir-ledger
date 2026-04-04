@@ -1,11 +1,14 @@
-# ADR: Feature Flag System (Phase 1 -- Environment Variables)
+# ADR-011: Feature Flag System (Phase 1 — Environment Variables)
 
-## Status: Superseded
+**Status:** Superseded
+**Superseded by:** ADR-010 addendum (2026-03-07) — Stripe is sole platform; all feature flags removed
 
 > **Superseded note:** Stripe is now the sole subscription platform. The
 > `SUBSCRIPTION_PLATFORM` feature flag, `isPatreon()`, and `isStripe()` helpers
 > have been removed. All Patreon code paths were deleted. The feature flag
-> registry file (`src/lib/feature-flags.ts`) has been removed entirely.
+> registry file (`src/lib/feature-flags.ts`) has been removed entirely. The
+> Phase 2 runtime-toggling path was never pursued — the feature flag system was
+> deleted rather than extended.
 
 ## Context
 

@@ -9,7 +9,7 @@
 
 ## Context
 
-Vercel-hosted API routes are unprotected. The client already has a Google `id_token` (signed JWT from PKCE flow). We need server-side verification before processing requests that consume LLM credits.
+API routes running on GKE (previously Vercel — see ADR-016) are unprotected. The client already has a Google `id_token` (signed JWT from PKCE flow). We need server-side verification before processing requests that consume LLM credits.
 
 Constraints: anonymous-first model preserved (only API routes gated, not pages). `/api/auth/token` must remain unprotected (token exchange endpoint).
 

@@ -1,9 +1,17 @@
 # ADR-007 — Remote Builder Platforms for Parallel Agent Orchestration
 
-**Status:** Accepted
+**Status:** Superseded by [infrastructure/adrs/ADR-004-gke-jobs-agent-execution.md](../../infrastructure/adrs/ADR-004-gke-jobs-agent-execution.md)
 **Date:** 2026-03-06
 **Authors:** FiremanDecko (Principal Engineer)
-**Ref:** GitHub Issue #175, #192 (implementation)
+**Ref:** GitHub Issue #175, #192 (evaluation); Issue #857 (superseding implementation)
+
+> **Note:** This ADR evaluated external managed platforms and recommended Depot. That
+> recommendation was superseded on 2026-03-14 when it became clear Fenrir Ledger already
+> runs on GKE Autopilot. Agent execution was moved to ephemeral Kubernetes Jobs on the
+> existing cluster — keeping secrets inside the GCP project boundary and eliminating the
+> external vendor dependency and per-minute cost. See
+> [infrastructure/adrs/ADR-004-gke-jobs-agent-execution.md](../../infrastructure/adrs/ADR-004-gke-jobs-agent-execution.md)
+> for the current agent execution architecture.
 
 ---
 
