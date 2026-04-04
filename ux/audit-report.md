@@ -39,7 +39,7 @@ All files in this list match the implemented UI or document planned features tha
 | `ux/light-theme-stone.md` | current | Stone/marble theme implemented in globals.css |
 | `ux/light-theme-lightning.md` | current | Lightning Norse light theme implemented in globals.css |
 | `ux/karl-upsell-interaction-spec.md` | current | KarlUpsellDialog.tsx implemented |
-| `ux/multi-idp-interaction-spec.md` | current (planned) | Clerk multi-IDP planned — spec valid for when Clerk is adopted; current prod uses Google PKCE |
+| `ux/multi-idp-interaction-spec.md` | current (planned) | Multi-IDP planned — spec describes future multi-provider flow; current prod uses Google PKCE |
 | `ux/ux-assets/mermaid-style-guide.md` | current | Active diagram conventions |
 | `ux/interactions/import-workflow-v2.md` | current | ImportWizard.tsx implemented |
 
@@ -89,7 +89,7 @@ All files in this list match the implemented UI or document planned features tha
 | File | Status | Notes |
 |------|--------|-------|
 | `wireframes/auth/sign-in.html` | current | sign-in/page.tsx implemented |
-| `wireframes/auth/multi-idp-sign-in.html` | current (planned) | Planned Clerk integration; production uses Google PKCE |
+| `wireframes/auth/multi-idp-sign-in.html` | current (planned) | Planned multi-IDP integration; production uses Google PKCE |
 | `wireframes/auth/migration-prompt.html` | current | Migration prompt implemented |
 | `wireframes/auth/upsell-banner.html` | current | UpsellBanner.tsx implemented |
 
@@ -213,7 +213,7 @@ The following implemented components do not have dedicated wireframes, which is 
 
 ## Decisions Made
 
-1. **`multi-idp-sign-in.html` kept.** Although Clerk is not yet implemented, the spec describes the planned target design. The wireframe index entry was updated to label it as "Planned (Clerk — not yet implemented)." Luna should update or supersede this when Clerk adoption is scheduled.
+1. **`multi-idp-sign-in.html` kept.** The spec describes the planned multi-IDP target design. The wireframe index entry is labelled as "Planned (not yet implemented)." Luna should update or supersede this when multi-IDP implementation is scheduled.
 
 2. **`light-theme-stone.md` and `light-theme-lightning.md` both kept.** `light-theme-stone.md` documents the initial Stone/Marble design (#146). `light-theme-lightning.md` documents the subsequent Lightning Norse overhaul (v2.0). Both are current: stone is the base, lightning is the overhaul. The `globals.css` `:root` block uses the lightning theme values.
 
@@ -229,8 +229,8 @@ These files describe planned features. They remain in `ux/` as forward-looking s
 
 | File | Planned Feature |
 |------|----------------|
-| `ux/wireframes/auth/multi-idp-sign-in.html` | Clerk multi-IDP sign-in dialog |
-| `ux/multi-idp-interaction-spec.md` | Clerk multi-IDP interaction spec |
+| `ux/wireframes/auth/multi-idp-sign-in.html` | Multi-IDP sign-in dialog (planned) |
+| `ux/multi-idp-interaction-spec.md` | Multi-IDP interaction spec (planned) |
 
 ---
 

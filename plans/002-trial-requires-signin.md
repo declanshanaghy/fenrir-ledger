@@ -9,7 +9,7 @@ The trial system uses a random UUID in localStorage as "device ID". Clearing loc
 ## New Firestore Schema
 
 ```
-/users/{userId}                          ← rename clerkUserId → userId everywhere
+/users/{userId}                          ← userId = Google sub claim throughout
 /households/{userId}                     ← householdId = creator's userId (not random UUID)
 /households/{userId}/cards/{cardId}      ← unchanged subcollection
 /households/{userId}/trial               ← NEW: trial record lives inside household
@@ -35,13 +35,13 @@ The trial system uses a random UUID in localStorage as "device ID". Clearing loc
 
 ## Changes by Area
 
-### 1. Rename `clerkUserId` → `userId` (global)
+### 1. Use `userId` throughout (Google sub — no legacy `clerkUserId` naming)
 
 Files affected:
-- `development/ledger/src/lib/firebase/firestore-types.ts` — `FirestoreUser.clerkUserId` → `userId`, `FIRESTORE_PATHS.user()` param name
+- `development/ledger/src/lib/firebase/firestore-types.ts` — `FirestoreUser.userId`, `FIRESTORE_PATHS.user()` param name
 - `development/ledger/src/lib/firebase/firestore.ts` — all references in `ensureSoloHousehold()`, user doc creation, household `ownerId`/`memberIds`
-- `development/ledger/src/lib/auth/authz.ts` — clerkUserId references in authz resolution
-- All test files referencing `clerkUserId`
+- `development/ledger/src/lib/auth/authz.ts` — userId references in authz resolution
+- All test files referencing userId
 
 ### 2. HouseholdId = userId (not random UUID)
 

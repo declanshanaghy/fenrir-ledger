@@ -784,7 +784,7 @@ Sprint 2 delivered the Saga Ledger design system (dark Nordic War Room aesthetic
 - **Depends on**: Nothing
 - **Implementation Notes**:
   - Documents five sub-decisions: auth library (Auth.js v5), session strategy (JWT), householdId derivation (Google sub), localStorage key namespacing (per-household), GKE preview deployment approach
-  - Auth.js v5 chosen over Clerk (vendor lock-in), Lucia (needs DB), custom OAuth (security risk)
+  - Auth.js v5 chosen over hosted auth services (vendor lock-in), Lucia (needs DB), custom OAuth (security risk)
   - JWT strategy chosen over DB sessions (no additional infrastructure)
   - `sub` claim chosen as householdId for stability across email/name changes
   - Per-household keys (`fenrir_ledger:{householdId}:cards`) chosen over flat keys
