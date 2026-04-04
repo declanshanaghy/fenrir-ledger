@@ -40,6 +40,8 @@ export function buildCspDirectives(): string[] {
       "https://js.stripe.com",
       "https://analytics.fenrirledger.com",
       "https://www.googletagmanager.com",
+      // Scalar API Explorer CDN (Issue #2057 — /openapi-ui/)
+      "https://cdn.jsdelivr.net",
     ].join(" "),
 
     // Styles: self + unsafe-inline + Google Fonts + Google Accounts + Google APIs
