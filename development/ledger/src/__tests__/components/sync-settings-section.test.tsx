@@ -36,7 +36,7 @@ const mockTrialStatus = {
 };
 
 const mockCloudSync = {
-  status: "idle" as "idle" | "syncing" | "synced" | "offline" | "error",
+  status: "idle" as "idle" | "needs-upload" | "needs-download" | "syncing" | "synced" | "offline" | "error",
   lastSyncedAt: null as Date | null,
   cardCount: null as number | null,
   errorMessage: null as string | null,
@@ -81,6 +81,7 @@ function setKarl() {
 
 function setStatus(s: typeof mockCloudSync.status) {
   mockCloudSync.status = s;
+  mockCloudSync.syncNow.mockClear();
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
@@ -262,6 +263,8 @@ describe("getSyncStatusDotClass", () => {
     ["synced", "bg-emerald-500"],
     ["offline", "opacity-40"],
     ["error", "bg-destructive"],
+    ["needs-upload", "bg-amber-400"],
+    ["needs-download", "bg-cyan-500"],
   ] as const)("returns correct class for status=%s", (status, expected) => {
     expect(getSyncStatusDotClass(status)).toContain(expected);
   });
@@ -309,5 +312,84 @@ describe("SyncSettingsSection — Karl: error state", () => {
     const btn = screen.getByRole("button", { name: "Dismiss sync error" });
     act(() => fireEvent.click(btn));
     expect(mockCloudSync.dismissError).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("SyncSettingsSection — Karl: needs-upload state", () => {
+  beforeEach(() => {
+    setKarl();
+    setStatus("needs-upload");
+  });
+
+  it("renders 'Local changes waiting to sync' message", () => {
+    render(<SyncSettingsSection />);
+    expect(screen.getByText(/Local changes waiting to sync/)).toBeDefined();
+  });
+
+  it("renders enabled Sync Now button", () => {
+    render(<SyncSettingsSection />);
+    const btn = screen.getByRole("button", { name: "Sync cards to cloud now" });
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("auto-triggers syncNow on mount", () => {
+    act(() => {
+      render(<SyncSettingsSection />);
+    });
+    expect(mockCloudSync.syncNow).toHaveBeenCalledTimes(1);
+  });
+
+  it("dot has amber class (gold accent)", () => {
+    expect(getSyncStatusDotClass("needs-upload")).toContain("bg-amber-400");
+  });
+});
+
+describe("SyncSettingsSection — Karl: needs-download state", () => {
+  beforeEach(() => {
+    setKarl();
+    setStatus("needs-download");
+  });
+
+  it("renders 'New changes from household available' message", () => {
+    render(<SyncSettingsSection />);
+    expect(screen.getByText(/New changes from household available/)).toBeDefined();
+  });
+
+  it("renders enabled Sync Now button", () => {
+    render(<SyncSettingsSection />);
+    const btn = screen.getByRole("button", { name: "Sync cards to cloud now" });
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("auto-triggers syncNow on mount", () => {
+    act(() => {
+      render(<SyncSettingsSection />);
+    });
+    expect(mockCloudSync.syncNow).toHaveBeenCalledTimes(1);
+  });
+
+  it("dot has cyan class (contrasting blue)", () => {
+    expect(getSyncStatusDotClass("needs-download")).toContain("bg-cyan-500");
+  });
+});
+
+describe("SyncSettingsSection — Karl: no auto-sync for non-dirty states", () => {
+  it("does NOT call syncNow on mount when status is idle", () => {
+    setKarl();
+    setStatus("idle");
+    act(() => {
+      render(<SyncSettingsSection />);
+    });
+    expect(mockCloudSync.syncNow).not.toHaveBeenCalled();
+  });
+
+  it("does NOT call syncNow on mount when status is synced", () => {
+    setKarl();
+    setStatus("synced");
+    mockCloudSync.lastSyncedAt = new Date();
+    act(() => {
+      render(<SyncSettingsSection />);
+    });
+    expect(mockCloudSync.syncNow).not.toHaveBeenCalled();
   });
 });

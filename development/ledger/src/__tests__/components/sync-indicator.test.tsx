@@ -36,7 +36,7 @@ vi.mock("@/hooks/useIsKarlOrTrial", () => ({
 }));
 
 const mockCloudSync = {
-  status: "idle" as "idle" | "syncing" | "synced" | "offline" | "error",
+  status: "idle" as "idle" | "needs-upload" | "needs-download" | "syncing" | "synced" | "offline" | "error",
   lastSyncedAt: null as Date | null,
   cardCount: null as number | null,
   errorMessage: null as string | null,
@@ -63,6 +63,7 @@ function setThrall() {
 function setKarl(status: typeof mockCloudSync.status = "idle") {
   mockIsKarlOrTrial.value = true;
   mockCloudSync.status = status;
+  mockCloudSync.lastSyncedAt = null;
 }
 
 // ── aria-label per state ───────────────────────────────────────────────────────
@@ -310,5 +311,85 @@ describe("SyncIndicator — dot CSS state classes", () => {
     const { container } = render(<SyncIndicator />);
     const dot = container.querySelector(".sync-dot");
     expect(dot?.className).toContain("motion-reduce:transition-none");
+  });
+
+  it("needs-upload state: dot has amber class (gold)", () => {
+    setKarl("needs-upload");
+    const { container } = render(<SyncIndicator />);
+    const dot = container.querySelector(".sync-dot");
+    expect(dot?.className).toContain("bg-amber-400");
+  });
+
+  it("needs-download state: dot has cyan class (contrasting blue)", () => {
+    setKarl("needs-download");
+    const { container } = render(<SyncIndicator />);
+    const dot = container.querySelector(".sync-dot");
+    expect(dot?.className).toContain("bg-cyan-500");
+  });
+});
+
+// ── needs-upload / needs-download states ───────────────────────────────────────
+
+describe("SyncIndicator — needs-upload state", () => {
+  it("aria-label is 'Local changes waiting to sync'", () => {
+    setKarl("needs-upload");
+    render(<SyncIndicator />);
+    expect(
+      screen.getByRole("button", { name: "Local changes waiting to sync" })
+    ).toBeDefined();
+  });
+
+  it("SR live region announces 'Local changes waiting to sync'", () => {
+    setKarl("needs-upload");
+    const { container } = render(<SyncIndicator />);
+    const sr = container.querySelector('[aria-live="polite"]');
+    expect(sr?.textContent).toBe("Local changes waiting to sync");
+  });
+
+  it("no ping ring in needs-upload state", () => {
+    setKarl("needs-upload");
+    const { container } = render(<SyncIndicator />);
+    expect(container.querySelector(".sync-ping-ring")).toBeNull();
+  });
+
+  it("Gleipnir Fragment 1 trigger fires on needs-upload click", () => {
+    setKarl("needs-upload");
+    render(<SyncIndicator />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Local changes waiting to sync" })
+    );
+    expect(mockTrigger).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("SyncIndicator — needs-download state", () => {
+  it("aria-label is 'New changes from household available'", () => {
+    setKarl("needs-download");
+    render(<SyncIndicator />);
+    expect(
+      screen.getByRole("button", { name: "New changes from household available" })
+    ).toBeDefined();
+  });
+
+  it("SR live region announces 'New changes from household available'", () => {
+    setKarl("needs-download");
+    const { container } = render(<SyncIndicator />);
+    const sr = container.querySelector('[aria-live="polite"]');
+    expect(sr?.textContent).toBe("New changes from household available");
+  });
+
+  it("no ping ring in needs-download state", () => {
+    setKarl("needs-download");
+    const { container } = render(<SyncIndicator />);
+    expect(container.querySelector(".sync-ping-ring")).toBeNull();
+  });
+
+  it("Gleipnir Fragment 1 trigger fires on needs-download click", () => {
+    setKarl("needs-download");
+    render(<SyncIndicator />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "New changes from household available" })
+    );
+    expect(mockTrigger).toHaveBeenCalledTimes(1);
   });
 });
