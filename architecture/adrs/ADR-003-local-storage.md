@@ -1,6 +1,14 @@
 # ADR-003: localStorage for Sprint 1 Persistence + Migration Path
 
-## Status: Accepted
+## Status: Accepted (partially superseded for authenticated users by ADR-014)
+
+> **Addendum (2026-03-20):** The migration path described in this ADR has been executed
+> for Karl-tier authenticated users. `development/ledger/src/lib/storage.ts` remains the
+> abstraction layer, but for signed-in Karl users the backing store is now **Firestore**
+> via the cloud sync API routes (`/api/cards/push`, `/api/cards/pull`). Anonymous users
+> and Thrall-tier users continue to use localStorage exclusively. See
+> [ADR-014](ADR-014-firestore-cloud-sync.md) for the Firestore sync architecture and
+> [ADR-019](ADR-019-cloud-sync-protocol.md) for the pull-before-push conflict protocol.
 
 ## Context
 

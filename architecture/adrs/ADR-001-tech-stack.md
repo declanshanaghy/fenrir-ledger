@@ -1,6 +1,11 @@
 # ADR-001: Tech Stack — Next.js + TypeScript + Tailwind CSS + shadcn/ui
 
-## Status: Accepted (hosting intent superseded by infrastructure/adrs/ADR-001-vercel-to-gke-autopilot.md)
+## Status: Accepted
+
+> **Note:** The tech stack decision (Next.js + TypeScript + Tailwind + shadcn/ui) remains
+> current. The hosting intent originally referenced in this ADR (Vercel) was superseded —
+> see [ADR-016](ADR-016-gke-autopilot-migration.md) and
+> [infrastructure/adrs/ADR-001-vercel-to-gke-autopilot.md](../../infrastructure/adrs/ADR-001-vercel-to-gke-autopilot.md).
 
 ## Context
 
