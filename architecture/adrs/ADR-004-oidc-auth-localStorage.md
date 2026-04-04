@@ -43,16 +43,7 @@ in beta) was built specifically for the App Router and Edge Runtime. It provides
 - v5 is still in beta (`next-auth@beta`); minor API surface may change before stable release
 - OAuth setup requires registering a Google Cloud project and managing client credentials
 
-#### 2. Clerk
-
-Hosted auth-as-a-service with its own dashboard and SDKs.
-
-**Pros**: Near-zero setup, beautiful pre-built UI components.
-
-**Cons**: Vendor lock-in. Monthly cost at scale. The hosted UI conflicts with our design
-system philosophy (we own all UI). Overkill for a personal tool with a single OAuth provider.
-
-#### 3. Lucia v3
+#### 2. Lucia v3
 
 Lightweight session management library for Node.js + any database.
 
@@ -62,7 +53,7 @@ Lightweight session management library for Node.js + any database.
 localStorage as the only persistence layer (no server-side DB). Adding a DB just for sessions
 would be a significant architectural escalation for Sprint 3.
 
-#### 4. Custom OAuth flow (no library)
+#### 3. Custom OAuth flow (no library)
 
 Build the Google OAuth PKCE flow manually.
 

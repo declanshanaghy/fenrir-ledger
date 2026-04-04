@@ -203,4 +203,4 @@ Google's requirement while keeping `client_secret` off the client.
 |--------|----------------|
 | Keep Auth.js v5 | Requires `AUTH_SECRET` + `GOOGLE_CLIENT_SECRET`; no direct id_token access; server-side middleware incompatible with localStorage-first model |
 | BFF (Backend for Frontend) proxy | Adds server complexity for no benefit in a stateless SPA |
-| Third-party auth SDK (Clerk, Auth0) | External dependency, cost, vendor lock-in |
+| Third-party auth SDK (e.g., Auth0) | External dependency, cost, vendor lock-in |

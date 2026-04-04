@@ -162,8 +162,6 @@ architecture/
 ├── system-design.md           # Component architecture, data flow, dependencies
 ├── implementation-brief.md    # Integration plan (Saga Ledger design system)
 ├── adrs/                      # Architecture Decision Records (ADR-001 through ADR-011)
-├── clerk-implementation-plan.md  # Clerk auth implementation plan (deferred)
-├── clerk-auth-qa-report.md    # QA report: Clerk auth architecture
 ├── n8n-reddit-automation.md   # n8n Reddit automation research
 └── route-ownership.md         # Route placement reference
 
