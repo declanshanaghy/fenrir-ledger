@@ -48,6 +48,9 @@ vi.mock("@/lib/storage", () => ({
   setAllCards: vi.fn(),
   // Issue #1796: resolves actual householdId — fall back to the provided sub in tests
   getEffectiveHouseholdId: (fallback: string) => fallback,
+  // Issue #2005: needs-upload flag helpers — no pending upload in base tests
+  getNeedsUpload: vi.fn().mockReturnValue(false),
+  clearNeedsUpload: vi.fn(),
 }));
 
 // Mock migration to prevent runMigration from calling fetch directly — the

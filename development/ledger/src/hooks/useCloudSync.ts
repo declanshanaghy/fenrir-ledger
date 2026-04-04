@@ -38,7 +38,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { getRawAllCards, setAllCards, getEffectiveHouseholdId } from "@/lib/storage";
+import { getRawAllCards, setAllCards, getEffectiveHouseholdId, getNeedsUpload, clearNeedsUpload } from "@/lib/storage";
 import { hasMigrated, runMigration } from "@/lib/sync/migration";
 import { ensureFreshToken } from "@/lib/auth/refresh-session";
 import { authFetch } from "@/lib/auth/auth-fetch";
@@ -59,13 +59,17 @@ import {
 export const SYNCED_DISPLAY_MS = 3000;
 
 /**
- * Debounce delay for auto-sync on card changes (ms).
+ * Debounce delay for auto-sync on individual card changes (ms).
  *
- * Increased from 2s → 10s in Issue #1172 to prevent over-eager syncing.
- * The listener is now "fenrir:cards-changed" (user-initiated writes only),
+ * Reduced from 10s → 2s in Issue #2005. Individual card saves are user-initiated
+ * and infrequent enough that 10s provides no debounce benefit.
+ * The listener is "fenrir:cards-changed" (user-initiated writes only),
  * NOT "fenrir:sync" (which fires on every write including internal sync merges).
+ *
+ * Bulk imports use the "fenrir:cards-bulk-changed" event which bypasses
+ * the debounce entirely and calls performSync() immediately.
  */
-export const AUTO_SYNC_DEBOUNCE_MS = 10_000;
+export const AUTO_SYNC_DEBOUNCE_MS = 2_000;
 
 // ---------------------------------------------------------------------------
 // Event types
@@ -85,6 +89,9 @@ const EVT_CLOUD_SYNC_ERROR = "fenrir:cloud-sync-error";
 
 /** Custom event name fired when cards change — triggers debounced cloud push */
 export const EVT_CARDS_CHANGED = "fenrir:cards-changed";
+
+/** Custom event name fired after a bulk import — triggers immediate cloud push (no debounce) */
+export const EVT_CARDS_BULK_CHANGED = "fenrir:cards-bulk-changed";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -257,6 +264,10 @@ export function useCloudSync(): CloudSyncState {
       // setAllCards dispatches "fenrir:sync" (NOT "fenrir:cards-changed") so the
       // auto-sync debounce listener is not triggered — no push loop. (#1172)
       setAllCards(householdId, mergedCards);
+
+      // Push succeeded — clear the needs-upload flag so a stale flag from a
+      // previous navigation doesn't trigger a redundant sync on next mount. (#2005)
+      clearNeedsUpload();
 
       setLastSyncedAt(new Date());
       setCardCount(syncedCount);
@@ -544,6 +555,49 @@ export function useCloudSync(): CloudSyncState {
       }
     };
   }, [isKarl, performSync]);
+
+  // ---------------------------------------------------------------------------
+  // Immediate sync on bulk card changes: fenrir:cards-bulk-changed listener
+  //
+  // Issue #2005: Import loops call notifyCardsBulkChanged() after all saveCard()
+  // calls complete. This listener bypasses the debounce and pushes immediately,
+  // ensuring the import reaches Firestore without waiting 2s.
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!isKarl) return;
+
+    const handleBulkChanged = () => {
+      // Cancel any pending debounced sync — the bulk push supersedes it.
+      if (autoSyncTimerRef.current) {
+        clearTimeout(autoSyncTimerRef.current);
+        autoSyncTimerRef.current = null;
+      }
+      if (!syncInProgressRef.current) {
+        void performSync();
+      }
+    };
+
+    window.addEventListener(EVT_CARDS_BULK_CHANGED, handleBulkChanged);
+    return () => window.removeEventListener(EVT_CARDS_BULK_CHANGED, handleBulkChanged);
+  }, [isKarl, performSync]);
+
+  // ---------------------------------------------------------------------------
+  // On-mount needs-upload check
+  //
+  // Issue #2005: If the user navigated away before the debounce fired, the
+  // "fenrir:needs-upload" flag persists in localStorage. On the next mount
+  // where isKarl is confirmed, kick off a sync to flush the pending changes.
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!isKarl) return;
+    if (getNeedsUpload()) {
+      void performSync();
+    }
+  // Only run when isKarl becomes true (login transition handled separately).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isKarl]);
 
   // ---------------------------------------------------------------------------
   // Sync on login: migration-aware sign-in handler

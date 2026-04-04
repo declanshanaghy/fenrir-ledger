@@ -5,8 +5,9 @@
  * visibility, Add Card link, SignInNudge. Issue #1470
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { notifyCardsBulkChanged } from "@/lib/storage";
 import DashboardPage from "@/app/ledger/page";
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
@@ -76,6 +77,8 @@ vi.mock("@/lib/storage", () => ({
   getDeletedCards: vi.fn(() => []),
   saveCard: vi.fn(),
   migrateIfNeeded: vi.fn(),
+  // Issue #2005: notifyCardsBulkChanged dispatched after bulk import
+  notifyCardsBulkChanged: vi.fn(),
 }));
 
 vi.mock("@/lib/analytics/track", () => ({
@@ -104,8 +107,14 @@ vi.mock("@/components/dashboard/CardSkeletonGrid", () => ({
   ),
 }));
 
+// Capture onConfirmImport so tests can trigger the callback
+let capturedOnConfirmImport: ((cards: unknown[]) => void) | null = null;
+
 vi.mock("@/components/sheets/ImportWizard", () => ({
-  ImportWizard: () => <div data-testid="import-wizard" />,
+  ImportWizard: ({ onConfirmImport }: { onConfirmImport?: (cards: unknown[]) => void }) => {
+    capturedOnConfirmImport = onConfirmImport ?? null;
+    return <div data-testid="import-wizard" />;
+  },
 }));
 
 vi.mock("@/components/shared/AuthGate", () => ({
@@ -134,6 +143,8 @@ describe("DashboardPage", () => {
     mockHouseholdId = "anon-household-id";
     mockStatus = "authenticated";
     sessionStorage.clear();
+    capturedOnConfirmImport = null;
+    vi.mocked(notifyCardsBulkChanged).mockClear();
   });
 
   it("renders the page heading 'The Ledger of Fates'", async () => {
@@ -174,5 +185,22 @@ describe("DashboardPage", () => {
     render(<DashboardPage />);
     // Add Card button only visible when hasCards = true; getCards returns [] so no button
     expect(screen.queryByRole("link", { name: /add card/i })).not.toBeInTheDocument();
+  });
+
+  // Issue #2005 — AC-5: notifyCardsBulkChanged called after import loop
+  it("calls notifyCardsBulkChanged after handleConfirmImport completes", async () => {
+    capturedOnConfirmImport = null;
+    render(<DashboardPage />);
+
+    await waitFor(() => expect(capturedOnConfirmImport).not.toBeNull());
+
+    const mockCard = { id: "c1", cardName: "Test Card" };
+    act(() => {
+      capturedOnConfirmImport!([mockCard]);
+    });
+
+    expect(notifyCardsBulkChanged).toHaveBeenCalledTimes(1);
+    // Called with the effective household id (anon fallback when no real householdId)
+    expect(notifyCardsBulkChanged).toHaveBeenCalledWith(expect.any(String));
   });
 });
