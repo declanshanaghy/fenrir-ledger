@@ -94,6 +94,7 @@ const SECRETS = [
   { name: "STRIPE_WEBHOOK_SECRET",     dest: "k8s-app", group: "K8s App Secrets", envVar: "STRIPE_WEBHOOK_SECRET", k8sSecret: "fenrir-app-secrets" },
   { name: "STRIPE_PRICE_ID",           dest: "k8s-app", group: "K8s App Secrets", envVar: "STRIPE_PRICE_ID", k8sSecret: "fenrir-app-secrets" },
   { name: "APP_BASE_URL",             dest: "k8s-app", group: "K8s App Secrets", envVar: "APP_BASE_URL", k8sSecret: "fenrir-app-secrets" },
+  { name: "ADMIN_EMAILS",             dest: "k8s-app", group: "K8s App Secrets", envVar: "ADMIN_EMAILS", k8sSecret: "fenrir-app-secrets" },
 ];
 
 // --------------------------------------------------------------------------
