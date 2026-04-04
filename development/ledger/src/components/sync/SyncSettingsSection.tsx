@@ -13,6 +13,7 @@
  * Issue #1125
  */
 
+import { useEffect } from "react";
 import type { CloudSyncStatus } from "@/hooks/useCloudSync";
 import { useCloudSync } from "@/hooks/useCloudSync";
 import { useEntitlement } from "@/hooks/useEntitlement";
@@ -44,8 +45,8 @@ export function formatTimestamp(date: Date): string {
 const STATUS_DOT_BASE = "inline-flex h-2 w-2 rounded-full flex-shrink-0";
 
 const STATUS_DOT_CLASSES: Record<CloudSyncStatus, string> = {
-  "needs-upload": `${STATUS_DOT_BASE} bg-[hsl(var(--egg-accent))] opacity-70`,
-  "needs-download": `${STATUS_DOT_BASE} bg-[hsl(var(--egg-accent))] opacity-70`,
+  "needs-upload": `${STATUS_DOT_BASE} bg-amber-400 dark:bg-amber-300`,
+  "needs-download": `${STATUS_DOT_BASE} bg-cyan-500 dark:bg-cyan-400`,
   syncing: `${STATUS_DOT_BASE} bg-[hsl(var(--egg-accent))]`,
   synced: `${STATUS_DOT_BASE} bg-emerald-500 dark:bg-emerald-400`,
   offline: `${STATUS_DOT_BASE} bg-[hsl(var(--egg-border))] opacity-40`,
@@ -60,6 +61,22 @@ export function getSyncStatusDotClass(status: CloudSyncStatus): string {
 // ---------------------------------------------------------------------------
 // Sub-components for SyncStatusCard
 // ---------------------------------------------------------------------------
+
+function SyncNeedsUploadMessage() {
+  return (
+    <p className="text-[13px] text-foreground/90 font-body leading-relaxed">
+      Local changes waiting to sync.
+    </p>
+  );
+}
+
+function SyncNeedsDownloadMessage() {
+  return (
+    <p className="text-[13px] text-foreground/90 font-body leading-relaxed">
+      New changes from household available.
+    </p>
+  );
+}
 
 function SyncProgressBar() {
   return (
@@ -361,9 +378,19 @@ function SyncStatusCard({ isTrial }: { isTrial: boolean }) {
   const isError = status === "error";
   const isSyncing = status === "syncing";
   const isOffline = status === "offline";
+  const isNeedsUpload = status === "needs-upload";
+  const isNeedsDownload = status === "needs-download";
   const syncNowDisabled = isSyncing || isOffline;
   const showLastSynced = lastSyncedAt !== null && !isSyncing;
   const showCardCount = cardCount !== null && !isSyncing && !isError;
+
+  // Auto-sync on mount when there is pending work to do
+  useEffect(() => {
+    if (status === "needs-upload" || status === "needs-download") {
+      void syncNow();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section
@@ -406,6 +433,8 @@ function SyncStatusCard({ isTrial }: { isTrial: boolean }) {
         </p>
       )}
 
+      {isNeedsUpload && <SyncNeedsUploadMessage />}
+      {isNeedsDownload && <SyncNeedsDownloadMessage />}
       {isSyncing && <SyncProgressBar />}
       {isOffline && <SyncOfflineMessage />}
       {isError && (

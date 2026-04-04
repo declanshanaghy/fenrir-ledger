@@ -62,16 +62,16 @@ function getStateConfig(
   switch (status) {
     case "needs-upload":
       return {
-        ariaLabel: "Upload pending",
-        tooltip: "Changes pending upload\u2026",
-        dotClass: "bg-[hsl(var(--egg-accent))] opacity-70",
+        ariaLabel: "Local changes waiting to sync",
+        tooltip: "Local changes waiting to sync\u2026",
+        dotClass: "bg-amber-400 dark:bg-amber-300",
         showPing: false,
       };
     case "needs-download":
       return {
-        ariaLabel: "Download pending",
-        tooltip: "New changes available\u2026",
-        dotClass: "bg-[hsl(var(--egg-accent))] opacity-70",
+        ariaLabel: "New changes from household available",
+        tooltip: "New changes from household available\u2026",
+        dotClass: "bg-cyan-500 dark:bg-cyan-400",
         showPing: false,
       };
     case "syncing":
