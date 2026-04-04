@@ -122,12 +122,12 @@ describe("GET /api/openapi", () => {
     }
   });
 
-  it("has 23 documented paths", async () => {
+  it("has 24 documented paths", async () => {
     mockRequireAuth.mockResolvedValueOnce({ ok: true, user: MOCK_USER });
 
     const res = await GET(makeRequest());
     const body = await res.json() as { paths: Record<string, unknown> };
-    expect(Object.keys(body.paths)).toHaveLength(23);
+    expect(Object.keys(body.paths)).toHaveLength(24);
   });
 
   it("sets Cache-Control to no-store", async () => {

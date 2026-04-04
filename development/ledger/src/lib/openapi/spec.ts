@@ -38,6 +38,13 @@ export const openApiSpec = {
         description:
           "Google OIDC id_token obtained from /api/auth/token. Include as `Authorization: Bearer <id_token>`.",
       },
+      StripeWebhookAuth: {
+        type: "apiKey",
+        in: "header",
+        name: "stripe-signature",
+        description:
+          "Stripe webhook signature header (`Stripe-Signature`). Validated server-side via HMAC-SHA256 using `STRIPE_WEBHOOK_SECRET`. Not a user-facing auth mechanism.",
+      },
     },
     schemas: {
       Error: {
@@ -290,6 +297,36 @@ export const openApiSpec = {
           "401": { $ref: "#/components/responses/Unauthorized" },
           "403": { $ref: "#/components/responses/Forbidden" },
           "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
+
+    "/api/health": {
+      get: {
+        tags: ["Config"],
+        summary: "Health check",
+        description:
+          "Kubernetes liveness and readiness probe endpoint. **Unauthenticated** — no Bearer token required. Returns minimal status data for fast probe responses.",
+        operationId: "healthCheck",
+        security: [],
+        responses: {
+          "200": {
+            description: "Service is healthy",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["status", "timestamp"],
+                  properties: {
+                    status: { type: "string", example: "ok" },
+                    timestamp: { type: "string", format: "date-time" },
+                    version: { type: "string" },
+                    buildId: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -984,26 +1021,27 @@ export const openApiSpec = {
     },
 
     "/api/sync/pull": {
-      post: {
+      get: {
         tags: ["Sync"],
         summary: "Pull cards from Firestore",
-        description: "Downloads and merges Firestore cards into the client's local state. Karl tier only.",
+        description: "Downloads all cards for the authenticated user's household from Firestore, including tombstones. Karl tier only.",
         operationId: "syncPull",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                required: ["householdId"],
-                properties: {
-                  householdId: { type: "string" },
-                  clientSyncVersion: { type: "number" },
-                },
-              },
-            },
+        parameters: [
+          {
+            name: "householdId",
+            in: "query",
+            required: true,
+            schema: { type: "string" },
+            description: "The household to pull cards for. Must match the authenticated user's household.",
           },
-        },
+          {
+            name: "clientSyncVersion",
+            in: "query",
+            required: false,
+            schema: { type: "number" },
+            description: "Optional client sync version for optimistic concurrency.",
+          },
+        ],
         responses: {
           "200": {
             description: "Pull result",
@@ -1014,13 +1052,14 @@ export const openApiSpec = {
                   properties: {
                     cards: { type: "array", items: { $ref: "#/components/schemas/Card" } },
                     syncVersion: { type: "number" },
+                    householdId: { type: "string" },
                   },
                 },
               },
             },
           },
           "400": {
-            description: "Invalid body",
+            description: "Missing householdId query param",
             content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
           },
           "401": { $ref: "#/components/responses/Unauthorized" },
