@@ -13,7 +13,8 @@
 #   GCP_PROJECT_ID, GCP_SA_KEY, GCP_REGION, GCP_ZONE, GKE_CLUSTER_NAME
 #   GOOGLE_CLIENT_SECRET, NEXT_PUBLIC_GOOGLE_CLIENT_ID, GOOGLE_PICKER_API_KEY
 #   FENRIR_ANTHROPIC_API_KEY, ENTITLEMENT_ENCRYPTION_KEY
-#   STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID
+#   STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_PRICE_ID
+#   (STRIPE_WEBHOOK_SECRET is read from terraform output, not GitHub Secrets)
 #   TF_VAR_BILLING_ACCOUNT_ID, TF_VAR_UPTIME_CHECK_HOST
 #   CLAUDE_CODE_OAUTH_TOKEN, GITHUB_TOKEN_PAT_CLASSIC, GITHUB_TOKEN_PAT_FINE_GRAINED
 #   UMAMI_OAUTH2_PROXY_COOKIE_SECRET  — 32-byte cookie secret for Umami oauth2-proxy
@@ -65,6 +66,8 @@ jobs:
     name: "Terraform: Plan & Apply"
     runs-on: ubuntu-latest
     if: ${{ !inputs.skip_terraform }}
+    outputs:
+      stripe_webhook_secret: ${{ steps.tf-outputs.outputs.stripe_webhook_secret }}
     permissions:
       contents: read
       id-token: write
@@ -101,6 +104,13 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Export Stripe webhook secret
+        id: tf-outputs
+        run: |
+          SECRET=$(terraform output -raw stripe_webhook_signing_secret 2>/dev/null || echo "")
+          echo "::add-mask::${SECRET}"
+          echo "stripe_webhook_secret=${SECRET}" >> "$GITHUB_OUTPUT"
 
       - name: Summary
         run: |
@@ -330,7 +340,7 @@ jobs:
 
   app-deploy:
     name: "App: Deploy to GKE"
-    needs: [app-pre-deploy-tests, build-app-image, detect-changes]
+    needs: [app-pre-deploy-tests, build-app-image, detect-changes, terraform]
     if: >-
       always() && !inputs.skip_deploy &&
       (needs.build-app-image.result == 'success' ||
@@ -391,6 +401,22 @@ jobs:
             --set gcpProjectId=${{ secrets.GCP_PROJECT_ID }} \
             --wait
 
+      - name: Resolve Stripe webhook secret
+        id: stripe-webhook
+        run: |
+          # Prefer terraform output; fall back to existing K8s value when terraform was skipped
+          TF_SECRET="${{ needs.terraform.outputs.stripe_webhook_secret }}"
+          if [ -n "$TF_SECRET" ]; then
+            echo "::add-mask::${TF_SECRET}"
+            echo "secret=${TF_SECRET}" >> "$GITHUB_OUTPUT"
+            echo "Source: terraform output"
+          else
+            EXISTING=$(kubectl get secret fenrir-app-secrets -n fenrir-app -o jsonpath='{.data.STRIPE_WEBHOOK_SECRET}' 2>/dev/null | base64 -d || echo "")
+            echo "::add-mask::${EXISTING}"
+            echo "secret=${EXISTING}" >> "$GITHUB_OUTPUT"
+            echo "Source: existing K8s secret (terraform skipped)"
+          fi
+
       - name: Sync app secrets
         run: |
           kubectl create secret generic fenrir-app-secrets \
@@ -403,7 +429,7 @@ jobs:
             --from-literal=APP_BASE_URL="https://www.fenrirledger.com" \
             --from-literal=STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
             --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
-            --from-literal=STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+            --from-literal=STRIPE_WEBHOOK_SECRET="${{ steps.stripe-webhook.outputs.secret }}" \
             --from-literal=STRIPE_PRICE_ID="${{ secrets.STRIPE_PRICE_ID }}" \
             --from-literal=NEXT_PUBLIC_APP_VERSION="${{ github.sha }}" \
             --dry-run=client -o yaml | kubectl apply -f -
