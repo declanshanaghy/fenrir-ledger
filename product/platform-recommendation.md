@@ -161,10 +161,12 @@ graph TD
 - [x] Customer Portal link works for self-service subscription management
 - [x] `useEntitlement` hook works identically (Stripe-only provider)
 - [x] `SubscriptionGate` (renamed from `PatreonGate`) works with Stripe
-- [ ] Settings page shows Stripe subscription status (verify in next QA pass)
 - [x] SealedRuneModal links to Stripe Checkout (not Patreon campaign page)
-- [ ] New Stripe test suites pass (verify with Loki)
-- [ ] Security review by Heimdall (Stripe webhook signature verification, key management)
+
+**Remaining verification items** — tracked as GitHub Issues (not in-doc checkboxes):
+- Settings page Stripe subscription status display — file a GitHub Issue if not yet verified
+- New Stripe test suites (Loki QA pass) — file a GitHub Issue if not yet completed
+- Heimdall security review (webhook signature verification, key management) — file a GitHub Issue if not yet completed
 
 ---
 
