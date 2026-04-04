@@ -786,8 +786,10 @@ describe("Bug 3 — Push loop prevention", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("AUTO_SYNC_DEBOUNCE_MS is 10s (not 2s) — guards against rapid loop", () => {
-    expect(AUTO_SYNC_DEBOUNCE_MS).toBe(10_000);
+  it("AUTO_SYNC_DEBOUNCE_MS is 2s (reduced from 10s in Issue #2005)", () => {
+    // Individual card saves are infrequent; 10s provided no debounce benefit.
+    // Bulk imports use fenrir:cards-bulk-changed which bypasses debounce entirely.
+    expect(AUTO_SYNC_DEBOUNCE_MS).toBe(2_000);
   });
 
   it("syncInProgress guard: dispatch card-changed while sync in progress skips push", async () => {
