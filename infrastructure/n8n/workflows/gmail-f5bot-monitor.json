@@ -236,13 +236,8 @@
     {
       "parameters": {
         "resource": "message",
-        "operation": "update",
-        "messageId": "={{ $('Extract — Reddit Links').first().json.emailId }}",
-        "updateFields": {
-          "removeLabelIds": [
-            "UNREAD"
-          ]
-        }
+        "operation": "markAsRead",
+        "messageId": "={{ $('Extract — Reddit Links').first().json.emailId }}"
       },
       "id": "f5b0-0013-4000-8000-000000000013",
       "name": "Gmail — Mark as Read",
