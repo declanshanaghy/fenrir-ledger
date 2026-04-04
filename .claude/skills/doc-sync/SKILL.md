@@ -170,6 +170,26 @@ A document is **current** if:
 
 ---
 
+### Step 3b — ADR Audit (FiremanDecko only)
+
+**Skip this step if your role is NOT `principal-engineer` / `firemandecko`.**
+
+FiremanDecko owns `architecture/adrs/`. As part of every doc-sync, audit all ADRs against the actual codebase:
+
+1. **Read every ADR** in `architecture/adrs/`.
+2. **For each ADR, verify** the "Decision" section matches what's actually implemented in the code. Check key files, types, and patterns referenced by the ADR.
+3. **Flag mismatches:**
+   - **Never-implemented:** The decision was proposed but never built. Mark with `Status: Never Implemented` or delete if it adds no historical value.
+   - **Superseded:** A later ADR or implementation replaced this decision. Add `Status: Superseded by ADR-NNN` header.
+   - **Stale:** The decision was implemented but the implementation has since changed. Update the ADR to match current reality.
+   - **Accurate:** No changes needed.
+4. **Identify missing ADRs:** Look for major architectural patterns in the code that lack an ADR. Create new ADRs following the existing format (Context, Decision, Alternatives Considered, Consequences).
+5. **Update `architecture/README.md`** to reflect any added, removed, or renamed ADRs.
+
+This ensures ADRs remain a trustworthy map of how the system actually works, not a graveyard of abandoned proposals.
+
+---
+
 ### Step 4 — Update stale content
 
 For each file that is stale but salvageable:
