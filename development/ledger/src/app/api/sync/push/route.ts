@@ -109,17 +109,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // (expungeCard / expungeAllCards removes it entirely, no tombstone).
     // Delete these from Firestore so they cannot reappear on the next pull.
     // Issue #1974.
+    //
+    // Safety guard (Issue #2002): skip expunge entirely when the client sends
+    // zero cards. An empty push is the fingerprint of a brand-new device that
+    // has never synced — its empty localStorage must NOT be treated as "the
+    // user deleted everything." Without this guard every remote card would be
+    // classified as expunged and wiped from Firestore.
     const localIds = new Set(localCards.map((c) => c.id));
-    const expungedIds = remoteCards
-      .filter((c) => !localIds.has(c.id))
-      .map((c) => c.id);
 
-    if (expungedIds.length > 0) {
-      await deleteCards(verifiedHouseholdId, expungedIds);
+    if (localCards.length > 0) {
+      const expungedIds = remoteCards
+        .filter((c) => !localIds.has(c.id))
+        .map((c) => c.id);
+
+      if (expungedIds.length > 0) {
+        await deleteCards(verifiedHouseholdId, expungedIds);
+      }
     }
 
-    // Merge only non-expunged remote cards with local (LWW per-card)
-    const nonExpungedRemote = remoteCards.filter((c) => localIds.has(c.id));
+    // Merge only non-expunged remote cards with local (LWW per-card).
+    // When localCards is empty (new device) all remote cards are kept so they
+    // are returned to the client and written back to localStorage on first sync.
+    const nonExpungedRemote =
+      localCards.length > 0 ? remoteCards.filter((c) => localIds.has(c.id)) : remoteCards;
     const { merged, stats } = mergeCardsWithStats(localCards, nonExpungedRemote);
 
     // Write merged result back to Firestore
