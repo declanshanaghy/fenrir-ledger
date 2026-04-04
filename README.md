@@ -221,7 +221,7 @@ graph LR
 
 > *"Before a single rune of code is carved, I draw the bones. Every screen is a ritual space — every interaction, a step in the dance between wolf and wanderer."*
 
-- [UX README](ux/README.md) — Index of all design artifacts, wireframes (78 HTML5 documents), and implementation status
+- [UX README](ux/README.md) — Index of all design artifacts, wireframes (92 HTML5 documents), and implementation status
 - [Theme System](ux/theme-system.md) — The runes of color and shadow I have woven into the wolf's skin
 - [Wireframes](ux/wireframes.md) — Bones of every screen, drawn before steel is poured
 - [Interactions](ux/interactions.md) — How the wolf moves when touched, precise as tides beneath Mani's gaze
@@ -251,8 +251,8 @@ graph LR
 - [Auth Architecture](security/architecture/auth-architecture.md) — OAuth PKCE flow, session model, JWKS verification, Stripe auth
 - [Data Flow Diagrams](security/architecture/data-flow-diagrams.md) — Security-focused flows: OAuth, CSV/URL import, Stripe, Firestore sync; trust boundaries
 - [Trust Boundaries](security/architecture/trust-boundaries.md) — Six trust zones, secret locations, and cross-boundary data constraints
-- [Firestore Sync Audit](security/reports/2026-03-17-firestore-sync-audit.md) — 2026-03-17: IDOR fixes (PRs #1203, #1207); 1 HIGH + 3 MEDIUM open
-- [External Pen Test](security/reports/2026-03-09-external-pentest.md) — Consolidated penetration test (4 parallel audits)
+- [Pen Test Report](security/pen-test-report.html) — 2026-03-23: External pen test (fenrirledger.com + Odin's Throne); CRITICAL auth bypass resolved (PR #1896); LOW/INFO findings open
+- Older Markdown reports archived in git history (commit `164115aa`) — Firestore sync audit (2026-03-17), consolidated external pen test (2026-03-09), and earlier reports
 
 ---
 
