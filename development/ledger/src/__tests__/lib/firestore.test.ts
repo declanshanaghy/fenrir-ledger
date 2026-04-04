@@ -802,9 +802,9 @@ describe("FIRESTORE_PATHS — no entitlement path (issue #1633)", () => {
     expect((FIRESTORE_PATHS as Record<string, unknown>).entitlement).toBeUndefined();
   });
 
-  it("has the expected path builders including stripeSubscription (issue #1648) and trial (issue #1634)", () => {
+  it("has the expected path builders including stripeSubscription (issue #1648), trial (issue #1634), and syncState (issue #2001)", () => {
     const keys = Object.keys(FIRESTORE_PATHS).sort();
-    expect(keys).toEqual(["card", "cards", "household", "stripeSubscription", "trial", "user"]);
+    expect(keys).toEqual(["card", "cards", "household", "stripeSubscription", "syncState", "syncStates", "trial", "user"]);
   });
 
   it("builds stripe subcollection path correctly", () => {
