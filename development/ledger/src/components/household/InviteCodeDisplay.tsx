@@ -12,7 +12,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import { buildInviteMailtoUrl } from "@/lib/household/invite-mailto";
+import { buildInviteMailtoUrl, buildInviteSharePayload } from "@/lib/household/invite-mailto";
 
 interface InviteCodeDisplayProps {
   inviteCode: string;
@@ -54,6 +54,18 @@ export function InviteCodeDisplay({
     }
   }, [inviteCode]);
 
+  const handleShare = useCallback(async () => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(buildInviteSharePayload(inviteCode));
+      } catch {
+        // User cancelled or share API failed — silently ignore
+      }
+    } else {
+      window.location.href = buildInviteMailtoUrl(inviteCode);
+    }
+  }, [inviteCode]);
+
   return (
     <div className="relative border border-border p-4 flex flex-col gap-3 karl-bling-card">
       <h3 className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-foreground">
@@ -76,13 +88,14 @@ export function InviteCodeDisplay({
         >
           {copied ? "Copied!" : "Copy"}
         </button>
-        <a
-          href={buildInviteMailtoUrl(inviteCode)}
+        <button
+          type="button"
+          onClick={handleShare}
           className="inline-flex items-center justify-center min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 whitespace-nowrap karl-bling-btn"
-          aria-label="Send invite via email"
+          aria-label="Send invite link"
         >
           Send Invite
-        </a>
+        </button>
       </div>
 
       <p className="text-xs text-muted-foreground font-body">
