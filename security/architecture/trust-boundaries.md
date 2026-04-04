@@ -1,7 +1,7 @@
 # Trust Boundaries — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-20 (removed Zone 5 Upstash Redis — entitlements migrated to Firestore in issue #1521; updated stale vercel.app hostname references)
+**Last reviewed**: 2026-04-04 (removed stale KV_REST_API_TOKEN reference; corrected Upstash Redis mention in XSS section — entitlements are in Firestore since issue #1521)
 
 ---
 
@@ -135,7 +135,6 @@ Every request to an API route crosses this boundary. The following data crosses:
 - `FENRIR_ANTHROPIC_API_KEY`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- `KV_REST_API_TOKEN`
 - Stack traces
 - Internal error messages
 
@@ -183,7 +182,7 @@ A successful XSS attack on the production GKE hostname could read:
 - `fenrir:pkce` → PKCE verifier if XSS fires during OAuth flow (tab-scoped)
 
 Note: Stripe entitlements are NOT in localStorage. They are stored server-side in
-Upstash Redis and fetched on demand from the API. An XSS payload cannot access entitlement
+Firestore and fetched on demand from the API. An XSS payload cannot access entitlement
 data directly.
 
 ### Mitigations in place
@@ -233,8 +232,8 @@ This means:
 
 ## Stripe Entitlement Data
 
-Subscription entitlements are stored server-side in Firestore (formerly Upstash Redis,
-migrated in issue #1521). The browser fetches the current tier from `/api/stripe/membership`
+Subscription entitlements are stored server-side in Firestore (migrated from Upstash Redis
+in issue #1521). The browser fetches the current tier from `/api/stripe/membership`
 on demand and caches it in React state only (not localStorage). This means:
 
 - An XSS attack cannot read entitlement data from localStorage

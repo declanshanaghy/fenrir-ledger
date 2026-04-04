@@ -1,7 +1,7 @@
 # Security Data Flow Diagrams — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-20 (updated Stripe checkout flow — entitlements now in Firestore, not Upstash Redis; issue #1521)
+**Last reviewed**: 2026-04-04 (verified all flows current; Firestore entitlement references correct; Karl-tier check via getStripeEntitlement now reads from Firestore)
 
 Trust boundary notation:
 - `[TB]` — Trust boundary crossing (browser ↔ server)
@@ -281,7 +281,7 @@ Browser (Karl-tier, authenticated)
   ├─ GET /api/sync/pull?householdId=<IGNORED>  [TB]
   │    Authorization: Bearer <id_token>
   │    requireAuth() → verified Google user { sub }
-  │    Karl tier check via getStripeEntitlement(sub) → Upstash Redis
+  │    Karl tier check via getStripeEntitlement(sub) → Firestore
   │    if not Karl → 403
   │
   │    getUser(sub)           ← Admin SDK, Firestore Zone 6
@@ -307,7 +307,7 @@ Browser (Karl-tier, authenticated)
   │    Authorization: Bearer <id_token>
   │    Body: { cards: Card[] }      ← householdId in body IGNORED
   │    requireAuth() → verified Google user { sub }
-  │    Karl tier check via getStripeEntitlement(sub) → Upstash Redis
+  │    Karl tier check via getStripeEntitlement(sub) → Firestore
   │    if not Karl → 403
   │
   │    getUser(sub)           ← Admin SDK

@@ -4,7 +4,7 @@ Owned by **Heimdall** (`.claude/agents/heimdall.md`).
 
 This directory contains all security documentation for the Fenrir Ledger project: audit reports, architecture diagrams, checklists, and advisories.
 
-## Current State (as of 2026-03-23)
+## Current State (as of 2026-04-04)
 
 - **Infrastructure**: GKE Autopilot (not Vercel). See `infrastructure/k8s/app/` for deployment manifests.
 - **Subscription platform**: Stripe Direct only. Patreon has been fully removed.
@@ -12,42 +12,46 @@ This directory contains all security documentation for the Fenrir Ledger project
 - **Stripe webhook**: SHA-256 HMAC via `stripe.webhooks.constructEvent()`.
 - **CSP**: Includes all required Google and Stripe domains.
 - **Entitlement store**: Firestore (migrated from Upstash Redis in issue #1521 — `KV_REST_API_URL` and `KV_REST_API_TOKEN` no longer used or deployed).
-- **Firestore sync (issue #1126)**: ~~2 CRITICAL IDOR vulnerabilities~~ → **RESOLVED**. IDOR in `/api/sync/pull` (PR #1203) and `/api/sync/push` (PR #1207) fixed — both routes now derive `householdId` from the server-side user record, not the client. See report below.
-- **Odin's Throne (issue #1879)**: **1 CRITICAL OPEN** — oauth2-proxy `--skip-auth-regex=.*` bypasses all authentication on `odins-throne.fenrirledger.com`. The full monitor UI and job API are publicly accessible without credentials. Assign to FiremanDecko for immediate fix.
+- **Firestore sync (issue #1126)**: ~~2 CRITICAL IDOR vulnerabilities~~ → **RESOLVED**. IDOR in `/api/sync/pull` (PR #1203) and `/api/sync/push` (PR #1207) fixed — both routes now derive `householdId` from the server-side user record, not the client.
+- **Odin's Throne auth bypass (issue #1879)**: ~~CRITICAL — oauth2-proxy `--skip-auth-regex=.*`~~ → **RESOLVED** in PR #1896. The wildcard skip-auth regex was removed; all Odin's Throne routes now enforce Google OAuth via oauth2-proxy.
+- **Sync state route (issue #2001)**: `/api/sync/state` added (PR #2012) — Karl-only, uses the `requireAuthz()` pattern (authentication + user resolution + household membership + tier check in one call). Household ID derived server-side only; IDOR protection confirmed.
 - **Open findings (Firestore audit)**: 1 HIGH (invite validate PII leakage), 3 MEDIUM (no rate limiting on invite/sync routes, Admin SDK bypasses rules), 3 LOW (error handling, entropy docs, tier disclosure), 3 INFO (emulator-only rules, soft-delete, no collection group).
 - **Open findings (older reports)**: 3 LOW (distributed rate limiting, webhook deduplication, email validation), 3 INFO (trust chain comment, publishable key monitoring), plus external pentest CRITICAL (Next.js CVEs #475 — **RESOLVED**: upgraded to Next.js 16.x) and HIGH (SheetJS #476 — still open).
-- **Report format note**: Pen test reports are now published as self-contained HTML files (e.g., `security/pen-test-report.html`) in addition to Markdown reports in `security/reports/`.
+- **Report format note**: The most recent pen test report is published as a self-contained HTML file at `security/pen-test-report.html`. Older Markdown reports were archived to git history in PR #1880 (commit `164115aa`) — history is preserved but files are not on disk.
 
 ---
 
 ## Reports
 
+The most recent pen test report is on disk. Older Markdown reports were removed from
+the working tree in PR #1880 (commit `164115aa`) — full content is preserved in git history.
+
 | Date | Scope | Risk Summary | Status | Path |
 |------|-------|-------------|--------|------|
-| 2026-03-23 | **External Pen Test — fenrirledger.com + Odin's Throne** (issue #1879) | **1C / 0H / 0M / 2L / 2I** | **[Active] CRITICAL Throne auth bypass open; LOW/INFO new findings; see open tracker** | [pen-test-report.html](pen-test-report.html) |
-| 2026-03-17 | **Firestore Sync & Household Data Access** (issue #1126) | **2C / 1H / 3M / 3L / 3I** | **[Active] CRITICAL IDOR fixed in PRs #1203 + #1207; HIGH + MEDIUM findings open** | [reports/2026-03-17-firestore-sync-audit.md](reports/2026-03-17-firestore-sync-audit.md) |
-| 2026-03-10 | **Comprehensive External Pen Test** — Consolidated from 4 parallel audits (#470–473) | **1C / 1H / 3M / 3L / 5I** | **[Active] CRITICAL Next.js CVEs RESOLVED (Next.js upgraded to 16.x); HIGH SheetJS unpatched — see issues** | [reports/2026-03-09-external-pentest.md](reports/2026-03-09-external-pentest.md) |
-| 2026-03-02 | Google API Integration | 0C / 3H / 3M / 3L / 3I | Active — findings partially open | [reports/2026-03-02-google-api-integration.md](reports/2026-03-02-google-api-integration.md) |
-| 2026-03-04 | Stripe Direct Integration | 0C / 0H / 0M / 3L / 3I | Active — CRITICAL/MEDIUM resolved | [reports/2026-03-04-stripe-direct-integration.md](reports/2026-03-04-stripe-direct-integration.md) |
-| 2026-03-05 | LLM Prompt Injection Remediation (#157) | 0C / 0H / 0M / 0L / 2I | Active | [reports/2026-03-05-llm-prompt-injection-remediation.md](reports/2026-03-05-llm-prompt-injection-remediation.md) |
-| 2026-03-07 | Gmail MCP Deep Audit | N/A (advisory) | Active | [reports/2026-03-07-gmail-mcp-deep-audit.md](reports/2026-03-07-gmail-mcp-deep-audit.md) |
-| 2026-03-07 | Gmail MCP PR #324 Review | 0C / 0H / 0M / 2 new findings | Resolved | [reports/2026-03-07-gmail-mcp-pr324-review.md](reports/2026-03-07-gmail-mcp-pr324-review.md) |
-| 2026-03-08 | Gmail MCP PR #324 Remediation | All findings resolved | Closed | [reports/2026-03-08-gmail-mcp-pr324-remediation.md](reports/2026-03-08-gmail-mcp-pr324-remediation.md) |
+| 2026-03-23 | **External Pen Test — fenrirledger.com + Odin's Throne** (issue #1879) | **1C / 0H / 0M / 2L / 2I** | **[Active] CRITICAL Throne auth bypass RESOLVED (PR #1896); LOW/INFO findings open** | [pen-test-report.html](pen-test-report.html) |
+| 2026-03-17 | **Firestore Sync & Household Data Access** (issue #1126) | **2C / 1H / 3M / 3L / 3I** | **[Active] CRITICAL IDOR fixed in PRs #1203 + #1207; HIGH + MEDIUM findings open** | archived in git (`164115aa`) |
+| 2026-03-10 | **Comprehensive External Pen Test** — Consolidated from 4 parallel audits (#470–473) | **1C / 1H / 3M / 3L / 5I** | **[Active] CRITICAL Next.js CVEs RESOLVED (Next.js upgraded to 16.x); HIGH SheetJS unpatched — see issues** | archived in git (`164115aa`) |
+| 2026-03-02 | Google API Integration | 0C / 3H / 3M / 3L / 3I | Active — findings partially open | archived in git (`164115aa`) |
+| 2026-03-04 | Stripe Direct Integration | 0C / 0H / 0M / 3L / 3I | Active — CRITICAL/MEDIUM resolved | archived in git (`164115aa`) |
+| 2026-03-05 | LLM Prompt Injection Remediation (#157) | 0C / 0H / 0M / 0L / 2I | Active | archived in git (`164115aa`) |
+| 2026-03-07 | Gmail MCP Deep Audit | N/A (advisory) | Active | archived in git (`164115aa`) |
+| 2026-03-07 | Gmail MCP PR #324 Review | 0C / 0H / 0M / 2 new findings | Resolved | archived in git (`164115aa`) |
+| 2026-03-08 | Gmail MCP PR #324 Remediation | All findings resolved | Closed | archived in git (`164115aa`) |
 
-### Penetration Test Sub-Reports (consolidated into 2026-03-09 External Pentest)
+### Penetration Test Sub-Reports (consolidated into 2026-03-09 External Pentest — archived in git)
 
-| Date | Scope | Path |
-|------|-------|------|
-| 2026-03-09 | Client-Side Security & Payment Flow | [reports/2026-03-09-pentest-clientside-payment.md](reports/2026-03-09-pentest-clientside-payment.md) |
-| 2026-03-10 | Authentication & API Authorization | [reports/2026-03-10-pentest-auth.md](reports/2026-03-10-pentest-auth.md) |
-| 2026-03-10 | Reconnaissance & Surface Enumeration | [reports/2026-03-10-pentest-recon.md](reports/2026-03-10-pentest-recon.md) |
-| 2026-03-10 | Injection & SSRF Testing | [reports/2026-03-10-pentest-injection.md](reports/2026-03-10-pentest-injection.md) |
+| Date | Scope | Git archive |
+|------|-------|-------------|
+| 2026-03-09 | Client-Side Security & Payment Flow | `164115aa` |
+| 2026-03-10 | Authentication & API Authorization | `164115aa` |
+| 2026-03-10 | Reconnaissance & Surface Enumeration | `164115aa` |
+| 2026-03-10 | Injection & SSRF Testing | `164115aa` |
 
 ### Archived Reports
 
-| Date | Scope | Notes | Path |
-|------|-------|-------|------|
-| 2026-03-02 | Patreon Integration | Historical — Patreon fully removed | [reports/2026-03-02-patreon-integration.md](reports/2026-03-02-patreon-integration.md) |
+| Date | Scope | Notes | Git archive |
+|------|-------|-------|-------------|
+| 2026-03-02 | Patreon Integration | Historical — Patreon fully removed | `164115aa` |
 
 ### Risk Summary Notes
 
@@ -68,10 +72,10 @@ This directory contains all security documentation for the Fenrir Ledger project
 
 | Document | Description | Last Reviewed |
 |----------|-------------|---------------|
-| [architecture/auth-architecture.md](architecture/auth-architecture.md) | Full OAuth 2.0 PKCE flow, session storage model, token expiration, incremental Drive consent, trust boundaries, JWKS verification, Stripe subscription auth model, and Firestore sync authorization model | 2026-03-20 |
-| [architecture/data-flow-diagrams.md](architecture/data-flow-diagrams.md) | Security-focused data flow diagrams for OAuth PKCE, URL import (Path A), CSV upload (Path C), Google Picker (Path B), Stripe checkout, and Firestore sync pull/push; marks trust boundaries, SSRF surfaces, and injection points | 2026-03-20 |
-| [architecture/trust-boundaries.md](architecture/trust-boundaries.md) | Five trust zones (browser, GKE server, Google infra, Stripe infra, Firestore); secret locations; what data crosses each boundary; localStorage XSS implications and Firestore householdId constraints | 2026-03-20 |
-| [architecture/threat-model.md](architecture/threat-model.md) | Assets, threat actors, attack surfaces, mitigations in place, and residual risks; includes Firestore sync attack surfaces and IDOR mitigations | 2026-03-20 |
+| [architecture/auth-architecture.md](architecture/auth-architecture.md) | Full OAuth 2.0 PKCE flow, session storage model, token expiration, incremental Drive consent, trust boundaries, JWKS verification, Stripe subscription auth model, Firestore sync authorization model, and `requireAuthz()` pattern for household-scoped routes | 2026-04-04 |
+| [architecture/data-flow-diagrams.md](architecture/data-flow-diagrams.md) | Security-focused data flow diagrams for OAuth PKCE, URL import (Path A), CSV upload (Path C), Google Picker (Path B), Stripe checkout, and Firestore sync pull/push; marks trust boundaries, SSRF surfaces, and injection points | 2026-04-04 |
+| [architecture/trust-boundaries.md](architecture/trust-boundaries.md) | Five trust zones (browser, GKE server, Google infra, Stripe infra, Firestore); secret locations; what data crosses each boundary; localStorage XSS implications and Firestore householdId constraints | 2026-04-04 |
+| [architecture/threat-model.md](architecture/threat-model.md) | Assets, threat actors, attack surfaces, mitigations in place, and residual risks; includes Firestore sync attack surfaces and IDOR mitigations | 2026-04-04 |
 
 ---
 
@@ -79,8 +83,8 @@ This directory contains all security documentation for the Fenrir Ledger project
 
 | Document | Description | Last Reviewed |
 |----------|-------------|---------------|
-| [checklists/api-route-checklist.md](checklists/api-route-checklist.md) | Pre-merge checklist for adding or modifying API routes: requireAuth pattern, Firestore householdId validation, input validation, error handling, secret hygiene, SSRF prevention; includes Stripe webhook exemption | 2026-03-20 |
-| [checklists/deployment-security.md](checklists/deployment-security.md) | Pre-deployment checklist for GKE Autopilot: secret hygiene (including Firestore env vars), CSP verification, OAuth config, Stripe config, dependency audit, build verification, post-deployment checks | 2026-03-20 |
+| [checklists/api-route-checklist.md](checklists/api-route-checklist.md) | Pre-merge checklist for adding or modifying API routes: requireAuth pattern, Firestore householdId validation, input validation, error handling, secret hygiene, SSRF prevention; includes Stripe webhook exemption | 2026-04-04 |
+| [checklists/deployment-security.md](checklists/deployment-security.md) | Pre-deployment checklist for GKE Autopilot: secret hygiene (including Firestore env vars), CSP verification, OAuth config, Stripe config, dependency audit, build verification, post-deployment checks | 2026-04-04 |
 
 ---
 
@@ -98,7 +102,7 @@ The following findings from active reports remain open. Assign to FiremanDecko f
 
 | ID | Report | Severity | Title | Status | Issue |
 |----|--------|----------|-------|--------|-------|
-| **PT2026-CRIT-001** | **pen-test-report.html** | **CRITICAL** | **Odin's Throne: oauth2-proxy auth bypass via `--skip-auth-regex=.*` — all routes unauthenticated** | Open | — |
+| ~~PT2026-CRIT-001~~ | ~~pen-test-report.html~~ | ~~CRITICAL~~ | ~~Odin's Throne: oauth2-proxy auth bypass via `--skip-auth-regex=.*`~~ | **RESOLVED — PR #1896** | #1879 |
 | PT2026-LOW-001 | pen-test-report.html | LOW | Technology disclosure via `x-powered-by: Next.js` header | Open | — |
 | PT2026-LOW-002 | pen-test-report.html | LOW | Build commit SHA exposed in `/api/health` response | Open | — |
 | PT2026-INFO-001 | pen-test-report.html | INFO | No `/.well-known/security.txt` file | Open | — |
