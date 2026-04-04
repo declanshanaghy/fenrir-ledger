@@ -3170,3 +3170,367 @@ body {
   text-transform: uppercase;
   pointer-events: none;
 }
+
+/* ── Card Panel (household selector + card summary) ─────────────────────── */
+
+.card-panel {
+  width: 280px;
+  min-width: 220px;
+  max-width: 360px;
+  height: 100%;
+  overflow-y: auto;
+  border-left: 1px solid var(--rune-border);
+  background: var(--forge);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.card-panel-header {
+  padding: 0.75rem 1rem 0.5rem;
+  border-bottom: 1px solid var(--rune-border);
+  flex-shrink: 0;
+}
+
+.card-panel-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.85rem;
+  color: var(--gold);
+  font-weight: 400;
+}
+
+.card-panel-selector {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--rune-border);
+  flex-shrink: 0;
+}
+
+.card-panel-select {
+  width: 100%;
+  background: var(--chain);
+  color: var(--text-saga);
+  border: 1px solid var(--rune-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.card-panel-select:focus {
+  border-color: var(--gold);
+}
+
+.card-panel-select option {
+  background: var(--chain);
+}
+
+.card-panel-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.household-info {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--rune-border);
+  background: var(--gold-subtle-bg);
+}
+
+.household-info-name {
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.85rem;
+  color: var(--text-saga);
+  font-weight: 600;
+}
+
+.household-info-meta {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-void);
+}
+
+.card-summary {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-summary-title {
+  padding: 0.5rem 1rem 0.4rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-void);
+  border-bottom: 1px solid var(--rune-border);
+}
+
+.card-summary-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-panel-empty {
+  padding: 1rem;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--text-void);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.card-panel-error {
+  padding: 0.75rem 1rem;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--error-text);
+  background: var(--error-bg);
+  border-left: 3px solid var(--error-border);
+  margin: 0.5rem 0.75rem;
+  border-radius: 3px;
+}
+
+/* ── Card Row (credit card list item) ───────────────────────────────────── */
+
+.card-row {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rune-border);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-saga);
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.card-row:hover {
+  background: var(--chain);
+}
+
+.card-row:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+}
+
+.card-row-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.card-row-issuer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.card-row-name {
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.82rem;
+  color: var(--text-saga);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+}
+
+.card-row-status {
+  font-weight: 600;
+}
+
+.card-row-fee {
+  color: var(--text-void);
+}
+
+.card-row-fee-date {
+  color: var(--text-void);
+  opacity: 0.75;
+}
+
+/* ── Card Detail Overlay ────────────────────────────────────────────────── */
+
+.card-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 7, 13, 0.72);
+  z-index: 500;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  animation: fadeIn 0.18s ease;
+}
+
+.card-overlay-panel {
+  width: min(420px, 94vw);
+  height: 100%;
+  background: var(--forge);
+  border-left: 1px solid var(--rune-border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.2s ease;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);   opacity: 1; }
+}
+
+.card-overlay-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--rune-border);
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.card-overlay-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.card-overlay-issuer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+.card-overlay-name {
+  font-family: 'Source Serif 4', serif;
+  font-size: 1.05rem;
+  color: var(--text-saga);
+  line-height: 1.2;
+}
+
+.card-overlay-close {
+  background: transparent;
+  border: 1px solid var(--rune-border);
+  border-radius: 4px;
+  color: var(--text-rune);
+  cursor: pointer;
+  font-size: 0.8rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+  /* Minimum touch target */
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.card-overlay-close:hover {
+  color: var(--error-strong);
+  border-color: var(--error-strong);
+}
+
+.card-overlay-close:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.card-overlay-status {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--rune-border);
+  flex-shrink: 0;
+}
+
+.card-detail-status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.card-overlay-details {
+  padding: 0.5rem 0;
+  flex: 1;
+}
+
+.card-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.35rem 1rem;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(42, 42, 62, 0.5);
+}
+
+.card-detail-row:last-child {
+  border-bottom: none;
+}
+
+.card-detail-row dt {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-void);
+  flex-shrink: 0;
+}
+
+.card-detail-row dd {
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.82rem;
+  color: var(--text-rune);
+  text-align: right;
+  word-break: break-word;
+}
+
+.card-detail-row--notes {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.card-detail-row--notes dd {
+  text-align: left;
+  font-size: 0.78rem;
+  color: var(--text-void);
+  font-style: italic;
+}
+
+.card-detail-id {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 0.6rem !important;
+  color: var(--text-void) !important;
+  word-break: break-all;
+}
+
+/* ── Responsive: hide CardPanel on very small screens ───────────────────── */
+@media (max-width: 768px) {
+  .card-panel {
+    display: none;
+  }
+}

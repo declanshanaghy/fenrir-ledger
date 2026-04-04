@@ -11,6 +11,7 @@ import { LogViewer } from "./components/LogViewer";
 import { AgentProfileModal } from "./components/AgentProfileModal";
 import { RagnarokDialog } from "./components/RagnarokDialog";
 import { Toast } from "./components/Toast";
+import { CardPanel } from "./components/CardPanel";
 import { useTheme } from "./hooks/useTheme";
 import {
   isPinned as checkIsPinned,
@@ -359,6 +360,9 @@ export function App() {
               }
             }}
           />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <CardPanel />
         </ErrorBoundary>
       </div>
       {profileAgent && (

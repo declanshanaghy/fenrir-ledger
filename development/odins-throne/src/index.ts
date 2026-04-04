@@ -3,6 +3,7 @@ import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { listAgentJobs, deleteAgentJob, findPodForSession, streamPodLogs } from "./k8s.js";
 import { attachWebSocketServer } from "./ws.js";
+import { listHouseholds, getCardsForHousehold } from "./firestore.js";
 
 const app = new Hono();
 
@@ -73,6 +74,33 @@ app.delete("/api/jobs/:sessionId", async (c) => {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.warn(`[k8s] Could not delete job for session ${sessionId}:`, message);
     return c.json({ ok: false, error: message }, 500);
+  }
+});
+
+// ── Household / card routes (admin monitoring) ────────────────────────────────
+
+// List all households — for the household selector in the monitoring UI
+app.get("/api/households", async (c) => {
+  try {
+    const households = await listHouseholds();
+    return c.json({ households, count: households.length });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.warn("[firestore] Could not list households:", message);
+    return c.json({ households: [], count: 0, error: message });
+  }
+});
+
+// List cards for a household — called when a household is selected in the UI
+app.get("/api/households/:householdId/cards", async (c) => {
+  const householdId = c.req.param("householdId");
+  try {
+    const cards = await getCardsForHousehold(householdId);
+    return c.json({ cards, count: cards.length });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.warn(`[firestore] Could not list cards for household ${householdId}:`, message);
+    return c.json({ cards: [], count: 0, error: message });
   }
 });
 
