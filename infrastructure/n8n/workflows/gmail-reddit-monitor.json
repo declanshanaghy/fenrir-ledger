@@ -49,7 +49,7 @@
           "name": "Gmail account"
         }
       },
-      "notes": "Reads unread emails from freyafenrir@gmail.com sent by noreply@redditmail.com with subject matching 'replied to your comment'.\n\nCredentials are sourced from the n8n-secrets K8s secret (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN). Configure the credential named 'Freya Gmail OAuth2 (freyafenrir@gmail.com)' in the n8n Credentials UI before activating."
+      "notes": "Reads unread emails from freyafenrir@gmail.com sent by noreply@redditmail.com with subject matching 'replied to your comment'."
     },
     {
       "parameters": {
@@ -82,11 +82,11 @@
         680,
         300
       ],
-      "notes": "Secondary guard: only process emails whose subject explicitly contains 'replied to your comment'. The Gmail fetch already filters by sender + subject, but this provides defense-in-depth against mis-filtered messages."
+      "notes": "Secondary guard: only process emails whose subject explicitly contains 'replied to your'. Defense-in-depth."
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst results = [];\nconst seenThreads = new Set();\n\nfor (const item of items) {\n  const subject = item.json.Subject || item.json.subject || '';\n  const snippet = item.json.snippet || item.json.text || '';\n  // With simple=false, Gmail node uses mailparser which outputs html field\n  // Also check textAsHtml as fallback\n  const htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n  const messageId = item.json.id || '';\n  const threadId = item.json.threadId || messageId;\n  const date = item.json.internalDate\n    ? new Date(parseInt(item.json.internalDate)).toISOString()\n    : (item.json.date || new Date().toISOString());\n\n  // Extract replier + subreddit from subject:\n  // \"u/USERNAME replied to your post/comment in r/SUBREDDIT\"\n  const subjectMatch = subject.match(/u\\/(\\S+)\\s+replied to your (?:post|comment) in (r\\/\\S+)/i);\n  const replierName = subjectMatch ? subjectMatch[1] : 'someone';\n  const subreddit = subjectMatch ? subjectMatch[2] : 'unknown';\n\n  // Skip bot/AutoModerator/ModTeam replies — no value in drafting follow-ups\n  const botNames = ['automoderator', 'bot', 'moderator', 'modteam'];\n  if (botNames.some(b => replierName.toLowerCase().includes(b))) {\n    continue;\n  }\n\n  // Skip excluded subreddits entirely\n  const excludedSubs = ['r/creditcards'];\n  if (excludedSubs.some(s => subreddit.toLowerCase() === s)) {\n    continue;\n  }\n\n  // Deduplicate by threadId — only process first email per thread\n  if (seenThreads.has(threadId)) {\n    continue;\n  }\n  seenThreads.add(threadId);\n\n  // Extract the \"View Reply\" link from the HTML email body\n  // Reddit emails have: <a href=\"https://www.reddit.com/r/.../comments/...\">View Reply</a>\n  // Try multiple patterns for the Reddit comment link\n  let replyLink = '';\n  const viewReplyMatch = htmlBody.match(/href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[^\"']*\\/comments\\/[^\"']*)[\"'][^>]*>[^<]*(?:View Reply|Reply|View Comment|View)/i);\n  if (viewReplyMatch) {\n    replyLink = viewReplyMatch[1];\n  } else {\n    // Fallback: find any reddit.com/r/.../comments/ link in the HTML\n    const commentLinkMatch = htmlBody.match(/href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[^\"']*\\/comments\\/[^\"']*)[\"']/i);\n    if (commentLinkMatch) {\n      replyLink = commentLinkMatch[1];\n    }\n  }\n\n  // Reply text is the snippet (already extracted by Gmail API)\n  const replyText = snippet.substring(0, 1000).trim();\n\n  results.push({\n    json: {\n      messageId,\n      threadId,\n      date,\n      subject,\n      replierName,\n      subreddit,\n      replyText,\n      replyLink,\n      rawBody: snippet\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "// Subreddits to ignore - read from env var (K8s configmap n8n-workflow-config)\n// Update via: kubectl edit configmap n8n-workflow-config -n fenrir-marketing\n// Format: comma-separated, e.g. \"r/sportscards,r/othersub\"\nconst IGNORED_SUBREDDITS = new Set(\n  ($env.IGNORED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst items = $input.all();\nconst results = [];\nconst seenThreads = new Set();\n\nfor (const item of items) {\n  const subject = item.json.Subject || item.json.subject || '';\n  const snippet = item.json.snippet || item.json.text || '';\n  const htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n  const messageId = item.json.id || '';\n  const threadId = item.json.threadId || messageId;\n  const date = item.json.internalDate\n    ? new Date(parseInt(item.json.internalDate)).toISOString()\n    : (item.json.date || new Date().toISOString());\n\n  const subjectMatch = subject.match(/u\\/(\\S+)\\s+replied to your (?:post|comment) in (r\\/\\S+)/i);\n  const replierName = subjectMatch ? subjectMatch[1] : 'someone';\n  const subreddit = subjectMatch ? subjectMatch[2] : 'unknown';\n\n  // Skip bot/AutoModerator/ModTeam replies\n  const botNames = ['automoderator', 'bot', 'moderator', 'modteam'];\n  if (botNames.some(b => replierName.toLowerCase().includes(b))) {\n    continue;\n  }\n\n  // Check ignore list from env var\n  const isIgnored = IGNORED_SUBREDDITS.has(subreddit.toLowerCase());\n\n  // Deduplicate by threadId\n  if (seenThreads.has(threadId)) {\n    continue;\n  }\n  seenThreads.add(threadId);\n\n  // Extract the \"View Reply\" link from the HTML email body\n  let replyLink = '';\n  const viewReplyMatch = htmlBody.match(/href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[^\"']*\\/comments\\/[^\"']*)[\"'][^>]*>[^<]*(?:View Reply|Reply|View Comment|View)/i);\n  if (viewReplyMatch) {\n    replyLink = viewReplyMatch[1];\n  } else {\n    const commentLinkMatch = htmlBody.match(/href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[^\"']*\\/comments\\/[^\"']*)[\"']/i);\n    if (commentLinkMatch) {\n      replyLink = commentLinkMatch[1];\n    }\n  }\n\n  const replyText = snippet.substring(0, 1000).trim();\n\n  results.push({\n    json: {\n      messageId,\n      threadId,\n      date,\n      subject,\n      replierName,\n      subreddit,\n      replyText,\n      replyLink,\n      isIgnored,\n      rawBody: snippet\n    }\n  });\n}\n\nreturn results;"
       },
       "id": "a1b2c3d4-0004-4000-8000-000000000004",
       "name": "Extract — Thread Context",
@@ -96,7 +96,40 @@
         900,
         220
       ],
-      "notes": "Parses the Gmail message to extract:\n- replierName: the Reddit username who replied\n- subreddit: where the thread lives\n- replyText: the content of their reply (stripped of email footer boilerplate)"
+      "notes": "Parses Gmail message to extract replierName, subreddit, replyText, replyLink. Uses IGNORED_SUBREDDITS env var for ignore list. Emits isIgnored flag."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-not-ignored",
+              "leftValue": "={{ $json.isIgnored }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEqual"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0009-4000-8000-000000000009",
+      "name": "Filter — Not Ignored",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        220
+      ],
+      "notes": "Splits by isIgnored flag. True branch (not ignored) goes to Claude. False branch (ignored subreddit) goes directly to Mark as Read."
     },
     {
       "parameters": {
@@ -110,14 +143,14 @@
         "messages": {
           "values": [
             {
-              "content": "=A Reddit user named {{ $json.replierName }} replied to your comment on {{ $json.subreddit }}.\n\nTheir reply:\n{{ $json.replyText }}\n\nDraft a short, genuine follow-up response (2-4 sentences). Be conversational, helpful, and specific to what they said. Where it fits naturally, steer the conversation toward tracking strategies that matter for churning: annual fee dates, signup bonus deadlines, minimum spend windows, product change timing, or statement close dates. Share from personal experience how keeping close tabs on these dates has saved you money or helped you optimize. Do not mention any specific apps, tools, or products by name.",
+              "content": "=A Reddit user named {{ $json.replierName }} replied to your comment on {{ $json.subreddit }}.\n\nTheir reply:\n{{ $json.replyText }}\n\nDraft a short, genuine follow-up response. Write 2-4 short paragraphs (one point per paragraph, 1-2 sentences each). Break up your response so it reads naturally on Reddit. No walls of text.\n\nBe conversational, helpful, and specific to what they said. Where it fits naturally, steer the conversation toward tracking strategies that matter for churning: annual fee dates, signup bonus deadlines, minimum spend windows, product change timing, or statement close dates. Share from personal experience how keeping close tabs on these dates has saved you money or helped you optimize.\n\nSprinkle in the occasional emoji or ASCII smiley (like :-D or ;-) or :-P) to keep the tone casual and human. Not every comment needs one, but use them when the mood fits.\n\nDo not mention any specific apps, tools, or products by name.",
               "role": "user"
             }
           ]
         },
         "simplify": true,
         "options": {
-          "system": "You are Freya, an experienced credit card churner who actively manages a stack of 10+ cards. You track annual fee dates, signup bonus spend deadlines, statement close dates, and downgrade/cancellation windows in a spreadsheet. You believe the key to successful churning is systematic tracking, knowing exactly when each fee hits, when minimum spend is due, and when to product-change before the next annual fee posts. You've seen people lose hundreds of dollars by missing a fee date or forgetting a bonus deadline. Your philosophy: churning is a numbers game, and the people who win are the ones who treat their card stack like a portfolio with clear dates and milestones for every card.\n\nYour tone is friendly, knowledgeable, and never promotional. You give real value first with specific advice, honest opinions, and genuine engagement. You write short Reddit comments (2-4 sentences). No marketing speak. No exclamation points. Never use em dashes. Sound like a real person who genuinely enjoys the hobby. Never mention any specific apps, tools, or products by name. When tracking comes up naturally, talk about the strategy and what to track, not what tool to use.",
+          "system": "You are Freya, a 34-year-old in Denver. You and your husband Marcus (software engineer) got into churning 3 years ago after he booked your honeymoon to Iceland on points. Now you manage 12 active cards between you. You have two daughters, Lily (7) and Nora (4), and a golden retriever named Odin.\n\nYou track everything in a color-coded spreadsheet you built yourself. Your favorites: Amex Gold (groceries for the family basically earns itself), Chase Sapphire Reserve (travel), Citi Premier (backup flexibility). You recently closed an Amex Platinum after the second AF because you weren't using the credits enough with two kids. Current goal: family trip to Japan next year, fully on points. Stockpiling MR and UR.\n\nYour philosophy: churning is a numbers game, and the people who win are the ones who treat their card stack like a portfolio with clear dates and milestones for every card. You're practical, not a maximizer. More of a 'good enough' optimizer.\n\nYour tone is friendly, knowledgeable, and never promotional. You give real value first with specific advice, honest opinions, and genuine engagement. You write short Reddit comments (2-4 sentences per paragraph, multiple paragraphs). No marketing speak. No exclamation points. Never use em dashes. Use occasional emojis or ASCII smileys (:-D, ;-), :-P) to sound human and casual. Reference your family naturally: 'my husband and I split the card apps,' 'with two kids under 8 the grocery spend basically earns itself.' Sound like a real person who genuinely enjoys the hobby. Never mention any specific apps, tools, or products by name. When tracking comes up naturally, talk about the strategy and what to track, not what tool to use.",
           "maxTokens": 512
         }
       },
@@ -126,7 +159,7 @@
       "type": "@n8n/n8n-nodes-langchain.anthropic",
       "typeVersion": 1,
       "position": [
-        1120,
+        1340,
         220
       ],
       "credentials": {
@@ -146,10 +179,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1460,
+        1560,
         220
       ],
-      "notes": "Extracts the Claude draft text from the API response and merges it with the email context data so the GitHub issue node has everything it needs."
+      "notes": "Merges Claude draft text with email context data."
     },
     {
       "parameters": {
@@ -157,7 +190,7 @@
         "operation": "create",
         "subject": "=Reply to u/{{ $json.replierName }} on {{ $json.subreddit }}",
         "emailType": "html",
-        "message": "=<h3>Reddit Reply Draft</h3>\n<p><strong>Reply to:</strong> <a href=\"{{ $json.replyLink }}\">{{ $json.replyLink ? 'View Reply on Reddit' : 'Link unavailable — check ' + $json.subreddit }}</a></p>\n<p><strong>Thread:</strong> {{ $json.subreddit }} | <strong>Replier:</strong> u/{{ $json.replierName }}</p>\n<p><strong>Received:</strong> {{ $json.date }}</p>\n<hr/>\n<h4>Their Reply</h4>\n<blockquote>{{ $json.replyText }}</blockquote>\n<hr/>\n<h4>Draft Response (post as u/Wide-Pass369)</h4>\n<p>{{ $json.draftText }}</p>\n<hr/>\n<p><em>1. Click the link above to open the Reddit comment<br/>2. Review and edit the draft response<br/>3. Post as u/Wide-Pass369<br/>4. Delete this email when done</em></p>",
+        "message": "=<h3>Reddit Reply Draft</h3>\n<p><strong>Reply to:</strong> <a href=\"{{ $json.replyLink }}\">{{ $json.replyLink ? 'View Reply on Reddit' : 'Link unavailable, check ' + $json.subreddit }}</a></p>\n<p><strong>Thread:</strong> {{ $json.subreddit }} | <strong>Replier:</strong> u/{{ $json.replierName }}</p>\n<p><strong>Received:</strong> {{ $json.date }}</p>\n<hr/>\n<h4>Their Reply</h4>\n<blockquote>{{ $json.replyText }}</blockquote>\n<hr/>\n<h4>Draft Response (post as u/Wide-Pass369)</h4>\n<div style=\"background: #f0f8ff; padding: 12px; border-radius: 4px; white-space: pre-line;\">{{ $json.draftText }}</div>\n<hr/>\n<p><em>1. Click the link above to open the Reddit comment<br/>2. Review and edit the draft response<br/>3. Post as u/Wide-Pass369<br/>4. Delete this email when done</em></p>",
         "toList": [
           "reddit-replies@fenrirledger.com"
         ],
@@ -168,7 +201,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        1680,
+        1780,
         220
       ],
       "credentials": {
@@ -177,7 +210,29 @@
           "name": "Gmail account"
         }
       },
-      "notes": "Creates a Gmail draft addressed to reddit-replies@fenrirledger.com with the Reddit post link and Claude's draft reply. Freya reviews, edits, then posts manually as u/Wide-Pass369."
+      "notes": "Creates a Gmail draft with the Reddit post link and Claude's draft reply."
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "markAsRead",
+        "messageId": "={{ $('Extract — Thread Context').first().json.messageId }}"
+      },
+      "id": "a1b2c3d4-0010-4000-8000-000000000010",
+      "name": "Gmail — Mark as Read",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        220
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Eck5j1Xj1x6zyc9A",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "Marks the source Reddit reply email as read after draft is created or if the subreddit is ignored."
     },
     {
       "parameters": {
@@ -191,7 +246,7 @@
         900,
         420
       ],
-      "notes": "Reached when no unread Reddit reply emails are present. Workflow ends cleanly — nothing to do."
+      "notes": "Reached when no unread Reddit reply emails are present. Workflow ends cleanly."
     }
   ],
   "connections": {
@@ -239,7 +294,25 @@
       "main": [
         [
           {
+            "node": "Filter — Not Ignored",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter — Not Ignored": {
+      "main": [
+        [
+          {
             "node": "Claude API — Draft Follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail — Mark as Read",
             "type": "main",
             "index": 0
           }
@@ -262,6 +335,17 @@
         [
           {
             "node": "Gmail — Create Draft Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail — Create Draft Reply": {
+      "main": [
+        [
+          {
+            "node": "Gmail — Mark as Read",
             "type": "main",
             "index": 0
           }
