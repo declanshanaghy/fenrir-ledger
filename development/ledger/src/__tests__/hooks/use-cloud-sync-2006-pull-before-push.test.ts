@@ -645,3 +645,117 @@ describe("useCloudSync — Issue #2006: syncVersion tracking", () => {
     expect(result.current.syncVersion).toBeNull();
   });
 });
+
+// ── Loki augmentation: edge case coverage ─────────────────────────────────────
+
+describe("useCloudSync — Issue #2006 (Loki): clientSyncVersion body edge cases", () => {
+  const mockFetch = vi.fn();
+
+  beforeEach(() => {
+    mockEntitlement.tier = "karl";
+    mockEntitlement.isActive = true;
+    mockGetNeedsUpload.mockReturnValue(false);
+    vi.stubGlobal("fetch", mockFetch);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    clearSession();
+  });
+
+  it("omits clientSyncVersion from push body when state check fails (first sync, no version)", async () => {
+    const capturedBodies: unknown[] = [];
+
+    mockFetch.mockImplementation((url: string, opts?: RequestInit) => {
+      if (url.includes("/api/sync/state")) return errorResponse(500);
+      if (url.includes("/api/sync/push")) {
+        if (opts?.body) capturedBodies.push(JSON.parse(opts.body as string));
+        return pushSuccessResponse(1, [], 5);
+      }
+      return errorResponse();
+    });
+
+    const { result } = renderHook(() => useCloudSync());
+    setSession();
+
+    await act(async () => {
+      await result.current.syncNow();
+    });
+
+    expect(result.current.status).toBe("synced");
+    // clientSyncVersion should be absent — syncVersionRef starts null, state returned null
+    expect(capturedBodies[0]).not.toHaveProperty("clientSyncVersion");
+  });
+
+  it("uses pull syncVersion as clientSyncVersion in the subsequent push (pre-push pull flow)", async () => {
+    const capturedBodies: unknown[] = [];
+
+    mockFetch.mockImplementation((url: string, opts?: RequestInit) => {
+      if (url.includes("/api/sync/state")) return stateResponse(8, 3, false); // stale, pull needed
+      if (url.includes("/api/sync/pull")) return pullSuccessResponse([], 0, 8);
+      if (url.includes("/api/sync/push")) {
+        if (opts?.body) capturedBodies.push(JSON.parse(opts.body as string));
+        return pushSuccessResponse(1, [], 9);
+      }
+      return errorResponse();
+    });
+
+    const { result } = renderHook(() => useCloudSync());
+    setSession();
+
+    await act(async () => {
+      await result.current.syncNow();
+    });
+
+    expect(result.current.status).toBe("synced");
+    // After pre-push pull (syncVersion=8), push should send clientSyncVersion=8
+    expect(capturedBodies[0]).toMatchObject({ clientSyncVersion: 8 });
+  });
+
+  it("re-entrancy guard: concurrent syncNow calls do not double-push", async () => {
+    let pushCallCount = 0;
+
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes("/api/sync/state")) return stateResponse(5, 5, false);
+      if (url.includes("/api/sync/push")) {
+        pushCallCount++;
+        return pushSuccessResponse(1, [], 6);
+      }
+      return errorResponse();
+    });
+
+    const { result } = renderHook(() => useCloudSync());
+    setSession();
+
+    // Fire two concurrent syncNow calls
+    await act(async () => {
+      await Promise.all([result.current.syncNow(), result.current.syncNow()]);
+    });
+
+    expect(result.current.status).toBe("synced");
+    // Second call should be a no-op due to re-entrancy guard
+    expect(pushCallCount).toBe(1);
+  });
+
+  it("updates syncVersion state after pre-push pull + push (end-to-end version tracking)", async () => {
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes("/api/sync/state")) return stateResponse(10, 7, true);
+      if (url.includes("/api/sync/pull")) return pullSuccessResponse([], 0, 10);
+      if (url.includes("/api/sync/push")) return pushSuccessResponse(3, [], 11);
+      return errorResponse();
+    });
+
+    const { result } = renderHook(() => useCloudSync());
+    setSession();
+
+    expect(result.current.syncVersion).toBeNull();
+
+    await act(async () => {
+      await result.current.syncNow();
+    });
+
+    expect(result.current.status).toBe("synced");
+    // Final syncVersion comes from the push response (11)
+    expect(result.current.syncVersion).toBe(11);
+  });
+});
