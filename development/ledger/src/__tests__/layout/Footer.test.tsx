@@ -210,3 +210,26 @@ describe("Footer — mobile overflow fix — issue #2047", () => {
     });
   });
 });
+
+describe("Footer — LokiToast overflow safety — issue #2047", () => {
+  it("LokiToast uses position:fixed so it is removed from document flow and cannot expand the scroll area", () => {
+    renderFooter();
+    const lokiBtn = screen.getByRole("button", { name: "Loki" });
+    for (let i = 0; i < 7; i++) fireEvent.click(lokiBtn);
+
+    const toast = screen.getByRole("status");
+    // position:fixed takes the element out of the normal document flow,
+    // ensuring it cannot contribute to the document's scrollable width.
+    expect(toast).toHaveStyle({ position: "fixed" });
+  });
+
+  it("LokiToast is centered (left:50%) so it cannot push the right edge of the viewport", () => {
+    renderFooter();
+    const lokiBtn = screen.getByRole("button", { name: "Loki" });
+    for (let i = 0; i < 7; i++) fireEvent.click(lokiBtn);
+
+    const toast = screen.getByRole("status");
+    // Centered via left:50% + translateX(-50%) — cannot overflow the right viewport edge.
+    expect(toast).toHaveStyle({ left: "50%" });
+  });
+});
