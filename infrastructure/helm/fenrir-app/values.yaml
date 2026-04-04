@@ -26,6 +26,9 @@ app:
     FIRESTORE_PROJECT_ID: "fenrir-ledger-prod"
     FIRESTORE_DATABASE_ID: "fenrir-ledger-prod"
     NEXT_PUBLIC_UMAMI_WEBSITE_ID: "2180ab61-a080-45b2-bf85-65ab3bbd0730"
+    # KMS key for JWT secret envelope decryption — set to `terraform output kms_key_name`
+    # Format: projects/{project}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}
+    KMS_KEY_NAME: "projects/fenrir-ledger-prod/locations/us-central1/keyRings/fenrir-keys/cryptoKeys/fenrir-envelope"
 
   resources:
     requests:

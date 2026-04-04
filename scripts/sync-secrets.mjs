@@ -105,7 +105,18 @@ const SECRETS = [
   { name: "APP_BASE_URL",             dest: "k8s-app", group: "K8s App Secrets", canonical: "APP_BASE_URL",                  envVar: "APP_BASE_URL",                k8sSecret: "fenrir-app-secrets" },
   { name: "ADMIN_EMAILS",             dest: "k8s-app", group: "K8s App Secrets", canonical: "ADMIN_EMAILS",                  envVar: "ADMIN_EMAILS",                k8sSecret: "fenrir-app-secrets" },
   { name: "GITHUB_TOKEN",            dest: "k8s-app", group: "K8s App Secrets", canonical: "GITHUB_TOKEN_PAT_CLASSIC",       secretsVar: "GITHUB_TOKEN_PAT_CLASSIC", k8sSecret: "fenrir-app-secrets" },
+  // KMS envelope encryption — stored as base64 ciphertext, decrypted at pod startup
+  // Source: FENRIR_JWT_SECRET plaintext is encrypted with gcloud kms encrypt before storage
+  { name: "FENRIR_JWT_SECRET_CIPHERTEXT", dest: "k8s-app", group: "K8s App Secrets", secretsVar: "FENRIR_JWT_SECRET", kmsEncrypt: true, k8sSecret: "fenrir-app-secrets" },
 ];
+
+// --------------------------------------------------------------------------
+// KMS constants
+// --------------------------------------------------------------------------
+const KMS_PROJECT  = "fenrir-ledger-prod";
+const KMS_LOCATION = "us-central1";
+const KMS_KEYRING  = "fenrir-keys";
+const KMS_KEY      = "fenrir-envelope";
 
 // --------------------------------------------------------------------------
 // Helpers
@@ -113,6 +124,34 @@ const SECRETS = [
 function sh(cmd) {
   try { return execSync(cmd, { encoding: "utf8", timeout: 10_000 }).trim(); }
   catch { return ""; }
+}
+
+/**
+ * Encrypt `plaintext` with Cloud KMS and return base64-encoded ciphertext.
+ * Requires gcloud CLI authenticated with cloudkms.cryptoKeyEncrypter role.
+ *
+ * @param {string} plaintext
+ * @returns {string} base64-encoded ciphertext
+ */
+function kmsEncrypt(plaintext) {
+  try {
+    const result = execSync(
+      `printf '%s' "${plaintext.replace(/"/g, '\\"')}" | ` +
+      `gcloud kms encrypt ` +
+      `--project=${KMS_PROJECT} ` +
+      `--location=${KMS_LOCATION} ` +
+      `--keyring=${KMS_KEYRING} ` +
+      `--key=${KMS_KEY} ` +
+      `--plaintext-file=- ` +
+      `--ciphertext-file=- | base64 -w0`,
+      { encoding: "buffer", timeout: 30_000 }
+    );
+    return result.toString("utf8").trim();
+  } catch (e) {
+    console.error(`  ${C.red}✗${C.r} KMS encrypt failed: ${e.message}`);
+    console.error(`  Ensure gcloud is authenticated and has roles/cloudkms.cryptoKeyEncrypter`);
+    throw e;
+  }
 }
 
 function parseKeyValueFile(filePath) {
@@ -207,6 +246,25 @@ async function resolveValue(s, secretsVars, smSecrets) {
   if (s.canonical && smSecrets.has(s.canonical)) return smSecrets.get(s.canonical);
 
   return null;
+}
+
+/**
+ * Resolve the value to store in the destination — applying KMS encryption
+ * for secrets with kmsEncrypt: true.
+ *
+ * @param {object} s   Secret definition
+ * @param {object} envVars
+ * @param {object} secretsVars
+ * @returns {string|null}
+ */
+function resolveDestValue(s, envVars, secretsVars) {
+  const raw = resolveLocalValue(s, envVars, secretsVars);
+  if (!raw) return null;
+  if (s.kmsEncrypt) {
+    console.log(`  ${C.cyan}⚙${C.r} ${s.name} — KMS encrypting plaintext before storage`);
+    return kmsEncrypt(raw);
+  }
+  return raw;
 }
 
 function getK8sSecretData(secretName, namespace) {
