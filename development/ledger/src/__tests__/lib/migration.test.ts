@@ -95,6 +95,14 @@ function makePushResponse(cards: Card[]): Response {
   } as Response;
 }
 
+function makePullResponse(cards: Card[]): Response {
+  const activeCount = cards.filter((c) => !c.deletedAt).length;
+  return {
+    ok: true,
+    json: async () => ({ cards, activeCount }),
+  } as Response;
+}
+
 function makeErrorResponse(status: number, error: string, description: string): Response {
   return {
     ok: false,
@@ -146,9 +154,36 @@ describe("runMigration — already migrated guard", () => {
   });
 });
 
-describe("runMigration — download direction", () => {
+describe("runMigration — download direction (pull-first)", () => {
   beforeEach(() => {
     localStorageMock.clear();
+    vi.clearAllMocks();
+  });
+
+  it("calls GET /api/sync/pull when local cards are empty", async () => {
+    mockGetRawAllCards.mockReturnValue([]);
+    const cloudCards = [
+      makeCard("c1", "2026-01-01T10:00:00Z"),
+      makeCard("c2", "2026-01-02T10:00:00Z"),
+    ];
+    mockFetch.mockResolvedValue(makePullResponse(cloudCards));
+
+    await runMigration("hh-test", "tok-pull");
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/sync/pull?householdId=hh-test",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({
+          Authorization: "Bearer tok-pull",
+        }),
+      })
+    );
+    // Must NOT call push when local is empty
+    expect(mockFetch).not.toHaveBeenCalledWith(
+      "/api/sync/push",
+      expect.anything()
+    );
   });
 
   it("direction=download when local is empty and cloud has cards", async () => {
@@ -161,7 +196,7 @@ describe("runMigration — download direction", () => {
       makeCard("c2", "2026-01-02T10:00:00Z"),
       makeCard("c3", "2026-01-03T10:00:00Z"),
     ];
-    mockFetch.mockResolvedValue(makePushResponse(cloudCards));
+    mockFetch.mockResolvedValue(makePullResponse(cloudCards));
 
     const result = await runMigration("hh-test", "id-token-123");
 
@@ -169,7 +204,7 @@ describe("runMigration — download direction", () => {
     expect(result.cardCount).toBe(3);
     expect(result.direction).toBe("download");
 
-    // Should apply merged result to localStorage
+    // Should write pulled cards to localStorage
     expect(mockSetAllCards).toHaveBeenCalledWith("hh-test", cloudCards);
 
     // Should mark migrated
@@ -177,6 +212,31 @@ describe("runMigration — download direction", () => {
       "fenrir:migrated",
       "true"
     );
+  });
+
+  it("direction=empty when local is empty and cloud is also empty", async () => {
+    mockGetRawAllCards.mockReturnValue([]);
+    mockFetch.mockResolvedValue(makePullResponse([]));
+
+    const result = await runMigration("hh-test", "id-token-123");
+
+    expect(result.ran).toBe(true);
+    expect(result.cardCount).toBe(0);
+    expect(result.direction).toBe("empty");
+    expect(localStorageMock.setItem).toHaveBeenCalledWith("fenrir:migrated", "true");
+  });
+
+  it("includes tombstones from pull in setAllCards", async () => {
+    mockGetRawAllCards.mockReturnValue([]);
+    const active = makeCard("c1", "2026-01-01T10:00:00Z");
+    const tombstone = makeCard("c2", "2026-01-01T09:00:00Z", "2026-01-02T08:00:00Z");
+    mockFetch.mockResolvedValue(makePullResponse([active, tombstone]));
+
+    const result = await runMigration("hh-test", "id-token-123");
+
+    // activeCount is 1 (tombstone excluded), but setAllCards receives all cards
+    expect(result.cardCount).toBe(1);
+    expect(mockSetAllCards).toHaveBeenCalledWith("hh-test", [active, tombstone]);
   });
 });
 
@@ -256,31 +316,14 @@ describe("runMigration — merge direction", () => {
   });
 });
 
-describe("runMigration — empty direction", () => {
+
+describe("runMigration — API error handling (pull path, empty local)", () => {
   beforeEach(() => {
     localStorageMock.clear();
+    vi.clearAllMocks();
   });
 
-  it("direction=empty when both local and cloud are empty", async () => {
-    mockGetRawAllCards.mockReturnValue([]);
-    mockFetch.mockResolvedValue(makePushResponse([]));
-
-    const result = await runMigration("hh-test", "id-token-123");
-
-    expect(result.ran).toBe(true);
-    expect(result.cardCount).toBe(0);
-    expect(result.direction).toBe("empty");
-    // Should still mark migrated even if empty
-    expect(localStorageMock.setItem).toHaveBeenCalledWith("fenrir:migrated", "true");
-  });
-});
-
-describe("runMigration — API error handling", () => {
-  beforeEach(() => {
-    localStorageMock.clear();
-  });
-
-  it("throws and does NOT set migration flag when API returns non-OK", async () => {
+  it("throws and does NOT set migration flag when pull API returns non-OK", async () => {
     mockGetRawAllCards.mockReturnValue([]);
     mockFetch.mockResolvedValue(
       makeErrorResponse(403, "forbidden", "Cloud sync is a Karl-tier feature.")
@@ -295,7 +338,7 @@ describe("runMigration — API error handling", () => {
     expect(mockSetAllCards).not.toHaveBeenCalled();
   });
 
-  it("throws with error code attached to the error", async () => {
+  it("throws with error code attached when pull API errors", async () => {
     mockGetRawAllCards.mockReturnValue([]);
     mockFetch.mockResolvedValue(
       makeErrorResponse(500, "internal_error", "Server blew up.")
@@ -313,7 +356,7 @@ describe("runMigration — API error handling", () => {
     expect(thrown?.message).toBe("Server blew up.");
   });
 
-  it("throws with generic message when error body is not parseable JSON", async () => {
+  it("throws with generic message when pull error body is not parseable JSON", async () => {
     mockGetRawAllCards.mockReturnValue([]);
     mockFetch.mockResolvedValue({
       ok: false,
@@ -327,22 +370,61 @@ describe("runMigration — API error handling", () => {
   });
 });
 
+describe("runMigration — API error handling (push path, local has cards)", () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+    vi.clearAllMocks();
+  });
+
+  it("throws and does NOT set migration flag when push API returns non-OK", async () => {
+    mockGetRawAllCards.mockReturnValue([makeCard("c1", "2026-01-01T10:00:00Z")]);
+    mockFetch.mockResolvedValue(
+      makeErrorResponse(403, "forbidden", "Cloud sync is a Karl-tier feature.")
+    );
+
+    await expect(runMigration("hh-test", "id-token-123")).rejects.toThrow(
+      "Cloud sync is a Karl-tier feature."
+    );
+
+    expect(hasMigrated()).toBe(false);
+    expect(mockSetAllCards).not.toHaveBeenCalled();
+  });
+});
+
 describe("runMigration — idempotency", () => {
   beforeEach(() => {
     localStorageMock.clear();
+    vi.clearAllMocks();
   });
 
-  it("second call returns ran=false without fetching", async () => {
+  it("second call returns ran=false without fetching (pull path)", async () => {
     mockGetRawAllCards.mockReturnValue([]);
     const cards = [makeCard("c1", "2026-01-01T10:00:00Z")];
-    mockFetch.mockResolvedValue(makePushResponse(cards));
+    mockFetch.mockResolvedValue(makePullResponse(cards));
 
-    // First call
+    // First call — local empty → pull
     const first = await runMigration("hh-test", "id-token-123");
     expect(first.ran).toBe(true);
     expect(mockFetch).toHaveBeenCalledTimes(1);
 
-    // Second call — should be skipped
+    // Second call — should be skipped (flag set)
+    vi.clearAllMocks();
+    const second = await runMigration("hh-test", "id-token-123");
+    expect(second.ran).toBe(false);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("second call returns ran=false without fetching (push path)", async () => {
+    const localCards = [makeCard("c1", "2026-01-01T10:00:00Z")];
+    mockGetRawAllCards.mockReturnValue(localCards);
+    mockFetch.mockResolvedValue(makePushResponse(localCards));
+
+    // First call — local has cards → push
+    const first = await runMigration("hh-test", "id-token-123");
+    expect(first.ran).toBe(true);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    // Second call — should be skipped (flag set)
     vi.clearAllMocks();
     const second = await runMigration("hh-test", "id-token-123");
     expect(second.ran).toBe(false);

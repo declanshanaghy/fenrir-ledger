@@ -94,8 +94,9 @@ export function markMigrated(): void {
  * Steps:
  *   1. Guard — return early if already migrated (idempotent)
  *   2. Read local cards (including tombstones)
- *   3. POST to /api/sync/push — server merges local + remote (LWW) and returns merged
- *   4. Apply merged result back to localStorage via setAllCards
+ *   3a. If local is empty → GET /api/sync/pull (new device: download cloud data)
+ *   3b. If local has cards → POST /api/sync/push (existing data: merge with cloud)
+ *   4. Apply result to localStorage via setAllCards
  *   5. Mark migrated
  *   6. Return MigrationResult for caller to show appropriate toast
  *
@@ -113,51 +114,94 @@ export async function runMigration(
     return { ran: false, cardCount: 0, direction: "empty" };
   }
 
-  // Snapshot local state before the push so we can infer direction
+  // Snapshot local state before the API call so we can infer direction
   const localCards = getRawAllCards(householdId);
   const localActiveCount = localCards.filter((c) => !c.deletedAt).length;
 
-  // Push local cards → server fetches remote, merges (LWW), writes Firestore, returns merged
-  const response = await fetch("/api/sync/push", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${idToken}`,
-    },
-    body: JSON.stringify({ householdId, cards: localCards }),
-  });
+  let resultCards: Card[];
+  let resultActiveCount: number;
 
-  if (!response.ok) {
-    let errCode = "migration_error";
-    let errMsg = "Migration failed.";
-    try {
-      const errBody = (await response.json()) as {
-        error?: string;
-        error_description?: string;
-      };
-      errCode = errBody.error ?? errCode;
-      errMsg = errBody.error_description ?? errMsg;
-    } catch {
-      // ignore JSON parse failure on error body
+  if (localCards.length === 0) {
+    // New device with no local data — pull cloud cards down rather than pushing nothing
+    const response = await fetch(
+      `/api/sync/pull?householdId=${encodeURIComponent(householdId)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      let errCode = "migration_error";
+      let errMsg = "Migration failed.";
+      try {
+        const errBody = (await response.json()) as {
+          error?: string;
+          error_description?: string;
+        };
+        errCode = errBody.error ?? errCode;
+        errMsg = errBody.error_description ?? errMsg;
+      } catch {
+        // ignore JSON parse failure on error body
+      }
+      throw Object.assign(new Error(errMsg), { code: errCode });
     }
-    throw Object.assign(new Error(errMsg), { code: errCode });
+
+    const { cards: pulledCards, activeCount } = (await response.json()) as {
+      cards: Card[];
+      activeCount: number;
+    };
+
+    resultCards = pulledCards;
+    resultActiveCount = activeCount;
+  } else {
+    // Local has cards — push to cloud; server merges (LWW), writes Firestore, returns merged
+    const response = await fetch("/api/sync/push", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ householdId, cards: localCards }),
+    });
+
+    if (!response.ok) {
+      let errCode = "migration_error";
+      let errMsg = "Migration failed.";
+      try {
+        const errBody = (await response.json()) as {
+          error?: string;
+          error_description?: string;
+        };
+        errCode = errBody.error ?? errCode;
+        errMsg = errBody.error_description ?? errMsg;
+      } catch {
+        // ignore JSON parse failure on error body
+      }
+      throw Object.assign(new Error(errMsg), { code: errCode });
+    }
+
+    const { cards: mergedCards, syncedCount } = (await response.json()) as {
+      cards: Card[];
+      syncedCount: number;
+    };
+
+    resultCards = mergedCards;
+    resultActiveCount = syncedCount;
   }
 
-  const { cards: mergedCards, syncedCount } = (await response.json()) as {
-    cards: Card[];
-    syncedCount: number;
-  };
-
-  // Apply merged result back to localStorage — same semantics as regular sync
-  setAllCards(householdId, mergedCards);
+  // Apply result to localStorage — same semantics as regular sync
+  setAllCards(householdId, resultCards);
 
   // Infer data flow direction for the caller's toast message
-  const direction = inferDirection(localActiveCount, syncedCount);
+  const direction = inferDirection(localActiveCount, resultActiveCount);
 
   // Mark as migrated — prevents re-running on subsequent sign-ins
   markMigrated();
 
-  return { ran: true, cardCount: syncedCount, direction };
+  return { ran: true, cardCount: resultActiveCount, direction };
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
