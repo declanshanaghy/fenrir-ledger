@@ -28,9 +28,10 @@ Helm manages Kubernetes workloads. GitHub Actions orchestrates every deployment.
 │  │  │  fenrir-monitor  │  │  Umami (analytics)           │  │  │
 │  │  │                 │  │  PostgreSQL StatefulSet       │  │  │
 │  │  │  Odin's Throne  │  └──────────────────────────────┘  │  │
-│  │  │  (monitor + UI) │                                     │  │
-│  │  │  oauth2-proxy   │                                     │  │
-│  │  └─────────────────┘                                     │  │
+│  │  │  (monitor + UI) │  ┌──────────────────────────────┐  │  │
+│  │  │  oauth2-proxy   │  │  fenrir-marketing            │  │  │
+│  │  └─────────────────┘  │  n8n marketing engine        │  │  │
+│  │                        └──────────────────────────────┘  │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │
@@ -56,6 +57,10 @@ Helm manages Kubernetes workloads. GitHub Actions orchestrates every deployment.
 | `fenrir-agents` | Ephemeral agent sandbox GKE Jobs (fire-and-forget) | `k8s/agents/dispatch-job.sh` (not Helm) |
 | `fenrir-analytics` | Umami self-hosted analytics + PostgreSQL | `helm/umami` |
 | `fenrir-monitor` | Odin's Throne monitor backend + UI + oauth2-proxy | `helm/odin-throne` |
+| `fenrir-marketing` | n8n marketing automation engine | `helm/n8n` |
+
+> **Redis removed:** The Redis StatefulSet that previously ran in `fenrir-app` was removed
+> in issues #1516–#1521. Entitlement and trial state are now persisted in Firestore.
 
 Namespaces, service accounts, and ResourceQuotas are created inline by each deploy job in `deploy.yml` — no separate bootstrap step.
 
@@ -66,7 +71,8 @@ Namespaces, service accounts, and ResourceQuotas are created inline by each depl
 | Layer | Tool | Scope |
 |---|---|---|
 | Cloud infrastructure | Terraform (`*.tf`) | GKE cluster, VPC, DNS, CDN, Firestore, Artifact Registry, IAM |
-| App workloads | Helm (`helm/fenrir-app`) | Next.js app + Redis in `fenrir-app` |
+| App workloads | Helm (`helm/fenrir-app`) | Next.js app in `fenrir-app` (Redis removed — see Firestore) |
+| Marketing engine | Helm (`helm/n8n`) | n8n in `fenrir-marketing` |
 | Monitor | Helm (`helm/odin-throne`) | Odin's Throne backend + UI in `fenrir-monitor` |
 | Analytics | Helm (`helm/umami`) | Umami + PostgreSQL in `fenrir-analytics` |
 | Agent sandbox | Shell script (`k8s/agents/dispatch-job.sh`) | GKE Jobs in `fenrir-agents` — not managed by Helm |

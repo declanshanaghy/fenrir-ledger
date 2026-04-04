@@ -174,7 +174,7 @@ Each type color-coded, formatted for readability.
 
 ### File Structure
 ```
-development/agent-monitor/
+development/odins-throne/
 ├── index.html          # Single-file SPA (1700+ lines)
 │                       # Includes:
 │                       # - HTML structure
@@ -185,8 +185,14 @@ development/agent-monitor/
 │                       # - Log parsing
 │                       # - Rendering logic
 │
-└── README.md           # Setup, usage, troubleshooting
+├── Dockerfile          # Odin's Throne container image
+└── README.md           # Setup, usage, troubleshooting (see k8s/agents/README.md)
 ```
+
+> **Note:** The standalone `development/agent-monitor/` directory was merged into
+> `development/odins-throne/` as part of the Odin's Throne unification. The SPA
+> (`index.html`) is now served from the Odin's Throne Helm chart (`infrastructure/helm/odin-throne/`)
+> in the `fenrir-monitor` namespace, behind oauth2-proxy.
 
 ### Key Functions
 
@@ -240,7 +246,7 @@ Extracts issue number, step, agent name.
 
 **Option A: HTTP Server (Recommended)**
 ```bash
-cd development/agent-monitor
+cd development/odins-throne
 python3 -m http.server 9000
 
 # In another terminal:
@@ -256,7 +262,7 @@ open http://localhost:9000
 kubectl proxy
 
 # In browser address bar:
-file:///path/to/repo/development/agent-monitor/index.html
+file:///path/to/repo/development/odins-throne/index.html
 ```
 
 ### Requirements
@@ -334,7 +340,7 @@ Coverage: 38 tests, all passing
 
 - **Issue:** #743
 - **Spec:** Issue description and acceptance criteria
-- **Related:** ADR-012 (Agent Job Infrastructure)
+- **Related:** infrastructure/adrs/ADR-004-gke-jobs-agent-execution.md (Agent Job Infrastructure — formerly referenced as ADR-012)
 - **CLI tool:** `infrastructure/k8s/agents/agent-logs.mjs` (parsing logic reference)
 
 ---

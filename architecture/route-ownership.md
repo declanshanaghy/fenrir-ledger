@@ -17,8 +17,12 @@
 | `GET /api/stripe/membership` | GET | requireAuth | Return Stripe entitlement from Firestore |
 | `POST /api/stripe/portal` | POST | requireAuth | Create Stripe Customer Portal session, return redirect URL |
 | `POST /api/stripe/unlink` | POST | requireAuth | Cancel Stripe subscription, delete KV entitlement record |
+| `GET /api/sync/state` | GET | requireAuthz (Karl) | Return household sync state: `syncVersion`, `lastSyncedVersion`, `needsDownload`; Karl-only |
 | `GET /api/sync/pull` | GET | requireAuthz (Karl) | Download all Firestore cards for authenticated user's household; Karl-only |
 | `POST /api/sync/push` | POST | requireAuthz (Karl) | Upload local cards to Firestore with last-write-wins conflict resolution; Karl-only |
+| `GET /api/household` | GET | requireAuthz | Read Firestore household document for the authenticated user |
+| `POST /api/trial` | POST | requireAuth | Start or check trial state for the authenticated user |
+| `GET/POST /api/admin` | GET/POST | requireAuth (admin only) | Internal admin operations; restricted to service accounts |
 
 ## Environment Variables
 

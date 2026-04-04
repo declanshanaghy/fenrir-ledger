@@ -88,17 +88,27 @@ GKE Ingress (GCE L7 Load Balancer)
   │  Google-managed SSL cert (fenrirledger.com, www.*, analytics.*)
   │
   ├── fenrir-app namespace
-  │     ├── Deployment: fenrir-app (2 replicas, 0.5 vCPU / 512 Mi)
-  │     │     Image: us-central1-docker.pkg.dev/fenrir-ledger-prod/
-  │     │             fenrir-images/fenrir-app:<git-sha>
-  │     └── StatefulSet: redis (1 replica, AOF persistence, ClusterIP only)
+  │     └── Deployment: fenrir-app (2 replicas, 0.5 vCPU / 512 Mi)
+  │           Image: us-central1-docker.pkg.dev/fenrir-ledger-prod/
+  │                   fenrir-images/fenrir-app:<git-sha>
+  │           (Redis StatefulSet removed — entitlements migrated to Firestore, issues #1516–#1521)
   │
   ├── fenrir-agents namespace
   │     └── Jobs: ephemeral Claude Code agent sandboxes (GKE Jobs, Spot)
   │
-  └── fenrir-analytics namespace
-        └── Umami analytics (self-hosted, PostgreSQL backend)
+  ├── fenrir-analytics namespace
+  │     └── Umami analytics (self-hosted, PostgreSQL backend)
+  │
+  ├── fenrir-monitor namespace
+  │     └── Odin's Throne monitor + UI + oauth2-proxy
+  │
+  └── fenrir-marketing namespace
+        └── n8n marketing engine
 ```
+
+> **Note:** `infrastructure/k8s/app/` (raw Kubernetes manifests) was replaced by Helm
+> charts (`infrastructure/helm/fenrir-app/`) as part of the Helm migration. The application
+> no longer uses static YAML manifests managed by `kubectl apply`. See ADR-003 (Helm).
 
 ### Container Image
 

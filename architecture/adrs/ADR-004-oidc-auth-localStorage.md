@@ -1,6 +1,6 @@
 # ADR-004: OIDC Authentication with Auth.js v5 + Per-Household localStorage Namespacing
 
-## Status: Accepted
+## Status: Accepted — Superseded by ADR-005
 
 ## Context
 

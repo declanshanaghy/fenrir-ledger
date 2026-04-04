@@ -14,17 +14,19 @@ This single command sets up everything: Node deps, environment files, GKE auth, 
 
 ## Source Code
 
-- [frontend/](frontend/) — Next.js project root. All `package.json`, `next.config.ts`, `app/`, and `components/` files live here. Deployed to GKE Autopilot via CI/CD on every push to `main`.
+- [ledger/](ledger/) — Next.js project root. All `package.json`, `next.config.ts`, `app/`, and `components/` files live here. Deployed to GKE Autopilot via CI/CD on every push to `main`.
+- [odins-throne/](odins-throne/) — Odin's Throne: agent monitor SPA (`index.html`) + monitor API. Deployed to `fenrir-monitor` namespace via `infrastructure/helm/odin-throne/`.
+- [odins-spear/](odins-spear/) — Odin's Spear supplementary tooling.
 
 ### Key Source Directories
 
 | Directory | Purpose |
 |-----------|---------|
-| `frontend/src/app/` | Next.js App Router pages and API routes |
-| `frontend/src/components/` | React components: layout, dashboard, cards, sheets, entitlement, easter-eggs, shared, ui |
-| `frontend/src/contexts/` | React contexts: AuthContext, EntitlementContext, RagnarokContext |
-| `frontend/src/hooks/` | Custom hooks: useAuth, useEntitlement, useSheetImport, usePickerConfig, useDriveToken |
-| `frontend/src/lib/` | Core libraries: types, storage, card-utils, auth, entitlement, stripe, google, sheets, llm, kv, crypto |
+| `ledger/src/app/` | Next.js App Router pages and API routes |
+| `ledger/src/components/` | React components: layout, dashboard, cards, sheets, entitlement, easter-eggs, shared, ui |
+| `ledger/src/contexts/` | React contexts: AuthContext, EntitlementContext, RagnarokContext |
+| `ledger/src/hooks/` | Custom hooks: useAuth, useEntitlement, useSheetImport, usePickerConfig, useDriveToken |
+| `ledger/src/lib/` | Core libraries: types, storage, card-utils, auth, entitlement, stripe, google, sheets, llm, firebase, crypto |
 
 ## Docs
 

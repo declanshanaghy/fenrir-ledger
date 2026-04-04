@@ -1,4 +1,4 @@
-# ADR-007 — Clerk as Auth Platform with GitHub as Initial Identity Provider
+# ADR-009 — Clerk as Auth Platform with GitHub as Initial Identity Provider
 
 **Status:** Proposed (deferred until GA planning)
 **Date:** 2026-03-01

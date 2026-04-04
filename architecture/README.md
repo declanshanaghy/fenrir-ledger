@@ -38,3 +38,4 @@ These are the Sprint 1-3 ADRs:
 - [n8n-reddit-automation.md](n8n-reddit-automation.md) -- n8n Reddit automation workflows technical research.
 - [umami-api-integration.md](umami-api-integration.md) -- Umami analytics API research, n8n workflow design, PostgreSQL schema for the marketing metrics loop (issue #1180).
 - [route-ownership.md](route-ownership.md) -- Route placement table: all routes in Next.js on GKE Autopilot.
+- [sync-architecture.md](sync-architecture.md) -- Cloud sync architecture: Firestore data model, LWW conflict resolution, push/pull protocol, state machine, and multi-user household sync sequence diagrams.
