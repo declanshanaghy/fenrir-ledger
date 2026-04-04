@@ -524,7 +524,7 @@ sequenceDiagram
 ### Tier Gating
 
 - **Karl**: Full sync (push + pull + auto-sync)
-- **Trial**: Full sync (same as Karl during trial period)
+- **Trial**: No sync — same as Thrall (sync is Karl-only per #1122)
 - **Thrall**: No sync — status always "idle", all operations are no-ops
 
 ---
