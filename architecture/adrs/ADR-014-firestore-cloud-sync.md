@@ -56,7 +56,7 @@ and is free under our expected load.
   recovery — no ops burden.
 - **Zero infrastructure.** No StatefulSets, no PVCs, no backup scripts.
 - **Document model fits the data.** Collections and sub-collections map naturally to
-  `/users/{clerkUserId}` and `/households/{id}/cards/{cardId}`.
+  `/users/{userId}` and `/households/{id}/cards/{cardId}`.
 - **Security rules.** Firestore's native security rules enforce household isolation at
   the database layer, not just the application layer.
 - **Future real-time sync.** Firestore's `onSnapshot` enables live updates for
@@ -99,11 +99,11 @@ Firestore is appropriate for primary user data that requires managed durability.
 All server-side access only via `@google-cloud/firestore` Admin SDK through API routes.
 No client SDK is used — this prevents credentials from leaking to the browser.
 
-### `/users/{clerkUserId}`
+### `/users/{userId}`
 
 ```typescript
 interface FirestoreUser {
-  clerkUserId: string;        // document ID — Clerk's user ID
+  userId: string;             // document ID — Google account sub claim
   email: string;
   displayName: string;
   householdId: string;        // exactly one household per user (enforced by security rules)
@@ -119,8 +119,8 @@ interface FirestoreUser {
 interface FirestoreHousehold {
   id: string;                 // document ID — UUID
   name: string;
-  ownerId: string;            // clerkUserId of the owner
-  memberIds: string[];        // clerkUserIds of all members (max 3, includes owner)
+  ownerId: string;            // userId of the owner
+  memberIds: string[];        // userIds of all members (max 3, includes owner)
   inviteCode: string;         // 6-char alphanumeric, rotated on demand
   inviteCodeExpiresAt: string; // UTC ISO 8601, 1 month TTL
   tier: "free" | "karl";      // Karl tier lives here, not on user doc
@@ -141,7 +141,7 @@ interface FirestoreHousehold {
 ## Security Rules
 
 Security rules enforce:
-- A user can only read/write their own `/users/{clerkUserId}` document.
+- A user can only read/write their own `/users/{userId}` document.
 - A user can only read/write households they are a member of (`memberIds` contains their UID).
 - `memberIds` is capped at 3 entries.
 - All card CRUD requires the caller to be a member of the parent household.

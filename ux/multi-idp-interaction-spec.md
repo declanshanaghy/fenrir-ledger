@@ -6,19 +6,20 @@
 **Wireframe**: [ux/wireframes/auth/multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html)
 **Supersedes**: `wireframes/auth/sign-in.html` (dedicated page spec — Google PKCE only)
 
-> **Implementation note (2026-03-01):** This spec describes a *planned* Clerk integration for multi-provider auth. The current production implementation uses Google PKCE directly (see ADR-005, ADR-008) — not Clerk. The interaction patterns and UX decisions here remain the target design for when Clerk is adopted. Until then, the single-provider Google flow in `wireframes/auth/sign-in.html` is what is implemented.
+> **Implementation note (2026-03-01):** This spec describes a *planned* multi-provider auth integration. The current production implementation uses Google OAuth PKCE directly (see ADR-005, ADR-008). The interaction patterns and UX decisions here remain the target design for when multi-IDP support is adopted. Until then, the single-provider Google flow in `wireframes/auth/sign-in.html` is what is implemented.
 
 ---
 
 ## Context
 
-Fenrir Ledger is integrating Clerk for authentication. Clerk manages the OAuth handshake
-internally and renders a `<SignIn>` component. The sign-in surface is a **modal dialog**
-overlaid on the current page — not a dedicated `/sign-in` route.
+Fenrir Ledger plans to support multiple identity providers for authentication. An auth
+platform manages the OAuth handshakes internally and renders a `<SignIn>` component.
+The sign-in surface is a **modal dialog** overlaid on the current page — not a dedicated
+`/sign-in` route.
 
-**Phase 1 (now):** GitHub only.
-**Phase 2 (later):** Google, Apple, email magic link — enabled via the Clerk dashboard.
-No code change required between phases. The dialog renders whatever providers Clerk exposes.
+**Phase 1 (now):** Google only (via PKCE — ADR-005).
+**Phase 2 (later):** Apple, email magic link — enabled via the auth provider dashboard.
+No code change required between phases. The dialog renders whatever providers are configured.
 
 ---
 
@@ -50,10 +51,10 @@ graph TD
     trigger -->|Settings Sync to cloud| dialog
 
     dialog --> choose{User chooses}
-    choose -->|Selects a provider| clerk[Clerk OAuth handshake]
+    choose -->|Selects a provider| oauth[OAuth handshake]
     choose -->|Continue without signing in| close[Dialog closes — user stays anonymous]
 
-    clerk --> success{OAuth result}
+    oauth --> success{OAuth result}
     success -->|Success + anonymous data exists| migrate[Migration prompt fires]
     success -->|Success + no anonymous data| signedin([Dashboard — signed-in state])
     success -->|Failure| error[Error state in dialog — try again or dismiss]
@@ -90,8 +91,8 @@ stateDiagram-v2
 
 ## On Successful Sign-In
 
-1. Clerk OAuth completes.
-2. Dialog closes automatically (Clerk handles this).
+1. OAuth completes.
+2. Dialog closes automatically.
 3. Check `localStorage` for anonymous card data (`householdId` cards > 0).
    - If data exists: fire the migration prompt modal (specced in `wireframes/auth/migration-prompt.html`).
    - If no data: proceed directly to step 4.
@@ -115,15 +116,15 @@ actively trigger it again (via avatar, banner CTA, or settings). No auto-re-prom
 
 ## How New Providers Appear
 
-Clerk controls the provider list via its dashboard. When a new provider is toggled on:
+The auth provider controls the provider list via its dashboard. When a new provider is toggled on:
 
-1. Clerk's `<SignIn>` component renders an additional button in the provider list.
-2. The `SignInDialog` wrapper adds no provider-specific code — it renders whatever Clerk exposes.
-3. No deployment required. Provider appears after the Clerk dashboard change propagates.
+1. The `<SignIn>` component renders an additional button in the provider list.
+2. The `SignInDialog` wrapper adds no provider-specific code — it renders whatever providers are configured.
+3. No deployment required. Provider appears after the dashboard change propagates.
 
-**Provider button order**: configured in the Clerk dashboard. UX recommendation — most
+**Provider button order**: configured in the auth provider dashboard. UX recommendation — most
 universally available first (Google), product audience-specific second (GitHub), then Apple,
-then Magic Link. FiremanDecko to confirm Clerk supports ordering configuration.
+then Magic Link.
 
 ---
 

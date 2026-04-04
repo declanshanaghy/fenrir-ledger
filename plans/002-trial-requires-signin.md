@@ -9,7 +9,7 @@ The trial system uses a random UUID in localStorage as "device ID". Clearing loc
 ## New Firestore Schema
 
 ```
-/users/{userId}                          ← rename clerkUserId → userId everywhere
+/users/{userId}                          ← userId = Google sub claim throughout
 /households/{userId}                     ← householdId = creator's userId (not random UUID)
 /households/{userId}/cards/{cardId}      ← unchanged subcollection
 /households/{userId}/trial               ← NEW: trial record lives inside household
@@ -35,13 +35,13 @@ The trial system uses a random UUID in localStorage as "device ID". Clearing loc
 
 ## Changes by Area
 
-### 1. Rename `clerkUserId` → `userId` (global)
+### 1. Use `userId` throughout (Google sub)
 
 Files affected:
-- `development/ledger/src/lib/firebase/firestore-types.ts` — `FirestoreUser.clerkUserId` → `userId`, `FIRESTORE_PATHS.user()` param name
+- `development/ledger/src/lib/firebase/firestore-types.ts` — `FirestoreUser.userId`, `FIRESTORE_PATHS.user()` param name
 - `development/ledger/src/lib/firebase/firestore.ts` — all references in `ensureSoloHousehold()`, user doc creation, household `ownerId`/`memberIds`
-- `development/ledger/src/lib/auth/authz.ts` — clerkUserId references in authz resolution
-- All test files referencing `clerkUserId`
+- `development/ledger/src/lib/auth/authz.ts` — userId references in authz resolution
+- All test files referencing userId
 
 ### 2. HouseholdId = userId (not random UUID)
 
@@ -187,7 +187,7 @@ When `/api/trial/init` returns 409 (trial already existed and expired):
 
 ## Dependency Order
 
-1. Rename `clerkUserId` → `userId` globally
+1. Use `userId` (Google sub) throughout — no legacy naming
 2. Change `householdId` generation to use `userId` (not random UUID)
 3. Remove entitlements collection — move Stripe tier to household doc
 4. Rewrite `trial-store.ts` (household subcollection)

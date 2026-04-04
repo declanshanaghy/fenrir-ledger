@@ -38,7 +38,7 @@ slug: "super-wolf"
 
         <div className="work-card">
           <div className="work-body">
-            <p>Created backlog item on branch <span className="mono">docs/backlog-idp-testing</span> after analyzing target audience from product brief. Recommended Clerk as IDP — matches credit card churners (mainstream consumers, privacy-conscious, mobile-first). GitHub as initial social provider for dev testing, with path to add Google/Apple later.</p>
+            <p>Created backlog item on branch <span className="mono">docs/backlog-idp-testing</span> after analyzing target audience from product brief. Evaluated third-party IDP options — matches credit card churners (mainstream consumers, privacy-conscious, mobile-first). GitHub as initial social provider for dev testing, with path to add Google/Apple later.</p>
           </div>
 
           <div className="file-chips">
@@ -90,13 +90,13 @@ slug: "super-wolf"
           <div className="msg-role">
             <span className="role-badge badge-fireman">FiremanDecko</span>
           </div>
-          <p className="msg-text">[Launch 3 teams in parallel: Team A (IDP/Clerk), Team B (Backend/WS), Team C (Luna wireframes)]</p>
+          <p className="msg-text">[Launch 3 teams in parallel: Team A (IDP/Auth), Team B (Backend/WS), Team C (Luna wireframes)]</p>
         </div>
 
         <div className="work-card">
           <div className="work-body">
-            <p>Spawned 3 agents in isolated worktrees simultaneously — FiremanDecko for Clerk investigation, FiremanDecko for backend/WebSocket architecture, Luna for multi-IDP wireframes. All three worked in parallel with no cross-contamination.</p>
-            <p>Provided GitHub OAuth setup instructions while teams ran in background: Clerk dashboard → Social Connections → GitHub, copy client ID/secret from GitHub OAuth app settings.</p>
+            <p>Spawned 3 agents in isolated worktrees simultaneously — FiremanDecko for IDP/auth investigation, FiremanDecko for backend/WebSocket architecture, Luna for multi-IDP wireframes. All three worked in parallel with no cross-contamination.</p>
+            <p>Provided GitHub OAuth setup instructions while teams ran in background: OAuth app settings → copy client ID/secret.</p>
           </div>
         </div>
       </div>
@@ -161,7 +161,7 @@ slug: "super-wolf"
       <div className="entry-rune" title="ᛁ Isa — integrations">ᛁ</div>
       <div className="entry-body">
         <p className="act-label">Act VI · Architecture</p>
-        <h2 className="entry-title">Clerk Auth Architecture</h2>
+        <h2 className="entry-title">IDP Auth Architecture Investigation</h2>
 
         <div className="user-msg">
           <div className="msg-role">
@@ -172,12 +172,12 @@ slug: "super-wolf"
 
         <div className="work-card">
           <div className="work-body">
-            <p>FiremanDecko delivered <span className="hl">ADR-007</span> — Clerk as auth platform, GitHub initial provider. 5-phase implementation plan: clerkMiddleware() replaces no-op middleware (all routes stay public, no auth gates), householdId contract unchanged (anonymous UUID from localStorage or Clerk user.id when signed in), FenrirSession type removed. Playwright testing via @clerk/testing — Testing Tokens bypass OAuth in CI entirely.</p>
+            <p>FiremanDecko delivered <span className="hl">ADR-007</span> — third-party IDP evaluation, GitHub initial provider. 5-phase implementation plan: middleware replaces no-op (all routes stay public, no auth gates), householdId contract unchanged (anonymous UUID from localStorage or IDP user.id when signed in), FenrirSession type removed. Playwright Testing Tokens bypass OAuth in CI entirely.</p>
           </div>
 
           <div className="file-chips">
-            <span className="chip chip-new">✦ designs/architecture/adr-clerk-auth.md</span>
-            <span className="chip chip-new">✦ designs/architecture/clerk-implementation-plan.md</span>
+            <span className="chip chip-new">✦ designs/architecture/adr-idp-auth.md</span>
+            <span className="chip chip-new">✦ designs/architecture/idp-implementation-plan.md</span>
           </div>
         </div>
       </div>
@@ -199,12 +199,12 @@ slug: "super-wolf"
 
         <div className="work-card">
           <div className="work-body">
-            <p>Loki QA for Team A (Clerk): <span className="hl">APPROVED WITH NOTES</span> (10/10 checks PASS). 3 non-blocking notes: JSDoc still references "Google sub claim", document Clerk Testing Token lifetime, product brief update deferred correctly.</p>
+            <p>Loki QA for Team A (IDP/Auth): <span className="hl">APPROVED WITH NOTES</span> (10/10 checks PASS). 3 non-blocking notes: JSDoc still references "Google sub claim", document Testing Token lifetime, product brief update deferred correctly.</p>
             <p>Loki QA for Team B (Backend/WS): <span className="hl">APPROVED</span> (8/8 checks PASS). 3 minor notes: SSE prototype vs evaluation acceptable, cost estimate excludes egress, Anthropic streaming deferred intentionally.</p>
           </div>
 
           <div className="file-chips">
-            <span className="chip chip-new">✦ designs/architecture/clerk-auth-qa-report.md</span>
+            <span className="chip chip-new">✦ designs/architecture/idp-auth-qa-report.md</span>
             <span className="chip chip-new">✦ designs/architecture/backend-ws-qa-report.md</span>
           </div>
         </div>
@@ -227,7 +227,7 @@ slug: "super-wolf"
 
         <div className="work-card">
           <div className="work-body">
-            <p>Merged PR #26 (dual-port worktree infra — already merged by user). Merged PR #27 (Clerk ADR + implementation plan). Merged PR #25 (backlog items for IDP + Backend/WS). Cleaned up stale worktree branch (backend docs were already on main via PR #26).</p>
+            <p>Merged PR #26 (dual-port worktree infra — already merged by user). Merged PR #27 (IDP auth ADR + implementation plan). Merged PR #25 (backlog items for IDP + Backend/WS). Cleaned up stale worktree branch (backend docs were already on main via PR #26).</p>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@
 **Status:** Accepted
 **Date:** 2026-03-01
 **Author:** FiremanDecko (Principal Engineer)
-**Related:** ADR-005 (auth/PKCE), ADR-006 (anonymous-first), ADR-007 (Clerk deferred)
+**Related:** ADR-005 (auth/PKCE), ADR-006 (anonymous-first)
 
 ---
 
@@ -19,7 +19,6 @@ Constraints: anonymous-first model preserved (only API routes gated, not pages).
 
 Rejected alternatives:
 - **Google tokeninfo round-trip** — 100-300ms per-request latency, unacceptable
-- **Clerk middleware** — not yet integrated; leaves security gap in interim
 - **Custom HMAC session token** — redundant when signed JWT already exists
 
 ### Implementation Pattern
@@ -52,7 +51,7 @@ All future API routes must use `requireAuth()` (CLAUDE.md unbreakable rule).
 
 ## Consequences
 
-**Positive:** API routes protected, no per-request latency (JWKS cached), minimal dependency (`jose` ~15KB), forward-compatible with Clerk (ADR-007).
+**Positive:** API routes protected, no per-request latency (JWKS cached), minimal dependency (`jose` ~15KB).
 
 **Trade-offs:** Cannot detect real-time token revocation (tokens short-lived ~1hr, acceptable). Anonymous users cannot use import (intentional — gated on LLM credits). `jose` added as dependency.
 

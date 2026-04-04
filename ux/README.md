@@ -34,7 +34,7 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 
 #### Interaction Specs (top-level)
 
-- [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) -- Multi-IDP sign-in dialog (planned Clerk integration)
+- [multi-idp-interaction-spec.md](multi-idp-interaction-spec.md) -- Multi-IDP sign-in dialog (planned future feature)
 - [karl-upsell-interaction-spec.md](karl-upsell-interaction-spec.md) -- Karl upsell dialog + Valhalla tab gating
 - [interactions/import-workflow-v2.md](interactions/import-workflow-v2.md) -- Import wizard three-path workflow
 
@@ -137,11 +137,11 @@ All sprints (1--5) shipped. The Saga Ledger design system is fully implemented. 
 | Artifact | Status |
 |----------|--------|
 | Theme system (colors, fonts, tokens) | Implemented |
-| 78 wireframes (synced 2026-03-17) | Implemented (Multi-IDP Clerk: Planned) |
+| 78 wireframes (synced 2026-03-17) | Implemented (Multi-IDP: Planned) |
 | All 11 easter eggs | Implemented |
 | Stripe Direct integration | Implemented |
 | Anonymous-first auth model | Implemented |
-| Multi-IDP Clerk integration | Planned (not yet implemented) |
+| Multi-IDP integration | Planned (not yet implemented) |
 | Light theme (Stone/Marble + Lightning Norse) | Implemented |
 | Chronicles (Prose Edda) | Implemented |
 | Import wizard | Implemented |
