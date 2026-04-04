@@ -14,9 +14,10 @@ resource "stripe_webhook_endpoint" "main" {
 
   enabled_events = [
     "checkout.session.completed",
-    "customer.subscription.updated",
+    "customer.subscription.created",
     "customer.subscription.deleted",
-    "billing_portal.session.created",
+    "customer.subscription.paused",
+    "customer.subscription.updated",
   ]
 
   description = "Fenrir Ledger production webhook — managed by Terraform"
