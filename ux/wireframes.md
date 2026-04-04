@@ -243,6 +243,15 @@ Wireframes are standalone HTML5 documents. They use only structural layout — n
 
 ---
 
+## Odin's Spear — Cancel Button States (Issue #1475)
+
+| File | Description |
+|------|-------------|
+| [wireframes/spear/cancel-button-states.html](wireframes/spear/cancel-button-states.html) | Cancel-job button affordance for Odin's Spear monitor UI: styled button states for both JobCard and SessionHeader cancel controls. 7 sections — (A) before/after comparison for both locations (stripped button chrome vs full affordance), (B) JobCard cancel anatomy (`.card-status--clickable` — cursor, border, padding, text label, hover/active CSS), (C) SessionHeader cancel anatomy (`.job-status-badge--cancel` modifier — remove inline style overrides, add hover/active CSS), (D) all interactive states table (default, hover, active/pressed, focus-visible, disabled/non-running), (E) mobile 375px touch target spec (44px minimum), (F) WCAG 2.1 AA accessibility checklist (role=button, aria-label, focus ring, keyboard Enter/Space), (G) implementation notes for FiremanDecko (JobCard.tsx + LogViewer.tsx only — no new files). Interaction spec: [cancel-button-interaction-spec.md](wireframes/spear/cancel-button-interaction-spec.md). |
+| [wireframes/spear/cancel-button-interaction-spec.md](wireframes/spear/cancel-button-interaction-spec.md) | Interaction spec: scope table (JobCard vs SessionHeader locations, class changes), button state machine (idle→hover→active, focus path, disabled guard), CSS remove/add spec for `.card-status--clickable` and new `.job-status-badge--cancel`, implementation flexibility notes for FiremanDecko, acceptance criteria mapping. |
+
+---
+
 ## Dashboard Tab Headers, Tooltips, and Empty States
 
 | File | Description |

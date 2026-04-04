@@ -40,6 +40,7 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 
 #### Interaction Specs (in wireframe directories)
 
+- [wireframes/cards/anon-empty-state-interaction-spec.md](wireframes/cards/anon-empty-state-interaction-spec.md) -- Anon empty state: sign-in CTA routing, state machine, component change summary
 - [wireframes/cards/karl-card-bling-interaction-spec.md](wireframes/cards/karl-card-bling-interaction-spec.md) -- Karl card bling: CSS-only cosmetic overlay, rune corners, hover glow
 - [wireframes/cards/trash-tab-interaction-spec.md](wireframes/cards/trash-tab-interaction-spec.md) -- Trash tab: soft-delete, restore, expunge flows
 - [wireframes/chrome/sidebar-removal-interaction-spec.md](wireframes/chrome/sidebar-removal-interaction-spec.md) -- Sidebar removal, dropdown settings, rotary theme toggle
@@ -48,6 +49,7 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [wireframes/chronicles/interaction-spec.md](wireframes/chronicles/interaction-spec.md) -- Chronicle Norse MDX components: collapsibles, animations, responsive
 - [wireframes/heilung/interaction-spec.md](wireframes/heilung/interaction-spec.md) -- Heilung modal: Norse restyle, video portal, rune bands
 - [wireframes/household/household-interaction-spec.md](wireframes/household/household-interaction-spec.md) -- Household invite code flow: settings, join, merge confirmation
+- [wireframes/modals/about-modal-v2-interaction-spec.md](wireframes/modals/about-modal-v2-interaction-spec.md) -- About modal v2: Gleipnir fragment state machine, Pack compression spec, height budget
 - [wireframes/odins-throne-ui/agent-profile-modal-interaction-spec.md](wireframes/odins-throne-ui/agent-profile-modal-interaction-spec.md) -- Agent profile modal: focus management, keyboard, backdrop
 - [wireframes/odins-throne-ui/decree-inscription-interaction-spec.md](wireframes/odins-throne-ui/decree-inscription-interaction-spec.md) -- All-Father's Decree Norse inscription: collapse/expand, Wikipedia links
 - [wireframes/odins-throne-ui/loki-error-boundary-interaction-spec.md](wireframes/odins-throne-ui/loki-error-boundary-interaction-spec.md) -- Loki error boundary tablet: state machine, retry flow
@@ -59,18 +61,21 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 - [wireframes/settings-tabs/settings-tabs-interaction-spec.md](wireframes/settings-tabs/settings-tabs-interaction-spec.md) -- Settings tab layout: tab switching, URL hash persistence, karl-bling tabs, mobile select pattern
 - [wireframes/spear/cancel-button-interaction-spec.md](wireframes/spear/cancel-button-interaction-spec.md) -- Odin's Spear cancel controls: styled button affordance for JobCard and SessionHeader (Issue #1475)
 - [wireframes/sync/sync-interaction-spec.md](wireframes/sync/sync-interaction-spec.md) -- Cloud sync UX: indicator states, settings section, tier gating
+- [wireframes/theme/dark-void-interaction-spec.md](wireframes/theme/dark-void-interaction-spec.md) -- Dark void theme contrast fix: token change table, border thickness spec (Issue #1875)
+- [wireframes/theme/tan-light-mode-interaction-spec.md](wireframes/theme/tan-light-mode-interaction-spec.md) -- Vellum Norse tan/parchment light mode: palette rationale, color application rules (Issue #1833)
+- [wireframes/theme/theme-toggle-single-btn-interaction-spec.md](wireframes/theme/theme-toggle-single-btn-interaction-spec.md) -- Theme toggle single button: state machine, removed/retained structure (Issue #1927)
 
-### Wireframes (78 HTML5 documents — synced 2026-03-17)
+### Wireframes (92 HTML5 documents — synced 2026-04-04)
 
 | Category | Files |
 |----------|-------|
 | app | [dashboard-tabs.html](wireframes/app/dashboard-tabs.html), [howl-karl-tier.html](wireframes/app/howl-karl-tier.html), [valhalla.html](wireframes/app/valhalla.html), [valhalla-karl-gated.html](wireframes/app/valhalla-karl-gated.html) |
-| chrome | [sidebar-removal-dropdown-settings.html](wireframes/chrome/sidebar-removal-dropdown-settings.html), [topbar.html](wireframes/chrome/topbar.html), [profile-dropdown-avatar-right.html](wireframes/chrome/profile-dropdown-avatar-right.html), [profile-dropdown-redesign.html](wireframes/chrome/profile-dropdown-redesign.html), [howl-panel.html](wireframes/chrome/howl-panel.html), [footer.html](wireframes/chrome/footer.html), [button-feedback-states.html](wireframes/chrome/button-feedback-states.html), [dashboard-tab-headers.html](wireframes/chrome/dashboard-tab-headers.html) |
+| chrome | [sidebar-removal-dropdown-settings.html](wireframes/chrome/sidebar-removal-dropdown-settings.html), [topbar.html](wireframes/chrome/topbar.html), [profile-dropdown-avatar-right.html](wireframes/chrome/profile-dropdown-avatar-right.html), [profile-dropdown-redesign.html](wireframes/chrome/profile-dropdown-redesign.html), [howl-panel.html](wireframes/chrome/howl-panel.html), [footer.html](wireframes/chrome/footer.html), [button-feedback-states.html](wireframes/chrome/button-feedback-states.html), [dashboard-tab-headers.html](wireframes/chrome/dashboard-tab-headers.html), [karl-badge-bling.html](wireframes/chrome/karl-badge-bling.html), [unified-header.html](wireframes/chrome/unified-header.html), [user-menu-theme-position.html](wireframes/chrome/user-menu-theme-position.html) |
 | trial | [trial-start.html](wireframes/trial/trial-start.html), [trial-status.html](wireframes/trial/trial-status.html), [trial-expiry.html](wireframes/trial/trial-expiry.html), [trial-feature-gates.html](wireframes/trial/trial-feature-gates.html) |
-| cards | [add-card.html](wireframes/cards/add-card.html), [wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html), [karl-card-bling.html](wireframes/cards/karl-card-bling.html), [trash-tab.html](wireframes/cards/trash-tab.html) |
+| cards | [add-card.html](wireframes/cards/add-card.html), [wolves-hunger-about-modal.html](wireframes/cards/wolves-hunger-about-modal.html), [karl-card-bling.html](wireframes/cards/karl-card-bling.html), [trash-tab.html](wireframes/cards/trash-tab.html), [anon-empty-state.html](wireframes/cards/anon-empty-state.html), [howl-tab-cards.html](wireframes/cards/howl-tab-cards.html), [valhalla-tab-cards.html](wireframes/cards/valhalla-tab-cards.html), [timer-icon-cards.html](wireframes/cards/timer-icon-cards.html) |
 | auth | [sign-in.html](wireframes/auth/sign-in.html), [multi-idp-sign-in.html](wireframes/auth/multi-idp-sign-in.html), [migration-prompt.html](wireframes/auth/migration-prompt.html), [upsell-banner.html](wireframes/auth/upsell-banner.html) |
 | notifications | [ragnarok-threshold.html](wireframes/notifications/ragnarok-threshold.html), [card-count-milestones.html](wireframes/notifications/card-count-milestones.html) |
-| modals | [about-modal.html](wireframes/modals/about-modal.html) |
+| modals | [about-modal.html](wireframes/modals/about-modal.html), [about-modal-v2-easter-eggs.html](wireframes/modals/about-modal-v2-easter-eggs.html) |
 | easter-eggs | [easter-egg-modal.html](wireframes/easter-eggs/easter-egg-modal.html), [konami-howl.html](wireframes/easter-eggs/konami-howl.html), [loki-mode.html](wireframes/easter-eggs/loki-mode.html), [gleipnir-hunt-complete.html](wireframes/easter-eggs/gleipnir-hunt-complete.html) |
 | accessibility | [accessibility-polish.html](wireframes/accessibility/accessibility-polish.html), [font-size-scale.html](wireframes/accessibility/font-size-scale.html) |
 | stripe-direct | [stripe-settings.html](wireframes/stripe-direct/stripe-settings.html), [sealed-rune-stripe.html](wireframes/stripe-direct/sealed-rune-stripe.html), [upsell-banner-stripe.html](wireframes/stripe-direct/upsell-banner-stripe.html), [anonymous-checkout.html](wireframes/stripe-direct/anonymous-checkout.html), [karl-upsell-dialog.html](wireframes/stripe-direct/karl-upsell-dialog.html), [karl-upsell-dialog-artwork.html](wireframes/stripe-direct/karl-upsell-dialog-artwork.html) |
@@ -80,8 +85,11 @@ What follows is the full visual and verbal soul of Fenrir Ledger. Freya shaped t
 | wizard-animations | [step-indicator.html](wireframes/wizard-animations/step-indicator.html), [step-transitions.html](wireframes/wizard-animations/step-transitions.html), [mobile-layout.html](wireframes/wizard-animations/mobile-layout.html) |
 | heilung | [heilung-modal.html](wireframes/heilung/heilung-modal.html), [heilung-norse-restyle.html](wireframes/heilung/heilung-norse-restyle.html) |
 | household | [settings-household.html](wireframes/household/settings-household.html), [join-household.html](wireframes/household/join-household.html), [merge-confirmation.html](wireframes/household/merge-confirmation.html) |
-| odins-throne-ui | [agent-profile-modal.html](wireframes/odins-throne-ui/agent-profile-modal.html), [decree-inscription.html](wireframes/odins-throne-ui/decree-inscription.html), [loki-error-boundary.html](wireframes/odins-throne-ui/loki-error-boundary.html), [norse-mist-tool-blocks.html](wireframes/odins-throne-ui/norse-mist-tool-blocks.html), [norse-tablet-rune-signatures.html](wireframes/odins-throne-ui/norse-tablet-rune-signatures.html), [session-header-title.html](wireframes/odins-throne-ui/session-header-title.html), [theme-switcher.html](wireframes/odins-throne-ui/theme-switcher.html), [verdict-inscription.html](wireframes/odins-throne-ui/verdict-inscription.html) |
+| odins-throne-ui | [agent-profile-modal.html](wireframes/odins-throne-ui/agent-profile-modal.html), [decree-inscription.html](wireframes/odins-throne-ui/decree-inscription.html), [loki-error-boundary.html](wireframes/odins-throne-ui/loki-error-boundary.html), [norse-mist-tool-blocks.html](wireframes/odins-throne-ui/norse-mist-tool-blocks.html), [norse-tablet-rune-signatures.html](wireframes/odins-throne-ui/norse-tablet-rune-signatures.html), [session-header-title.html](wireframes/odins-throne-ui/session-header-title.html), [theme-switcher.html](wireframes/odins-throne-ui/theme-switcher.html), [verdict-inscription.html](wireframes/odins-throne-ui/verdict-inscription.html), [wss-icon-tooltip.html](wireframes/odins-throne-ui/wss-icon-tooltip.html) |
+| settings-tabs | [settings-tabs.html](wireframes/settings-tabs/settings-tabs.html) |
+| spear | [cancel-button-states.html](wireframes/spear/cancel-button-states.html) |
 | sync | [sync-indicator-states.html](wireframes/sync/sync-indicator-states.html), [sync-settings-section.html](wireframes/sync/sync-settings-section.html) |
+| theme | [dark-void-palette.html](wireframes/theme/dark-void-palette.html), [tan-light-mode-palette.html](wireframes/theme/tan-light-mode-palette.html), [theme-toggle-single-btn.html](wireframes/theme/theme-toggle-single-btn.html) |
 
 ### Cross-Domain References
 
