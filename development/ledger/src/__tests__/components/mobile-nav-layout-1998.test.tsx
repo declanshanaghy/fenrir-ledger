@@ -95,7 +95,7 @@ describe("MarketingNavbar — hamburger left of logo (Issue #1998)", () => {
     act(() => { fireEvent.click(hamburger); });
 
     const overlay = screen.getByRole("dialog", { name: "Navigation menu" });
-    expect(overlay.className).toContain("overflow-hidden");
+    expect(overlay).toHaveClass("overflow-hidden");
   });
 
   it("overlay uses fixed inset-0 positioning for full-viewport coverage", () => {
@@ -105,8 +105,8 @@ describe("MarketingNavbar — hamburger left of logo (Issue #1998)", () => {
     act(() => { fireEvent.click(hamburger); });
 
     const overlay = screen.getByRole("dialog", { name: "Navigation menu" });
-    expect(overlay.className).toContain("fixed");
-    expect(overlay.className).toContain("inset-0");
+    expect(overlay).toHaveClass("fixed");
+    expect(overlay).toHaveClass("inset-0");
   });
 });
 
@@ -136,7 +136,7 @@ describe("LedgerTopBar — hamburger left of logo (Issue #1998)", () => {
     act(() => { fireEvent.click(hamburger); });
 
     const overlay = screen.getByRole("dialog", { name: "Navigation menu" });
-    expect(overlay.className).toContain("overflow-hidden");
+    expect(overlay).toHaveClass("overflow-hidden");
   });
 
   it("overlay uses fixed inset-0 positioning for full-viewport coverage", () => {
@@ -146,7 +146,7 @@ describe("LedgerTopBar — hamburger left of logo (Issue #1998)", () => {
     act(() => { fireEvent.click(hamburger); });
 
     const overlay = screen.getByRole("dialog", { name: "Navigation menu" });
-    expect(overlay.className).toContain("fixed");
-    expect(overlay.className).toContain("inset-0");
+    expect(overlay).toHaveClass("fixed");
+    expect(overlay).toHaveClass("inset-0");
   });
 });
