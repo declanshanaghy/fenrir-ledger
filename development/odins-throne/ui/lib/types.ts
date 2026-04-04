@@ -55,6 +55,56 @@ export interface DisplayJob {
   fixture?: boolean;
 }
 
+// ─── Household / Card types (mirrors ledger firestore-types) ──────────────────
+
+export interface OdinHousehold {
+  id: string;
+  name: string;
+  ownerId: string;
+  memberIds: string[];
+  inviteCode: string;
+  inviteCodeExpiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  syncVersion?: number;
+}
+
+export type CardStatus =
+  | "active"
+  | "fee_approaching"
+  | "promo_expiring"
+  | "closed"
+  | "bonus_open"
+  | "overdue"
+  | "graduated";
+
+export interface SignUpBonus {
+  description: string;
+  rewardAmount: number;
+  minimumSpend: number;
+  minimumSpendDeadline: string;
+}
+
+export interface OdinCard {
+  id: string;
+  householdId: string;
+  issuerId: string;
+  cardName: string;
+  openDate: string;
+  creditLimit: number;
+  annualFee: number;
+  annualFeeDate: string;
+  promoPeriodMonths: number;
+  signUpBonus: SignUpBonus | null;
+  amountSpent?: number;
+  status: CardStatus;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+  closedAt?: string;
+}
+
 // JSONL event types
 export interface ContentBlock {
   type: string;

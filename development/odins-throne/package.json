@@ -20,6 +20,7 @@
     "verify:build": "pnpm run build:ui && tsc --noEmit"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^8.3.0",
     "@hono/node-server": "^1.13.7",
     "@kubernetes/client-node": "^1.0.0",
     "hono": "^4.6.20",
@@ -40,7 +41,9 @@
     "vitest": "^3.1.1"
   },
   "vitest": {
-    "include": ["src/__tests__/**/*.test.ts"],
+    "include": [
+      "src/__tests__/**/*.test.ts"
+    ],
     "environment": "node"
   }
 }
