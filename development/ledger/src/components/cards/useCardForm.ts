@@ -274,7 +274,8 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
     setValue,
     formState: { errors },
   } = useForm<CardFormValues>({
-    resolver: zodResolver(cardFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(cardFormSchema as any),
     defaultValues,
     shouldFocusError: false,
   });
