@@ -13,10 +13,10 @@ Technical architecture documents. These translate product vision into technical 
 
 These are the Sprint 1-3 ADRs:
 
-- [adrs/ADR-001-tech-stack.md](adrs/ADR-001-tech-stack.md) -- Next.js + TypeScript + Tailwind CSS + shadcn/ui stack choice. **Accepted.**
+- [adrs/ADR-001-tech-stack.md](adrs/ADR-001-tech-stack.md) -- Next.js + TypeScript + Tailwind CSS + shadcn/ui stack choice. **Accepted** (hosting intent superseded by ADR-016).
 - [adrs/ADR-002-data-model.md](adrs/ADR-002-data-model.md) -- Household-scoped data model. **Accepted.**
 - [adrs/ADR-003-local-storage.md](adrs/ADR-003-local-storage.md) -- localStorage persistence with documented migration path. **Accepted.**
-- [adrs/ADR-004-oidc-auth-localStorage.md](adrs/ADR-004-oidc-auth-localStorage.md) -- OIDC auth with per-household localStorage namespacing. **Accepted, superseded by ADR-005.**
+- [adrs/ADR-004-oidc-auth-localStorage.md](adrs/ADR-004-oidc-auth-localStorage.md) -- OIDC auth with Auth.js v5 (never shipped). **Superseded by ADR-005.**
 - [adrs/ADR-005-auth-pkce-public-client.md](adrs/ADR-005-auth-pkce-public-client.md) -- Authorization Code + PKCE flow with server token proxy. **Accepted.**
 - [adrs/ADR-006-anonymous-first-auth.md](adrs/ADR-006-anonymous-first-auth.md) -- Anonymous-first auth model with optional Google sign-in. **Accepted, current.**
 - [adrs/ADR-007-remote-builder-platforms.md](adrs/ADR-007-remote-builder-platforms.md) -- Remote builder platform evaluation: Depot was initially selected but **superseded by infrastructure ADR-004** (GKE Autopilot Jobs chosen for agent execution). **Accepted, superseded.**
@@ -30,6 +30,9 @@ These are the Sprint 1-3 ADRs:
 - [adrs/ADR-013-agent-monitor-spa.md](adrs/ADR-013-agent-monitor-spa.md) -- ADR-013: Agent Monitor single-file SPA for real-time GKE agent log streaming. **Accepted, current.**
 - [adrs/ADR-014-firestore-cloud-sync.md](adrs/ADR-014-firestore-cloud-sync.md) -- ADR-014: Firestore for Karl-tier cloud sync of card data. **Accepted, current.**
 - [adrs/ADR-015-authz-layer.md](adrs/ADR-015-authz-layer.md) -- ADR-015: Centralized `requireAuthz()` authorization layer for household-scoped routes. **Accepted, current.**
+- [adrs/ADR-016-gke-autopilot-migration.md](adrs/ADR-016-gke-autopilot-migration.md) -- ADR-016: GKE Autopilot migration — app moves from Vercel to GKE; standalone Next.js build, Helm deploy, in-cluster Redis. **Accepted, current.**
+- [adrs/ADR-017-trial-tier-system.md](adrs/ADR-017-trial-tier-system.md) -- ADR-017: 30-day free trial with Karl-level features except cloud sync; server-authoritative Firestore state; Stripe for Karl paid tier ($3.99/mo). **Accepted, current.**
+- [adrs/ADR-018-import-pipeline.md](adrs/ADR-018-import-pipeline.md) -- ADR-018: Three-path import pipeline (URL / CSV / file) with LLM-powered card extraction via Anthropic Claude. **Accepted, current.**
 
 ## Other Architecture Documents
 
