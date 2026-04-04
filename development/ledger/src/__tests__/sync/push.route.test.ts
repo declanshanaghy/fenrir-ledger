@@ -27,11 +27,15 @@ vi.mock("@/lib/auth/authz", () => ({
 const mockGetAllFirestoreCards = vi.hoisted(() => vi.fn());
 const mockSetCards = vi.hoisted(() => vi.fn());
 const mockDeleteCards = vi.hoisted(() => vi.fn());
+const mockGetHouseholdSyncVersion = vi.hoisted(() => vi.fn());
+const mockUpdateSyncStateAfterPush = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getAllFirestoreCards: mockGetAllFirestoreCards,
   setCards: mockSetCards,
   deleteCards: mockDeleteCards,
+  getHouseholdSyncVersion: mockGetHouseholdSyncVersion,
+  updateSyncStateAfterPush: mockUpdateSyncStateAfterPush,
 }));
 
 // ── Import after mocks ────────────────────────────────────────────────────
@@ -53,11 +57,11 @@ function makeRequest(body: unknown): NextRequest {
 }
 
 /** Authz success result for a Karl user belonging to the given household. */
-function authzKarlSuccess(householdId = "hh-test") {
+function authzKarlSuccess(householdId = "hh-test", userId = "google-user-123") {
   return {
     ok: true as const,
-    user: { sub: "google-user-123", email: "test@example.com" },
-    firestoreUser: { householdId },
+    user: { sub: userId, email: "test@example.com" },
+    firestoreUser: { householdId, userId },
   };
 }
 
@@ -67,6 +71,8 @@ beforeEach(() => {
   mockSetCards.mockResolvedValue(undefined);
   mockDeleteCards.mockResolvedValue(undefined);
   mockGetAllFirestoreCards.mockResolvedValue([]);
+  mockGetHouseholdSyncVersion.mockResolvedValue(0);
+  mockUpdateSyncStateAfterPush.mockResolvedValue(1);
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────

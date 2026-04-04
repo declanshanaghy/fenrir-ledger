@@ -11,9 +11,10 @@
  *   ?householdId=<string>   required — the household to pull cards for
  *
  * Response 200:
- *   { cards: Card[], activeCount: number }
+ *   { cards: Card[], activeCount: number, syncVersion: number }
  *   cards — all Firestore cards including tombstones
  *   activeCount — number of non-tombstoned cards
+ *   syncVersion — current household sync version (client should persist this)
  *
  * Error responses:
  *   400 — missing householdId
@@ -25,12 +26,16 @@
  * Firestore access. The authz-resolved householdId is used for all Firestore
  * operations — never the raw client-supplied query param — to prevent IDOR.
  *
- * Issue #1122, #1192
+ * Issue #1122, #1192, #2004
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthz } from "@/lib/auth/authz";
-import { getAllFirestoreCards } from "@/lib/firebase/firestore";
+import {
+  getAllFirestoreCards,
+  getHouseholdSyncVersion,
+  updateSyncStateAfterPull,
+} from "@/lib/firebase/firestore";
 import { log } from "@/lib/logger";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -56,20 +61,30 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // Use the authz-resolved householdId — never the raw query param — to prevent IDOR
   const resolvedHouseholdId = authz.firestoreUser.householdId;
+  const userId = authz.firestoreUser.userId;
 
   try {
-    const cards = await getAllFirestoreCards(resolvedHouseholdId);
+    // Fetch cards and current sync version in parallel
+    const [cards, syncVersion] = await Promise.all([
+      getAllFirestoreCards(resolvedHouseholdId),
+      getHouseholdSyncVersion(resolvedHouseholdId),
+    ]);
+
     const activeCount = cards.filter((c) => !c.deletedAt).length;
+
+    // Clear needsDownload flag and record lastSyncedVersion for this member
+    await updateSyncStateAfterPull(resolvedHouseholdId, userId);
 
     log.debug("GET /api/sync/pull returning", {
       status: 200,
       householdId: resolvedHouseholdId,
       total: cards.length,
       activeCount,
+      syncVersion,
     });
 
     return NextResponse.json(
-      { cards, activeCount },
+      { cards, activeCount, syncVersion },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (err) {

@@ -22,10 +22,14 @@ vi.mock("@/lib/auth/authz", () => ({
 
 const mockGetAllFirestoreCards = vi.hoisted(() => vi.fn());
 const mockSetCards = vi.hoisted(() => vi.fn());
+const mockGetHouseholdSyncVersion = vi.hoisted(() => vi.fn());
+const mockUpdateSyncStateAfterPush = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getAllFirestoreCards: mockGetAllFirestoreCards,
   setCards: mockSetCards,
+  getHouseholdSyncVersion: mockGetHouseholdSyncVersion,
+  updateSyncStateAfterPush: mockUpdateSyncStateAfterPush,
 }));
 
 // ── Import after mocks ────────────────────────────────────────────────────
@@ -48,6 +52,8 @@ function makeRequest(body: unknown): NextRequest {
 beforeEach(() => {
   mockSetCards.mockResolvedValue(undefined);
   mockGetAllFirestoreCards.mockResolvedValue([]);
+  mockGetHouseholdSyncVersion.mockResolvedValue(0);
+  mockUpdateSyncStateAfterPush.mockResolvedValue(1);
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────
@@ -59,7 +65,7 @@ describe("POST /api/sync/push — IDOR regression (#1193)", () => {
     mockRequireAuthz.mockResolvedValue({
       ok: true as const,
       user: { sub: "attacker-sub" },
-      firestoreUser: { householdId: "hh-server-verified" },
+      firestoreUser: { householdId: "hh-server-verified", userId: "attacker-sub" },
     });
 
     const req = makeRequest({ householdId: "hh-caller-supplied", cards: [] });

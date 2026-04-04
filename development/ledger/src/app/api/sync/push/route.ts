@@ -9,31 +9,42 @@
  * Karl-only: Thrall and free-trial users receive 403.
  *
  * Request body:
- *   { householdId: string, cards: Card[] }
+ *   { householdId: string, cards: Card[], clientSyncVersion?: number }
  *   cards should include ALL local cards, including tombstones (deletedAt set).
+ *   clientSyncVersion — optional. When provided, the server rejects the push
+ *   with 409 if the household syncVersion has advanced past this value,
+ *   indicating another member has pushed since the client last synced.
  *
  * Response 200:
- *   { cards: Card[], syncedCount: number }
+ *   { cards: Card[], syncedCount: number, syncVersion: number }
  *   cards — merged result (client must write this back to localStorage)
  *   syncedCount — number of active (non-tombstoned) cards after merge
+ *   syncVersion — new household sync version after this push
  *
  * Error responses:
  *   400 — invalid request body
  *   401 — not authenticated
  *   403 — user is not Karl tier (Thrall or free trial), or householdId does
  *          not match the authenticated user's household (IDOR guard)
+ *   409 — clientSyncVersion is stale (another push has occurred since client synced)
  *   500 — internal error
  *
  * Security: household membership is verified via requireAuthz() before any
  * Firestore access. The authz-resolved householdId is used for all Firestore
  * operations — never the raw client-supplied body value — to prevent IDOR.
  *
- * Issue #1122, #1193, #1208
+ * Issue #1122, #1193, #1208, #2004
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthz } from "@/lib/auth/authz";
-import { getAllFirestoreCards, setCards, deleteCards } from "@/lib/firebase/firestore";
+import {
+  getAllFirestoreCards,
+  setCards,
+  deleteCards,
+  getHouseholdSyncVersion,
+  updateSyncStateAfterPush,
+} from "@/lib/firebase/firestore";
 import { mergeCardsWithStats } from "@/lib/sync/sync-engine";
 import { log } from "@/lib/logger";
 import type { Card } from "@/lib/types";
@@ -59,7 +70,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { householdId, cards } = body as Record<string, unknown>;
+  const { householdId, cards, clientSyncVersion } = body as Record<string, unknown>;
 
   if (typeof householdId !== "string" || !householdId) {
     return NextResponse.json(
@@ -89,6 +100,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Use the authz-resolved householdId — never the raw body value — to prevent IDOR
   const verifiedHouseholdId = authz.firestoreUser.householdId;
+  const pushingUserId = authz.firestoreUser.userId;
 
   // Sanitize card-level householdId to prevent second-order IDOR (Issue #1208):
   // An attacker can pass their own valid householdId at the top level (passing authz)
@@ -101,6 +113,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }));
 
   try {
+    // 409 stale-client check: if clientSyncVersion is provided and the household
+    // has advanced past it, reject so the client can pull before retrying.
+    if (typeof clientSyncVersion === "number") {
+      const currentVersion = await getHouseholdSyncVersion(verifiedHouseholdId);
+      if (clientSyncVersion < currentVersion) {
+        log.debug("POST /api/sync/push rejected: stale client", {
+          householdId: verifiedHouseholdId,
+          clientSyncVersion,
+          currentVersion,
+        });
+        return NextResponse.json(
+          {
+            error: "sync_conflict",
+            error_description: "Client sync version is stale. Pull the latest changes before pushing.",
+            currentSyncVersion: currentVersion,
+          },
+          { status: 409 },
+        );
+      }
+    }
+
     // Fetch all remote cards (including tombstones) for LWW merge
     const remoteCards = await getAllFirestoreCards(verifiedHouseholdId);
 
@@ -137,9 +170,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Write merged result back to Firestore
     await setCards(merged);
 
+    // Increment syncVersion and mark other household members as needing download.
+    // Returns the new syncVersion for inclusion in the response.
+    const syncVersion = await updateSyncStateAfterPush(verifiedHouseholdId, pushingUserId);
+
     log.debug("POST /api/sync/push returning", {
       status: 200,
       householdId: verifiedHouseholdId,
+      syncVersion,
       ...stats,
     });
 
@@ -147,6 +185,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       {
         cards: merged,
         syncedCount: stats.activeCount,
+        syncVersion,
       },
       { headers: { "Cache-Control": "no-store" } },
     );

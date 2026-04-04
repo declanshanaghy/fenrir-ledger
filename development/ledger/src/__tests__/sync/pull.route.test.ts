@@ -27,9 +27,13 @@ vi.mock("@/lib/auth/authz", () => ({
 // ── Mock: Firestore ────────────────────────────────────────────────────────
 
 const mockGetAllFirestoreCards = vi.hoisted(() => vi.fn());
+const mockGetHouseholdSyncVersion = vi.hoisted(() => vi.fn());
+const mockUpdateSyncStateAfterPull = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/firebase/firestore", () => ({
   getAllFirestoreCards: mockGetAllFirestoreCards,
+  getHouseholdSyncVersion: mockGetHouseholdSyncVersion,
+  updateSyncStateAfterPull: mockUpdateSyncStateAfterPull,
 }));
 
 // ── Import after mocks ────────────────────────────────────────────────────
@@ -49,12 +53,12 @@ function makeRequest(householdId?: string): NextRequest {
   });
 }
 
-function authzSuccess(householdId = "hh-test") {
+function authzSuccess(householdId = "hh-test", userId = "google-123") {
   mockRequireAuthz.mockResolvedValue({
     ok: true,
-    user: { sub: "google-123", email: "test@example.com" },
+    user: { sub: userId, email: "test@example.com" },
     firestoreUser: {
-      userId: "google-123",
+      userId,
       householdId,
       email: "test@example.com",
       displayName: "Test User",
@@ -76,6 +80,8 @@ function authzFail(status: number, error: string) {
 
 beforeEach(() => {
   mockGetAllFirestoreCards.mockResolvedValue([]);
+  mockGetHouseholdSyncVersion.mockResolvedValue(0);
+  mockUpdateSyncStateAfterPull.mockResolvedValue(undefined);
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────
