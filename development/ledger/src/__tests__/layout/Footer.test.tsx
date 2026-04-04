@@ -166,3 +166,47 @@ describe("Footer — copyright line", () => {
     expect(footer).toHaveTextContent("Loki");
   });
 });
+
+describe("Footer — mobile overflow fix — issue #2047", () => {
+  it("left span does not apply whitespace-nowrap unconditionally (only sm:)", () => {
+    renderFooter();
+    const footer = screen.getByRole("contentinfo");
+    // Find the left span (wordmark + tagline)
+    const leftSpan = footer.querySelector(
+      'span[class*="text-muted-foreground"]'
+    );
+    expect(leftSpan).toBeInTheDocument();
+    // Must NOT have bare 'whitespace-nowrap' — only sm: prefixed variant is allowed
+    const cls = leftSpan?.className ?? "";
+    expect(cls).not.toMatch(/(?<![:\w])whitespace-nowrap/);
+  });
+
+  it("right span does not apply whitespace-nowrap unconditionally (only sm:)", () => {
+    renderFooter();
+    const footer = screen.getByRole("contentinfo");
+    const allSpans = footer.querySelectorAll(
+      'span[class*="text-muted-foreground"]'
+    );
+    // Second span is the colophon
+    const rightSpan = allSpans[1];
+    expect(rightSpan).toBeInTheDocument();
+    const cls = rightSpan?.className ?? "";
+    expect(cls).not.toMatch(/(?<![:\w])whitespace-nowrap/);
+  });
+
+  it("both footer text spans allow wrapping on mobile via sm: prefix", () => {
+    renderFooter();
+    const footer = screen.getByRole("contentinfo");
+    const allSpans = footer.querySelectorAll(
+      'span[class*="text-muted-foreground"]'
+    );
+    expect(allSpans.length).toBeGreaterThanOrEqual(2);
+    [allSpans[0], allSpans[1]].forEach((span) => {
+      const cls = span.className;
+      // sm:whitespace-nowrap is acceptable (only applies at >= 640px)
+      if (cls.includes("whitespace-nowrap")) {
+        expect(cls).toContain("sm:whitespace-nowrap");
+      }
+    });
+  });
+});

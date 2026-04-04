@@ -262,11 +262,18 @@
 
   html {
     scroll-behavior: smooth;
+    /* Prevent horizontal overflow on mobile — issue #2047.
+     * overflow-x: clip clips without creating a scroll container,
+     * preserving position:sticky behaviour in all browsers. */
+    overflow-x: clip;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body), serif;
+    /* Belt-and-suspenders: prevent any invisible element from
+     * widening the body scroll area on mobile. */
+    overflow-x: clip;
   }
 
   /* ── Body background textures (theme-aware) ──────────────── */
