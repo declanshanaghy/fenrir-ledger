@@ -33,6 +33,15 @@ const nextConfig: NextConfig = {
   // pnpm symlinks (node_modules/.pnpm/) that live above this package directory.
   outputFileTracingRoot: path.join(__dirname, "../.."),
 
+  // Expose OpenAPI spec at root-level paths without /api/ prefix.
+  // Issue #2009
+  async rewrites() {
+    return [
+      { source: "/openapi.json", destination: "/api/openapi.json" },
+      { source: "/openapi.yml", destination: "/api/openapi.yml" },
+    ];
+  },
+
   // Non-CSP security headers — static, same on every response.
   // CSP is set per-request in middleware (needs nonce for RSC scripts).
   async headers() {
