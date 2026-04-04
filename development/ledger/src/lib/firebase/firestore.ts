@@ -19,6 +19,7 @@ import type {
   FirestoreHousehold,
   FirestoreCard,
   FirestoreStripeSubscription,
+  FirestoreMemberSyncState,
 } from "./firestore-types";
 import {
   FIRESTORE_PATHS,
@@ -815,4 +816,126 @@ export async function deleteStripeSubscription(
 ): Promise<void> {
   const db = getFirestore();
   await db.doc(FIRESTORE_PATHS.stripeSubscription(householdId)).delete();
+}
+
+// ─── Sync state operations ────────────────────────────────────────────────────
+
+/**
+ * Fetches the sync state document for a specific member.
+ * Stored at /households/{householdId}/syncState/{userId}.
+ * Returns null if no sync state document exists yet (first access).
+ *
+ * @param householdId - The household document ID
+ * @param userId - The member's user ID (Google sub)
+ */
+export async function getMemberSyncState(
+  householdId: string,
+  userId: string
+): Promise<FirestoreMemberSyncState | null> {
+  const db = getFirestore();
+  const snap = await db.doc(FIRESTORE_PATHS.syncState(householdId, userId)).get();
+  if (!snap.exists) return null;
+  return snap.data() as FirestoreMemberSyncState;
+}
+
+/**
+ * Returns the current syncVersion for a household, or 0 if absent.
+ * Reads the household document's syncVersion field.
+ *
+ * @param householdId - The household document ID
+ */
+export async function getHouseholdSyncVersion(
+  householdId: string
+): Promise<number> {
+  const db = getFirestore();
+  const snap = await db.doc(FIRESTORE_PATHS.household(householdId)).get();
+  if (!snap.exists) return 0;
+  const data = snap.data() as FirestoreHousehold;
+  return data.syncVersion ?? 0;
+}
+
+/**
+ * Atomically increments the household syncVersion and marks all OTHER members
+ * as needing a download.
+ *
+ * Transaction steps (all-or-nothing):
+ *   1. Read household doc to get current syncVersion and memberIds
+ *   2. Increment syncVersion by 1
+ *   3. Write updated syncVersion to the household doc
+ *   4. For each member ID other than pushingUserId, write/merge their
+ *      syncState doc with needsDownload = true and the new syncVersion
+ *
+ * The pushing member's own syncState is updated to reflect they are now
+ * in sync with the new version (needsDownload = false).
+ *
+ * @param householdId  - The household document ID
+ * @param pushingUserId - The user ID of the member performing the push
+ */
+export async function updateSyncStateAfterPush(
+  householdId: string,
+  pushingUserId: string
+): Promise<number> {
+  const db = getFirestore();
+  const now = new Date().toISOString();
+
+  return await db.runTransaction(async (tx) => {
+    const householdRef = db.doc(FIRESTORE_PATHS.household(householdId));
+    const householdSnap = await tx.get(householdRef);
+
+    if (!householdSnap.exists) {
+      throw new Error("household_not_found");
+    }
+
+    const household = householdSnap.data() as FirestoreHousehold;
+    const newVersion = (household.syncVersion ?? 0) + 1;
+
+    // Increment syncVersion on the household doc
+    tx.update(householdRef, { syncVersion: newVersion, updatedAt: now });
+
+    // Update sync state for each member
+    for (const memberId of household.memberIds) {
+      const syncStateRef = db.doc(FIRESTORE_PATHS.syncState(householdId, memberId));
+      const isPusher = memberId === pushingUserId;
+
+      const syncState: FirestoreMemberSyncState = {
+        userId: memberId,
+        lastSyncedVersion: newVersion,
+        needsDownload: !isPusher,
+        updatedAt: now,
+      };
+      tx.set(syncStateRef, syncState);
+    }
+
+    return newVersion;
+  });
+}
+
+/**
+ * Marks a member as having completed a pull — clears needsDownload and
+ * updates lastSyncedVersion to the household's current syncVersion.
+ *
+ * Reads the current syncVersion from the household doc, then writes:
+ *   needsDownload = false
+ *   lastSyncedVersion = current syncVersion
+ *
+ * @param householdId - The household document ID
+ * @param userId - The member's user ID (Google sub)
+ */
+export async function updateSyncStateAfterPull(
+  householdId: string,
+  userId: string
+): Promise<void> {
+  const db = getFirestore();
+  const now = new Date().toISOString();
+
+  const currentVersion = await getHouseholdSyncVersion(householdId);
+
+  const syncState: FirestoreMemberSyncState = {
+    userId,
+    lastSyncedVersion: currentVersion,
+    needsDownload: false,
+    updatedAt: now,
+  };
+
+  await db.doc(FIRESTORE_PATHS.syncState(householdId, userId)).set(syncState);
 }

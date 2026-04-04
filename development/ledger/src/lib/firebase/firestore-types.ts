@@ -82,6 +82,38 @@ export interface FirestoreHousehold {
   createdAt: string;
   /** UTC ISO 8601 timestamp when this household was last modified */
   updatedAt: string;
+  /**
+   * Monotonically increasing sync version counter. Incremented atomically
+   * whenever a member pushes changes. Absent on legacy households until first
+   * push or sync state access. Used by sync state tracking (issue #2001).
+   */
+  syncVersion?: number;
+}
+
+// ─── Sync state subcollection document ───────────────────────────────────────
+
+/**
+ * Stored at /households/{householdId}/syncState/{userId}.
+ *
+ * One document per household member. Tracks which members need to download
+ * new changes after another member pushes. Enables multi-device, multi-user
+ * household sync (issue #2001).
+ */
+export interface FirestoreMemberSyncState {
+  /** Document ID — Google OAuth sub claim of the household member */
+  userId: string;
+  /**
+   * The household syncVersion at the time this member last completed a pull.
+   * 0 for members who have never synced.
+   */
+  lastSyncedVersion: number;
+  /**
+   * True when another member has pushed changes this member has not yet pulled.
+   * Cleared by updateSyncStateAfterPull().
+   */
+  needsDownload: boolean;
+  /** UTC ISO 8601 timestamp when this document was last modified */
+  updatedAt: string;
 }
 
 // ─── Stripe subcollection document ────────────────────────────────────────────
@@ -143,6 +175,12 @@ export const FIRESTORE_PATHS = {
     `households/${householdId}/stripe/subscription` as const,
   /** /households/{userId}/trial/status — permanent trial record (never auto-deleted) */
   trial: (userId: string) => `households/${userId}/trial/status` as const,
+  /** /households/{householdId}/syncState — sync state subcollection (issue #2001) */
+  syncStates: (householdId: string) =>
+    `households/${householdId}/syncState` as const,
+  /** /households/{householdId}/syncState/{userId} — per-member sync state doc (issue #2001) */
+  syncState: (householdId: string, userId: string) =>
+    `households/${householdId}/syncState/${userId}` as const,
 } as const;
 
 // ─── Invite code helpers ──────────────────────────────────────────────────────
