@@ -47,6 +47,11 @@ config:
         secretKeyRef:
           name: n8n-secrets
           key: N8N_API_KEY
+    - name: IGNORED_SUBREDDITS
+      valueFrom:
+        configMapKeyRef:
+          name: n8n-workflow-config
+          key: IGNORED_SUBREDDITS
 
 # Secrets from K8s secret. Only N8N_ENCRYPTION_KEY comes from the secret.
 # Host/port/protocol are set via config (not secrets — they're not sensitive).
