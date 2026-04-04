@@ -3,6 +3,7 @@ import { Box, Text, useInput } from "ink";
 import { log } from "@fenrir/logger";
 import { firestoreClient } from "../lib/firestore.js";
 import { useSelection } from "../context/SelectionContext.js";
+import { useMouseClick } from "../lib/useMouse.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -481,6 +482,44 @@ export function UsersTab({
     },
     [] // setters are stable
   );
+
+  // ─── Mouse click handler ──────────────────────────────────────────────────
+  //
+  // Terminal layout (1-based rows):
+  //   Row 1  TopBar content
+  //   Row 2  TopBar bottom border
+  //   Row 3  Left-panel header "Users (N)"
+  //   Row 4  Left-panel header bottom border
+  //   Row 5+ List items (one per row)
+  //
+  // Left panel spans columns 1–36.
+  // paddingX={1} inside the list means usable content is cols 2–35, but we
+  // accept clicks across the full panel width for a forgiving hit target.
+
+  useMouseClick(({ x, y, button }) => {
+    log.debug("UsersTab mouseClick", { x, y, button });
+
+    // Only respond to left-click (button=0) in the left list panel.
+    if (button !== 0) return;
+    if (x < 1 || x > 36) return;
+
+    const LIST_START_Y = 5;
+    if (y < LIST_START_Y) return;
+
+    const clickedIdx = scrollOffset + (y - LIST_START_Y);
+    if (clickedIdx < 0 || clickedIdx >= users.length) return;
+
+    // Clicking the already-selected row deselects it (toggle).
+    if (clickedIdx === selectedIdx) {
+      log.debug("UsersTab: mouse deselect", { idx: clickedIdx });
+      setSelectedIdx(-1);
+      setActionMode("none");
+    } else {
+      log.debug("UsersTab: mouse select", { idx: clickedIdx });
+      setSelectedIdx(clickedIdx);
+      setActionMode("none");
+    }
+  });
 
   useInput((input, key) => {
     // Delete confirmation
