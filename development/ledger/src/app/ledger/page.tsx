@@ -37,7 +37,7 @@ import { AuthGate } from "@/components/shared/AuthGate";
 import { KarlUpsellDialog, KARL_UPSELL_IMPORT } from "@/components/entitlement/KarlUpsellDialog";
 import { UpsellBanner } from "@/components/entitlement/UpsellBanner";
 import { SignInNudge } from "@/components/layout/SignInNudge";
-import { getCards, getDeletedCards, saveCard, migrateIfNeeded } from "@/lib/storage";
+import { getCards, getDeletedCards, saveCard, migrateIfNeeded, notifyCardsBulkChanged } from "@/lib/storage";
 import { ANON_HOUSEHOLD_ID } from "@/lib/constants";
 import { track } from "@/lib/analytics/track";
 import type { Card } from "@/lib/types";
@@ -142,6 +142,9 @@ function DashboardPageContent() {
       saveCard(card);
       track("card-save", { method: "import" });
     }
+
+    // Trigger immediate sync for bulk import (no debounce — all cards are already saved)
+    notifyCardsBulkChanged(effectiveId);
 
     const refreshed = getCards(effectiveId); // includes closed cards for Valhalla tab
     setCards(refreshed);

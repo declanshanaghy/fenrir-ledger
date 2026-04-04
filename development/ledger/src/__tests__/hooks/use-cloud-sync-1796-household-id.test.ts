@@ -55,6 +55,9 @@ vi.mock("@/lib/storage", () => ({
   getEffectiveHouseholdId: (fallback: string) => mockGetEffectiveHouseholdId(fallback),
   getRawAllCards: (...args: unknown[]) => mockGetRawAllCards(...args),
   setAllCards: (...args: unknown[]) => mockSetAllCards(...args),
+  // Issue #2005: needs-upload flag helpers — no pending upload in base tests
+  getNeedsUpload: vi.fn().mockReturnValue(false),
+  clearNeedsUpload: vi.fn(),
 }));
 
 vi.mock("@/lib/sync/migration", () => ({

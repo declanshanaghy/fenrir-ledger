@@ -21,6 +21,9 @@ import {
   deleteCard,
   closeCard,
   setAllCards,
+  notifyCardsBulkChanged,
+  getNeedsUpload,
+  clearNeedsUpload,
 } from "@/lib/storage";
 
 // ── Test helpers ──────────────────────────────────────────────────────────
@@ -494,6 +497,70 @@ describe("storage", () => {
 
       expect(handler).toHaveBeenCalledTimes(1);
       window.removeEventListener("fenrir:sync", handler);
+    });
+  });
+
+  // ── Needs-upload flag ───────────────────────────────────────────────
+
+  describe("getNeedsUpload / clearNeedsUpload", () => {
+    it("returns false when flag is absent", () => {
+      expect(getNeedsUpload()).toBe(false);
+    });
+
+    it("returns true after flag is set", () => {
+      localStorage.setItem("fenrir:needs-upload", "1");
+      expect(getNeedsUpload()).toBe(true);
+    });
+
+    it("clearNeedsUpload removes the flag", () => {
+      localStorage.setItem("fenrir:needs-upload", "1");
+      clearNeedsUpload();
+      expect(getNeedsUpload()).toBe(false);
+    });
+  });
+
+  describe("notifyCardsBulkChanged", () => {
+    it("dispatches fenrir:cards-bulk-changed event", () => {
+      const handler = vi.fn();
+      window.addEventListener("fenrir:cards-bulk-changed", handler);
+
+      notifyCardsBulkChanged(HH_ID);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      window.removeEventListener("fenrir:cards-bulk-changed", handler);
+    });
+
+    it("includes householdId in event detail", () => {
+      let detail: unknown;
+      window.addEventListener("fenrir:cards-bulk-changed", (e) => {
+        detail = (e as CustomEvent).detail;
+      });
+
+      notifyCardsBulkChanged(HH_ID);
+
+      expect(detail).toEqual({ householdId: HH_ID });
+    });
+
+    it("sets fenrir:needs-upload flag in localStorage", () => {
+      notifyCardsBulkChanged(HH_ID);
+      expect(localStorage.getItem("fenrir:needs-upload")).toBe("1");
+    });
+  });
+
+  describe("notifyCardsChanged (via saveCard)", () => {
+    it("saveCard sets fenrir:needs-upload flag", () => {
+      saveCard(makeCard({ id: "c1" }));
+      expect(localStorage.getItem("fenrir:needs-upload")).toBe("1");
+    });
+
+    it("saveCard dispatches fenrir:cards-changed event", () => {
+      const handler = vi.fn();
+      window.addEventListener("fenrir:cards-changed", handler);
+
+      saveCard(makeCard({ id: "c1" }));
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      window.removeEventListener("fenrir:cards-changed", handler);
     });
   });
 

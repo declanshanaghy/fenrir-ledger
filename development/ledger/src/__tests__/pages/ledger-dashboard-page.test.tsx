@@ -76,6 +76,8 @@ vi.mock("@/lib/storage", () => ({
   getDeletedCards: vi.fn(() => []),
   saveCard: vi.fn(),
   migrateIfNeeded: vi.fn(),
+  // Issue #2005: notifyCardsBulkChanged dispatched after bulk import
+  notifyCardsBulkChanged: vi.fn(),
 }));
 
 vi.mock("@/lib/analytics/track", () => ({

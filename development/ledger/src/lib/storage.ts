@@ -46,9 +46,32 @@ function isBrowser(): boolean {
 
 // ─── Cloud sync notification ──────────────────────────────────────────────────
 
+/** localStorage key set when cards need to be uploaded to Firestore. */
+const NEEDS_UPLOAD_KEY = "fenrir:needs-upload";
+
+/**
+ * Returns true if there are local card changes that have not yet been pushed
+ * to Firestore. Persists across page navigations.
+ */
+export function getNeedsUpload(): boolean {
+  if (!isBrowser()) return false;
+  return localStorage.getItem(NEEDS_UPLOAD_KEY) === "1";
+}
+
+/**
+ * Clears the needs-upload flag after a successful Firestore push.
+ */
+export function clearNeedsUpload(): void {
+  if (!isBrowser()) return;
+  localStorage.removeItem(NEEDS_UPLOAD_KEY);
+}
+
 /**
  * Dispatches "fenrir:cards-changed" after a user-initiated card write.
  * useCloudSync listens for this event and schedules a debounced push to Firestore.
+ *
+ * Also sets the "fenrir:needs-upload" flag so sync can be triggered even if
+ * the debounce timer fires after navigation (or the component unmounts).
  *
  * NOT called from setAllCards() directly — only from user-facing write functions
  * (saveCard, deleteCard, restoreCard, expungeCard, expungeAllCards, closeCard)
@@ -58,8 +81,35 @@ function isBrowser(): boolean {
  */
 function notifyCardsChanged(householdId: string): void {
   if (!isBrowser()) return;
+  try {
+    localStorage.setItem(NEEDS_UPLOAD_KEY, "1");
+  } catch {
+    // localStorage full — ignore
+  }
   window.dispatchEvent(
     new CustomEvent("fenrir:cards-changed", { detail: { householdId } })
+  );
+}
+
+/**
+ * Dispatches "fenrir:cards-bulk-changed" after a bulk import writes multiple
+ * cards in a loop. useCloudSync listens for this event and calls performSync()
+ * immediately (no debounce) so the import is pushed without waiting 2s.
+ *
+ * Also sets the "fenrir:needs-upload" flag so sync survives page navigation
+ * (e.g. the user navigates away immediately after import).
+ *
+ * Detail: { householdId: string }
+ */
+export function notifyCardsBulkChanged(householdId: string): void {
+  if (!isBrowser()) return;
+  try {
+    localStorage.setItem(NEEDS_UPLOAD_KEY, "1");
+  } catch {
+    // localStorage full — ignore
+  }
+  window.dispatchEvent(
+    new CustomEvent("fenrir:cards-bulk-changed", { detail: { householdId } })
   );
 }
 
