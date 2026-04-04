@@ -133,7 +133,9 @@ describe("useCloudSync — uses getEffectiveHouseholdId after join (#1796)", () 
     // No session set here — avoids login-transition pull holding the lock.
     // Session is written in each test just before syncNow() is called.
     vi.stubGlobal("fetch", mockFetch);
-    mockFetch.mockReturnValue(makePushResponse());
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh
+    // Response with unconsumed body. (#2006 — performSync now pre-checks sync state)
+    mockFetch.mockImplementation(() => makePushResponse());
     mockGetEffectiveHouseholdId.mockReturnValue(JOINED_HH_ID);
   });
 
@@ -185,7 +187,9 @@ describe("useCloudSync — uses getEffectiveHouseholdId after join (#1796)", () 
   });
 
   it("writes merged cards back to the joined household localStorage key", async () => {
-    mockFetch.mockReturnValue(
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh
+    // Response with an unconsumed body. (#2006 — performSync now calls state check first)
+    mockFetch.mockImplementation(() =>
       makePushResponse([{ id: "card-1", householdId: JOINED_HH_ID }], 1)
     );
 

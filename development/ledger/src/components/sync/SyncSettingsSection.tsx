@@ -44,6 +44,8 @@ export function formatTimestamp(date: Date): string {
 const STATUS_DOT_BASE = "inline-flex h-2 w-2 rounded-full flex-shrink-0";
 
 const STATUS_DOT_CLASSES: Record<CloudSyncStatus, string> = {
+  "needs-upload": `${STATUS_DOT_BASE} bg-[hsl(var(--egg-accent))] opacity-70`,
+  "needs-download": `${STATUS_DOT_BASE} bg-[hsl(var(--egg-accent))] opacity-70`,
   syncing: `${STATUS_DOT_BASE} bg-[hsl(var(--egg-accent))]`,
   synced: `${STATUS_DOT_BASE} bg-emerald-500 dark:bg-emerald-400`,
   offline: `${STATUS_DOT_BASE} bg-[hsl(var(--egg-border))] opacity-40`,

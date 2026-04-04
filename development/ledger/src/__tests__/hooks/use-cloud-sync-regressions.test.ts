@@ -268,21 +268,24 @@ describe("useCloudSync — tier switching without page reload", () => {
   it("switching from Karl back to Thrall makes syncNow a no-op", async () => {
     mockEntitlement.tier = "karl";
     mockEntitlement.isActive = true;
-    mockFetch.mockReturnValue(successResponse(3));
+    // Use mockImplementation so each call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(3));
 
     const { result, rerender } = renderHook(() => useCloudSync());
     expect(result.current.status).toBe("idle");
 
     setSession();
     await act(async () => { await result.current.syncNow(); });
-    expect(mockFetch).toHaveBeenCalledTimes(1);
+    // performSync now makes 2 calls: GET /api/sync/state + POST /api/sync/push (#2006)
+    expect(mockFetch).toHaveBeenCalledTimes(2);
 
     mockEntitlement.tier = "thrall";
     mockEntitlement.isActive = false;
     rerender();
 
     await act(async () => { await result.current.syncNow(); });
-    expect(mockFetch).toHaveBeenCalledTimes(1);
+    // No new calls after switching to Thrall
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -307,9 +310,10 @@ describe("useCloudSync — retryIn countdown", () => {
   });
 
   it("retryIn is null after sync error (auto-retry removed in #1239)", async () => {
-    mockFetch
-      .mockReturnValueOnce(errorResponse("network_error"))
-      .mockReturnValue(hangingFetch());
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh
+    // Response. performSync degrades gracefully when state check returns error (null),
+    // then the push also gets an error response → status=error, retryIn=null. (#2006)
+    mockFetch.mockImplementation(() => errorResponse("network_error"));
     const { result } = renderHook(() => useCloudSync());
     setSession();
     await act(async () => { await result.current.syncNow(); });
@@ -323,9 +327,8 @@ describe("useCloudSync — retryIn countdown", () => {
   });
 
   it("retryIn stays null after error even with time passing (#1239)", async () => {
-    mockFetch
-      .mockReturnValueOnce(errorResponse("network_error"))
-      .mockReturnValue(hangingFetch());
+    // Use mockImplementation so each fetch call gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => errorResponse("network_error"));
     const { result } = renderHook(() => useCloudSync());
     setSession();
     await act(async () => { await result.current.syncNow(); });
@@ -364,7 +367,8 @@ describe("useCloudSync — first-sync toast pluralization", () => {
   });
 
   it("uses singular 'card has been' for count=1 (restore direction)", async () => {
-    mockFetch.mockReturnValue(successResponse(1));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(1));
     const { result } = renderHook(() => useCloudSync());
     setSession();
     await act(async () => { await result.current.syncNow(); });
@@ -376,7 +380,8 @@ describe("useCloudSync — first-sync toast pluralization", () => {
   });
 
   it("uses plural 'cards have been' for count=5 (restore direction)", async () => {
-    mockFetch.mockReturnValue(successResponse(5));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(5));
     const { result } = renderHook(() => useCloudSync());
     setSession();
     await act(async () => { await result.current.syncNow(); });
@@ -388,7 +393,8 @@ describe("useCloudSync — first-sync toast pluralization", () => {
   });
 
   it("shows 'backed up' toast when syncedCount is 0 (neither direction)", async () => {
-    mockFetch.mockReturnValue(successResponse(0));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(0));
     const { result } = renderHook(() => useCloudSync());
     setSession();
     await act(async () => { await result.current.syncNow(); });
@@ -432,7 +438,10 @@ describe("useCloudSync — error persists after toast dismiss (not dismissError)
   });
 
   it("error data overwrites on second consecutive error", async () => {
-    mockFetch.mockReturnValueOnce(errorResponse("network-timeout"));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh
+    // Response. State check degrades gracefully on error; push gets its own error
+    // response and sets errorCode correctly. (#2006)
+    mockFetch.mockImplementation(() => errorResponse("network-timeout"));
     const { result } = renderHook(() => useCloudSync());
     setSession();
     await act(async () => { await result.current.syncNow(); });
@@ -441,7 +450,7 @@ describe("useCloudSync — error persists after toast dismiss (not dismissError)
     act(() => result.current.dismissError());
     expect(result.current.status).toBe("idle");
 
-    mockFetch.mockReturnValueOnce(errorResponse("quota-exceeded"));
+    mockFetch.mockImplementation(() => errorResponse("quota-exceeded"));
     await act(async () => { await result.current.syncNow(); });
     expect(result.current.errorCode).toBe("quota-exceeded");
     expect(result.current.errorMessage).toBe("quota-exceeded");
@@ -664,7 +673,8 @@ describe("Bug 2 — Restore vs backup message direction", () => {
 
   it("shows 'restored from cloud' when local is empty and Firestore has cards", async () => {
     mockGetRawAllCards.mockReturnValue([]);
-    mockFetch.mockReturnValue(successResponse(4));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(4));
 
     const { result } = renderHook(() => useCloudSync());
     setSession(SESSION_1172);
@@ -683,7 +693,8 @@ describe("Bug 2 — Restore vs backup message direction", () => {
       { id: "c2", deletedAt: undefined },
       { id: "c3", deletedAt: undefined },
     ]);
-    mockFetch.mockReturnValue(successResponse(3));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(3));
 
     const { result } = renderHook(() => useCloudSync());
     setSession(SESSION_1172);
@@ -698,7 +709,8 @@ describe("Bug 2 — Restore vs backup message direction", () => {
 
   it("NEVER shows 'backed up' when local is empty (empty push must not claim backup)", async () => {
     mockGetRawAllCards.mockReturnValue([]);
-    mockFetch.mockReturnValue(successResponse(5));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(5));
 
     const { result } = renderHook(() => useCloudSync());
     setSession(SESSION_1172);
@@ -712,7 +724,8 @@ describe("Bug 2 — Restore vs backup message direction", () => {
 
   it("uses singular 'card has been' for count=1 restore", async () => {
     mockGetRawAllCards.mockReturnValue([]);
-    mockFetch.mockReturnValue(successResponse(1));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(1));
 
     const { result } = renderHook(() => useCloudSync());
     setSession(SESSION_1172);
@@ -726,7 +739,8 @@ describe("Bug 2 — Restore vs backup message direction", () => {
 
   it("uses singular 'card has been' for count=1 backup (local had 1 card)", async () => {
     mockGetRawAllCards.mockReturnValue([{ id: "c1", deletedAt: undefined }]);
-    mockFetch.mockReturnValue(successResponse(1));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(1));
 
     const { result } = renderHook(() => useCloudSync());
     setSession(SESSION_1172);
@@ -1340,7 +1354,8 @@ describe("Bug 2 fix — first-sync toast suppressed after fenrir:first-sync-show
   });
 
   it("second sync still updates status and cardCount even without toast", async () => {
-    mockFetch.mockReturnValue(successResponse(5));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(5));
 
     const { result } = renderHook(() => useCloudSync());
     setSession(SESSION_LOKI_1172);
@@ -1349,7 +1364,7 @@ describe("Bug 2 fix — first-sync toast suppressed after fenrir:first-sync-show
     expect(result.current.status).toBe("synced");
     expect(result.current.cardCount).toBe(5);
 
-    mockFetch.mockReturnValue(successResponse(7));
+    mockFetch.mockImplementation(() => successResponse(7));
     await act(async () => { await result.current.syncNow(); });
 
     expect(result.current.status).toBe("synced");
@@ -1794,7 +1809,8 @@ describe("Issue #1239 AC-4 — No auto-retry push after sync error", () => {
     expect(result.current.status).toBe("idle");
 
     mockFetch.mockReset();
-    mockFetch.mockReturnValue(pushResponse(1));
+    // Use mockImplementation so each fetch call (state check + push) gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => pushResponse(1));
     act(() => { window.dispatchEvent(new CustomEvent(EVT_CARDS_CHANGED)); });
 
     await act(async () => {

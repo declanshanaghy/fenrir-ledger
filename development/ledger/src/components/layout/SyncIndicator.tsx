@@ -31,6 +31,7 @@ import {
   useGleipnirFragment1,
 } from "@/components/cards/GleipnirCatFootfall";
 import { useCloudSync } from "@/hooks/useCloudSync";
+import type { CloudSyncStatus } from "@/hooks/useCloudSync";
 import { useIsKarlOrTrial } from "@/hooks/useIsKarlOrTrial";
 
 // ---------------------------------------------------------------------------
@@ -45,7 +46,7 @@ interface StateConfig {
 }
 
 function getStateConfig(
-  status: "idle" | "syncing" | "synced" | "offline" | "error",
+  status: CloudSyncStatus,
   isKarlOrTrial: boolean,
   lastSyncedAt: Date | null
 ): StateConfig {
@@ -59,6 +60,20 @@ function getStateConfig(
   }
 
   switch (status) {
+    case "needs-upload":
+      return {
+        ariaLabel: "Upload pending",
+        tooltip: "Changes pending upload\u2026",
+        dotClass: "bg-[hsl(var(--egg-accent))] opacity-70",
+        showPing: false,
+      };
+    case "needs-download":
+      return {
+        ariaLabel: "Download pending",
+        tooltip: "New changes available\u2026",
+        dotClass: "bg-[hsl(var(--egg-accent))] opacity-70",
+        showPing: false,
+      };
     case "syncing":
       return {
         ariaLabel: "Syncing to cloud",
