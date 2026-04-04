@@ -5,9 +5,44 @@
 import { describe, it, expect } from "vitest";
 import {
   buildInviteMailtoUrl,
+  buildInviteSharePayload,
   pickRandomIntro,
   INVITE_INTRO_POOL,
+  INVITE_JOIN_URL,
+  INVITE_SUBJECT,
 } from "@/lib/household/invite-mailto";
+
+describe("buildInviteSharePayload", () => {
+  const code = "XYZ789";
+
+  it("returns title matching INVITE_SUBJECT", () => {
+    const payload = buildInviteSharePayload(code);
+    expect(payload.title).toBe(INVITE_SUBJECT);
+  });
+
+  it("includes invite code in text", () => {
+    const payload = buildInviteSharePayload(code);
+    expect(payload.text).toContain(code);
+  });
+
+  it("returns INVITE_JOIN_URL as url", () => {
+    const payload = buildInviteSharePayload(code);
+    expect(payload.url).toBe(INVITE_JOIN_URL);
+  });
+
+  it("url points to fenrirledger.com", () => {
+    const payload = buildInviteSharePayload(code);
+    expect(payload.url).toContain("fenrirledger.com");
+  });
+
+  it("works with different invite codes", () => {
+    const payload1 = buildInviteSharePayload("AAA111");
+    const payload2 = buildInviteSharePayload("BBB222");
+    expect(payload1.text).toContain("AAA111");
+    expect(payload2.text).toContain("BBB222");
+    expect(payload1.text).not.toContain("BBB222");
+  });
+});
 
 describe("pickRandomIntro", () => {
   it("returns an item from the pool", () => {

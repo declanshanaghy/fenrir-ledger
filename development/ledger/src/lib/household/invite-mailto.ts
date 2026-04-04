@@ -35,6 +35,31 @@ export function pickRandomIntro(
   return pool[Math.floor(random() * pool.length)] ?? pool[0] ?? "";
 }
 
+export const INVITE_JOIN_URL = "https://fenrirledger.com/ledger/join";
+export const INVITE_SUBJECT = "Join my Fenrir Ledger household";
+
+/**
+ * Payload for the Web Share API (navigator.share).
+ * Used on mobile to open the native share sheet.
+ */
+export interface InviteSharePayload {
+  title: string;
+  text: string;
+  url: string;
+}
+
+/**
+ * Builds the Web Share API payload for inviting a new household member.
+ * Used on mobile devices that support navigator.share.
+ */
+export function buildInviteSharePayload(inviteCode: string): InviteSharePayload {
+  return {
+    title: INVITE_SUBJECT,
+    text: `Invite code: ${inviteCode}\n\nJoin my Fenrir Ledger household:`,
+    url: INVITE_JOIN_URL,
+  };
+}
+
 /**
  * Builds the mailto: URL for an invite email.
  *
