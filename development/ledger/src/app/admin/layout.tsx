@@ -37,7 +37,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const checkAdmin = useCallback(async () => {
     const token = await ensureFreshToken();
     if (!token) {
-      setGate({ phase: "forbidden" });
+      // Token refresh failed — send to sign-in so user can re-authenticate
+      setGate({ phase: "redirecting" });
+      window.location.href = buildSignInUrl("/admin");
       return;
     }
     try {
@@ -47,7 +49,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       });
 
       if (res.status === 403) {
+        // Authenticated but not an admin — show forbidden page
         setGate({ phase: "forbidden" });
+        return;
+      }
+
+      if (res.status === 401) {
+        // Token rejected by server — redirect to sign-in
+        setGate({ phase: "redirecting" });
+        window.location.href = buildSignInUrl("/admin");
         return;
       }
 
@@ -56,7 +66,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Other errors — treat as forbidden
+      // Other server errors — treat as forbidden (not an auth issue)
       setGate({ phase: "forbidden" });
     } catch {
       setGate({ phase: "forbidden" });
