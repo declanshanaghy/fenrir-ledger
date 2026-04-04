@@ -296,11 +296,12 @@ describe("POST /api/sync/push — expunge (issue #1974)", () => {
   });
 
   it("deletes Firestore card that is absent from local (expunged)", async () => {
+    // Non-empty local: one card kept, one card absent → absent card is expunged
     const expunged = makeCard({ id: "expunged-card" });
-    mockGetAllFirestoreCards.mockResolvedValue([expunged]);
+    const kept = makeCard({ id: "kept-card" });
+    mockGetAllFirestoreCards.mockResolvedValue([expunged, kept]);
 
-    // Local has NO cards — expunged-card was removed entirely
-    const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [kept] }));
     expect(res.status).toBe(200);
 
     expect(mockDeleteCards).toHaveBeenCalledOnce();
@@ -308,14 +309,16 @@ describe("POST /api/sync/push — expunge (issue #1974)", () => {
   });
 
   it("does not return expunged card in response", async () => {
+    // Non-empty local: expunged card absent from local → not returned in merge
     const expunged = makeCard({ id: "expunged-card" });
-    mockGetAllFirestoreCards.mockResolvedValue([expunged]);
+    const kept = makeCard({ id: "kept-card" });
+    mockGetAllFirestoreCards.mockResolvedValue([expunged, kept]);
 
-    const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [kept] }));
     const body = await res.json() as { cards: Card[]; syncedCount: number };
 
     expect(body.cards.find((c) => c.id === "expunged-card")).toBeUndefined();
-    expect(body.syncedCount).toBe(0);
+    expect(body.cards.find((c) => c.id === "kept-card")).toBeDefined();
   });
 
   it("expunged card is excluded from setCards write", async () => {
@@ -382,13 +385,89 @@ describe("POST /api/sync/push — expunge (issue #1974)", () => {
   });
 
   it("returns 500 when deleteCards throws", async () => {
+    // Non-empty local required so the expunge path is reached and deleteCards is called
     const expunged = makeCard({ id: "expunged-card" });
+    const kept = makeCard({ id: "kept-card" });
     mockGetAllFirestoreCards.mockResolvedValue([expunged]);
     mockDeleteCards.mockRejectedValue(new Error("Firestore unavailable"));
 
-    const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [kept] }));
     expect(res.status).toBe(500);
     const body = await res.json() as { error: string };
     expect(body.error).toBe("internal_error");
+  });
+});
+
+// ── Expunge safety guard: issue #2002 ────────────────────────────────────────
+//
+// When a client pushes with an empty cards array (brand-new device / first
+// sync), the expunge logic must be skipped entirely. An empty push does NOT
+// mean "the user deleted all cards" — it means the device has never synced.
+// Without the guard every remote card would be deleted from Firestore,
+// destroying all cloud data silently.
+
+describe("POST /api/sync/push — expunge safety guard (issue #2002)", () => {
+  beforeEach(() => {
+    mockRequireAuthz.mockResolvedValue(authzKarlSuccess("hh-test"));
+  });
+
+  it("does NOT delete remote cards when local is empty (new device)", async () => {
+    const remote1 = makeCard({ id: "remote-1" });
+    const remote2 = makeCard({ id: "remote-2" });
+    mockGetAllFirestoreCards.mockResolvedValue([remote1, remote2]);
+
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+    expect(res.status).toBe(200);
+
+    // Guard prevents deleteCards from being called
+    expect(mockDeleteCards).not.toHaveBeenCalled();
+  });
+
+  it("returns remote cards in merge result when local is empty (new device)", async () => {
+    const remote1 = makeCard({ id: "remote-1", cardName: "Visa" });
+    const remote2 = makeCard({ id: "remote-2", cardName: "Amex" });
+    mockGetAllFirestoreCards.mockResolvedValue([remote1, remote2]);
+
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+    expect(res.status).toBe(200);
+
+    const body = await res.json() as { cards: Card[]; syncedCount: number };
+    const ids = body.cards.map((c) => c.id);
+    expect(ids).toContain("remote-1");
+    expect(ids).toContain("remote-2");
+    expect(body.syncedCount).toBe(2);
+  });
+
+  it("writes remote cards back to Firestore when local is empty (new device)", async () => {
+    const remote = makeCard({ id: "remote-1" });
+    mockGetAllFirestoreCards.mockResolvedValue([remote]);
+
+    await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+
+    expect(mockSetCards).toHaveBeenCalledOnce();
+    const written = mockSetCards.mock.calls[0]?.[0] as Card[];
+    expect(written.map((c) => c.id)).toContain("remote-1");
+  });
+
+  it("deletes only expunged cards when client has a non-empty card list", async () => {
+    // Client has card-A but not card-B → card-B was intentionally expunged
+    const cardA = makeCard({ id: "card-a" });
+    const cardB = makeCard({ id: "card-b" });
+    mockGetAllFirestoreCards.mockResolvedValue([cardA, cardB]);
+
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [cardA] }));
+    expect(res.status).toBe(200);
+
+    expect(mockDeleteCards).toHaveBeenCalledOnce();
+    expect(mockDeleteCards).toHaveBeenCalledWith("hh-test", ["card-b"]);
+  });
+
+  it("does not call deleteCards when all local cards are present remotely", async () => {
+    const card = makeCard({ id: "card-1" });
+    mockGetAllFirestoreCards.mockResolvedValue([card]);
+
+    await POST(makeRequest({ householdId: "hh-test", cards: [card] }));
+
+    expect(mockDeleteCards).not.toHaveBeenCalled();
   });
 });
