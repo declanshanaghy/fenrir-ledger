@@ -62,7 +62,7 @@ const SECRETS = [
   { name: "ENTITLEMENT_ENCRYPTION_KEY",      dest: "github", group: "App Secrets", envVar: "ENTITLEMENT_ENCRYPTION_KEY" },
   { name: "STRIPE_SECRET_KEY",              dest: "github", group: "App Secrets", envVar: "STRIPE_SECRET_KEY" },
   { name: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", dest: "github", group: "App Secrets", envVar: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" },
-  { name: "STRIPE_WEBHOOK_SECRET",          dest: "github", group: "App Secrets", envVar: "STRIPE_WEBHOOK_SECRET" },
+  // STRIPE_WEBHOOK_SECRET — managed by Terraform output → deploy.yml (not GitHub Secrets)
   { name: "STRIPE_PRICE_ID",               dest: "github", group: "App Secrets", envVar: "STRIPE_PRICE_ID" },
 
   // --- GitHub → K8s agent secrets (deploy workflow creates agent-secrets) ---
@@ -91,7 +91,7 @@ const SECRETS = [
   { name: "ENTITLEMENT_ENCRYPTION_KEY", dest: "k8s-app", group: "K8s App Secrets", envVar: "ENTITLEMENT_ENCRYPTION_KEY", k8sSecret: "fenrir-app-secrets" },
   { name: "STRIPE_SECRET_KEY",         dest: "k8s-app", group: "K8s App Secrets", envVar: "STRIPE_SECRET_KEY", k8sSecret: "fenrir-app-secrets" },
   { name: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", dest: "k8s-app", group: "K8s App Secrets", envVar: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", k8sSecret: "fenrir-app-secrets" },
-  { name: "STRIPE_WEBHOOK_SECRET",     dest: "k8s-app", group: "K8s App Secrets", envVar: "STRIPE_WEBHOOK_SECRET", k8sSecret: "fenrir-app-secrets" },
+  // STRIPE_WEBHOOK_SECRET — managed by Terraform output → deploy.yml (not sync-secrets)
   { name: "STRIPE_PRICE_ID",           dest: "k8s-app", group: "K8s App Secrets", envVar: "STRIPE_PRICE_ID", k8sSecret: "fenrir-app-secrets" },
   { name: "APP_BASE_URL",             dest: "k8s-app", group: "K8s App Secrets", envVar: "APP_BASE_URL", k8sSecret: "fenrir-app-secrets" },
   { name: "ADMIN_EMAILS",             dest: "k8s-app", group: "K8s App Secrets", envVar: "ADMIN_EMAILS", k8sSecret: "fenrir-app-secrets" },
@@ -406,17 +406,7 @@ const mode = args[0] || "audit";
 const envVars = parseKeyValueFile(ENV_FILE);
 const secretsVars = parseKeyValueFile(SECRETS_FILE);
 
-// Guard: refuse to sync STRIPE_WEBHOOK_SECRET if stripe listen override is active
-const STRIPE_OVERRIDE = join(REPO_ROOT, "development", "frontend", ".env.stripe-listen");
-if (existsSync(STRIPE_OVERRIDE) && (mode === "--sync" || mode === "--fix-all" || mode === "--push")) {
-  const pushingStripe = mode === "--push" && args[1] === "STRIPE_WEBHOOK_SECRET";
-  if (mode !== "--push" || pushingStripe) {
-    console.error(`${C.red}BLOCKED:${C.r} ${STRIPE_OVERRIDE} exists — stripe listen is active (or was not stopped cleanly).`);
-    console.error(`The STRIPE_WEBHOOK_SECRET in .env.local may be overridden by an ephemeral CLI value.`);
-    console.error(`Run: ${C.bold}rm ${STRIPE_OVERRIDE}${C.r} (or stop stripe via services.sh stop) then retry.`);
-    process.exit(1);
-  }
-}
+// Note: STRIPE_WEBHOOK_SECRET guard removed — that secret is now managed by Terraform output
 
 if (!existsSync(ENV_FILE) && !existsSync(SECRETS_FILE)) {
   console.error(`${C.red}Missing both ${ENV_FILE} and ${SECRETS_FILE}${C.r}`);
