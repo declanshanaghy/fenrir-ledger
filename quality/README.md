@@ -12,7 +12,7 @@
 |-------|--------|-------|-------|---------|
 | **Unit** | Vitest | ~500+ | ~2s | Pure logic, utilities, helpers |
 | **Integration** | Vitest + happy-dom | ~300+ | ~3s | API routes, component render, hooks |
-| **E2E** | Playwright | ~20 | ~1min | User journeys, critical integrations, multi-page flows |
+| **E2E** | Playwright | ~10 | ~1min | User journeys, critical integrations, multi-page flows |
 
 Run `bash quality/scripts/loki-critique.sh` to generate the latest bloat critique and per-suite details.
 
@@ -51,8 +51,8 @@ Run `bash quality/scripts/loki-critique.sh` to generate the latest bloat critiqu
 **Generated on demand:** Run `bash quality/scripts/loki-critique.sh` to produce a fresh quality report. The report is not committed — it is regenerated each session.
 
 Key metrics:
-- **E2E suites:** 3 directories, 8 spec files
-- **E2E tests:** ~20 (Playwright)
+- **E2E suites:** 3 directories, 4 spec files
+- **E2E tests:** ~10 (Playwright)
 - **Unit/Integration:** ~802 tests (Vitest)
 - **Overall health:** Run `bash quality/scripts/loki-critique.sh` for a real-time verdict
 
