@@ -1,6 +1,11 @@
 # ADR-004: OIDC Authentication with Auth.js v5 + Per-Household localStorage Namespacing
 
-## Status: Accepted
+## Status: Superseded by ADR-005
+
+> **Note:** ADR-004 was never used in production. The Auth.js v5 approach was replaced before
+> shipping by ADR-005 (Authorization Code + PKCE with server token proxy). This document is
+> retained for historical context only. See [ADR-005](ADR-005-auth-pkce-public-client.md) for
+> the current auth architecture.
 
 ## Context
 

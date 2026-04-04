@@ -1,10 +1,10 @@
 # ADR-001: Tech Stack — Next.js + TypeScript + Tailwind CSS + shadcn/ui
 
-## Status: Accepted
+## Status: Accepted (hosting intent superseded by infrastructure/adrs/ADR-001-vercel-to-gke-autopilot.md)
 
 ## Context
 
-Fenrir Ledger is a personal finance web app for credit card churners. Sprint 1 targets local-only use (no backend, no auth), with Vercel hosting coming in a future sprint. We need a frontend stack that:
+Fenrir Ledger is a personal finance web app for credit card churners. Sprint 1 targets local-only use (no backend, no auth), with hosting to be added in a future sprint. We need a frontend stack that:
 
 - Enables fast iteration on UI-heavy features (cards, dashboards, forms)
 - Produces a production-quality codebase from day one
@@ -13,7 +13,7 @@ Fenrir Ledger is a personal finance web app for credit card churners. Sprint 1 t
 - Is mobile-responsive (churners check this on the go)
 - Has strong TypeScript support for data model correctness
 
-The team has also decided that the Next.js project root will live at `development/ledger/` so the monorepo can host architecture docs, team SKILLs, and source code alongside each other without collision. Vercel will be configured with Root Directory set to `development/ledger/`.
+The team has also decided that the Next.js project root will live at `development/ledger/` so the monorepo can host architecture docs, team SKILLs, and source code alongside each other without collision.
 
 ## Options Considered
 
@@ -24,7 +24,7 @@ The team has also decided that the Next.js project root will live at `developmen
 - TypeScript eliminates a class of runtime bugs in data model handling (critical when tracking financial dates and amounts)
 - Tailwind CSS enables rapid, consistent styling without a large CSS surface to maintain
 - shadcn/ui provides accessible, unstyled-but-beautiful components (cards, dialogs, forms, badges) that map directly to our UI needs; components are copy-owned, not library-locked
-- Vercel is the natural deploy target for Next.js — zero additional config when we add hosting
+- Next.js standalone output (`output: 'standalone'`) enables containerized deployment on GKE Autopilot
 - Strong community support and long-term viability
 
 **Cons**:
@@ -48,7 +48,7 @@ The team has also decided that the Next.js project root will live at `developmen
 
 **Pros**: Excellent data loading model, good TypeScript support.
 
-**Cons**: Less familiar to most frontend developers. Smaller shadcn/ui integration story. Vercel support is good but Next.js is the primary Vercel-optimized framework.
+**Cons**: Less familiar to most frontend developers. Smaller shadcn/ui integration story. Next.js has broader ecosystem support and better standalone container build story for GKE.
 
 ## Decision
 
@@ -68,7 +68,7 @@ shadcn/ui is initialized after scaffolding with `npx shadcn@latest init`.
 - Consistent type safety across the data model from Sprint 1 onward
 - Tailwind + shadcn/ui enables rapid, accessible UI development
 - App Router provides the foundation for API routes and server components in future sprints
-- Vercel deploy in a future sprint requires zero additional framework configuration
+- Next.js `output: 'standalone'` produces a minimal Node.js bundle suitable for GKE container deployment (see infrastructure/adrs/ADR-001-vercel-to-gke-autopilot.md)
 - shadcn/ui components are copy-owned — no dependency drift, no breaking upgrades
 
 **Negative**:
@@ -79,4 +79,4 @@ shadcn/ui is initialized after scaffolding with `npx shadcn@latest init`.
 **Constraints introduced**:
 - All components that use React hooks or browser APIs must include `"use client"` at the top
 - The `development/ledger/` directory is the Next.js project root — all `npm` commands run from there
-- Vercel Root Directory must be set to `development/ledger/` when hosting is configured
+- `output: 'standalone'` in `next.config.js` is required for GKE container builds
