@@ -38,6 +38,9 @@ vi.mock("@/lib/firebase/firestore", () => ({
   getCards: vi.fn().mockResolvedValue([]),
   findHouseholdByInviteCode: vi.fn(),
   getUsersByHouseholdId: vi.fn().mockResolvedValue([]),
+  getHouseholdSyncVersion: vi.fn().mockResolvedValue(0),
+  updateSyncStateAfterPush: vi.fn().mockResolvedValue(1),
+  updateSyncStateAfterPull: vi.fn().mockResolvedValue(undefined),
 }));
 
 // ── Import routes after mocks ───────────────────────────────────────────────
