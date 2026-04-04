@@ -433,6 +433,7 @@ jobs:
             --from-literal=STRIPE_PRICE_ID="${{ secrets.STRIPE_PRICE_ID }}" \
             --from-literal=NEXT_PUBLIC_APP_VERSION="${{ github.sha }}" \
             --from-literal=GITHUB_TOKEN="${{ secrets.GH_TOKEN_AGENTS }}" \
+            --from-literal=ADMIN_EMAILS="${{ secrets.ADMIN_EMAILS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Sync agent secrets
