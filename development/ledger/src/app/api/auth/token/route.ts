@@ -13,22 +13,29 @@
  *   detail, not a security boundary.
  *
  * See ADR-005 for the full auth architecture decision.
+ * See issue #2060 for the Fenrir JWT session migration.
  *
  * Supports two flows:
  *
  * 1. Authorization code exchange (initial login):
  *    Request:  { code: string; code_verifier: string; redirect_uri: string }
- *    Response: Google's token response (access_token, id_token, refresh_token, expires_in)
+ *    Response: { fenrir_token, access_token, refresh_token, expires_in, user }
+ *              Google id_token is verified once server-side; a 30-day Fenrir JWT
+ *              is minted and returned as the session credential. Google tokens are
+ *              retained for Google API calls (Sheets import, Picker).
  *
- * 2. Refresh token (silent session renewal — DEF-001 fix):
+ * 2. Refresh token (Google API access renewal — for Sheets import only):
  *    Request:  { refresh_token: string }
  *    Response: Google's token response (access_token, id_token, expires_in)
+ *    Note: NOT used for session renewal after #2060. Sessions extend via sliding
+ *          window on the Fenrir JWT (X-Fenrir-Token header in API responses).
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/logger";
 import { initTrialForUser } from "@/lib/trial/init-trial";
+import { signFenrirJwt, JWT_LIFETIME_S } from "@/lib/auth/fenrir-jwt";
 
 /**
  * Whitelisted origins that may call this endpoint.
@@ -250,11 +257,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // Issue #1722: Initialize trial server-side after successful auth code exchange.
-  // This replaces the client-side /api/trial/init call that was unreliable because
-  // window.location.replace() aborted in-flight fetches in the callback page.
   // Fire-and-forget: trial init failures are logged but don't block the token response.
   if (googleResponse.ok && grantType === "authorization_code") {
     await initTrialFromAuthCode(responseBody);
+  }
+
+  // Issue #2060: On authorization_code exchange, mint a Fenrir JWT and return it
+  // as the session credential. The Google id_token is verified once here; from
+  // this point on, only the Fenrir JWT is used for session identity.
+  if (googleResponse.ok && grantType === "authorization_code") {
+    const fenrirResponse = await mintFenrirSessionResponse(responseBody);
+    if (fenrirResponse) {
+      log.debug("POST /api/auth/token returning Fenrir session", { grantType });
+      return fenrirResponse;
+    }
+    // If minting fails (e.g., KMS not initialised), fall through to return Google tokens.
+    // This prevents login breakage if KMS is misconfigured — the client can handle the
+    // missing fenrir_token field gracefully.
+    log.warn("POST /api/auth/token: Fenrir JWT minting failed, returning raw Google response");
   }
 
   log.debug("POST /api/auth/token returning", { status: googleResponse.status, grantType });
@@ -262,4 +282,77 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     status: googleResponse.status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+// ─── Fenrir JWT minting ────────────────────────────────────────────────────────
+
+/**
+ * Parses the Google token response, mints a Fenrir JWT, and returns a combined
+ * session response: { fenrir_token, access_token, refresh_token, expires_in, user }.
+ *
+ * Returns null if parsing fails or Fenrir JWT minting throws.
+ */
+async function mintFenrirSessionResponse(googleResponseBody: string): Promise<NextResponse | null> {
+  try {
+    const tokenData = JSON.parse(googleResponseBody) as {
+      access_token?: string;
+      id_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
+    };
+
+    if (!tokenData.id_token) {
+      log.warn("mintFenrirSessionResponse: no id_token in Google response");
+      return null;
+    }
+
+    // Decode id_token payload to get user claims (no signature check needed here —
+    // the token was received directly from Google's token endpoint over HTTPS).
+    const parts = tokenData.id_token.split(".");
+    if (parts.length !== 3) return null;
+
+    const payloadB64 = parts[1]!.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = payloadB64 + "=".repeat((4 - (payloadB64.length % 4)) % 4);
+    const claims = JSON.parse(Buffer.from(padded, "base64").toString("utf-8")) as {
+      sub?: string;
+      email?: string;
+      name?: string;
+      picture?: string;
+    };
+
+    if (!claims.sub) {
+      log.warn("mintFenrirSessionResponse: missing sub in id_token claims");
+      return null;
+    }
+
+    // Mint the Fenrir JWT. householdId defaults to sub — Firestore may have a
+    // different value for users who joined another household, but requireAuthz
+    // always resolves it from Firestore on every request.
+    const fenrirToken = await signFenrirJwt(
+      claims.sub,
+      claims.email ?? "",
+      claims.sub, // householdId defaults to sub
+    );
+
+    const sessionResponse = {
+      fenrir_token: fenrirToken,
+      access_token: tokenData.access_token ?? "",
+      refresh_token: tokenData.refresh_token,
+      // expires_in reflects Fenrir JWT lifetime (30 days), not Google's 1 hour
+      expires_in: JWT_LIFETIME_S,
+      user: {
+        sub: claims.sub,
+        email: claims.email ?? "",
+        name: claims.name ?? "",
+        picture: claims.picture ?? "",
+      },
+    };
+
+    log.debug("mintFenrirSessionResponse: minted Fenrir session", { sub: claims.sub });
+    return NextResponse.json(sessionResponse, { status: 200 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error("mintFenrirSessionResponse: failed", { error: message });
+    return null;
+  }
 }

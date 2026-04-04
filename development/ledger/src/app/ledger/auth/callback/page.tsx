@@ -13,7 +13,7 @@
  *     The server proxy forwards the request to Google with the client_secret,
  *     keeping the secret off the browser. The browser still owns the full
  *     PKCE flow (verifier, challenge, state).
- *  4. Decode the id_token JWT payload (base64url middle segment).
+ *  4. Server mints a Fenrir JWT (30-day HS256 token) — response includes it.
  *  5. Build a FenrirSession and write it to localStorage("fenrir:auth").
  *  6. Redirect to callbackUrl (default: /).
  *
@@ -33,31 +33,23 @@ const PKCE_SESSION_KEY = "fenrir:pkce";
 /** Server-side token exchange proxy — keeps client_secret off the browser. */
 const TOKEN_PROXY_URL = "/api/auth/token";
 
-// ── id_token decoder ──────────────────────────────────────────────────────────
-
-interface IdTokenClaims {
-  sub: string;
-  email: string;
-  name: string;
-  picture: string;
-  exp: number;
-}
+// ── Token response types ───────────────────────────────────────────────────────
 
 /**
- * Decodes the payload of a JWT without verifying the signature.
- * Safe here because the token was received directly from Google's token
- * endpoint over HTTPS and the exchange was PKCE-protected.
+ * Response from /api/auth/token on authorization_code exchange (issue #2060).
+ * Server mints a Fenrir JWT and returns it alongside Google tokens.
  */
-function decodeIdToken(idToken: string): IdTokenClaims {
-  const parts = idToken.split(".");
-  if (parts.length !== 3) {
-    throw new Error("Invalid id_token format");
-  }
-  // Restore base64url padding before decoding.
-  const payload = parts[1]!.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
-  const decoded = atob(padded);
-  return JSON.parse(decoded) as IdTokenClaims;
+interface FenrirTokenResponse {
+  fenrir_token: string;
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number; // Fenrir JWT lifetime in seconds (30 days)
+  user: {
+    sub: string;
+    email: string;
+    name: string;
+    picture: string;
+  };
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -168,27 +160,21 @@ function AuthCallbackContent() {
           throw new Error(`Token exchange failed (${response.status}): ${text}`);
         }
 
-        const tokens = (await response.json()) as {
-          access_token: string;
-          id_token: string;
-          expires_in: number;
-          refresh_token?: string; // only present on first consent (access_type=offline)
-        };
+        // After issue #2060: server mints a Fenrir JWT after verifying the Google
+        // id_token once. The response includes the Fenrir JWT + Google tokens.
+        const tokens = (await response.json()) as FenrirTokenResponse;
 
-        // Decode id_token to get user profile claims.
-        const claims = decodeIdToken(tokens.id_token);
+        if (!tokens.fenrir_token) {
+          throw new Error("Server did not return a Fenrir session token. Check KMS configuration.");
+        }
 
         const session: FenrirSession = {
+          fenrir_token: tokens.fenrir_token,
           access_token: tokens.access_token,
-          id_token: tokens.id_token,
           ...(tokens.refresh_token ? { refresh_token: tokens.refresh_token } : {}),
+          // expires_at is the Fenrir JWT expiry (30 days from now)
           expires_at: Date.now() + tokens.expires_in * 1000,
-          user: {
-            sub: claims.sub,
-            email: claims.email,
-            name: claims.name,
-            picture: claims.picture,
-          },
+          user: tokens.user,
         };
 
         setSession(session);

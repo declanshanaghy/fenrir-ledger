@@ -12,7 +12,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { requireKarl } from "@/lib/auth/require-karl";
-import type { VerifiedUser } from "@/lib/auth/verify-id-token";
+import type { VerifiedUser } from "@/lib/auth/require-auth";
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -35,15 +35,13 @@ import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
 const KARL_USER: VerifiedUser = {
   sub: "google-sub-karl",
   email: "karl@fenrir.dev",
-  name: "Karl the Worthy",
-  picture: "https://example.com/karl.jpg",
+  householdId: "google-sub-karl",
 };
 
 const THRALL_USER: VerifiedUser = {
   sub: "google-sub-thrall",
   email: "thrall@fenrir.dev",
-  name: "Thrall the Free",
-  picture: "https://example.com/thrall.jpg",
+  householdId: "google-sub-thrall",
 };
 
 // ---------------------------------------------------------------------------

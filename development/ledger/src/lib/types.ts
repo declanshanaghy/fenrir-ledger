@@ -125,24 +125,30 @@ export interface Issuer {
 /**
  * FenrirSession — the auth session stored in localStorage under "fenrir:auth".
  *
- * Populated from Google's token endpoint response and the decoded id_token.
+ * After issue #2060: Google tokens are used only at login. The primary session
+ * credential is a Fenrir-issued JWT (30-day HS256 token). Google access_token
+ * and refresh_token are retained only for Google API calls (Sheets import).
+ *
  * No cookies. No server-side session. Public client / PKCE.
  *
- * See ADR-005 for the auth architecture migration decision.
+ * See ADR-005 for the auth architecture. See issue #2060 for the JWT migration.
  */
 export interface FenrirSession {
-  /** Google OAuth2 access token */
-  access_token: string;
-  /** Google OIDC id token (signed JWT from Google) */
-  id_token: string;
+  /** Fenrir-issued session JWT — used as Bearer token for all API calls */
+  fenrir_token: string;
   /**
-   * Google OAuth2 refresh token — only returned on first consent (access_type=offline).
-   * Stored so Google remembers the grant and skips the consent screen on re-auth.
+   * Google OAuth2 access token — retained only for Google API calls (Sheets import,
+   * Google Picker). NOT used as a session credential after issue #2060.
+   */
+  access_token?: string;
+  /**
+   * Google OAuth2 refresh token — retained only for Google API calls.
+   * NOT used for session renewal after issue #2060 (Fenrir JWT handles sessions).
    */
   refresh_token?: string;
-  /** Unix timestamp (ms) when this session expires — Date.now() + expires_in * 1000 */
+  /** Unix timestamp (ms) when the Fenrir JWT expires — Date.now() + 30 days */
   expires_at: number;
-  /** Decoded claims from the id_token */
+  /** User claims — decoded from Google id_token at login, stored in localStorage */
   user: {
     /** Google account immutable ID — used as householdId */
     sub: string;

@@ -13,7 +13,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { requireKarlOrTrial } from "@/lib/auth/require-karl-or-trial";
-import type { VerifiedUser } from "@/lib/auth/verify-id-token";
+import type { VerifiedUser } from "@/lib/auth/require-auth";
 import type { NextRequest } from "next/server";
 import type { StoredTrial } from "@/lib/kv/trial-store";
 
@@ -52,15 +52,13 @@ import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 const KARL_USER: VerifiedUser = {
   sub: "google-sub-karl",
   email: "karl@fenrir.dev",
-  name: "Karl the Worthy",
-  picture: "https://example.com/karl.jpg",
+  householdId: "google-sub-karl",
 };
 
 const THRALL_USER: VerifiedUser = {
   sub: "google-sub-thrall",
   email: "thrall@fenrir.dev",
-  name: "Thrall the Free",
-  picture: "https://example.com/thrall.jpg",
+  householdId: "google-sub-thrall",
 };
 
 const KARL_ENTITLEMENT = {

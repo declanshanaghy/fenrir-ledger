@@ -51,7 +51,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const bootstrapped = await ensureSoloHousehold({
       userId: userId,
       email: auth.user.email,
-      displayName: auth.user.name,
+      displayName: auth.user.email,
     });
     callerUser = bootstrapped.user;
     log.debug("GET /api/household/members: solo household bootstrapped", {

@@ -4,7 +4,7 @@
  * Tests:
  *   - Auth guard: 401 when no token
  *   - Returns 200 with user claims when authenticated
- *   - Response shape: { ok, user: { sub, email, name, picture } }
+ *   - Response shape: { ok, user: { sub, email, householdId } }
  *   - Cache-Control is no-store
  *
  * Issue #2057
@@ -39,8 +39,7 @@ function makeRequest(): NextRequest {
 const MOCK_USER = {
   sub: "google-sub-456",
   email: "viking@fenrirledger.com",
-  name: "Fenrir Viking",
-  picture: "https://lh3.googleusercontent.com/a/avatar",
+  householdId: "google-sub-456",
 };
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -79,8 +78,7 @@ describe("GET /api/auth/session", () => {
     const body = await res.json() as { ok: boolean; user: typeof MOCK_USER };
     expect(body.user.sub).toBe(MOCK_USER.sub);
     expect(body.user.email).toBe(MOCK_USER.email);
-    expect(body.user.name).toBe(MOCK_USER.name);
-    expect(body.user.picture).toBe(MOCK_USER.picture);
+    expect(body.user.householdId).toBe(MOCK_USER.householdId);
   });
 
   it("sets Cache-Control to no-store", async () => {

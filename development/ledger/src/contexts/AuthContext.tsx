@@ -7,11 +7,11 @@
  *
  * On mount:
  *  - Reads "fenrir:auth" from localStorage.
- *  - If valid → status = "authenticated", session = FenrirSession,
- *               householdId = session.user.sub
- *  - If expired but has refresh_token → attempts to refresh the session
- *  - Else → status = "anonymous", session = null,
- *            householdId = null (cards stored under ANON_HOUSEHOLD_ID = "anon")
+ *  - If valid (fenrir_token exists and expires_at > now) → status = "authenticated"
+ *  - If expired → status = "anonymous" (user must re-login with Google)
+ *    No background refresh: Fenrir JWTs have 30-day lifetime + server-side
+ *    sliding window refresh via X-Fenrir-Token header in API responses.
+ *  - Else → status = "anonymous"
  *
  * NEVER redirects to /sign-in automatically. All app routes are accessible
  * without authentication. Sign-in is an opt-in upgrade path.
@@ -26,22 +26,28 @@
  *    No UUID household is created for anonymous users.
  *  - Authenticated users: householdId = session.user.sub (Google sub claim).
  *
+ * Token refresh (issue #2060):
+ *  - NO setInterval for token refresh — removed entirely.
+ *  - Fenrir JWTs are self-contained (30-day expiry). Sessions extend indefinitely
+ *    via sliding window: server re-issues a new JWT in X-Fenrir-Token header on
+ *    API calls when the token is older than 15 days. authFetch() swaps it in.
+ *  - If inactive for 30+ days → token expires → user re-logins with Google.
+ *
  * See ADR-006 for the anonymous-first auth model.
  * See ADR-005 for the PKCE auth implementation that remains intact.
+ * See issue #2060 for the Fenrir JWT session migration.
  */
 
 import {
   createContext,
   useContext,
   useEffect,
-  useRef,
   useState,
   useCallback,
   type ReactNode,
 } from "react";
 import { getSession, clearSession, isSessionValid } from "@/lib/auth/session";
 import { clearEntitlementCache } from "@/lib/entitlement/cache";
-import { refreshSession } from "@/lib/auth/refresh-session";
 import { getEffectiveHouseholdId, clearStoredHouseholdId } from "@/lib/storage";
 import { ANON_HOUSEHOLD_ID } from "@/lib/constants";
 import type { FenrirSession } from "@/lib/types";
@@ -87,9 +93,6 @@ export interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/** Interval for proactive token refresh: 50 minutes in ms. */
-const REFRESH_INTERVAL_MS = 50 * 60 * 1000;
-
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 interface AuthProviderProps {
@@ -100,90 +103,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<FenrirSession | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [householdId, setHouseholdId] = useState<string | null>(null);
-  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Evaluate the stored session once on mount (client-only).
+  // No proactive refresh: Fenrir JWTs are 30-day tokens refreshed server-side
+  // via sliding window (X-Fenrir-Token header). No setInterval needed.
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    async function initializeAuth() {
-      const stored = getSession();
+    const stored = getSession();
 
-      if (stored && isSessionValid()) {
-        // Authenticated: resolve effective household ID — may be a joined household
-        setSession(stored);
-        setStatus("authenticated");
-        setHouseholdId(getEffectiveHouseholdId(stored.user.sub));
-      } else if (stored?.refresh_token) {
-        // Session expired but we have a refresh token — attempt to refresh
-        try {
-          const refreshed = await refreshSession();
-          if (refreshed) {
-            // Successfully refreshed the session
-            setSession(refreshed);
-            setStatus("authenticated");
-            setHouseholdId(getEffectiveHouseholdId(refreshed.user.sub));
-            return;
-          }
-        } catch (err) {
-          // Refresh failed, fall through to anonymous
-          console.error("[Fenrir] Session refresh failed:", err);
-        }
-        // Refresh failed or returned null — treat as anonymous.
-        // Anonymous users use the fixed "anon" storage key (Issue #1671).
-        setSession(null);
-        setStatus("anonymous");
-        setHouseholdId(null);
-      } else {
-        // No session or no refresh token — anonymous user.
-        // Anonymous users use the fixed "anon" storage key (Issue #1671).
-        // No UUID household is created — no localStorage write on mount.
-        setSession(null);
-        setStatus("anonymous");
-        setHouseholdId(null);
-      }
+    if (stored && isSessionValid()) {
+      // Authenticated: resolve effective household ID — may be a joined household
+      setSession(stored);
+      setStatus("authenticated");
+      setHouseholdId(getEffectiveHouseholdId(stored.user.sub));
+    } else {
+      // No session or Fenrir JWT expired — anonymous user.
+      // If the JWT is expired, the user must re-authenticate with Google.
+      // Sliding window refresh (via API calls) prevents expiry for active users.
+      setSession(null);
+      setStatus("anonymous");
+      setHouseholdId(null);
     }
-
-    initializeAuth();
   }, []);
-
-  // Periodic proactive token refresh for authenticated sessions.
-  // Runs every 50 minutes so tokens never expire silently on long-lived pages.
-  // Google access tokens have a 1-hour TTL; refreshing at 50 min gives 10 min margin.
-  useEffect(() => {
-    if (status !== "authenticated") {
-      // Clear any existing interval when the user signs out or is not authenticated
-      if (refreshIntervalRef.current !== null) {
-        clearInterval(refreshIntervalRef.current);
-        refreshIntervalRef.current = null;
-      }
-      return;
-    }
-
-    refreshIntervalRef.current = setInterval(async () => {
-      const refreshed = await refreshSession();
-      if (refreshed) {
-        setSession(refreshed);
-        setHouseholdId(getEffectiveHouseholdId(refreshed.user.sub));
-      }
-      // If refresh returns null (revoked/expired refresh token), leave the session
-      // as-is — the next API call will get a 401 and trigger sign-out via authFetch.
-    }, REFRESH_INTERVAL_MS);
-
-    return () => {
-      if (refreshIntervalRef.current !== null) {
-        clearInterval(refreshIntervalRef.current);
-        refreshIntervalRef.current = null;
-      }
-    };
-  }, [status]);
 
   /**
    * Returns the effective storage ID for the current user.
    * For authenticated users: returns householdId (session.user.sub).
    * For anonymous users: returns ANON_HOUSEHOLD_ID ("anon").
-   *
-   * Replaces the old lazy UUID creation pattern — no UUID is created.
    */
   const ensureHouseholdId = useCallback((): string => {
     return householdId ?? ANON_HOUSEHOLD_ID;

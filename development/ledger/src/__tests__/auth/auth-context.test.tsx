@@ -96,7 +96,7 @@ describe("AuthContext — regression: null householdId for anonymous users (#167
     const mockSession = {
       user: { sub: "google-sub-abc123", email: "user@example.com", name: "User", picture: "" },
       access_token: "tok",
-      id_token: "idtok",
+      fenrir_token: "fenrir-jwt-tok",
       expires_at: Date.now() + 3600_000,
     };
     mockGetSession.mockReturnValue(mockSession);
@@ -136,7 +136,7 @@ describe("AuthContext — regression: null householdId for anonymous users (#167
     const mockSession = {
       user: { sub: "google-sub-xyz", email: "user@example.com", name: "User", picture: "" },
       access_token: "tok",
-      id_token: "idtok",
+      fenrir_token: "fenrir-jwt-tok",
       expires_at: Date.now() + 3600_000,
     };
     mockGetSession.mockReturnValue(mockSession);
@@ -163,7 +163,7 @@ describe("AuthContext — regression: null householdId for anonymous users (#167
     const mockSession = {
       user: { sub: "google-sub-def", email: "user@example.com", name: "User", picture: "" },
       access_token: "tok",
-      id_token: "idtok",
+      fenrir_token: "fenrir-jwt-tok",
       expires_at: Date.now() + 3600_000,
     };
     mockGetSession.mockReturnValue(mockSession);

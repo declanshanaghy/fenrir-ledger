@@ -51,12 +51,12 @@ export function PackStatusDashboard() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!session?.id_token) return;
+    if (!session?.fenrir_token) return;
 
     setIsRefreshing(true);
     try {
       const res = await fetch("/api/admin/pack-status", {
-        headers: { Authorization: `Bearer ${session.id_token}` },
+        headers: { Authorization: `Bearer ${session.fenrir_token}` },
       });
 
       if (!res.ok) {
@@ -73,7 +73,7 @@ export function PackStatusDashboard() {
     } finally {
       setIsRefreshing(false);
     }
-  }, [session?.id_token]);
+  }, [session?.fenrir_token]);
 
   // Initial fetch + auto-refresh
   useEffect(() => {

@@ -9,10 +9,12 @@
  * Usage in a route handler:
  *   const authz = await requireAuthz(request, { householdId, tier: "karl" });
  *   if (!authz.ok) return authz.response;
- *   // authz.user       — VerifiedUser (Google id_token claims)
+ *   // authz.user       — VerifiedUser (Fenrir JWT claims)
  *   // authz.firestoreUser — FirestoreUser (householdId, role)
+ *   // authz.newToken   — new Fenrir JWT if sliding window refresh triggered
  *   // Use authz.firestoreUser.householdId for ALL Firestore ops — never the
  *   // caller-supplied householdId — to prevent IDOR.
+ *   // Pass to applyTokenRefresh(response, authz) to deliver sliding refresh token.
  *
  * Pipeline (sequential):
  *   1. requireAuth(request)           → 401 on missing/invalid token
@@ -29,11 +31,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "./require-auth";
+import type { VerifiedUser } from "./require-auth";
 import { getUser } from "@/lib/firebase/firestore";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
 import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 import { log } from "@/lib/logger";
-import type { VerifiedUser } from "./verify-id-token";
 import type { FirestoreUser } from "@/lib/firebase/firestore-types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -54,6 +56,8 @@ export type AuthzSuccess = {
   ok: true;
   user: VerifiedUser;
   firestoreUser: FirestoreUser;
+  /** Propagated from requireAuth — new Fenrir JWT if sliding window refresh triggered. */
+  newToken?: string;
 };
 
 /** Authorization failed — pre-built NextResponse is ready to return. */
@@ -172,7 +176,7 @@ export async function requireAuthz(
   }
 
   // ── Step 5: Authorized ────────────────────────────────────────────────────
-  return { ok: true, user, firestoreUser };
+  return { ok: true, user, firestoreUser, newToken: auth.newToken };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

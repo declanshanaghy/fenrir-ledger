@@ -46,11 +46,12 @@ export function clearSession(): void {
 }
 
 /**
- * Returns true if the stored session exists and has not expired.
- * A session is valid when expires_at > Date.now().
+ * Returns true if the stored session exists, has a Fenrir JWT, and has not expired.
+ * A session is valid when fenrir_token is present and expires_at > Date.now().
  */
 export function isSessionValid(): boolean {
   const session = getSession();
   if (!session) return false;
+  if (!session.fenrir_token) return false;
   return session.expires_at > Date.now();
 }

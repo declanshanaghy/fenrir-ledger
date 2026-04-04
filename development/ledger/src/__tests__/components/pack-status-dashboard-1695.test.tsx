@@ -12,7 +12,7 @@ import type { PackStatusResult } from "@/lib/admin/pack-status";
 
 // ── Module mocks ───────────────────────────────────────────────────────────
 
-let mockAuthData: { id_token: string } | null = { id_token: "mock-token-xyz" };
+let mockAuthData: { fenrir_token: string } | null = { fenrir_token: "mock-fenrir-token-xyz" };
 
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
@@ -71,7 +71,7 @@ const MOCK_PACK_STATUS: PackStatusResult = {
 
 describe("PackStatusDashboard — loading state", () => {
   beforeEach(() => {
-    mockAuthData = { id_token: "mock-token-xyz" };
+    mockAuthData = { fenrir_token: "mock-fenrir-token-xyz" };
     // fetch never resolves = perpetual loading
     vi.stubGlobal(
       "fetch",
@@ -101,7 +101,7 @@ describe("PackStatusDashboard — loading state", () => {
 
 describe("PackStatusDashboard — error state", () => {
   beforeEach(() => {
-    mockAuthData = { id_token: "mock-token-xyz" };
+    mockAuthData = { fenrir_token: "mock-fenrir-token-xyz" };
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -148,7 +148,7 @@ describe("PackStatusDashboard — error state", () => {
 
 describe("PackStatusDashboard — data loaded", () => {
   beforeEach(() => {
-    mockAuthData = { id_token: "mock-token-xyz" };
+    mockAuthData = { fenrir_token: "mock-fenrir-token-xyz" };
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -234,12 +234,12 @@ describe("PackStatusDashboard — data loaded", () => {
 
 describe("PackStatusDashboard — no session", () => {
   afterEach(() => {
-    mockAuthData = { id_token: "mock-token-xyz" };
+    mockAuthData = { fenrir_token: "mock-fenrir-token-xyz" };
     vi.unstubAllGlobals();
     vi.clearAllTimers();
   });
 
-  it("does not fetch when there is no id_token", async () => {
+  it("does not fetch when there is no fenrir_token", async () => {
     mockAuthData = null;
 
     const fetchSpy = vi.fn().mockResolvedValue({
@@ -255,7 +255,7 @@ describe("PackStatusDashboard — no session", () => {
       await new Promise((r) => setTimeout(r, 50));
     });
 
-    // With no id_token the fetchData guard returns early
+    // With no fenrir_token the fetchData guard returns early
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

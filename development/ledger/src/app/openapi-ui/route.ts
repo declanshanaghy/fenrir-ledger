@@ -127,7 +127,7 @@ export async function GET(): Promise<Response> {
           var raw = localStorage.getItem('fenrir:auth');
           if (!raw) return null;
           var session = JSON.parse(raw);
-          if (!session || !session.id_token || !session.expires_at) return null;
+          if (!session || !session.fenrir_token || !session.expires_at) return null;
           if (Date.now() >= session.expires_at) return null;
           return session;
         } catch (e) {
@@ -182,7 +182,7 @@ export async function GET(): Promise<Response> {
           return;
         }
 
-        var token = session.id_token;
+        var token = session.fenrir_token;
         showLoading('Fetching routes\u2026');
 
         fetch(SPEC_URL, {

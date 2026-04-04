@@ -22,7 +22,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
 import { getTrial, computeTrialStatus } from "@/lib/kv/trial-store";
 import { log } from "@/lib/logger";
-import type { VerifiedUser } from "./verify-id-token";
+import type { VerifiedUser } from "./require-auth";
 
 /** Karl-or-trial check succeeded. */
 export type KarlOrTrialSuccess = { ok: true };

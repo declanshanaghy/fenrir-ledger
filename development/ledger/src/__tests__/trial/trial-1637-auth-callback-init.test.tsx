@@ -82,9 +82,15 @@ function mockTokenExchange() {
     if (url.includes("/api/auth/token")) {
       return new Response(
         JSON.stringify({
+          fenrir_token: "fenrir-jwt-test-token",
           access_token: "fake-at",
-          id_token: FAKE_ID_TOKEN,
-          expires_in: 3600,
+          expires_in: 30 * 24 * 60 * 60, // 30 days in seconds
+          user: {
+            sub: "google-sub-1722",
+            email: "user@example.com",
+            name: "Test User",
+            picture: "",
+          },
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
