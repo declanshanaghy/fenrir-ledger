@@ -95,6 +95,7 @@ const SECRETS = [
   { name: "STRIPE_PRICE_ID",           dest: "k8s-app", group: "K8s App Secrets", envVar: "STRIPE_PRICE_ID", k8sSecret: "fenrir-app-secrets" },
   { name: "APP_BASE_URL",             dest: "k8s-app", group: "K8s App Secrets", envVar: "APP_BASE_URL", k8sSecret: "fenrir-app-secrets" },
   { name: "ADMIN_EMAILS",             dest: "k8s-app", group: "K8s App Secrets", envVar: "ADMIN_EMAILS", k8sSecret: "fenrir-app-secrets" },
+  { name: "GITHUB_TOKEN",            dest: "k8s-app", group: "K8s App Secrets", secretsVar: "GITHUB_TOKEN_PAT_CLASSIC", k8sSecret: "fenrir-app-secrets" },
 ];
 
 // --------------------------------------------------------------------------
