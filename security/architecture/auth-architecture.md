@@ -1,7 +1,7 @@
 # Auth Architecture — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-20 (updated entitlement store from Upstash Redis to Firestore — issue #1521)
+**Last reviewed**: 2026-04-04 (fixed remaining Upstash Redis references; added requireAuthz pattern; Odin's Throne CRITICAL resolved PR #1896)
 **References**: ADR-005, ADR-006, ADR-008, ADR-010
 
 ---
@@ -249,8 +249,8 @@ These are the minimum scopes required for Path B. `drive.file` is narrower than
 ### 5.1 Overview
 
 Subscription management uses Stripe Direct exclusively. Users subscribe via Stripe
-Checkout (hosted payment page). Entitlements are stored in Upstash Redis keyed on the
-Google `sub` claim.
+Checkout (hosted payment page). Entitlements are stored in Firestore keyed on the
+Google `sub` claim (migrated from Upstash Redis in issue #1521).
 
 The Stripe integration creates a **layered model**:
 - Google `id_token` in `localStorage` — identity on every API request
@@ -262,7 +262,7 @@ process.env variable used server-to-server only.
 ### 5.2 Checkout Flow
 
 ```
-Browser (authenticated with Google)    /api/stripe/checkout     Stripe / Upstash Redis
+Browser (authenticated with Google)    /api/stripe/checkout     Stripe / Firestore
    |                                        |                           |
    |-- POST /api/stripe/checkout            |                           |
    |   Authorization: Bearer id_token       |                           |
@@ -288,7 +288,7 @@ Browser (authenticated with Google)    /api/stripe/checkout     Stripe / Upstash
    |   Stripe --> POST /api/stripe/webhook  |                           |
    |   checkout.session.completed           |                           |
    |   [SHA-256 HMAC verified]              |                           |
-   |   setStripeEntitlement(googleSub) ---- |-- KV.set ---------------> |
+   |   setStripeEntitlement(googleSub) ---- |-- Firestore.set --------> |
 ```
 
 ### 5.3 Webhook Authentication
@@ -485,8 +485,13 @@ client value and use `user.householdId` exclusively.
 
 ### 10.4 Tier Enforcement
 
-Sync routes check `getStripeEntitlement(googleSub)` from Upstash Redis and return 403 with
+Sync routes check `getStripeEntitlement(googleSub)` from Firestore and return 403 with
 `{ error: "karl_required", current_tier: "thrall" }` for non-Karl users.
+
+The newer `/api/sync/state` route (issue #2001) uses the `requireAuthz()` helper which combines
+authentication, user resolution, household membership verification, and Karl-tier check into a
+single call. New household-scoped routes should prefer `requireAuthz()` over calling `requireAuth()`
+and then separately validating tier and householdId.
 
 ---
 

@@ -7,14 +7,13 @@
 //   2. A user can only read/write households where they are in memberIds[].
 //   3. memberIds is capped at 3 entries.
 //   4. Card CRUD requires the caller to be a member of the parent household.
-//   5. All authenticated operations require a valid Clerk JWT (via Firebase Auth
-//      or a custom token exchange — see note below).
+//   5. All authenticated operations require a valid Google id_token JWT.
 //
 // Note on authentication:
-//   This app uses Clerk for auth, not Firebase Auth directly. When Firestore
-//   security rules are enforced from the server (Admin SDK), these rules are
-//   bypassed — the Admin SDK has root access. These rules apply to any future
-//   direct client-SDK access or Firebase Emulator test suites.
+//   This app uses Google OAuth (PKCE flow) for auth, not Firebase Auth directly.
+//   When Firestore security rules are enforced from the server (Admin SDK), these
+//   rules are bypassed — the Admin SDK has root access. These rules apply to any
+//   future direct client-SDK access or Firebase Emulator test suites.
 //
 //   For production, all Firestore access flows through API routes using the
 //   Admin SDK. These rules serve as documentation + emulator test enforcement.
@@ -26,7 +25,7 @@ service cloud.firestore {
 
     // ─── Helper functions ──────────────────────────────────────────────────────
 
-    // Returns the authenticated user's Clerk user ID from the JWT subject claim.
+    // Returns the authenticated user's ID from the JWT subject claim (Google sub).
     function userId() {
       return request.auth.uid;
     }
@@ -36,9 +35,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Returns true if the caller's UID matches the given clerkUserId.
-    function isSelf(clerkUserId) {
-      return isAuthenticated() && userId() == clerkUserId;
+    // Returns true if the caller's UID matches the given userId.
+    function isSelf(uid) {
+      return isAuthenticated() && userId() == uid;
     }
 
     // Returns true if the caller is a member of the given household.
@@ -66,7 +65,7 @@ service cloud.firestore {
 
     // Validates a user document write: required fields, role enum.
     function isValidUserWrite(data) {
-      return data.keys().hasAll(['clerkUserId', 'email', 'displayName', 'householdId',
+      return data.keys().hasAll(['userId', 'email', 'displayName', 'householdId',
                                   'role', 'createdAt', 'updatedAt'])
           && data.role in ['owner', 'member'];
     }
@@ -77,24 +76,24 @@ service cloud.firestore {
                                   'openDate', 'status', 'createdAt', 'updatedAt']);
     }
 
-    // ─── /users/{clerkUserId} ──────────────────────────────────────────────────
+    // ─── /users/{userId} ───────────────────────────────────────────────────────
 
-    match /users/{clerkUserId} {
+    match /users/{userId} {
       // A user can only read their own document.
-      allow read: if isSelf(clerkUserId);
+      allow read: if isSelf(userId);
 
       // A user can only create their own document, and it must be valid.
       // householdId must not be blank.
-      allow create: if isSelf(clerkUserId)
+      allow create: if isSelf(userId)
           && isValidUserWrite(request.resource.data)
-          && request.resource.data.clerkUserId == clerkUserId
+          && request.resource.data.userId == userId
           && request.resource.data.householdId.size() > 0;
 
       // A user can update their own document, but cannot change householdId or role
       // (those require an invite flow — future issue).
-      allow update: if isSelf(clerkUserId)
+      allow update: if isSelf(userId)
           && isValidUserWrite(request.resource.data)
-          && request.resource.data.clerkUserId == clerkUserId
+          && request.resource.data.userId == userId
           && request.resource.data.householdId == resource.data.householdId
           && request.resource.data.role == resource.data.role;
 

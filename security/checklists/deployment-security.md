@@ -1,7 +1,7 @@
 # Deployment Security Checklist — Fenrir Ledger
 
 **Owner**: Heimdall
-**Last reviewed**: 2026-03-20 (removed KV_REST_API_URL and KV_REST_API_TOKEN — Upstash Redis removed in issue #1521)
+**Last reviewed**: 2026-04-04 (updated package manager references from npm to pnpm; project uses pnpm-lock.yaml)
 
 Run this checklist before every production deployment. Items marked [AUTOMATED] are
 covered by the Playwright test suite or CI. Items marked [MANUAL] require human review.
@@ -110,13 +110,13 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [AUTOMATED / CI] **No critical or high CVEs in npm dependencies**
   ```
-  cd development/ledger && npm audit --audit-level=high
+  cd development/ledger && pnpm audit --audit-level=high
   ```
   Expected: 0 vulnerabilities at high or critical severity
 
 - [ ] [MANUAL] **Lock file is committed and up to date**
-  - `package-lock.json` or `yarn.lock` should be committed
-  - `npm ci` should succeed without modifying the lock file
+  - `pnpm-lock.yaml` should be committed at repo root
+  - `pnpm install --frozen-lockfile` should succeed without modifying the lock file
 
 - [ ] [MANUAL] **Review any dependency added or updated in this release**
   - Check for unexpected new transitive dependencies
@@ -128,12 +128,12 @@ covered by the Playwright test suite or CI. Items marked [MANUAL] require human 
 
 - [ ] [AUTOMATED / CI] **Production build succeeds without TypeScript errors**
   ```
-  cd development/ledger && npm run build
+  cd development/ledger && pnpm build
   ```
 
 - [ ] [AUTOMATED / CI] **Full Playwright test suite passes**
   ```
-  cd development/ledger && npx playwright test
+  cd development/ledger && pnpm exec playwright test
   ```
   Expected: 0 failures (baseline count grows with each sprint)
 

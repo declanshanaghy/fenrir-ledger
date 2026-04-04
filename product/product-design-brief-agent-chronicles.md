@@ -66,10 +66,9 @@ Must match the existing HTML report aesthetic. The Dark Nordic War Room. Specifi
       (`chronicle-norse.css` scoped under `.chronicle-page`)
 - [x] Shared components are reusable by Session and Saga chronicles (no agent-only coupling)
 - [x] Secret sanitization: `sanitize-chronicle.mjs` strips/masks secrets before writing MDX
-- [ ] Chronicle renders correctly at `/chronicles/agent-{slug}` on desktop and mobile
-      (375px minimum) — verify with Loki QA pass
 - [x] Luna provided wireframes (issue #1047 — `ux/wireframes/chronicles/`)
 - [x] Existing basic agent chronicles still render (no regression on current MDX files)
+- Chronicle rendering at `/chronicles/agent-{slug}` on desktop and mobile (375px minimum) — verification pending; track as GitHub Issue for Loki QA pass
 
 ## Priority & Constraints
 
