@@ -142,28 +142,27 @@ After every logical chunk of implementation work (~5-10 min or 1-3 files changed
 Do NOT batch all changes into one commit at the end. Sessions can die at any time —
 uncommitted work is lost work.
 
-VERIFY — tsc + build + Vitest (UNBREAKABLE):
-All agents run tsc, build, AND the full Vitest suite before handoff.
-Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.
+VERIFY (UNBREAKABLE):
+First, determine which package you changed:
+  cd /workspace/repo && git diff origin/main --name-only
+
+**If ALL changes are in `development/odins-throne/` or `development/odins-spear/`:**
+  cd /workspace/repo/development/odins-throne && npx tsc --noEmit   (or odins-spear)
+  cd /workspace/repo/development/odins-throne && pnpm run build
+  That's it. Do NOT run ledger tsc, build, or Vitest. These packages have no test infra.
+
+**If ANY changes touch `development/ledger/` (or shared files like pnpm-lock.yaml):**
   cd /workspace/repo/development/ledger && pnpm run verify:tsc
   cd /workspace/repo/development/ledger && pnpm run verify:build
   cd /workspace/repo/development/ledger && npx vitest run
-**Trust the exit code.** Exit 0 = all tests pass. Non-zero = failures.
-Do NOT grep vitest output for FAIL, do NOT parse ANSI escape codes.
-Just run the command and check whether it succeeded or failed.
-On failure: read the output to see which tests failed, fix them, commit+push, re-run.
-Repeat until the command exits 0.
-Do NOT proceed to handoff with ANY failing Vitest tests.
-**All verify steps MUST run in the foreground (blocking).** NEVER use `run_in_background`
-for tsc, build, or Vitest commands. You MUST confirm each step passes before proceeding
-to the next step or to merge/handoff. Background verify = unverified merge = bug.
-**NEVER use `sleep` commands.** Do not sleep between commands. Do not poll background
-task output files with sleep loops. Run everything in the foreground and check the exit code.
+  Do NOT run Playwright E2E tests — Vitest only. E2E runs via CI.
 
-NO MONITOR-UI / ODINS-SPEAR TESTS (UNBREAKABLE):
-NEVER write tests for `development/odins-throne/` (Odin's Throne) or `development/odins-spear/`.
-These packages have no test infrastructure that agents should use. All tests target
-`development/ledger/` only. For odins-throne or odins-spear issues, validate via tsc + build only.
+**Trust the exit code.** Exit 0 = pass. Non-zero = failures.
+On failure: read output, fix, commit+push, re-run. Repeat until exit 0.
+Do NOT proceed to handoff with ANY failing checks.
+**All verify steps MUST run in the foreground (blocking).** NEVER use `run_in_background`
+for tsc, build, or Vitest commands. Background verify = unverified merge = bug.
+**NEVER use `sleep` commands.** No sleep polling. Run foreground, check exit code.
 
 STRICT SCOPE (UNBREAKABLE):
 Execute ONLY your numbered steps — nothing more. Do NOT close issues, merge PRs,
