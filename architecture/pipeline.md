@@ -170,8 +170,10 @@ development/
 │   ├── implementation-plan.md     # What was built and how
 │   ├── qa-handoff.md              # Handoff notes for Loki
 │   └── setup-guide.md             # Local dev setup guide
-└── frontend/                      # Next.js project root (GKE deployment)
-    └── src/                       # Next.js source code
+├── ledger/                        # Next.js project root (GKE deployment)
+│   └── src/                       # Next.js source code
+├── odins-throne/                  # Odin's Throne monitor UI + API (fenrir-monitor namespace)
+└── odins-spear/                   # Odin's Spear (supplementary tooling)
 
 quality/
 ├── test-plan.md                   # Test plan

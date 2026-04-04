@@ -7,6 +7,13 @@
 > and `src/lib/feature-flags.ts` have all been deleted. The feature flag guards on routes
 > are no longer needed — all Stripe routes are always active. See `adr-feature-flags.md`
 > (superseded) for the transition history.
+>
+> **Addendum (2026-03-20):** The KV store (Redis) has been removed entirely and replaced by
+> **Firestore** for entitlement persistence (issues #1516–#1521, PRs #1533–#1568). The
+> `entitlement:{googleSub}` and `stripe-customer:{stripeCustomerId}` key patterns in the
+> KV Schema section below now refer to Firestore document IDs under `/users/{googleSub}`
+> and `/stripe/{stripeCustomerId}`. The `ioredis` client and Redis StatefulSet are gone;
+> all entitlement reads/writes go through `src/lib/firebase/firestore.ts`.
 
 ## Context
 
