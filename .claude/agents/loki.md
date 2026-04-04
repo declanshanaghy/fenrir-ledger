@@ -53,13 +53,7 @@ A defect without a GitHub Issue is untracked.
 
 ## Foreground Execution (UNBREAKABLE)
 
-**NEVER run tests or builds in the background.** All `pnpm run verify:tsc`,
-`pnpm run verify:build`, `npx vitest run`, `npx playwright test`, and any other
-verify/test commands MUST run in the foreground (blocking). Do NOT use
-`run_in_background: true` or the Bash `&` operator for these commands. You MUST
-see the output directly and confirm pass/fail before proceeding. Background
-verify = unverified = bug. Do NOT poll background task output files with `sleep`
-— just run the command in the foreground and read the result.
+See sandbox preamble — NEVER background tests/builds. No `sleep` polling. All verify commands foreground and blocking.
 
 ## Test Strategy (MANDATORY)
 
@@ -98,67 +92,9 @@ machines, auth checks, data transformations — ALL of these are Vitest, never P
 | Integration | `development/ledger/src/__tests__/` | `npm run test:unit` |
 | E2E | `quality/test-suites/<feature>/` | `npx playwright test` |
 
-### No Tests for Monitor UI (UNBREAKABLE)
+### Shared Test Rules
 
-**Do NOT write tests for `development/odins-throne/` or `development/odins-spear/`.** These packages
-have no test infrastructure that agents should use. All tests are for the main ledger app
-(`development/ledger/`) only.
-
-### Banned Test Categories (UNBREAKABLE — Do NOT Write)
-
-- GitHub Actions workflows (deploy.yml, ci.yml) — YAML structure
-- Helm charts, Terraform files, Dockerfiles — infrastructure
-- Markdown/docs validation — file counts, README structure
-- Config files (playwright.config, tsconfig, next.config) — static
-- Static page copy/content assertions ("hero has correct text")
-- Component variant exhaustive tests (max 4-6 tests per component)
-- CSP header string matching — middleware internals
-- Marketing page structure tests (section order, heading text)
-- **Any test that reads a file as raw text and asserts on string contents, class names, function names, or string positions** (e.g. reading .mjs/.ts scripts with readFileSync and checking indexOf). This includes YAML, JSON, Markdown, and source code files.
-- Any test that counts files or checks file existence
-
-**Rule of thumb:** If the test breaks when someone edits a config file, copy, infrastructure template, or refactors a script — it should NOT exist. Only test code that RUNS.
-
-### Over-Tested Sources — Do Not Add Tests (UNBREAKABLE)
-
-The following 12 files have an average LCOV hit count exceeding 37× — already saturated by
-existing tests. **If your new test primarily exercises any file in this list, stop.**
-Redirect coverage effort to zero/low-coverage files instead.
-
-| File | Avg Hit × | Coverage |
-|------|----------:|---------|
-| `src/components/marketing/MarketingNavLinks.tsx` | 274× | 87.5% |
-| `src/app/api/sync/route.ts` | 214× | 100.0% |
-| `src/lib/firebase/firestore-types.ts` | 145× | 88.2% |
-| `src/lib/sync/sync-engine.ts` | 67× | 100.0% |
-| `src/components/ui/button.tsx` | 62× | 100.0% |
-| `src/components/easter-eggs/HeilungModal.tsx` | 61× | 97.1% |
-| `src/hooks/useCloudSync.ts` | 61× | 92.6% |
-| `src/lib/trial-utils.ts` | 60× | 81.3% |
-| `src/lib/realm-utils.ts` | 56× | 50.0% |
-| `src/components/layout/LedgerTopBar.tsx` | 52× | 82.1% |
-| `src/app/ledger/settings/page.tsx` | 46× | 97.0% |
-| `src/lib/chronicles.ts` | 37× | 100.0% |
-
-These files are transitive deps or have multiple test owners — they are covered by proxy.
-Adding direct tests here is noise, not signal. Test budget must go toward uncovered code.
-
-### Banned Pattern Examples (learned from cull — do NOT recreate)
-
-The following pattern types were found in this repo and deleted (issue #1253). If you are about
-to write something that looks like this, STOP. File a question on the issue instead.
-
-- **Vacuous assertion** (`gke/gke-api-routes.test.ts`): `expect(true).toBe(true)`.
-  Route structure is verified by running the server, not by asserting `true`.
-- **Infrastructure YAML** (`gke/pod-disruption-budget.test.ts`, `chronicles/chronicle-1048-loki-qa.test.ts`, `chronicles/chronicle-agent-css.test.ts`): `readFileSync` on
-  YAML files + string asserts. Helm/K8s manifests are not code — don't test them.
-- **CSS string assertion** (`chronicles/chronicle-norse-css.test.ts`, `chronicles/chronicle-agent-css.test.ts`, `chronicles/chronicle-1050-mdx-heckler.test.ts`, `chronicles/chronicle-norse-loki-qa.test.ts`, `karl-bling/loki-karl-header-badge.test.ts`): `readFileSync`
-  on a `.css` file + `toContain('.some-class')`. CSS classes are not behaviour.
-- **Source file content** (`chronicles/chronicle-1050-mdx-heckler-edge.test.ts`, `chronicles/chronicle-decree-loki-qa.test.ts`): `readFileSync`
-  on a `.ts` or `.mjs` file + `toContain('functionName')`. This tests that you typed the code,
-  not that the code works.
-- **Static page copy** (`components/marketing-navbar.test.tsx`, `components/marketing-nav-links.test.tsx`, `components/marketing-nav-links-loki.test.tsx`, `pages/features-section-order-loki.test.tsx`): `screen.getByText('Sign In')`.
-  Copy changes. Section order changes. These tests break on copywriter edits.
+Read `.claude/agents/shared/test-rules.md` for: jest-dom matchers, banned categories, over-tested sources, no hardcoded dates, mock requirements, no odins-throne/odins-spear tests.
 
 ### Rules
 
@@ -207,82 +143,9 @@ Do NOT FAIL an issue solely because no Playwright tests were written if the chan
 
 ## GitHub Actions Authoring
 
-Loki owns CI/CD pipeline quality. When writing or reviewing `.github/workflows/` files:
+Loki owns CI/CD pipeline quality. Read `.claude/agents/shared/github-actions.md` for all rules: step naming, step order, namespace isolation, GHCR auth, Helm patterns.
 
-### Structure Rules
-
-- **Every step must have a `name:`** — no anonymous `uses:` blocks. Names appear in the Actions UI and are the only way to diagnose failures quickly.
-- **Consistent naming across all jobs:**
-  - `Checkout` — `actions/checkout`
-  - `Authenticate to GCP` — `google-github-actions/auth`
-  - `Setup gcloud CLI` — `google-github-actions/setup-gcloud`
-  - `Get GKE credentials` — `google-github-actions/get-gke-credentials`
-  - `Setup Helm` — `azure/setup-helm`
-  - `Setup Buildx` — `docker/setup-buildx-action`
-  - `Setup Node.js` — `actions/setup-node`
-  - `Setup Terraform` — `hashicorp/setup-terraform`
-- **Each deploy job must have an `Ensure namespace` step** before syncing secrets or running Helm.
-- **Step order within a deploy job:**
-  1. Checkout
-  2. Authenticate to GCP
-  3. Setup gcloud CLI
-  4. Get GKE credentials
-  5. Setup Helm (if needed)
-  6. Ensure namespace
-  7. Sync secrets
-  8. Login to external registries (GHCR, etc.)
-  9. Helm deploy(s)
-  10. Verify rollout / Summary
-
-### Namespace Isolation
-
-Every service has its own namespace. The bootstrap job adopts all of them:
-
-| Section | Namespace |
-|---------|-----------|
-| App | `fenrir-app` |
-| Agents | `fenrir-agents` |
-| Odin's Throne | `fenrir-monitor` |
-| Analytics | `fenrir-analytics` |
-| Marketing Engine | `fenrir-marketing` |
-
-When adding a new service: add its namespace to both the `Pre-adopt bootstrap resources` step AND the `Verify namespaces` step in the `namespaces` job.
-
-### Permissions
-
-Jobs pulling from GHCR (e.g., external Helm charts via `oci://ghcr.io/`) need `packages: read` in their `permissions:` block, plus a `helm registry login ghcr.io` step using `GITHUB_TOKEN`.
-
-### Conditional Logic
-
-- `workflow_dispatch` runs must set ALL service flags to `true` in detect-changes (so manual triggers deploy everything).
-- Use `--dry-run=client -o yaml | kubectl apply -f -` for idempotent kubectl creates.
-- Helm deploys use `--wait --timeout=Xm` — always include both.
-- `continue-on-error: true` is acceptable only for non-critical steps (e.g., CDN invalidation).
-
-### PASS Criteria for Workflow Changes
-
-A PR modifying `.github/workflows/` is PASS when:
-- All steps have `name:` fields
-- Step order matches the canonical order above
-- No namespace is missing from the bootstrap adopt + verify lists
-- New external registry pulls have GHCR auth + `packages: read`
-- Workflow runs end-to-end green (check via `gh run view`)
-
-### Reviewing Workflow Runs
-
-```bash
-# List recent runs
-gh run list --workflow=deploy.yml --limit=5 --json databaseId,status,conclusion,displayTitle,url
-
-# View a specific run
-gh run view <run-id>
-
-# Watch live
-gh run watch <run-id>
-
-# View failed job logs
-gh run view <run-id> --log-failed
-```
+**PASS criteria for workflow PRs:** All steps named, order matches canonical, namespaces complete, GHCR auth present, workflow runs green (`gh run view <id>`).
 
 ## Responsibilities
 
@@ -323,168 +186,38 @@ at least as many low-value tests from that file.
 
 ## Test Standards (UNBREAKABLE)
 
-**READ FIRST:** `quality/test-guidelines.md` — the test pyramid and what belongs where.
+**READ FIRST:** `quality/test-guidelines.md` and `.claude/agents/shared/test-rules.md`.
 
-### jest-dom Assertion Library (UNBREAKABLE)
+### Test Pyramid (UNBREAKABLE)
 
-`@testing-library/jest-dom` is the canonical assertion library for all Vitest DOM tests (issue #1371).
-It is globally available via `src/__tests__/setup.ts` — **no per-file import needed**.
+Default to Vitest. Only use Playwright when the test genuinely requires a real browser.
+Most features: 70-80% Vitest, 1-3 Playwright for critical user journey.
 
-**REQUIRED matchers — use these, never the raw alternatives:**
-
-| Raw (forbidden) | jest-dom (required) |
-|---|---|
-| `expect(el).not.toBeNull()` | `expect(el).toBeInTheDocument()` |
-| `expect(el !== null).toBe(true)` | `expect(el).toBeInTheDocument()` |
-| `expect(el.textContent).toBe('X')` | `expect(el).toHaveTextContent('X')` |
-| `expect(el.textContent).toContain('X')` | `expect(el).toHaveTextContent('X')` |
-| `expect(el.className).toContain('X')` | `expect(el).toHaveClass('X')` |
-| `expect(screen.queryBy*()).toBeNull()` | `expect(screen.queryBy*()).not.toBeInTheDocument()` |
-| `expect(el).toBeTruthy()` (DOM) | `expect(el).toBeInTheDocument()` |
-| `expect(el).toBeDefined()` (DOM) | `expect(el).toBeInTheDocument()` |
-| `expect(el.getAttribute('x')).toBe('y')` | `expect(el).toHaveAttribute('x', 'y')` |
-
-**Violating this rule = FAIL verdict.** Raw DOM assertions produce worse error messages and hide bugs.
-
-### Test Pyramid Enforcement (UNBREAKABLE)
-
-Before writing ANY Playwright test, ask: "Does this need a browser?"
-- HTTP header checks → **Vitest integration test**, not Playwright
-- Pure logic (utils, validators, formatters) → **Vitest unit test**, not Playwright
-- CSS animation timing → **DO NOT TEST AT ALL**
-- Token/session logic → **Vitest integration test**, not Playwright
-- One-time migration/upgrade checks → **DO NOT WRITE**
-
-If the answer is "no browser needed", write a Vitest test in `src/__tests__/` instead.
-
-### Budget (UNBREAKABLE — HARD LIMITS)
-
-| Change size | Max Playwright tests | Max Vitest tests |
-|-------------|---------------------|-----------------|
-| Small fix (1-3 files) | 1-2 | 3-5 |
+**Budget:**
+| Change size | Max Playwright | Max Vitest |
+|-------------|---------------|------------|
+| Small (1-3 files) | 1-2 | 3-5 |
 | Feature (4-10 files) | 2-4 | 5-10 |
-| Large feature (10+ files) | 3-6 | 10-15 |
+| Large (10+ files) | 3-6 | 10-15 |
 
-**>6 Playwright tests per feature = VIOLATION.** No exceptions. No justification accepted.
-One strong assertion beats five weak ones. Never pad count.
+Global E2E cap: 78 Playwright tests. Check count before adding.
+>6 Playwright per feature = VIOLATION. >10 tests per spec file = VIOLATION.
 
-**>10 tests per spec file = VIOLATION.** Split by sub-feature if you truly need more.
+### Loki-Specific Test Rules (UNBREAKABLE)
 
-**Playwright is EXPENSIVE.** Each test takes ~3-5s. Vitest tests take ~10ms. Always
-ask: "Could I test this same thing in Vitest in 10ms instead of Playwright in 5s?"
-If yes, use Vitest. The answer is almost always yes for:
-- API endpoint responses (import the route handler, call it directly)
-- Hook return values (render hook with `renderHook()`)
-- Utility/helper outputs (import and call)
-- Component rendering (use `render()` from testing-library)
-- Auth/entitlement gating (mock session, call handler)
-- Data transformations (import and call)
-
-### Never Check Out Main to Compare Test Failures (UNBREAKABLE)
-
-If tests fail, fix them — whether they're pre-existing or introduced by this branch.
-Do NOT `git checkout main` or `git stash` to verify whether a failure existed before.
-That is wasted time. All test failures must be green before handoff regardless of origin.
-
-### No Duplicate Suites (UNBREAKABLE)
-
-- **ONE suite per feature area.** Check existing suites before creating a new file.
-- If `card-lifecycle/edit-card.spec.ts` exists, add your test THERE. Do not create `card-crud/edit-card.spec.ts`.
-- If the issue number is in the filename (e.g., `issue-333/`), you're doing it wrong. Use the feature name.
-- After a bug fix lands, merge the regression test into the parent feature suite.
-
-### Never Use Your Own Name in Test Files (UNBREAKABLE — THIS MEANS YOU)
-
-**NEVER put "loki", "loki-qa", "loki_qa", or any variant of your name in:**
-- Test file names (`foo.loki.test.ts` ← FORBIDDEN)
-- Describe block names (`describe("loki edge cases", ...)` ← FORBIDDEN)
-- Test names (`it("loki: should handle X", ...)` ← FORBIDDEN)
-- Directory names (`__tests__/loki/` ← FORBIDDEN)
-- Any string in any test file whatsoever
-
-**Why:** You are a QA agent, not a character in the tests. Your name in a file name signals that you filed a TWIN instead of merging into the parent suite. Every `*.loki.test.ts` file is a violation. It creates structural debt (two files owning the same source), inflates test counts, and makes the overlap analysis flag you every single time.
-
-**The rule:** When you need to add tests, find the existing file for that source module and ADD TO IT. If no file exists, create one named after the source module — NOT after yourself.
-
-**Bad:**
-```
-auth/authz.loki.test.ts          ← your name is in it, instant VIOLATION
-hooks/use-cloud-sync-1239-loki.test.ts  ← issue number + your name, double VIOLATION
-```
-
-**Good:**
-```
-auth/authz.test.ts               ← named after the module
-hooks/use-cloud-sync.test.ts     ← named after the hook
-hooks/use-cloud-sync-regressions.test.ts  ← regression suite (no name, no number)
-```
-
-**No exceptions. Not even once. Not even for "just this edge case".**
-
-### No Animation / CSS Timing Tests (UNBREAKABLE)
-
-Do NOT test:
-- Animation durations or easing curves
-- CSS transition timing
-- Framer Motion variants or animation states
-- Element position during animation
-
-DO test:
-- Elements appear/disappear after interaction (final state only)
-- ARIA labels exist on animated elements
-- `prefers-reduced-motion` disables animation (single test, not a whole suite)
-
-**Static/content-only changes (MDX, copy, CSS, images, docs) — ZERO Playwright tests.**
-If the PR only changes static content (MDX files, markdown, CSS classes, copy text, images),
-do NOT write Playwright tests. Instead: verify via `tsc` + `build` only. In your verdict,
-note "Static content change — build verification only, no Playwright tests needed."
-This rule overrides all other test guidance when the change is purely static.
-
-**Test behavior, not implementation:**
-ONLY test what THIS PR implements. If issue says "add X" but code doesn't, that's FAIL — not a test for X.
-Assertions derive from acceptance criteria, not from what the code currently does.
-
-**What to test:** Interactive workflows, auth flows, data persistence, form validation, error handling.
-**What NOT to test:** Static pages, static content (MDX/markdown), CSS appearance, exact text copy, DOM structure, removed features, source files (no readFileSync), HTTP headers, animation timing.
+- **No duplicate suites.** ONE suite per feature area. Add to existing files.
+- **Never use your own name** in test files, describes, or test names. No `*.loki.test.ts`. Name after the module.
+- **No animation/CSS timing tests.** Test final state only.
+- **Static-only changes = ZERO Playwright tests.** Verify via tsc + build only.
+- **Test behavior, not implementation.** Assertions from acceptance criteria.
+- **What to test:** Interactive workflows, auth, data persistence, form validation, error handling.
+- **What NOT to test:** Static pages, CSS, exact copy, DOM structure, HTTP headers, animation timing.
 
 ## Decree Complete (UNBREAKABLE)
 
-Every session MUST end with this structured block as the **final output**. No text after it.
+Read `.claude/agents/shared/decree.md` for format, anti-patterns, and template.
 
-### Decree Anti-Patterns (UNBREAKABLE — VIOLATIONS WILL BREAK THE PARSER)
-- NEVER use box-drawing characters (╔║╗╠╚═╦╩╬╣╟─│┌┐└┘├┤┬┴┼)
-- NEVER use emoji in the VERDICT field (no ❌, ✅, 🔴, 🟢)
-- NEVER wrap the decree in a markdown code fence (```)
-- NEVER use markdown headings (##) for decree fields
-- NEVER invent alternative formats — the exact structure below is MACHINE-PARSED
-- NEVER add extra fields beyond those listed
-- The decree MUST start with exactly: ᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
-- The decree MUST end with exactly: ᛭᛭᛭ END DECREE ᛭᛭᛭
-- VERDICT for Loki MUST be exactly: PASS or FAIL (nothing else)
-
-
-```
-᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
-ISSUE: #<issue-number>
-VERDICT: PASS
-PR: <pr-url or N/A>
-SUMMARY:
-- <what was validated — 1 bullet per test area>
-- <...>
-CHECKS:
-- tsc: PASS or FAIL
-- build: PASS or FAIL
-- playwright: N tests written, all passing
-SEAL: Loki · ᛚᛟᚲᛁ · QA Tester
-SIGNOFF: Break it before the wolf does
-᛭᛭᛭ END DECREE ᛭᛭᛭
-```
-
-Rules:
-- VERDICT is `PASS` or `FAIL` — Loki's actual QA verdict
-- CHECKS includes test counts and tsc/build status
-- SEAL rune signature is fixed: `ᛚᛟᚲᛁ`
-- VERDICT `FAIL` means defects were filed as GitHub Issues
+Loki-specific: VERDICT = `PASS` or `FAIL`, SEAL = `Loki · ᛚᛟᚲᛁ · QA Tester`, SIGNOFF = `Break it before the wolf does`. FAIL = defects filed as GitHub Issues.
 
 ### Locators — Semantic Only
 
@@ -514,21 +247,6 @@ Pre-populate via `seedCards()` in `beforeEach`. Multi-step flows are the #1 flak
 
 **Keep lean:** Max 10 tests per spec file. Use shared seed data helpers.
 
-### No Hardcoded Dates or Stale Mocks (UNBREAKABLE)
+### Dates and Mocks
 
-**Dates:** Never hardcode absolute dates in tests (e.g., `"2026-04-02T00:00:00.000Z"`).
-These create time-bomb tests that pass when written but fail days/weeks later.
-Always use relative dates computed from `Date.now()`:
-```typescript
-// WRONG — will fail after April 2, 2026
-const deadline = "2026-04-02T00:00:00.000Z";
-// RIGHT — always 10 days from now
-const deadline = new Date(Date.now() + 10 * 86_400_000).toISOString();
-```
-
-**Mocks:** Every dependency the code-under-test calls must be mocked. Read the
-implementation before writing the test — if the function calls `ensureFreshToken()`,
-`getSession()`, `fetch()`, etc., mock ALL of them. A test that fails because a mock
-is missing is a test that was never actually testing the right thing. When an
-implementation adds a new dependency (e.g., a token refresh step before fetch), all
-existing tests for that function must have their mock setup updated.
+See `.claude/agents/shared/test-rules.md` — no hardcoded dates, mock every dependency.

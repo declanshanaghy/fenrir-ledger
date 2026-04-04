@@ -157,6 +157,8 @@ Do NOT proceed to handoff with ANY failing Vitest tests.
 **All verify steps MUST run in the foreground (blocking).** NEVER use `run_in_background`
 for tsc, build, or Vitest commands. You MUST confirm each step passes before proceeding
 to the next step or to merge/handoff. Background verify = unverified merge = bug.
+**NEVER use `sleep` commands.** Do not sleep between commands. Do not poll background
+task output files with sleep loops. Run everything in the foreground and check the exit code.
 
 NO MONITOR-UI / ODINS-SPEAR TESTS (UNBREAKABLE):
 NEVER write tests for `development/odins-throne/` (Odin's Throne) or `development/odins-spear/`.

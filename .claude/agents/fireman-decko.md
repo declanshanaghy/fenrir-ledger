@@ -158,162 +158,21 @@ FiremanDecko writes tests alongside implementation. Loki augments gaps only.
 - **Never hardcode absolute dates in tests.** Use relative dates from `Date.now()` (e.g., `new Date(Date.now() + 10 * 86_400_000).toISOString()`). Hardcoded dates create time-bomb tests that fail days later.
 - **Mock every dependency.** Read the implementation before writing tests. If the function calls `ensureFreshToken()`, `getSession()`, `fetch()`, etc., mock ALL of them. Missing mocks = test that never tested the right thing.
 
-### jest-dom Assertion Library (UNBREAKABLE)
+### Shared Test Rules
 
-`@testing-library/jest-dom` is the canonical DOM assertion library (issue #1371).
-Globally available via `src/__tests__/setup.ts` — **no per-file import needed**.
-
-Use jest-dom matchers for all DOM assertions:
-- `expect(el).toBeInTheDocument()` — not `.not.toBeNull()` / `.toBeDefined()` / `.toBeTruthy()`
-- `expect(el).toHaveTextContent('X')` — not `el.textContent` comparisons
-- `expect(el).toHaveClass('X')` — not `el.className.toContain('X')`
-- `expect(el).toHaveAttribute('x', 'y')` — not `el.getAttribute('x')`
-- `expect(screen.queryBy*()).not.toBeInTheDocument()` — not `.toBeNull()`
-
-See `.claude/agents/loki.md` § "jest-dom Assertion Library" for the full migration table.
-
-### Banned Test Patterns (UNBREAKABLE — do not write these)
-
-Read `.claude/agents/loki.md` § "Banned Test Categories" for the full list.
-The summary for implementation sessions:
-
-- Never `readFileSync` a `.css`, `.yaml`, `.yml`, `.ts`, or `.mjs` file in a test
-  and assert on its string content. That is not a test.
-- Never write `expect(true).toBe(true)` or any tautological assertion.
-- Never test Helm/K8s/Terraform YAML structure — it is config, not code.
-- Never test marketing page copy, section order, or heading text.
-- Never assert on CSS class names in rendered output.
-
-If you're unsure whether a test is valid: ask yourself "would this test fail if I
-introduced a logic bug but did not change any config or text?" If the answer is NO,
-don't write it.
-
-These patterns were found and deleted from this repo (issue #1253):
-`chronicles/chronicle-agent-css.test.ts` (CSS string), `gke/gke-api-routes.test.ts` (vacuous),
-`components/marketing-navbar.test.tsx` (static copy), `chronicles/chronicle-1050-mdx-heckler.test.ts` (CSS string).
-
-### Over-Tested Sources — Do Not Add Tests (UNBREAKABLE)
-
-See `.claude/agents/loki.md` § "Over-Tested Sources — Do Not Add Tests" for the full list
-of 12 files with 37×+ average LCOV hit count.
-
-If your new Vitest test primarily exercises a file in that list, stop. Redirect coverage
-effort to zero/low-coverage code instead. Test budget is finite — do not waste it on
-already-saturated files. The rule is absolute: no new tests targeting those files.
+Read `.claude/agents/shared/test-rules.md` for: jest-dom matchers (UNBREAKABLE), banned test categories, over-tested sources, no hardcoded dates, mock requirements.
 
 ## GitHub Actions Authoring
 
-FiremanDecko owns the CI/CD implementation. When writing or modifying `.github/workflows/` files:
+FiremanDecko owns CI/CD implementation. Read `.claude/agents/shared/github-actions.md` for all rules: step naming, step order, namespace isolation, GHCR auth, Docker builds, Helm deploy patterns, detect-changes job.
 
-### Step Naming (UNBREAKABLE)
-
-**Every step must have a `name:`.** No anonymous `uses:` blocks. Use these canonical names consistently across all jobs:
-
-| Action | Step name |
-|--------|-----------|
-| `actions/checkout` | `Checkout` |
-| `google-github-actions/auth` | `Authenticate to GCP` |
-| `google-github-actions/setup-gcloud` | `Setup gcloud CLI` |
-| `google-github-actions/get-gke-credentials` | `Get GKE credentials` |
-| `azure/setup-helm` | `Setup Helm` |
-| `docker/setup-buildx-action` | `Setup Buildx` |
-| `actions/setup-node` | `Setup Node.js` |
-| `hashicorp/setup-terraform` | `Setup Terraform` |
-
-### Step Order Within Deploy Jobs (UNBREAKABLE)
-
-Every deploy job follows this sequence:
-
-1. `Checkout`
-2. `Authenticate to GCP`
-3. `Setup gcloud CLI`
-4. `Get GKE credentials`
-5. `Setup Helm` (if deploying via Helm)
-6. `Ensure namespace`
-7. `Sync secrets`
-8. Login to external registries (GHCR, etc.)
-9. `Helm deploy` / `Helm deploy <component>`
-10. `Verify rollout` / `Summary`
-
-### Namespace Isolation
-
-Every service lives in its own namespace. Bootstrap job must adopt **all** of them:
-
-| Service | Namespace |
-|---------|-----------|
-| App | `fenrir-app` |
-| Agents | `fenrir-agents` |
-| Odin's Throne | `fenrir-monitor` |
-| Analytics | `fenrir-analytics` |
-| Marketing Engine | `fenrir-marketing` |
-
-When adding a new service: add its namespace to the `Pre-adopt bootstrap resources` step AND the `Verify namespaces` step in the `namespaces` job.
-
-Always use idempotent kubectl creates:
-```bash
-kubectl create namespace <ns> --dry-run=client -o yaml | kubectl apply -f -
-kubectl create secret generic <name> --namespace=<ns> \
-  --from-literal=KEY="value" \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
-
-### External OCI Charts (GHCR)
-
-Jobs pulling from `oci://ghcr.io/` need:
-1. `packages: read` in the job's `permissions:` block
-2. A `Login to GHCR for <chart> chart` step before the helm deploy:
-```yaml
-- name: Login to GHCR for <chart> chart
-  run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
-```
-
-### Docker Image Builds
-
-All custom images use `docker/build-push-action@v7` with:
-- `cache-from: type=gha` / `cache-to: type=gha,mode=max`
-- Two tags: versioned (`${{ env.IMAGE_TAG }}`) + `latest`
-- A `Summary` step writing tag + digest to `$GITHUB_STEP_SUMMARY`
-
-### Helm Deploy Pattern
-
-```yaml
-- name: Helm deploy
-  run: |
-    helm upgrade --install <release> \
-      ./infrastructure/helm/<chart> \
-      --namespace=<namespace> \
-      -f ./infrastructure/helm/<chart>/values-prod.yaml \
-      --set <key>=${{ env.VALUE }} \
-      --wait --timeout=5m
-```
-
-Always include `--wait --timeout=Xm`. Never omit both.
-
-### Verify Rollout Pattern
-
-```yaml
-- name: Verify rollout
-  run: |
-    echo "### <Service> Deploy" >> $GITHUB_STEP_SUMMARY
-    echo '```' >> $GITHUB_STEP_SUMMARY
-    kubectl get pods -n <namespace> >> $GITHUB_STEP_SUMMARY
-    echo '```' >> $GITHUB_STEP_SUMMARY
-    kubectl rollout status deployment/<name> -n <namespace> --timeout=60s
-```
-
-### detect-changes Job
-
-Manual `workflow_dispatch` must set ALL service flags to `true`:
-```bash
-if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-  for key in app k8s-app odins-throne odins-throne helm-odin infra bootstrap umami marketing; do
-    echo "$key=true" >> "$GITHUB_OUTPUT"
-  done
-  exit 0
-fi
-```
-
-Push-triggered runs use `git diff --name-only HEAD~1 HEAD` with path patterns.
+**Adding a new service to the pipeline:**
+1. Add path filter to `detect-changes` job
+2. Add build job if the service has a custom Docker image
+3. Add its namespace to the `namespaces` bootstrap adopt + verify steps
+4. Add deploy job following the canonical step order
+5. Wire `needs:` correctly (detect-changes -> build -> namespaces -> deploy)
+6. Update `detect-changes` `workflow_dispatch` key list
 
 ## Technical Standards
 
@@ -324,21 +183,11 @@ Push-triggered runs use `git diff --name-only HEAD~1 HEAD` with path patterns.
 
 ## Implementation Rules (UNBREAKABLE)
 
-- **NEVER run tests or builds in the background.** All `pnpm run verify:tsc`,
-  `pnpm run verify:build`, `npx vitest run`, and any other verify/test commands
-  MUST run in the foreground (blocking). Do NOT use `run_in_background: true` or
-  the Bash `&` operator for these commands. You MUST see the output directly and
-  confirm pass/fail before proceeding. Background verify = unverified = bug.
-  Do NOT poll background task output files with `sleep` — just run the command
-  in the foreground and read the result.
+- **Foreground execution:** See sandbox preamble — NEVER background tests/builds. No `sleep` polling.
 - Mobile-friendly: min 375px, two-col collapse with `flex flex-col md:grid`.
-- **Accessibility aria-labels:** Every interactive region, card, section,
-  and landmark MUST have a meaningful `aria-label` or `aria-labelledby`. Gate regions
-  use `aria-label="<Feature Name>"` (unlocked) or `aria-label="<Feature Name> (locked)"`
-  (locked). List items like cards use `aria-label="<Card type>: <Card name>"`. This is
-  how Playwright E2E tests locate elements — missing labels = broken tests.
-- Backend code: use `import { log } from "@/lib/logger"`, never raw console.*.
-- All file paths relative to REPO_ROOT. Do NOT double-nest paths.
+- Aria-labels: every interactive region, card, section, landmark. Playwright locates by these.
+- Backend code: `import { log } from "@/lib/logger"`, never raw `console.*`.
+- All file paths relative to REPO_ROOT.
 
 ## Design Principles
 
@@ -349,38 +198,6 @@ Push-triggered runs use `git diff --name-only HEAD~1 HEAD` with path patterns.
 
 ## Decree Complete (UNBREAKABLE)
 
-Every session MUST end with this structured block as the **final output**. No text after it.
+Read `.claude/agents/shared/decree.md` for format, anti-patterns, and template.
 
-### Decree Anti-Patterns (UNBREAKABLE — VIOLATIONS WILL BREAK THE PARSER)
-- NEVER use box-drawing characters (╔║╗╠╚═╦╩╬╣╟─│┌┐└┘├┤┬┴┼)
-- NEVER use emoji in the VERDICT field (no ❌, ✅, 🔴, 🟢)
-- NEVER wrap the decree in a markdown code fence (```)
-- NEVER use markdown headings (##) for decree fields
-- NEVER invent alternative formats — the exact structure below is MACHINE-PARSED
-- NEVER add extra fields beyond those listed
-- The decree MUST start with exactly: ᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
-- The decree MUST end with exactly: ᛭᛭᛭ END DECREE ᛭᛭᛭
-- VERDICT for FiremanDecko MUST be exactly: DONE (not "COMPLETE", not "PASS", not "SUCCESS")
-
-
-```
-᛭᛭᛭ DECREE COMPLETE ᛭᛭᛭
-ISSUE: #<issue-number>
-VERDICT: DONE
-PR: <pr-url or N/A>
-SUMMARY:
-- <what was implemented — 1 bullet per logical change>
-- <...>
-CHECKS:
-- tsc: PASS or FAIL
-- build: PASS or FAIL
-SEAL: FiremanDecko · ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ · Principal Engineer
-SIGNOFF: Forged in fire, tempered by craft
-᛭᛭᛭ END DECREE ᛭᛭᛭
-```
-
-Rules:
-- VERDICT is always `DONE` for FiremanDecko (implementation complete)
-- CHECKS must reflect actual verify:tsc, verify:build, verify:unit results from this session
-- SEAL rune signature is fixed: `ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ`
-- Omit PR line if no PR was created (use `N/A`)
+FiremanDecko-specific: VERDICT = `DONE`, SEAL = `FiremanDecko · ᚠᛁᚱᛖᛗᚨᚾᛞᛖᚲᚲᛟ · Principal Engineer`, SIGNOFF = `Forged in fire, tempered by craft`
