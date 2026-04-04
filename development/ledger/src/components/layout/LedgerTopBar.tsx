@@ -522,26 +522,8 @@ export function LedgerTopBar() {
         <MarketingNavLinks />
       </nav>
 
-      {/* LEFT: Logo link + mobile hamburger */}
+      {/* LEFT: Mobile hamburger + logo */}
       <div className="flex items-center gap-1">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 text-left min-h-[44px] px-1"
-          aria-label="Fenrir Ledger — go to home"
-        >
-          <span className="text-lg font-bold text-gold" aria-hidden="true">
-            ᛟ
-          </span>
-          {/* Full wordmark: desktop only */}
-          <span className="hidden md:inline font-display text-gold tracking-widest uppercase text-sm">
-            FENRIR LEDGER
-          </span>
-          {/* Short wordmark: mobile only */}
-          <span className="md:hidden font-display text-gold tracking-widest uppercase text-xs font-bold">
-            FL
-          </span>
-        </Link>
-
         {/* Mobile hamburger — opens marketing nav overlay (44×44px touch target) */}
         <button
           ref={mobileHamburgerRef}
@@ -559,6 +541,24 @@ export function LedgerTopBar() {
         >
           <span className="text-base leading-none" aria-hidden="true">☰</span>
         </button>
+
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 text-left min-h-[44px] px-1"
+          aria-label="Fenrir Ledger — go to home"
+        >
+          <span className="text-lg font-bold text-gold" aria-hidden="true">
+            ᛟ
+          </span>
+          {/* Full wordmark: desktop only */}
+          <span className="hidden md:inline font-display text-gold tracking-widest uppercase text-sm">
+            FENRIR LEDGER
+          </span>
+          {/* Short wordmark: mobile only */}
+          <span className="md:hidden font-display text-gold tracking-widest uppercase text-xs font-bold">
+            FL
+          </span>
+        </Link>
       </div>
 
       {/* RIGHT: Controls cluster */}
@@ -651,7 +651,7 @@ export function LedgerTopBar() {
         className={[
           "fixed inset-0 z-[200]",
           "bg-background flex flex-col",
-          "p-6",
+          "p-6 overflow-hidden",
         ].join(" ")}
         onClick={(e) => {
           // Close on backdrop tap (tapping empty overlay area, not children)

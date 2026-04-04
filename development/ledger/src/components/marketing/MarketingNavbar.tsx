@@ -97,19 +97,8 @@ export function MarketingNavbar() {
           <MarketingNavLinks />
         </div>
 
-        {/* LEFT: Logo + mobile hamburger */}
+        {/* LEFT: Mobile hamburger + logo */}
         <div className="flex items-center gap-1">
-          <Link
-            href="/"
-            className="flex items-center gap-2 group min-h-[44px] px-1"
-            aria-label="Fenrir Ledger — home"
-          >
-            <span className="text-lg font-bold text-gold" aria-hidden="true">ᛟ</span>
-            <span className="font-display text-sm font-bold tracking-widest uppercase text-gold hover:brightness-110">
-              FENRIR LEDGER
-            </span>
-          </Link>
-
           {/* Mobile hamburger — 44×44px touch target (WCAG 2.5.5) */}
           <button
             ref={hamburgerRef}
@@ -127,6 +116,17 @@ export function MarketingNavbar() {
           >
             <span className="text-base leading-none" aria-hidden="true">☰</span>
           </button>
+
+          <Link
+            href="/"
+            className="flex items-center gap-2 group min-h-[44px] px-1"
+            aria-label="Fenrir Ledger — home"
+          >
+            <span className="text-lg font-bold text-gold" aria-hidden="true">ᛟ</span>
+            <span className="font-display text-sm font-bold tracking-widest uppercase text-gold hover:brightness-110">
+              FENRIR LEDGER
+            </span>
+          </Link>
         </div>
 
         {/* RIGHT: Theme toggle + CTA — desktop only */}
@@ -158,7 +158,7 @@ export function MarketingNavbar() {
           className={[
             "fixed inset-0 z-[200]",
             "bg-background flex flex-col",
-            "p-6",
+            "p-6 overflow-hidden",
           ].join(" ")}
           onClick={(e) => {
             // Close on backdrop tap (tapping the empty overlay area, not its children)
