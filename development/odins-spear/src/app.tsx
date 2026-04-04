@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Box, useApp, useInput, useStdout } from "ink";
 import { log } from "@fenrir/logger";
 import { TopBar } from "./components/TopBar.js";
@@ -142,8 +142,26 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
     }
   });
 
-  const termWidth = stdout?.columns ?? 80;
-  const termHeight = stdout?.rows ?? 24;
+  const [termSize, setTermSize] = useState(() => ({
+    width: stdout?.columns ?? process.stdout?.columns ?? 80,
+    height: stdout?.rows ?? process.stdout?.rows ?? 24,
+  }));
+
+  useEffect(() => {
+    const onResize = () => {
+      setTermSize({
+        width: stdout?.columns ?? process.stdout?.columns ?? 80,
+        height: stdout?.rows ?? process.stdout?.rows ?? 24,
+      });
+    };
+    process.stdout?.on("resize", onResize);
+    return () => {
+      process.stdout?.off("resize", onResize);
+    };
+  }, [stdout]);
+
+  const termWidth = termSize.width;
+  const termHeight = termSize.height;
 
   log.debug("SpearInner rendering layout", {
     termWidth,
