@@ -8,9 +8,10 @@
  * to call unconditionally.
  *
  * Returns:
- *   status       — "idle" | "syncing" | "synced" | "offline" | "error"
+ *   status       — "idle" | "needs-upload" | "needs-download" | "syncing" | "synced" | "offline" | "error"
  *   lastSyncedAt — Date of last successful sync (null if never synced)
  *   cardCount    — Number of cards in last sync (null if unknown)
+ *   syncVersion  — Current household sync version (null if unknown)
  *   errorMessage — Human-readable error description (null if no error)
  *   errorCode    — Machine-readable code e.g. "permission-denied" (null if no error)
  *   errorTimestamp — When the error occurred (null if no error)
@@ -19,19 +20,28 @@
  *   dismissError — Clear visible error state
  *
  * State transitions:
- *   idle → syncing: syncNow() called (Karl only)
- *   syncing → synced: fenrir:cloud-sync-complete event
- *   syncing → error: fenrir:cloud-sync-error event
+ *   idle → needs-upload: local card change (before debounce fires)
+ *   idle → needs-download: server check reveals needsDownload=true
+ *   idle → offline: navigator.onLine = false
+ *   needs-upload → syncing: debounce fires / bulk-changed / syncNow()
+ *   needs-download → syncing: auto-trigger / syncNow()
+ *   syncing → synced: sync success
+ *   syncing → error: sync failure
  *   synced → idle: after SYNCED_DISPLAY_MS elapsed
  *   error → idle: dismissError()
- *   * → offline: navigator.onLine = false
- *   offline → idle: navigator.onLine = true (no push on reconnect — Issue #1239)
+ *   offline → needs-upload: reconnect + needs-upload flag
+ *   offline → idle: reconnect (no pending changes)
+ *
+ * Pull-before-push (Issue #2006): Before any push, performSync() calls
+ * GET /api/sync/state. If needsDownload=true or lastSyncedVersion<syncVersion,
+ * it pulls first then pushes. 409 from push triggers automatic pull → retry.
  *
  * Issue #1122 — wired to real API routes
  * Issue #1125 — initial state machine design
  * Issue #1172 — auth gating, restore vs backup message, push loop fix
  * Issue #1239 — lock push to card create/edit only (remove online/retry/login push)
  * Issue #1693 — refactor: extract helpers, reduce cyclomatic complexity ≤ 15
+ * Issue #2006 — pull-before-push orchestration, needs-upload/needs-download states
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -97,12 +107,13 @@ export const EVT_CARDS_BULK_CHANGED = "fenrir:cards-bulk-changed";
 // Types
 // ---------------------------------------------------------------------------
 
-export type CloudSyncStatus = "idle" | "syncing" | "synced" | "offline" | "error";
+export type CloudSyncStatus = "idle" | "needs-upload" | "needs-download" | "syncing" | "synced" | "offline" | "error";
 
 export interface CloudSyncState {
   status: CloudSyncStatus;
   lastSyncedAt: Date | null;
   cardCount: number | null;
+  syncVersion: number | null;
   errorMessage: string | null;
   errorCode: string | null;
   errorTimestamp: Date | null;
@@ -153,6 +164,58 @@ function lwwMerge(local: Card[], cloud: Card[]): Card[] {
 }
 
 // ---------------------------------------------------------------------------
+// Module-level API helpers (issue #2006)
+// ---------------------------------------------------------------------------
+
+/** Response shape from GET /api/sync/state */
+interface SyncStateData {
+  syncVersion: number;
+  lastSyncedVersion: number;
+  needsDownload: boolean;
+}
+
+/** Response shape from GET /api/sync/pull */
+interface PullResponseData {
+  cards: Card[];
+  activeCount: number;
+  syncVersion: number;
+}
+
+/**
+ * Calls GET /api/sync/state and returns the parsed response.
+ * Returns null on any network error or non-ok response (caller degrades gracefully).
+ */
+async function fetchSyncStateResponse(householdId: string): Promise<SyncStateData | null> {
+  try {
+    const response = await authFetch(
+      `/api/sync/state?householdId=${encodeURIComponent(householdId)}`,
+      { method: "GET" }
+    );
+    if (!response?.ok) return null;
+    return (await response.json()) as SyncStateData;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Calls GET /api/sync/pull and returns the parsed response.
+ * Returns null on any network error or non-ok response.
+ */
+async function fetchPullResponse(householdId: string): Promise<PullResponseData | null> {
+  try {
+    const response = await authFetch(
+      `/api/sync/pull?householdId=${encodeURIComponent(householdId)}`,
+      { method: "GET" }
+    );
+    if (!response?.ok) return null;
+    return (await response.json()) as PullResponseData;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
@@ -186,6 +249,7 @@ export function useCloudSync(): CloudSyncState {
   const [status, setStatus] = useState<CloudSyncStatus>("idle");
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [cardCount, setCardCount] = useState<number | null>(null);
+  const [syncVersion, setSyncVersion] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [errorTimestamp, setErrorTimestamp] = useState<Date | null>(null);
@@ -197,18 +261,28 @@ export function useCloudSync(): CloudSyncState {
   const syncInProgressRef = useRef<boolean>(false);
   /** Debounce timer for auto-sync on card changes */
   const autoSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Last known household syncVersion — used as clientSyncVersion in push requests */
+  const syncVersionRef = useRef<number | null>(null);
+  /** Tracks online state via window events (navigator.onLine not reliable in tests) */
+  const isOnlineRef = useRef<boolean>(typeof navigator === "undefined" || navigator.onLine);
 
   // ---------------------------------------------------------------------------
   // Core push function (internal)
   // ---------------------------------------------------------------------------
 
   /**
-   * Performs the actual push→merge→apply sync cycle against /api/sync/push.
-   * Dispatches cloud sync events so other listeners can react.
-   * Returns early (no-op) if already in progress or offline.
+   * Performs the pull-before-push sync cycle against /api/sync/push.
    *
-   * Issue #1239: Called ONLY from fenrir:cards-changed listener (debounced)
-   * and syncNow() (manual). Not called on online reconnect, login, or error retry.
+   * Issue #2006 pull-before-push flow:
+   *   1. GET /api/sync/state — check if server is ahead of client
+   *   2. If needsDownload=true OR lastSyncedVersion<syncVersion: pull first
+   *   3. POST /api/sync/push with clientSyncVersion
+   *   4. On 409: pull → merge → retry push once
+   *
+   * State check failure degrades gracefully: push proceeds without version guard.
+   *
+   * Issue #1239: Called ONLY from fenrir:cards-changed listener (debounced),
+   * fenrir:cards-bulk-changed (immediate), and syncNow() (manual).
    */
   const performSync = useCallback(async (): Promise<void> => {
     if (!isKarl) return;
@@ -226,8 +300,6 @@ export function useCloudSync(): CloudSyncState {
     const householdId = getEffectiveHouseholdId(session.user.sub);
 
     // Acquire the sync lock and set status synchronously (optimistic update).
-    // This must happen before any await so the re-entrant guard and UI state
-    // are correct even if ensureFreshToken triggers a network refresh.
     syncInProgressRef.current = true;
     setStatus("syncing");
     setErrorMessage(null);
@@ -238,36 +310,102 @@ export function useCloudSync(): CloudSyncState {
     try {
       // Gather all local cards including tombstones.
       // Snapshot the local active count BEFORE sync to determine message direction.
-      const localCards = getRawAllCards(householdId);
+      let localCards = getRawAllCards(householdId);
       const localActiveCount = localCards.filter((c) => !c.deletedAt).length;
 
-      // authFetch ensures fresh token + retries on 401 for mid-flight token expiry
-      const response = await authFetch("/api/sync/push", {
+      // ── Step 1: Check sync state (pull-before-push) ──────────────────────────
+      // clientSyncVersion starts from the last version we know about.
+      let clientSyncVersion: number | null = syncVersionRef.current;
+
+      const stateData = await fetchSyncStateResponse(householdId);
+      if (stateData) {
+        const { syncVersion: serverVersion, lastSyncedVersion, needsDownload } = stateData;
+
+        if (needsDownload || lastSyncedVersion < serverVersion) {
+          // Server is ahead — pull first so our push has full context.
+          const pullData = await fetchPullResponse(householdId);
+          if (pullData) {
+            const merged = lwwMerge(localCards, pullData.cards);
+            // setAllCards dispatches "fenrir:sync" (not "fenrir:cards-changed") — no push loop.
+            setAllCards(householdId, merged);
+            localCards = merged;
+            clientSyncVersion = pullData.syncVersion;
+            syncVersionRef.current = pullData.syncVersion;
+            setSyncVersion(pullData.syncVersion);
+          }
+        } else {
+          // No pull needed — capture server's version as our clientSyncVersion.
+          clientSyncVersion = serverVersion;
+        }
+      }
+      // If stateData is null (network error), fall back to direct push with
+      // whatever clientSyncVersion we have — degrade gracefully per spec.
+
+      // ── Step 2: Push ─────────────────────────────────────────────────────────
+      const pushBody: { householdId: string; cards: Card[]; clientSyncVersion?: number } = {
+        householdId,
+        cards: localCards,
+      };
+      if (clientSyncVersion !== null) {
+        pushBody.clientSyncVersion = clientSyncVersion;
+      }
+
+      let response = await authFetch("/api/sync/push", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ householdId, cards: localCards }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pushBody),
       });
 
+      // ── Step 3: Handle 409 — pull → retry push ───────────────────────────────
+      if (response?.status === 409) {
+        const pullData = await fetchPullResponse(householdId);
+        if (pullData) {
+          const currentCards = getRawAllCards(householdId);
+          const merged = lwwMerge(currentCards, pullData.cards);
+          setAllCards(householdId, merged);
+          localCards = merged;
+          clientSyncVersion = pullData.syncVersion;
+          syncVersionRef.current = pullData.syncVersion;
+          setSyncVersion(pullData.syncVersion);
+        }
+
+        // Retry push with updated cards + version (even if pull failed, retry with latest local)
+        response = await authFetch("/api/sync/push", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            householdId,
+            cards: localCards,
+            ...(clientSyncVersion !== null ? { clientSyncVersion } : {}),
+          }),
+        });
+      }
+
       if (!response || !response.ok) {
-        const { code, message } = response ? await parseApiError(response) : { code: "auth_error", message: "Authentication failed." };
+        const { code, message } = response
+          ? await parseApiError(response)
+          : { code: "auth_error", message: "Authentication failed." };
         throw Object.assign(new Error(message), { code });
       }
 
-      const { cards: mergedCards, syncedCount } = (await response.json()) as {
+      const { cards: mergedCards, syncedCount, syncVersion: newSyncVersion } = (await response.json()) as {
         cards: Card[];
         syncedCount: number;
+        syncVersion: number;
       };
 
-      // Apply merged result back to localStorage using setAllCards.
-      // setAllCards dispatches "fenrir:sync" (NOT "fenrir:cards-changed") so the
-      // auto-sync debounce listener is not triggered — no push loop. (#1172)
+      // Apply merged result back to localStorage.
+      // setAllCards dispatches "fenrir:sync" (NOT "fenrir:cards-changed") — no push loop. (#1172)
       setAllCards(householdId, mergedCards);
 
-      // Push succeeded — clear the needs-upload flag so a stale flag from a
-      // previous navigation doesn't trigger a redundant sync on next mount. (#2005)
+      // Push succeeded — clear the needs-upload flag. (#2005)
       clearNeedsUpload();
+
+      // Track syncVersion for future push requests.
+      if (typeof newSyncVersion === "number") {
+        syncVersionRef.current = newSyncVersion;
+        setSyncVersion(newSyncVersion);
+      }
 
       setLastSyncedAt(new Date());
       setCardCount(syncedCount);
@@ -310,8 +448,7 @@ export function useCloudSync(): CloudSyncState {
         })
       );
 
-      // Issue #1239: No auto-retry timer. The next push fires only when
-      // the user edits a card (fenrir:cards-changed) or calls syncNow().
+      // Issue #1239: No auto-retry timer.
     } finally {
       syncInProgressRef.current = false;
     }
@@ -326,6 +463,7 @@ export function useCloudSync(): CloudSyncState {
    * Fetches Firestore cards and merges them into localStorage using LWW.
    * Called on login transition when migration is already done.
    * Does NOT push local cards to Firestore — read-only from cloud perspective.
+   * Tracks syncVersion from the pull response. (Issue #2006)
    */
   const performPull = useCallback(async (): Promise<void> => {
     if (!isKarl) return;
@@ -346,21 +484,15 @@ export function useCloudSync(): CloudSyncState {
     setRetryIn(null);
 
     try {
-      const response = await authFetch(
-        `/api/sync/pull?householdId=${encodeURIComponent(householdId)}`,
-        { method: "GET" }
-      );
+      const pullData = await fetchPullResponse(householdId);
 
-      if (!response || !response.ok) {
+      if (!pullData) {
         // Pull failed — stay idle rather than showing an error (non-critical path)
         setStatus("idle");
         return;
       }
 
-      const { cards: cloudCards, activeCount } = (await response.json()) as {
-        cards: Card[];
-        activeCount: number;
-      };
+      const { cards: cloudCards, activeCount, syncVersion: pulledVersion } = pullData;
 
       // LWW merge: cloud cards win ties (most recent updatedAt)
       const localCards = getRawAllCards(householdId);
@@ -370,6 +502,12 @@ export function useCloudSync(): CloudSyncState {
       // Apply merged result — uses setAllCards (not saveCard) so fenrir:cards-changed
       // is not dispatched and no push loop is created.
       setAllCards(householdId, mergedCards);
+
+      // Track syncVersion from pull response. (Issue #2006)
+      if (typeof pulledVersion === "number") {
+        syncVersionRef.current = pulledVersion;
+        setSyncVersion(pulledVersion);
+      }
 
       setLastSyncedAt(new Date());
       setCardCount(activeCount);
@@ -498,15 +636,25 @@ export function useCloudSync(): CloudSyncState {
     if (!isKarl) return;
 
     const handleOffline = () => {
+      isOnlineRef.current = false;
       setStatus("offline");
     };
 
     const handleOnline = () => {
-      // Restore to idle — do NOT push. No card data changed on reconnect. (#1239)
-      setStatus("idle");
+      isOnlineRef.current = true;
+      // Restore to needs-upload if there are pending changes, otherwise idle.
+      // State machine: offline → needs-upload (reconnect + needs-upload flag)
+      //                offline → idle (reconnect, no pending changes)
+      // Does NOT auto-push — push fires only on next card change or syncNow(). (#1239)
+      if (getNeedsUpload()) {
+        setStatus("needs-upload");
+      } else {
+        setStatus("idle");
+      }
     };
 
     if (typeof navigator !== "undefined" && !navigator.onLine) {
+      isOnlineRef.current = false;
       setStatus("offline");
     }
 
@@ -533,8 +681,15 @@ export function useCloudSync(): CloudSyncState {
     if (!isKarl) return;
 
     const handleCardsChanged = () => {
+      // Set needs-upload immediately for visual feedback before the debounce fires.
+      // (Issue #2006 — state machine: idle → needs-upload on local card change)
+      // Only set if online — offline state is managed by online/offline events.
+      // Use isOnlineRef (not navigator.onLine) for reliable detection in all envs.
+      if (!syncInProgressRef.current && isOnlineRef.current) {
+        setStatus("needs-upload");
+      }
+
       // Debounce: rapid saves coalesce into a single sync.
-      // Skip entirely if a sync is already in progress.
       if (autoSyncTimerRef.current) {
         clearTimeout(autoSyncTimerRef.current);
       }
@@ -574,6 +729,8 @@ export function useCloudSync(): CloudSyncState {
         autoSyncTimerRef.current = null;
       }
       if (!syncInProgressRef.current) {
+        // Set needs-upload for visual feedback before performSync sets syncing. (#2006)
+        setStatus("needs-upload");
         void performSync();
       }
     };
@@ -593,6 +750,8 @@ export function useCloudSync(): CloudSyncState {
   useEffect(() => {
     if (!isKarl) return;
     if (getNeedsUpload()) {
+      // Set needs-upload immediately for visual feedback before performSync sets syncing. (#2006)
+      setStatus("needs-upload");
       void performSync();
     }
   // Only run when isKarl becomes true (login transition handled separately).
@@ -682,6 +841,7 @@ export function useCloudSync(): CloudSyncState {
     status,
     lastSyncedAt,
     cardCount,
+    syncVersion,
     errorMessage,
     errorCode,
     errorTimestamp,

@@ -209,7 +209,9 @@ describe("useCloudSync — Issue #2005: on-mount needs-upload check", () => {
   it("triggers sync on mount when getNeedsUpload() is true", async () => {
     setSession();
     mockGetNeedsUpload.mockReturnValue(true);
-    mockFetch.mockReturnValue(successResponse(2));
+    // Use mockImplementation so each fetch call (state check + push + pull-on-login)
+    // gets a fresh Response with an unconsumed body. (#2006)
+    mockFetch.mockImplementation(() => successResponse(2));
 
     const { result } = renderHook(() => useCloudSync());
     // Wait for the mount effect to fire
@@ -245,7 +247,8 @@ describe("useCloudSync — Issue #2005: clearNeedsUpload after successful push",
   });
 
   it("calls clearNeedsUpload after a successful sync", async () => {
-    mockFetch.mockReturnValue(successResponse(4));
+    // Use mockImplementation so each fetch call gets a fresh Response. (#2006)
+    mockFetch.mockImplementation(() => successResponse(4));
     const { result } = renderHook(() => useCloudSync());
     setSession();
 

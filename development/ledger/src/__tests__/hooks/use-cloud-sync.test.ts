@@ -188,7 +188,10 @@ describe("useCloudSync — Karl: state transitions", () => {
   it("transitions syncing → synced on successful fetch", async () => {
     // Set session AFTER renderHook so the mount effect (handleLoginTransition)
     // returns early at the session check — only syncNow() drives the fetch.
-    mockFetch.mockReturnValue(successResponse(5));
+    // Use mockImplementation (not mockReturnValue) so each fetch call gets a
+    // fresh Response with an unconsumed body. performSync now makes two calls:
+    // GET /api/sync/state and POST /api/sync/push. (#2006)
+    mockFetch.mockImplementation(() => successResponse(5));
     const { result } = renderHook(() => useCloudSync());
     setSession();
     await act(async () => {
@@ -284,7 +287,8 @@ describe("useCloudSync — first-sync toast", () => {
 
   it("shows first-sync toast on first synced transition", async () => {
     const { toast } = await import("sonner");
-    mockFetch.mockReturnValue(successResponse(12));
+    // Use mockImplementation so each fetch call (state check + push) gets fresh body. (#2006)
+    mockFetch.mockImplementation(() => successResponse(12));
     const { result } = renderHook(() => useCloudSync());
     setSession(); // Set AFTER renderHook so performPull on mount returns early (no session)
     await act(async () => {
@@ -301,7 +305,8 @@ describe("useCloudSync — first-sync toast", () => {
   it("does not show toast on subsequent syncs (localStorage guard)", async () => {
     const { toast } = await import("sonner");
     localStorage.setItem("fenrir:first-sync-shown", "true");
-    mockFetch.mockReturnValue(successResponse(12));
+    // Use mockImplementation so each fetch call (state check + push) gets fresh body. (#2006)
+    mockFetch.mockImplementation(() => successResponse(12));
     const { result } = renderHook(() => useCloudSync());
     setSession(); // Set AFTER renderHook so performPull/runMigration on mount returns early
     await act(async () => {
