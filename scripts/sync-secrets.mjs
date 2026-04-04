@@ -92,6 +92,11 @@ const SECRETS = [
   { name: "GMAIL_REFRESH_TOKEN",  dest: "k8s-marketing", group: "K8s n8n Secrets", canonical: "GMAIL_REFRESH_TOKEN",    secretsVar: "GMAIL_REFRESH_TOKEN",   k8sSecret: "n8n-secrets" },
   { name: "N8N_ENCRYPTION_KEY",   dest: "k8s-marketing", group: "K8s n8n Secrets", canonical: "N8N_ENCRYPTION_KEY",     secretsVar: "N8N_ENCRYPTION_KEY",    k8sSecret: "n8n-secrets" },
   { name: "N8N_API_KEY",          dest: "k8s-marketing", group: "K8s n8n Secrets", canonical: "N8N_API_KEY",            secretsVar: "N8N_API_KEY",           k8sSecret: "n8n-secrets" },
+  // Chart-required keys (not sensitive, but the upstream n8n Helm chart expects them in the secret)
+  { name: "N8N_HOST",             dest: "k8s-marketing", group: "K8s n8n Secrets", canonical: "N8N_HOST",               k8sSecret: "n8n-secrets", defaultValue: "marketing.fenrirledger.com" },
+  { name: "N8N_PORT",             dest: "k8s-marketing", group: "K8s n8n Secrets", canonical: "N8N_PORT",               k8sSecret: "n8n-secrets", defaultValue: "5678" },
+  { name: "N8N_PROTOCOL",         dest: "k8s-marketing", group: "K8s n8n Secrets", canonical: "N8N_PROTOCOL",           k8sSecret: "n8n-secrets", defaultValue: "https" },
+  { name: "N8N_RUNNERS_AUTH_TOKEN", dest: "k8s-marketing", group: "K8s n8n Secrets", canonical: "N8N_RUNNERS_AUTH_TOKEN", secretsVar: "N8N_RUNNERS_AUTH_TOKEN", k8sSecret: "n8n-secrets" },
 
   // --- K8s fenrir-app-secrets (fenrir-app namespace) ---
   { name: "FENRIR_ANTHROPIC_API_KEY",  dest: "k8s-app", group: "K8s App Secrets", canonical: "FENRIR_ANTHROPIC_API_KEY",        envVar: "FENRIR_ANTHROPIC_API_KEY",    k8sSecret: "fenrir-app-secrets" },
@@ -244,6 +249,9 @@ async function resolveValue(s, secretsVars, smSecrets) {
 
   // 2. Secret Manager (canonical source of truth)
   if (s.canonical && smSecrets.has(s.canonical)) return smSecrets.get(s.canonical);
+
+  // 3. Default value (for non-sensitive chart-required keys like N8N_HOST)
+  if (s.defaultValue) return s.defaultValue;
 
   return null;
 }
