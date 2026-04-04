@@ -151,6 +151,77 @@ function buildDefaultValues(initialValues?: Card): Partial<CardFormValues> {
   };
 }
 
+// ─── onSubmit helpers ─────────────────────────────────────────────────────────
+
+/** Builds the signUpBonus payload from form data, or null if no bonus type selected. */
+function buildSignUpBonus(data: CardFormValues): import("@/lib/types").Card["signUpBonus"] {
+  if (!data.bonusType) return null;
+  const spendRequirementCents = dollarsToCents(data.bonusSpendRequirement ?? "");
+  const amountSpentCents = dollarsToCents(data.amountSpent ?? "");
+  const bonusDeadlineIso =
+    localDateStringToIso(data.bonusDeadline ?? "") || data.bonusDeadline || "";
+  return {
+    type: data.bonusType,
+    amount:
+      data.bonusType === "cashback"
+        ? dollarsToCents(data.bonusAmount ?? "")
+        : Math.round(parseFloat(data.bonusAmount ?? "") || 0),
+    spendRequirement: spendRequirementCents,
+    deadline: bonusDeadlineIso,
+    met: spendRequirementCents > 0 && amountSpentCents >= spendRequirementCents,
+  };
+}
+
+/** Increments the card save counter in localStorage and triggers the easter egg at save #7. */
+function trackCardSaveCount(triggerBear: () => void): void {
+  const SAVE_COUNT_KEY = "fenrir:card-save-count";
+  const prevCount = parseInt(localStorage.getItem(SAVE_COUNT_KEY) || "0", 10);
+  const newCount = prevCount + 1;
+  localStorage.setItem(SAVE_COUNT_KEY, String(newCount));
+  if (newCount === 7) triggerBear();
+}
+
+/**
+ * Builds the full Card object from validated form data.
+ * Centralizes all date conversion and null-coalescing so callers stay simple.
+ */
+function buildCardPayload(
+  data: CardFormValues,
+  initialValues: Card | undefined,
+  householdId: string,
+  now: string,
+): Card {
+  const openDateIso = localDateStringToIso(data.openDate) || data.openDate;
+  const annualFeeDateIso =
+    localDateStringToIso(data.annualFeeDate ?? "") || data.annualFeeDate || "";
+  return {
+    id: initialValues?.id ?? generateId(),
+    householdId: initialValues?.householdId ?? householdId,
+    issuerId: data.issuerId,
+    cardName: data.cardName,
+    openDate: openDateIso,
+    creditLimit: dollarsToCents(data.creditLimit ?? ""),
+    annualFee: dollarsToCents(data.annualFee ?? ""),
+    annualFeeDate: annualFeeDateIso,
+    promoPeriodMonths: 0,
+    amountSpent: dollarsToCents(data.amountSpent ?? ""),
+    signUpBonus: buildSignUpBonus(data),
+    status: (data.status === "closed" ? "closed" : "active") as CardStatus,
+    notes: data.notes ?? "",
+    createdAt: initialValues?.createdAt ?? now,
+    updatedAt: now,
+  };
+}
+
+/** Shows a milestone toast when the new card count hits a tracked threshold. No-op otherwise. */
+function maybeShowMilestoneToast(cardHouseholdId: string): void {
+  const activeCards = getCards(cardHouseholdId);
+  const milestone = checkMilestone(activeCards.length);
+  if (milestone) {
+    toast(milestone.message, { duration: 5000, className: "milestone-toast" });
+  }
+}
+
 // ─── Derived date auto-fill (Step 1 wizard submit with no Step 2 data) ───────
 
 function applyWizardStep1Defaults(data: CardFormValues): void {
@@ -273,7 +344,6 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
           (c) => c.status !== "closed" && c.status !== "graduated"
         ).length;
         const limitCheck = canAddCard(tier, activeCardCount, isTrialActive);
-
         if (!limitCheck.allowed) {
           toast.error(limitCheck.reason || "Unable to add card at this time");
           setIsSubmitting(false);
@@ -287,74 +357,14 @@ export function useCardForm({ initialValues, householdId }: UseCardFormOptions) 
         applyWizardStep1Defaults(data);
       }
 
-      const openDateIso = localDateStringToIso(data.openDate) || data.openDate;
-      const annualFeeDateIso =
-        localDateStringToIso(data.annualFeeDate ?? "") ||
-        data.annualFeeDate ||
-        "";
-      const bonusDeadlineIso =
-        localDateStringToIso(data.bonusDeadline ?? "") ||
-        data.bonusDeadline ||
-        "";
-
-      const amountSpentCents = dollarsToCents(data.amountSpent ?? "");
-      const spendRequirementCents = dollarsToCents(data.bonusSpendRequirement ?? "");
-      const minimumSpendMet =
-        spendRequirementCents > 0 && amountSpentCents >= spendRequirementCents;
-
-      const card: Card = {
-        id: initialValues?.id ?? generateId(),
-        householdId: initialValues?.householdId ?? householdId,
-        issuerId: data.issuerId,
-        cardName: data.cardName,
-        openDate: openDateIso,
-        creditLimit: dollarsToCents(data.creditLimit ?? ""),
-        annualFee: dollarsToCents(data.annualFee ?? ""),
-        annualFeeDate: annualFeeDateIso,
-        promoPeriodMonths: 0,
-        amountSpent: amountSpentCents,
-        signUpBonus: data.bonusType
-          ? {
-              type: data.bonusType,
-              amount:
-                data.bonusType === "cashback"
-                  ? dollarsToCents(data.bonusAmount ?? "")
-                  : Math.round(parseFloat(data.bonusAmount ?? "") || 0),
-              spendRequirement: spendRequirementCents,
-              deadline: bonusDeadlineIso,
-              met: minimumSpendMet,
-            }
-          : null,
-        status: (data.status === "closed" ? "closed" : "active") as CardStatus,
-        notes: data.notes ?? "",
-        createdAt: initialValues?.createdAt ?? now,
-        updatedAt: now,
-      };
-
+      const card = buildCardPayload(data, initialValues, householdId, now);
       card.status = computeCardStatus(card);
       saveCard(card);
       track("card-save", { method: "manual" });
-
-      const SAVE_COUNT_KEY = "fenrir:card-save-count";
-      const prevCount = parseInt(
-        localStorage.getItem(SAVE_COUNT_KEY) || "0",
-        10
-      );
-      const newCount = prevCount + 1;
-      localStorage.setItem(SAVE_COUNT_KEY, String(newCount));
-      if (newCount === 7) {
-        triggerBear();
-      }
+      trackCardSaveCount(triggerBear);
 
       if (!isEditMode) {
-        const activeCards = getCards(card.householdId);
-        const milestone = checkMilestone(activeCards.length);
-        if (milestone) {
-          toast(milestone.message, {
-            duration: 5000,
-            className: "milestone-toast",
-          });
-        }
+        maybeShowMilestoneToast(card.householdId);
       }
 
       router.push("/ledger");

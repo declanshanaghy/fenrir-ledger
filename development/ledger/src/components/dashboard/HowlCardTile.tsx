@@ -160,6 +160,117 @@ export function getHowlBonusRemaining(card: CreditCard): number {
   return Math.max(0, required - spent);
 }
 
+// ── Content row sub-components ─────────────────────────────────────────────────
+
+interface AnnualFeeRowProps {
+  card: CreditCard;
+  feeDays: number | null;
+  feeUrgent: boolean;
+  urgencyTextClass: string;
+}
+
+function AnnualFeeRow({ card, feeDays, feeUrgent, urgencyTextClass }: AnnualFeeRowProps) {
+  if (card.annualFee <= 0 || !card.annualFeeDate) {
+    return (
+      <div className="flex justify-between text-muted-foreground">
+        <span>Annual fee</span>
+        <span className="font-medium text-foreground">$0 (no fee)</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex justify-between text-muted-foreground">
+      <span>Annual fee</span>
+      <span className={cn("font-medium", feeUrgent ? urgencyTextClass : "text-foreground")}>
+        {formatCurrency(card.annualFee)}
+        {" · "}
+        {formatDate(card.annualFeeDate)}
+        {feeDays !== null && feeDays >= 0 && feeDays <= 60 && (
+          <span className="ml-1 text-xs">({feeDays}d)</span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+interface BonusSectionProps {
+  card: CreditCard;
+  bonusDays: number | null;
+  bonusUrgent: boolean;
+  urgencyTextClass: string;
+  spendPercent: number;
+  spendRemaining: number;
+  spendRequired: number;
+  amountSpent: number;
+  tier: HowlUrgencyTier;
+}
+
+function BonusSection({
+  card,
+  bonusDays,
+  bonusUrgent,
+  urgencyTextClass,
+  spendPercent,
+  spendRemaining,
+  spendRequired,
+  amountSpent,
+  tier,
+}: BonusSectionProps) {
+  const hasBonus = card.signUpBonus && !card.signUpBonus.met && card.signUpBonus.deadline;
+  if (!hasBonus || !card.signUpBonus) {
+    return (
+      <div className="flex justify-between text-muted-foreground">
+        <span>Bonus deadline</span>
+        <span className="font-medium text-foreground">— (no active bonus)</span>
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="flex justify-between text-muted-foreground">
+        <span>Bonus deadline</span>
+        <span className={cn("font-medium", bonusUrgent ? urgencyTextClass : "text-foreground")}>
+          {formatDate(card.signUpBonus.deadline)}
+          {bonusDays !== null && bonusDays >= 0 && bonusDays <= 30 && (
+            <span className="ml-1 text-xs">({bonusDays}d)</span>
+          )}
+        </span>
+      </div>
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-muted-foreground">
+          <span>Remaining spend</span>
+          <span className="font-medium text-foreground">
+            {formatCurrency(spendRemaining)}
+            {spendRequired > 0 && (
+              <span className="ml-1 text-xs text-muted-foreground">({spendPercent}%)</span>
+            )}
+          </span>
+        </div>
+        {spendRequired > 0 && (
+          <div
+            className="h-1 w-full rounded-full overflow-hidden bg-secondary"
+            role="progressbar"
+            aria-valuenow={amountSpent}
+            aria-valuemin={0}
+            aria-valuemax={spendRequired}
+            aria-label={`${card.cardName}: min spend progress ${spendPercent}%`}
+          >
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-300",
+                tier === "red" || tier === "overdue"
+                  ? "bg-[hsl(var(--realm-muspel))]"
+                  : "bg-[hsl(var(--realm-alfheim))]"
+              )}
+              style={{ width: `${spendPercent}%` }}
+            />
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 interface UrgencyBadgeProps {
@@ -302,88 +413,25 @@ export function HowlCardTile({ card, lokiLabel }: HowlCardTileProps) {
 
           <CardContent className="space-y-2 text-base">
             {/* Annual fee + due date */}
-            {hasFee ? (
-              <div className="flex justify-between text-muted-foreground">
-                <span>Annual fee</span>
-                <span
-                  className={cn(
-                    "font-medium",
-                    feeUrgent ? urgencyTextClass : "text-foreground"
-                  )}
-                >
-                  {formatCurrency(card.annualFee)}
-                  {" · "}
-                  {formatDate(card.annualFeeDate)}
-                  {feeDays !== null && feeDays >= 0 && feeDays <= 60 && (
-                    <span className="ml-1 text-xs">({feeDays}d)</span>
-                  )}
-                </span>
-              </div>
-            ) : (
-              <div className="flex justify-between text-muted-foreground">
-                <span>Annual fee</span>
-                <span className="font-medium text-foreground">$0 (no fee)</span>
-              </div>
-            )}
+            <AnnualFeeRow
+              card={card}
+              feeDays={feeDays}
+              feeUrgent={feeUrgent}
+              urgencyTextClass={urgencyTextClass}
+            />
 
             {/* Bonus deadline + remaining spend */}
-            {hasBonus && card.signUpBonus ? (
-              <>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Bonus deadline</span>
-                  <span
-                    className={cn(
-                      "font-medium",
-                      bonusUrgent ? urgencyTextClass : "text-foreground"
-                    )}
-                  >
-                    {formatDate(card.signUpBonus.deadline)}
-                    {bonusDays !== null && bonusDays >= 0 && bonusDays <= 30 && (
-                      <span className="ml-1 text-xs">({bonusDays}d)</span>
-                    )}
-                  </span>
-                </div>
-                {/* Spend progress */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Remaining spend</span>
-                    <span className="font-medium text-foreground">
-                      {formatCurrency(spendRemaining)}
-                      {spendRequired > 0 && (
-                        <span className="ml-1 text-xs text-muted-foreground">
-                          ({spendPercent}%)
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  {spendRequired > 0 && (
-                    <div
-                      className="h-1 w-full rounded-full overflow-hidden bg-secondary"
-                      role="progressbar"
-                      aria-valuenow={amountSpent}
-                      aria-valuemin={0}
-                      aria-valuemax={spendRequired}
-                      aria-label={`${card.cardName}: min spend progress ${spendPercent}%`}
-                    >
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all duration-300",
-                          tier === "red" || tier === "overdue"
-                            ? "bg-[hsl(var(--realm-muspel))]"
-                            : "bg-[hsl(var(--realm-alfheim))]"
-                        )}
-                        style={{ width: `${spendPercent}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="flex justify-between text-muted-foreground">
-                <span>Bonus deadline</span>
-                <span className="font-medium text-foreground">— (no active bonus)</span>
-              </div>
-            )}
+            <BonusSection
+              card={card}
+              bonusDays={bonusDays}
+              bonusUrgent={bonusUrgent}
+              urgencyTextClass={urgencyTextClass}
+              spendPercent={spendPercent}
+              spendRemaining={spendRemaining}
+              spendRequired={spendRequired}
+              amountSpent={amountSpent}
+              tier={tier}
+            />
 
             {/* Action needed */}
             <div className="flex gap-2 pt-1 border-t border-border">

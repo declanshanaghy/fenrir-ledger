@@ -49,6 +49,183 @@ interface HouseholdData {
 
 const MAX_HOUSEHOLD_MEMBERS = 3;
 
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+interface OwnerSectionProps {
+  data: HouseholdData;
+  kickTarget: HouseholdMember | null;
+  isKicking: boolean;
+  kickError: string | null;
+  isRegenerating: boolean;
+  onKickConfirm: () => void;
+  onKickCancel: () => void;
+  onKickSelect: (member: HouseholdMember) => void;
+  onRegenerate: () => Promise<void>;
+}
+
+function OwnerSection({
+  data,
+  kickTarget,
+  isKicking,
+  kickError,
+  isRegenerating,
+  onKickConfirm,
+  onKickCancel,
+  onKickSelect,
+  onRegenerate,
+}: OwnerSectionProps) {
+  return (
+    <>
+      {kickTarget && (
+        <div
+          className="border border-destructive/60 p-3 flex flex-col gap-3"
+          role="alertdialog"
+          aria-label={`Confirm removing ${kickTarget.displayName}`}
+        >
+          <p className="text-sm font-heading font-bold text-destructive">
+            Remove {kickTarget.displayName} from your household?
+          </p>
+          <p className="text-xs text-muted-foreground font-body">
+            They will be moved to a new solo household. Their cards will remain with this household.
+          </p>
+          {kickError && (
+            <p className="text-xs text-destructive font-body" role="alert">
+              {kickError}
+            </p>
+          )}
+          <div className="flex gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={onKickConfirm}
+              disabled={isKicking}
+              className="min-h-[44px] px-4 py-2 border border-destructive text-sm font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={`Confirm removing ${kickTarget.displayName}`}
+            >
+              {isKicking ? "Removing…" : "Confirm Remove"}
+            </button>
+            <button
+              type="button"
+              onClick={onKickCancel}
+              disabled={isKicking}
+              className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+              aria-label="Cancel removing member"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {data.isFull ? (
+        <HouseholdFullBanner />
+      ) : data.inviteCode && data.inviteCodeExpiresAt ? (
+        <InviteCodeDisplay
+          inviteCode={data.inviteCode}
+          inviteCodeExpiresAt={data.inviteCodeExpiresAt}
+          onRegenerate={onRegenerate}
+          isRegenerating={isRegenerating}
+        />
+      ) : null}
+
+      <div>
+        <p className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+          Members
+        </p>
+        <MembersList
+          members={data.members}
+          onKick={(member) => onKickSelect(member)}
+        />
+      </div>
+    </>
+  );
+}
+
+interface MemberSectionProps {
+  data: HouseholdData;
+  showLeaveConfirm: boolean;
+  isLeaving: boolean;
+  leaveError: string | null;
+  onLeave: () => void;
+  onShowLeaveConfirm: () => void;
+  onCancelLeave: () => void;
+}
+
+function MemberSection({
+  data,
+  showLeaveConfirm,
+  isLeaving,
+  leaveError,
+  onLeave,
+  onShowLeaveConfirm,
+  onCancelLeave,
+}: MemberSectionProps) {
+  const ownerName = data.members.find((m) => m.role === "owner")?.displayName ?? "the owner";
+  return (
+    <>
+      <div className="border border-dashed border-border p-3 text-xs text-muted-foreground font-body">
+        Ask{" "}
+        <strong className="text-foreground">{ownerName}</strong>{" "}
+        for an invite code to share with others.
+      </div>
+
+      {!showLeaveConfirm ? (
+        <div className="border border-dashed border-destructive/40 p-3 flex flex-col gap-2">
+          <p className="text-xs text-muted-foreground font-body">
+            Leaving will remove you from this household. A new solo household will be created for you.
+            Your shared cards will remain with this household.
+          </p>
+          <button
+            type="button"
+            onClick={onShowLeaveConfirm}
+            className="self-start min-h-[44px] px-4 py-2 border border-destructive/60 text-sm font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label="Leave this household"
+          >
+            Leave Household
+          </button>
+        </div>
+      ) : (
+        <div
+          className="border border-destructive/60 p-3 flex flex-col gap-3"
+          role="alertdialog"
+          aria-label="Confirm leaving household"
+        >
+          <p className="text-sm font-heading font-bold text-destructive">
+            Are you sure you want to leave?
+          </p>
+          <p className="text-xs text-muted-foreground font-body">
+            You will lose access to all shared cards. This cannot be undone.
+          </p>
+          {leaveError && (
+            <p className="text-xs text-destructive font-body" role="alert">
+              {leaveError}
+            </p>
+          )}
+          <div className="flex gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={onLeave}
+              disabled={isLeaving}
+              className="min-h-[44px] px-4 py-2 border border-destructive text-sm font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Confirm leaving the household"
+            >
+              {isLeaving ? "Leaving…" : "Confirm Leave"}
+            </button>
+            <button
+              type="button"
+              onClick={onCancelLeave}
+              disabled={isLeaving}
+              className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+              aria-label="Cancel leaving the household"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export function HouseholdSettingsSection() {
   const router = useRouter();
 
@@ -341,137 +518,35 @@ export function HouseholdSettingsSection() {
           before anyone has joined. — issue #1780 */}
       {(!data.isSolo || (isOwner && data.isKarl)) && (
         <>
-          <div>
-            <p className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
-              Members
-            </p>
-            <MembersList
-              members={data.members}
-              onKick={isOwner ? (member) => { setKickTarget(member); setKickError(null); } : undefined}
+          {isOwner ? (
+            <OwnerSection
+              data={data}
+              kickTarget={kickTarget}
+              isKicking={isKicking}
+              kickError={kickError}
+              isRegenerating={isRegenerating}
+              onKickConfirm={handleKickConfirm}
+              onKickCancel={() => { setKickTarget(null); setKickError(null); }}
+              onKickSelect={(member) => { setKickTarget(member); setKickError(null); }}
+              onRegenerate={handleRegenerate}
             />
-          </div>
-
-          {/* Owner: kick confirmation dialog */}
-          {isOwner && kickTarget && (
-            <div
-              className="border border-destructive/60 p-3 flex flex-col gap-3"
-              role="alertdialog"
-              aria-label={`Confirm removing ${kickTarget.displayName}`}
-            >
-              <p className="text-sm font-heading font-bold text-destructive">
-                Remove {kickTarget.displayName} from your household?
-              </p>
-              <p className="text-xs text-muted-foreground font-body">
-                They will be moved to a new solo household. Their cards will remain with this household.
-              </p>
-              {kickError && (
-                <p className="text-xs text-destructive font-body" role="alert">
-                  {kickError}
-                </p>
-              )}
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  type="button"
-                  onClick={handleKickConfirm}
-                  disabled={isKicking}
-                  className="min-h-[44px] px-4 py-2 border border-destructive text-sm font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label={`Confirm removing ${kickTarget.displayName}`}
-                >
-                  {isKicking ? "Removing…" : "Confirm Remove"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setKickTarget(null); setKickError(null); }}
-                  disabled={isKicking}
-                  className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
-                  aria-label="Cancel removing member"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Owner: invite code or full banner */}
-          {isOwner && (
-            data.isFull ? (
-              <HouseholdFullBanner />
-            ) : data.inviteCode && data.inviteCodeExpiresAt ? (
-              <InviteCodeDisplay
-                inviteCode={data.inviteCode}
-                inviteCodeExpiresAt={data.inviteCodeExpiresAt}
-                onRegenerate={handleRegenerate}
-                isRegenerating={isRegenerating}
-              />
-            ) : null
-          )}
-
-          {/* Member: informational note + Leave Household button */}
-          {!isOwner && (
+          ) : (
             <>
-              <div className="border border-dashed border-border p-3 text-xs text-muted-foreground font-body">
-                Ask{" "}
-                <strong className="text-foreground">
-                  {data.members.find((m) => m.role === "owner")?.displayName ?? "the owner"}
-                </strong>{" "}
-                for an invite code to share with others.
+              <div>
+                <p className="text-xs font-heading font-bold uppercase tracking-[0.08em] text-muted-foreground mb-2">
+                  Members
+                </p>
+                <MembersList members={data.members} />
               </div>
-
-              {/* Leave Household — member only */}
-              {!showLeaveConfirm ? (
-                <div className="border border-dashed border-destructive/40 p-3 flex flex-col gap-2">
-                  <p className="text-xs text-muted-foreground font-body">
-                    Leaving will remove you from this household. A new solo household will be created for you.
-                    Your shared cards will remain with this household.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => { setShowLeaveConfirm(true); setLeaveError(null); }}
-                    className="self-start min-h-[44px] px-4 py-2 border border-destructive/60 text-sm font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    aria-label="Leave this household"
-                  >
-                    Leave Household
-                  </button>
-                </div>
-              ) : (
-                <div
-                  className="border border-destructive/60 p-3 flex flex-col gap-3"
-                  role="alertdialog"
-                  aria-label="Confirm leaving household"
-                >
-                  <p className="text-sm font-heading font-bold text-destructive">
-                    Are you sure you want to leave?
-                  </p>
-                  <p className="text-xs text-muted-foreground font-body">
-                    You will lose access to all shared cards. This cannot be undone.
-                  </p>
-                  {leaveError && (
-                    <p className="text-xs text-destructive font-body" role="alert">
-                      {leaveError}
-                    </p>
-                  )}
-                  <div className="flex gap-2 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={handleLeave}
-                      disabled={isLeaving}
-                      className="min-h-[44px] px-4 py-2 border border-destructive text-sm font-heading text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Confirm leaving the household"
-                    >
-                      {isLeaving ? "Leaving…" : "Confirm Leave"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setShowLeaveConfirm(false); setLeaveError(null); }}
-                      disabled={isLeaving}
-                      className="min-h-[44px] px-4 py-2 border border-border text-sm font-heading text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
-                      aria-label="Cancel leaving the household"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+              <MemberSection
+                data={data}
+                showLeaveConfirm={showLeaveConfirm}
+                isLeaving={isLeaving}
+                leaveError={leaveError}
+                onLeave={handleLeave}
+                onShowLeaveConfirm={() => { setShowLeaveConfirm(true); setLeaveError(null); }}
+                onCancelLeave={() => { setShowLeaveConfirm(false); setLeaveError(null); }}
+              />
             </>
           )}
         </>

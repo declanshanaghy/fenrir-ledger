@@ -81,6 +81,93 @@ function isAllowedRedirectUri(redirectUri: string): boolean {
   }
 }
 
+/**
+ * Builds URLSearchParams for the refresh_token grant, or returns an error response.
+ */
+function buildRefreshParams(
+  body: RefreshRequestBody,
+  clientId: string,
+  clientSecret: string,
+): URLSearchParams | NextResponse {
+  if (!body.refresh_token) {
+    log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "missing refresh_token" });
+    return NextResponse.json(
+      { error: "invalid_request", error_description: "Missing required field: refresh_token." },
+      { status: 400 }
+    );
+  }
+  return new URLSearchParams({
+    refresh_token: body.refresh_token,
+    client_id: clientId,
+    client_secret: clientSecret,
+    grant_type: "refresh_token",
+  });
+}
+
+/**
+ * Builds URLSearchParams for the authorization_code grant, or returns an error response.
+ */
+function buildAuthCodeParams(
+  body: AuthCodeRequestBody,
+  clientId: string,
+  clientSecret: string,
+): URLSearchParams | NextResponse {
+  const { code, code_verifier, redirect_uri } = body;
+  if (!code || !code_verifier || !redirect_uri) {
+    log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "missing fields" });
+    return NextResponse.json(
+      { error: "invalid_request", error_description: "Missing required fields: code, code_verifier, redirect_uri." },
+      { status: 400 }
+    );
+  }
+  if (!isAllowedRedirectUri(redirect_uri)) {
+    log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "redirect_uri not whitelisted" });
+    return NextResponse.json(
+      { error: "invalid_request", error_description: "redirect_uri origin is not whitelisted." },
+      { status: 400 }
+    );
+  }
+  return new URLSearchParams({
+    code,
+    code_verifier,
+    redirect_uri,
+    client_id: clientId,
+    client_secret: clientSecret,
+    grant_type: "authorization_code",
+  });
+}
+
+/**
+ * Issue #1722: Initialize trial server-side after a successful auth code exchange.
+ * Fire-and-forget: failures are logged but do not block the token response.
+ */
+async function initTrialFromAuthCode(responseBody: string): Promise<void> {
+  try {
+    const tokenData = JSON.parse(responseBody) as { id_token?: string };
+    if (!tokenData.id_token) return;
+
+    // Decode id_token payload (base64url middle segment) to get user claims.
+    const parts = tokenData.id_token.split(".");
+    if (parts.length !== 3) return;
+
+    const payload = parts[1]!.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
+    const decoded = Buffer.from(padded, "base64").toString("utf-8");
+    const claims = JSON.parse(decoded) as { sub?: string; email?: string; name?: string };
+
+    if (!claims.sub) return;
+    await initTrialForUser({
+      userId: claims.sub,
+      email: claims.email ?? "",
+      displayName: claims.name ?? "",
+    });
+    log.debug("POST /api/auth/token: trial init completed", { userId: claims.sub });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.warn("POST /api/auth/token: trial init failed (non-blocking)", { error: message });
+  }
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -91,14 +178,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!success) {
     log.debug("POST /api/auth/token returning", { status: 429, error: "rate_limited", retryAfter });
     return NextResponse.json(
-      {
-        error: "rate_limited",
-        error_description: "Too many requests. Try again later.",
-      },
-      {
-        status: 429,
-        headers: { "Retry-After": String(retryAfter ?? 60) },
-      }
+      { error: "rate_limited", error_description: "Too many requests. Try again later." },
+      { status: 429, headers: { "Retry-After": String(retryAfter ?? 60) } }
     );
   }
 
@@ -137,59 +218,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // Build the params for the appropriate grant type.
-  let params: URLSearchParams;
+  const paramsOrError = isRefreshRequest(body)
+    ? buildRefreshParams(body, clientId, clientSecret)
+    : buildAuthCodeParams(body, clientId, clientSecret);
 
-  if (isRefreshRequest(body)) {
-    // --- Refresh token flow (DEF-001) ---
-    if (!body.refresh_token) {
-      log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "missing refresh_token" });
-      return NextResponse.json(
-        { error: "invalid_request", error_description: "Missing required field: refresh_token." },
-        { status: 400 }
-      );
-    }
-
-    params = new URLSearchParams({
-      refresh_token: body.refresh_token,
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: "refresh_token",
-    });
-  } else {
-    // --- Authorization code exchange flow (original) ---
-    const { code, code_verifier, redirect_uri } = body;
-
-    if (!code || !code_verifier || !redirect_uri) {
-      log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "missing fields" });
-      return NextResponse.json(
-        {
-          error: "invalid_request",
-          error_description: "Missing required fields: code, code_verifier, redirect_uri.",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!isAllowedRedirectUri(redirect_uri)) {
-      log.debug("POST /api/auth/token returning", { status: 400, error: "invalid_request", reason: "redirect_uri not whitelisted" });
-      return NextResponse.json(
-        {
-          error: "invalid_request",
-          error_description: "redirect_uri origin is not whitelisted.",
-        },
-        { status: 400 }
-      );
-    }
-
-    params = new URLSearchParams({
-      code,
-      code_verifier,
-      redirect_uri,
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: "authorization_code",
-    });
-  }
+  if (paramsOrError instanceof NextResponse) return paramsOrError;
+  const params = paramsOrError;
 
   // Proxy to Google's token endpoint.
   log.debug("POST /api/auth/token proxying to Google", { grantType, clientIdLength: clientId.length, clientSecretLength: clientSecret.length });
@@ -220,31 +254,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // window.location.replace() aborted in-flight fetches in the callback page.
   // Fire-and-forget: trial init failures are logged but don't block the token response.
   if (googleResponse.ok && grantType === "authorization_code") {
-    try {
-      const tokenData = JSON.parse(responseBody) as { id_token?: string };
-      if (tokenData.id_token) {
-        // Decode id_token payload (base64url middle segment) to get user claims.
-        const parts = tokenData.id_token.split(".");
-        if (parts.length === 3) {
-          const payload = parts[1]!.replace(/-/g, "+").replace(/_/g, "/");
-          const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
-          const decoded = Buffer.from(padded, "base64").toString("utf-8");
-          const claims = JSON.parse(decoded) as { sub?: string; email?: string; name?: string };
-          if (claims.sub) {
-            await initTrialForUser({
-              userId: claims.sub,
-              email: claims.email ?? "",
-              displayName: claims.name ?? "",
-            });
-            log.debug("POST /api/auth/token: trial init completed", { userId: claims.sub });
-          }
-        }
-      }
-    } catch (err) {
-      // Trial init is best-effort — don't block the token response
-      const message = err instanceof Error ? err.message : String(err);
-      log.warn("POST /api/auth/token: trial init failed (non-blocking)", { error: message });
-    }
+    await initTrialFromAuthCode(responseBody);
   }
 
   log.debug("POST /api/auth/token returning", { status: googleResponse.status, grantType });
