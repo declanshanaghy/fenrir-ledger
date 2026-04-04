@@ -177,3 +177,44 @@ describe("getJwtSecret — before init", () => {
     expect(() => getJwtSecret()).toThrow("not initialised");
   });
 });
+
+describe("kms — production mode: KMS client failure", () => {
+  beforeEach(() => {
+    _resetJwtSecretForTesting();
+    setEnv({
+      NODE_ENV: "production",
+      FENRIR_JWT_SECRET_CIPHERTEXT: "dGVzdA==",
+      KMS_KEY_NAME: "projects/proj/locations/us-central1/keyRings/r/cryptoKeys/k",
+    });
+    mockDecrypt.mockReset();
+  });
+
+  afterEach(() => {
+    setEnv({ NODE_ENV: ORIGINAL_NODE_ENV });
+    _resetJwtSecretForTesting();
+  });
+
+  it("propagates KMS network errors so pod startup fails loudly", async () => {
+    mockDecrypt.mockRejectedValue(new Error("UNAVAILABLE: DNS resolution failed"));
+    await expect(initJwtSecret()).rejects.toThrow("UNAVAILABLE: DNS resolution failed");
+  });
+
+  it("propagates KMS IAM/permission errors", async () => {
+    mockDecrypt.mockRejectedValue(
+      new Error("PERMISSION_DENIED: Permission denied on resource")
+    );
+    await expect(initJwtSecret()).rejects.toThrow("PERMISSION_DENIED");
+  });
+
+  it("leaves cache empty after a failed decrypt — next call retries KMS", async () => {
+    mockDecrypt.mockRejectedValueOnce(new Error("transient error"));
+    await expect(initJwtSecret()).rejects.toThrow("transient error");
+
+    // After failure the secret is still null — second attempt should retry KMS
+    const plaintext = Buffer.from("retry-secret");
+    mockDecrypt.mockResolvedValueOnce([{ plaintext }]);
+    await initJwtSecret();
+    expect(getJwtSecret()).toBe("retry-secret");
+    expect(mockDecrypt).toHaveBeenCalledTimes(2);
+  });
+});
