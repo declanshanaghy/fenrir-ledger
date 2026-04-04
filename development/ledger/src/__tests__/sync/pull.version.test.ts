@@ -167,4 +167,32 @@ describe("GET /api/sync/pull — updateSyncStateAfterPull (issue #2004)", () => 
     const body = await res.json() as { error: string };
     expect(body.error).toBe("internal_error");
   });
+
+  it("updateSyncStateAfterPull called after fetch resolves (call order invariant)", async () => {
+    // The route must not mark the member as synced before the fetch returns.
+    // If updateSyncStateAfterPull fires before Promise.all resolves, a network
+    // failure would silently suppress needsDownload even though no data was delivered.
+    const callOrder: string[] = [];
+    mockGetAllFirestoreCards.mockImplementation(async () => {
+      callOrder.push("getAllFirestoreCards");
+      return [];
+    });
+    mockGetHouseholdSyncVersion.mockImplementation(async () => {
+      callOrder.push("getHouseholdSyncVersion");
+      return 5;
+    });
+    mockUpdateSyncStateAfterPull.mockImplementation(async () => {
+      callOrder.push("updateSyncStateAfterPull");
+    });
+
+    await GET(makeRequest("hh-test"));
+
+    // Both fetches must complete before the state update
+    expect(callOrder.indexOf("updateSyncStateAfterPull")).toBeGreaterThan(
+      Math.max(
+        callOrder.indexOf("getAllFirestoreCards"),
+        callOrder.indexOf("getHouseholdSyncVersion"),
+      ),
+    );
+  });
 });
