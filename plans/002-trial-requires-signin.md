@@ -35,7 +35,7 @@ The trial system uses a random UUID in localStorage as "device ID". Clearing loc
 
 ## Changes by Area
 
-### 1. Use `userId` throughout (Google sub — no legacy `clerkUserId` naming)
+### 1. Use `userId` throughout (Google sub)
 
 Files affected:
 - `development/ledger/src/lib/firebase/firestore-types.ts` — `FirestoreUser.userId`, `FIRESTORE_PATHS.user()` param name
@@ -187,7 +187,7 @@ When `/api/trial/init` returns 409 (trial already existed and expired):
 
 ## Dependency Order
 
-1. Rename `clerkUserId` → `userId` globally
+1. Use `userId` (Google sub) throughout — no legacy naming
 2. Change `householdId` generation to use `userId` (not random UUID)
 3. Remove entitlements collection — move Stripe tier to household doc
 4. Rewrite `trial-store.ts` (household subcollection)
