@@ -64,6 +64,7 @@ const SECRETS = [
   { name: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", dest: "github", group: "App Secrets", envVar: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" },
   // STRIPE_WEBHOOK_SECRET — managed by Terraform output → deploy.yml (not GitHub Secrets)
   { name: "STRIPE_PRICE_ID",               dest: "github", group: "App Secrets", envVar: "STRIPE_PRICE_ID" },
+  { name: "ADMIN_EMAILS",                 dest: "github", group: "App Secrets", envVar: "ADMIN_EMAILS" },
 
   // --- GitHub → K8s agent secrets (deploy workflow creates agent-secrets) ---
   { name: "CLAUDE_CODE_OAUTH_TOKEN", dest: "github", group: "Agent Sandbox", secretsVar: "CLAUDE_CODE_OAUTH_TOKEN" },
