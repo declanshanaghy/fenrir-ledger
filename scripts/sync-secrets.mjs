@@ -55,9 +55,9 @@ const SECRETS = [
   { name: "GCP_PROJECT_ID",       dest: "github", group: "GCP Infra",     canonical: "GCP_PROJECT_ID" },
   { name: "GCP_SA_KEY",           dest: "github", group: "GCP Infra",     canonical: "GCP_SA_KEY" },
   { name: "GCP_REGION",           dest: "github", group: "GCP Infra",     canonical: "GCP_REGION" },
-  { name: "GCP_ZONE",             dest: "github", group: "GCP Infra",     canonical: "GCP_ZONE" },
+  { name: "GCP_ZONE",             dest: "github", group: "GCP Infra",     canonical: "GCP_ZONE", envVar: "GCP_ZONE" },
   { name: "GKE_CLUSTER_NAME",     dest: "github", group: "GCP Infra",     canonical: "GKE_CLUSTER_NAME" },
-  { name: "TF_VAR_BILLING_ACCOUNT_ID", dest: "github", group: "Terraform", canonical: "TF_VAR_BILLING_ACCOUNT_ID" },
+  { name: "TF_VAR_BILLING_ACCOUNT_ID", dest: "github", group: "Terraform", canonical: "TF_VAR_BILLING_ACCOUNT_ID", envVar: "TF_VAR_BILLING_ACCOUNT_ID" },
   { name: "TF_VAR_UPTIME_CHECK_HOST",  dest: "github", group: "Terraform", canonical: "TF_VAR_UPTIME_CHECK_HOST" },
 
   // --- GitHub only: Docker build-args (baked at build time) ---
