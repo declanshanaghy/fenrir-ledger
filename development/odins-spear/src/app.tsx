@@ -6,6 +6,9 @@ import { StatusBar } from "./components/StatusBar.js";
 import { HelpOverlay } from "./components/HelpOverlay.js";
 import { ResultsOverlay } from "./components/ResultsOverlay.js";
 import { TrialInputDialog } from "./components/TrialInputDialog.js";
+import { ScriptBrowserOverlay } from "./components/ScriptBrowserOverlay.js";
+import { ScriptConfirmOverlay } from "./components/ScriptConfirmOverlay.js";
+import { ScriptRunnerOverlay } from "./components/ScriptRunnerOverlay.js";
 import { UsersTab } from "./tabs/UsersTab.js";
 import { HouseholdsTab } from "./tabs/HouseholdsTab.js";
 import { CardDrilldownView } from "./tabs/CardDrilldownView.js";
@@ -13,6 +16,8 @@ import { SelectionProvider, useSelection } from "./context/SelectionContext.js";
 import type { PaletteCommand, CommandContext } from "./commands/registry.js";
 import { getCommands } from "./commands/registry.js";
 import type { ConnStatus, Counts } from "./components/StatusBar.js";
+import type { MigrationScript } from "./lib/migrations.js";
+import { listMigrations, runMigration } from "./lib/migrations.js";
 
 const TUI_TABS = ["Households", "Users"] as const;
 
@@ -27,7 +32,10 @@ type OverlayMode =
   | { kind: "none" }
   | { kind: "help" }
   | { kind: "results"; title: string; lines: string[] }
-  | { kind: "trial-input"; cmd: PaletteCommand };
+  | { kind: "trial-input"; cmd: PaletteCommand }
+  | { kind: "script-browser" }
+  | { kind: "script-confirm"; script: MigrationScript }
+  | { kind: "script-running"; script: MigrationScript };
 
 function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): React.JSX.Element {
   log.debug("SpearInner render");
@@ -54,6 +62,11 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
   // Suppress unused-variable warnings for setters wired in later stories
   void setConnState;
   void setCountState;
+
+  // ─── Script runner state ───────────────────────────────────────────────────
+  const [scriptLines, setScriptLines] = useState<string[]>([]);
+  const [scriptRunning, setScriptRunning] = useState(false);
+  const [scriptExitCode, setScriptExitCode] = useState<number | null>(null);
 
   // Build CommandContext from SelectionContext
   const cmdCtx: CommandContext = {
@@ -100,6 +113,33 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
     }
   }, [cmdCtx, closeOverlay]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── Script runner callbacks ───────────────────────────────────────────────
+
+  const handleScriptSelect = useCallback((script: MigrationScript) => {
+    log.debug("SpearInner: script selected", { name: script.name });
+    setOverlay({ kind: "script-confirm", script });
+  }, []);
+
+  const handleScriptConfirm = useCallback((script: MigrationScript) => {
+    log.debug("SpearInner: script confirmed, starting", { name: script.name });
+    setScriptLines([]);
+    setScriptRunning(true);
+    setScriptExitCode(null);
+    setOverlay({ kind: "script-running", script });
+
+    runMigration(
+      script,
+      (line) => {
+        setScriptLines((prev) => [...prev, line]);
+      },
+      (code) => {
+        log.debug("SpearInner: script finished", { name: script.name, code });
+        setScriptRunning(false);
+        setScriptExitCode(code);
+      },
+    );
+  }, []);
+
   // ─── Global key handler (inactive when an overlay owns input) ─────────────
 
   useInput((input, key) => {
@@ -125,6 +165,12 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
 
     if (input === "?") {
       openHelp();
+      return;
+    }
+
+    if (input === "s") {
+      log.debug("SpearInner: opening script browser");
+      setOverlay({ kind: "script-browser" });
       return;
     }
 
@@ -180,6 +226,32 @@ function SpearInner({ initialConnStatus, initialCounts }: SpearInnerProps): Reac
       <ResultsOverlay
         title={overlay.title}
         lines={overlay.lines}
+        onClose={closeOverlay}
+      />
+    );
+  } else if (overlay.kind === "script-browser") {
+    mainContent = (
+      <ScriptBrowserOverlay
+        scripts={listMigrations()}
+        onSelect={handleScriptSelect}
+        onClose={closeOverlay}
+      />
+    );
+  } else if (overlay.kind === "script-confirm") {
+    mainContent = (
+      <ScriptConfirmOverlay
+        script={overlay.script}
+        onConfirm={() => { handleScriptConfirm(overlay.script); }}
+        onCancel={() => { setOverlay({ kind: "script-browser" }); }}
+      />
+    );
+  } else if (overlay.kind === "script-running") {
+    mainContent = (
+      <ScriptRunnerOverlay
+        script={overlay.script}
+        lines={scriptLines}
+        running={scriptRunning}
+        exitCode={scriptExitCode}
         onClose={closeOverlay}
       />
     );

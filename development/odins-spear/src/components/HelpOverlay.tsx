@@ -62,6 +62,7 @@ const SECTIONS: Section[] = [
     title: "System Commands",
     tabs: "all",
     shortcuts: [
+      { key: "s",       desc: "Open migration script browser" },
       { key: "Ctrl+R",  desc: "Reload current view" },
     ],
   },
