@@ -98,7 +98,7 @@ function makeRequest(token = "valid-token"): NextRequest {
 function authOk() {
   mockRequireAuth.mockResolvedValue({
     ok: true,
-    user: { sub: USER_ID, email: "user@example.com", name: "Test User" },
+    user: { sub: USER_ID, email: "user@example.com", householdId: USER_ID },
   });
 }
 
@@ -250,7 +250,7 @@ describe("POST /api/trial/init", () => {
     expect(mockEnsureSoloHousehold).toHaveBeenCalledWith({
       userId: USER_ID,
       email: "user@example.com",
-      displayName: "Test User",
+      displayName: "user@example.com",
     });
   });
 

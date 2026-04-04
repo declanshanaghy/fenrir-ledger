@@ -22,7 +22,7 @@
 import { NextResponse } from "next/server";
 import { getStripeEntitlement } from "@/lib/kv/entitlement-store";
 import { log } from "@/lib/logger";
-import type { VerifiedUser } from "./verify-id-token";
+import type { VerifiedUser } from "./require-auth";
 
 /** Karl check succeeded — user has an active Karl subscription. */
 export type KarlSuccess = { ok: true };

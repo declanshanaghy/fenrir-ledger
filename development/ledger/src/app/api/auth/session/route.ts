@@ -36,8 +36,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       user: {
         sub: auth.user.sub,
         email: auth.user.email,
-        name: auth.user.name,
-        picture: auth.user.picture,
+        householdId: auth.user.householdId,
       },
     },
     {

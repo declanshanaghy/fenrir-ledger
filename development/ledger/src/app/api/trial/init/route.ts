@@ -46,7 +46,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const result = await initTrialForUser({
     userId: auth.user.sub,
     email: auth.user.email,
-    displayName: auth.user.name,
+    displayName: auth.user.email,
   });
 
   if (result.ok) {

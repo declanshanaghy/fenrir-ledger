@@ -14,7 +14,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { requireAuthz } from "@/lib/auth/authz";
 import type { NextRequest } from "next/server";
-import type { VerifiedUser } from "@/lib/auth/verify-id-token";
+import type { VerifiedUser } from "@/lib/auth/require-auth";
 import type { FirestoreUser } from "@/lib/firebase/firestore-types";
 import type { StoredTrial } from "@/lib/kv/trial-store";
 
@@ -54,8 +54,7 @@ const GOOGLE_SUB = "google-sub-1635-test";
 const THRALL_USER: VerifiedUser = {
   sub: GOOGLE_SUB,
   email: "thrall1635@fenrir.dev",
-  name: "Thrall 1635",
-  picture: "https://example.com/1635.jpg",
+  householdId: GOOGLE_SUB,
 };
 
 const FIRESTORE_USER: FirestoreUser = {

@@ -18,7 +18,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { requireAuthz } from "@/lib/auth/authz";
 import type { NextRequest } from "next/server";
-import type { VerifiedUser } from "@/lib/auth/verify-id-token";
+import type { VerifiedUser } from "@/lib/auth/require-auth";
 import type { FirestoreUser } from "@/lib/firebase/firestore-types";
 import type { StoredTrial } from "@/lib/kv/trial-store";
 import * as fs from "fs";
@@ -69,15 +69,13 @@ const VALID_FINGERPRINT = "a".repeat(64);
 const KARL_USER: VerifiedUser = {
   sub: "google-sub-karl",
   email: "karl@fenrir.dev",
-  name: "Karl the Worthy",
-  picture: "https://example.com/karl.jpg",
+  householdId: "google-sub-karl",
 };
 
 const THRALL_USER: VerifiedUser = {
   sub: "google-sub-thrall",
   email: "thrall@fenrir.dev",
-  name: "Thrall the Free",
-  picture: "https://example.com/thrall.jpg",
+  householdId: "google-sub-thrall",
 };
 
 const FIRESTORE_USER: FirestoreUser = {

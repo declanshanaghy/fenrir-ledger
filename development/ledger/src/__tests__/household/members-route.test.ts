@@ -84,7 +84,7 @@ const memberUserDoc = {
 
 describe("GET /api/household/members", () => {
   beforeEach(() => {
-    mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: OWNER_ID, email: "thor@example.com", name: "Thorvald", picture: "" } });
+    mockRequireAuth.mockResolvedValue({ ok: true, user: { sub: OWNER_ID, email: "thor@example.com", householdId: OWNER_ID } });
     mockGetUser.mockResolvedValue(ownerUserDoc);
     mockGetHousehold.mockResolvedValue(baseHousehold);
     mockGetUsersByHouseholdId.mockResolvedValue([ownerUserDoc, memberUserDoc]);
@@ -186,7 +186,7 @@ describe("GET /api/household/members", () => {
     expect(mockEnsureSoloHousehold).toHaveBeenCalledWith({
       userId: OWNER_ID,
       email: "thor@example.com",
-      displayName: "Thorvald",
+      displayName: "thor@example.com",
     });
 
     const body = await res.json() as {

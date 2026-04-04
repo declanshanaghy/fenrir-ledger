@@ -38,8 +38,8 @@ const SESSION_KEY = "fenrir:auth";
 
 function makeSession(overrides: Partial<FenrirSession> = {}): FenrirSession {
   return {
+    fenrir_token: "fenrir-jwt-test-token",
     access_token: "ya29.access_token",
-    id_token: "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIn0.sig",
     refresh_token: "1//refresh_token",
     expires_at: Date.now() + 3600 * 1000,
     user: {

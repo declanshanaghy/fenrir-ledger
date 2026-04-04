@@ -78,11 +78,11 @@ describe("GET /openapi-ui", () => {
     expect(html).toContain("/api/openapi");
   });
 
-  it("injects id_token as Bearer token for Scalar Try It", async () => {
+  it("injects fenrir_token as Bearer token for Scalar Try It (issue #2060)", async () => {
     const res = await GET();
     const html = await res.text();
-    // Auth gate passes id_token to Scalar's authentication.http.bearer.token
-    expect(html).toContain("id_token");
+    // Auth gate passes fenrir_token to Scalar's authentication.http.bearer.token
+    expect(html).toContain("fenrir_token");
     expect(html).toContain("Authorization");
   });
 
