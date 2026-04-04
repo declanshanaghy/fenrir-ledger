@@ -59,6 +59,7 @@ resource "google_project_service" "apis" {
     "firestore.googleapis.com",            # Firestore
     "firebaserules.googleapis.com",        # Firebase Security Rules
     "secretmanager.googleapis.com",        # Secret Manager
+    "cloudkms.googleapis.com",             # Cloud KMS (envelope encryption)
   ])
 
   project            = var.project_id

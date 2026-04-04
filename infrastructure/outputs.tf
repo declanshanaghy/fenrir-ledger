@@ -74,6 +74,15 @@ output "firestore_project_id" {
 }
 
 # --------------------------------------------------------------------------
+# KMS
+# --------------------------------------------------------------------------
+
+output "kms_key_name" {
+  description = "Fully-qualified KMS crypto key resource name — set as KMS_KEY_NAME env var in app pods"
+  value       = google_kms_crypto_key.envelope.id
+}
+
+# --------------------------------------------------------------------------
 # Stripe
 # --------------------------------------------------------------------------
 
