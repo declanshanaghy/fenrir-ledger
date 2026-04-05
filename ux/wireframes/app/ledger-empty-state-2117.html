@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe: Ledger Empty State — Separate Login + Sign Up — Issue #2117</title>
+  <style>
+    /* -- Wireframe layout rules ONLY -- no theme styling -------------------- */
+    /* No colors, no backgrounds, no border-radius, no box-shadow, no fonts   */
+    /* beyond sans-serif. Permitted: flex/grid, border, width/height,          */
+    /* padding/margin, font-size/weight.                                       */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; font-size: 14px; line-height: 1.5; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 48px; }
+
+    /* -- Section headers ---------------------------------------------------- */
+    .section { display: flex; flex-direction: column; gap: 16px; }
+    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid; padding-bottom: 4px; }
+    .section-desc { font-size: 12px; font-style: italic; }
+
+    /* -- Note annotation style ---------------------------------------------- */
+    .note { font-size: 11px; font-style: italic; border-left: 2px solid; padding: 4px 8px; margin-top: 6px; }
+    .note strong { font-style: normal; }
+
+    /* -- Frame shell -------------------------------------------------------- */
+    .frame { border: 1px solid; }
+    .frame-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 8px; border-bottom: 1px solid; }
+    .page-shell { display: flex; flex-direction: column; }
+
+    /* -- App chrome: top nav bar -------------------------------------------- */
+    .app-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      border-bottom: 1px solid;
+    }
+    .nav-brand { font-size: 16px; font-weight: bold; }
+    .nav-actions { display: flex; gap: 8px; align-items: center; }
+    .nav-link { font-size: 13px; text-decoration: underline; }
+
+    /* -- Page content area -------------------------------------------------- */
+    .page-content { padding: 24px; }
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-title { font-size: 20px; font-weight: bold; }
+
+    /* -- Empty state hero --------------------------------------------------- */
+    .empty-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 24px;
+      text-align: center;
+      gap: 0;
+    }
+    .empty-hero-heading { font-size: 24px; font-weight: bold; margin-bottom: 12px; }
+    .empty-hero-subtext { font-size: 14px; margin-bottom: 32px; max-width: 380px; font-style: italic; }
+
+    /* -- CTA group ---------------------------------------------------------- */
+    .cta-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    /* PRIMARY: Start trial -- largest, boldest, 2px border (gold in themed) */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px 24px;
+      border: 2px solid;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      min-height: 48px;
+    }
+
+    /* SECONDARY: Login -- same width, lighter weight, 1px border */
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 10px 24px;
+      border: 1px solid;
+      font-size: 14px;
+      cursor: pointer;
+      min-height: 44px;
+    }
+
+    /* TERTIARY: Add locally -- text link, no button chrome */
+    .link-tertiary {
+      font-size: 12px;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 8px 0;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    .cta-footnote {
+      font-size: 11px;
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .cta-divider-line {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      margin: 4px 0;
+    }
+    .cta-divider-line::before,
+    .cta-divider-line::after {
+      content: "";
+      flex: 1;
+      border-top: 1px solid;
+    }
+    .cta-divider-text {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* -- Callout boxes ------------------------------------------------------ */
+    .callout {
+      border: 1px dashed;
+      padding: 8px 12px;
+      font-size: 12px;
+      margin-top: 12px;
+    }
+    .callout-label { font-weight: bold; font-size: 11px; text-transform: uppercase; margin-bottom: 4px; }
+
+    /* -- Side-by-side columns ----------------------------------------------- */
+    .cols { display: flex; gap: 24px; flex-wrap: wrap; }
+    .col { flex: 1; min-width: 260px; }
+    .col-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid; padding-bottom: 4px; margin-bottom: 12px; }
+
+    /* -- Hierarchy annotation block ----------------------------------------- */
+    .hierarchy-block {
+      border: 1px solid;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .h-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .h-indicator {
+      width: 16px;
+      height: 16px;
+      border: 2px solid;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .h-label { font-size: 13px; font-weight: bold; }
+    .h-meta { font-size: 11px; font-style: italic; }
+
+    /* -- Mobile simulation frame -------------------------------------------- */
+    .mobile-frame {
+      width: 375px;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-status-bar {
+      padding: 6px 12px;
+      font-size: 10px;
+      border-bottom: 1px solid;
+      text-align: center;
+    }
+
+    /* -- State matrix table ------------------------------------------------- */
+    table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid; padding: 6px 8px; text-align: left; }
+    th { font-weight: bold; }
+
+    /* -- Before/after comparison -------------------------------------------- */
+    .removed {
+      border: 1px dashed;
+      padding: 8px 12px;
+      font-size: 12px;
+      text-decoration: line-through;
+    }
+    .removed-label { font-size: 11px; font-weight: bold; text-transform: uppercase; text-decoration: none; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="section">
+      <div class="section-title">Issue #2117 -- Ledger Empty State: Separate Login and Sign Up Buttons</div>
+      <div class="section-desc">
+        Evolves the anon empty state from #1748 (single auth CTA) to two distinct auth actions:
+        "Start Your Free 30-Day Trial" for new users and "Login &amp; Return to Hlidskjalf"
+        for returning users. Both route to the same auth flow, but the copy signals intent.
+        "Add a Card Locally" is demoted from a bordered button to a text link.
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         SECTION A -- Before / After Comparison
+    ================================================================== -->
+    <div class="section">
+      <div class="section-title">(A) Before / After -- What Changes</div>
+      <div class="section-desc">
+        Side-by-side showing the current #1748 design (left) and the new #2117 design (right).
+        Both share the same atmospheric heading. The CTA group hierarchy changes.
+      </div>
+
+      <div class="cols">
+        <div class="col">
+          <div class="col-label">Before (#1748) -- Single Auth CTA</div>
+          <div style="border: 1px solid; padding: 16px; text-align: center;">
+            <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">Before Gleipnir was forged...</p>
+            <p style="font-size: 12px; font-style: italic; margin-bottom: 16px;">Before your first card...</p>
+            <div style="border: 2px solid; padding: 12px; font-weight: bold; font-size: 14px; margin-bottom: 6px;">Start Your Free 30-Day Trial</div>
+            <p style="font-size: 10px; font-style: italic; margin-bottom: 10px;">Sign in to sync cards...</p>
+            <p style="font-size: 10px; text-transform: uppercase; margin-bottom: 10px;">or</p>
+            <div style="border: 1px solid; padding: 10px; font-size: 12px; margin-bottom: 6px;">Add a Card Locally</div>
+            <p style="font-size: 10px; font-style: italic;">No account needed...</p>
+          </div>
+          <p class="note"><strong>Issue:</strong> Returning users must use the same "Start Your Free 30-Day Trial" button to sign in, which is confusing. "Add a Card Locally" competes visually as a bordered button.</p>
+        </div>
+
+        <div class="col">
+          <div class="col-label">After (#2117) -- Two Auth CTAs + Text Link</div>
+          <div style="border: 1px solid; padding: 16px; text-align: center;">
+            <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">Before Gleipnir was forged...</p>
+            <p style="font-size: 12px; font-style: italic; margin-bottom: 16px;">Before your first card...</p>
+            <div style="border: 2px solid; padding: 12px; font-weight: bold; font-size: 14px; margin-bottom: 6px;">Start Your Free 30-Day Trial</div>
+            <p style="font-size: 10px; font-style: italic; margin-bottom: 10px;">Sign in to sync cards, access all devices &amp; unlock Karl.</p>
+            <div style="border: 1px solid; padding: 10px; font-size: 13px; margin-bottom: 10px;">Login &amp; Return to Hlidskjalf</div>
+            <div style="display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 10px;">
+              <span style="flex: 1; border-top: 1px solid;"></span>
+              <span style="font-size: 10px; text-transform: uppercase;">or</span>
+              <span style="flex: 1; border-top: 1px solid;"></span>
+            </div>
+            <p style="font-size: 11px; text-decoration: underline;">Add a card locally</p>
+            <p style="font-size: 10px; font-style: italic;">No account needed -- stored on this device only.</p>
+          </div>
+          <p class="note"><strong>Result:</strong> Clear path for both new and returning users. Local option is de-emphasized to a footnote-level text link.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         SECTION B -- New Design: Desktop (Primary Wireframe)
+    ================================================================== -->
+    <div class="section">
+      <div class="section-title">(B) New Design -- Anonymous Empty State -- Desktop (>= 600px)</div>
+      <div class="section-desc">
+        The full desktop wireframe. Three-tier CTA hierarchy: Primary (trial sign-up),
+        Secondary (login), Tertiary (local add as text link). Both auth buttons route to
+        the same buildSignInUrl(pathname) -- they are differentiated by copy, not destination.
+      </div>
+
+      <div class="frame">
+        <div class="frame-label">New: /ledger -- Anonymous User -- Zero Cards -- Desktop (>= 600px)</div>
+        <div class="page-shell">
+          <nav class="app-nav">
+            <span class="nav-brand">Fenrir Ledger</span>
+            <div class="nav-actions">
+              <span class="nav-link">Sign in</span>
+              <span>Settings</span>
+            </div>
+          </nav>
+          <main class="page-content">
+            <header class="page-header">
+              <h1 class="page-title">The Ledger of Fates</h1>
+            </header>
+
+            <section class="empty-hero">
+              <!-- Atmospheric heading (unchanged) -->
+              <h2 class="empty-hero-heading">Before Gleipnir was forged, Fenrir roamed free.</h2>
+              <p class="empty-hero-subtext">Before your first card is added, no chain can be broken.</p>
+
+              <div class="cta-group">
+
+                <!-- TIER 1 -- PRIMARY: New user sign-up / trial start -->
+                <button class="btn-primary"
+                        aria-describedby="trial-footnote">
+                  Start Your Free 30-Day Trial
+                </button>
+                <p class="cta-footnote" id="trial-footnote">
+                  Sign in to sync cards, access all devices &amp; unlock Karl.
+                </p>
+                <!-- ANNOTATION: In themed implementation, this is the gold (#c9920a) filled button
+                     with gold-bright (#f0b429) hover. Font: Cinzel 600. -->
+
+                <!-- TIER 2 -- SECONDARY: Returning user login -->
+                <button class="btn-secondary"
+                        aria-describedby="login-footnote">
+                  Login &amp; Return to Hlidskjalf
+                </button>
+                <!-- ANNOTATION: In themed implementation, this uses a transparent background
+                     with rune-border (#1e2235) outline. Font: Cinzel 400.
+                     Same onClick handler as primary: router.push(buildSignInUrl(pathname)).
+                     The auth flow itself determines new-vs-returning (not the button). -->
+
+                <!-- Visual separator before tertiary option -->
+                <div class="cta-divider-line" aria-hidden="true">
+                  <span class="cta-divider-text">or</span>
+                </div>
+
+                <!-- TIER 3 -- TERTIARY: Local add (de-emphasized text link) -->
+                <a class="link-tertiary" href="/ledger/cards/new"
+                   id="local-add-link">
+                  Add a card locally
+                </a>
+                <p class="cta-footnote" id="login-footnote" style="margin-top: -4px;">
+                  No account needed -- cards are stored on this device only.
+                </p>
+                <!-- ANNOTATION: This is NOT a button. It is a text link with underline.
+                     In themed implementation: text-rune (#8a8578) color, underline on hover.
+                     44px touch target achieved via padding, not visual size.
+                     This element must feel like a footnote, not a competing action. -->
+
+              </div>
+            </section>
+
+            <div class="callout">
+              <div class="callout-label">Design Decisions</div>
+              1. Primary button (2px border, bold 15px) is the largest interactive element -- new user funnel.<br/>
+              2. Secondary button (1px border, 14px) provides a distinct "I have an account" entry point without competing with trial CTA.<br/>
+              3. Both auth buttons call the same buildSignInUrl(pathname) -- the distinction is copy-only, reducing user confusion about which path is theirs.<br/>
+              4. "Add a card locally" is now a plain text link (12px, underline) instead of a bordered button. The "or" divider + line rules create visual separation between auth actions and the local path.<br/>
+              5. The footnote under the local link serves double duty: it explains the local path AND visually anchors the bottom of the CTA group.<br/>
+              6. Footnote for the trial button uses aria-describedby so screen readers associate the benefit copy with the action.<br/>
+              7. "Hlidskjalf" (Odin's throne / high seat) reinforces the Norse mythology for returning users -- it signals "your seat awaits."
+            </div>
+          </main>
+        </div>
+      </div>
+
+      <!-- Visual hierarchy annotation -->
+      <div class="hierarchy-block">
+        <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px;">Visual Hierarchy (3 tiers)</div>
+        <div class="h-row">
+          <div class="h-indicator" style="border-width: 3px;"></div>
+          <div>
+            <div class="h-label">TIER 1 -- PRIMARY: Start Your Free 30-Day Trial</div>
+            <div class="h-meta">btn-primary -- 2px border, bold 15px, full width (max 340px), min-height 48px. Themed: gold fill (#c9920a), Cinzel 600.</div>
+          </div>
+        </div>
+        <div class="h-row">
+          <div class="h-indicator"></div>
+          <div>
+            <div class="h-label">TIER 2 -- SECONDARY: Login &amp; Return to Hlidskjalf</div>
+            <div class="h-meta">btn-secondary -- 1px border, 14px, full width (max 340px), min-height 44px. Themed: transparent bg, rune-border outline, Cinzel 400.</div>
+          </div>
+        </div>
+        <div class="h-row">
+          <div class="h-indicator" style="border-width: 1px; border-style: dashed;"></div>
+          <div>
+            <div class="h-label">TIER 3 -- TERTIARY: Add a card locally</div>
+            <div class="h-meta">Text link -- 12px, underline, no border/background. Themed: text-rune (#8a8578). 44px touch target via padding. Feels like a footnote.</div>
+          </div>
+        </div>
+        <div class="h-row">
+          <div>
+            <div class="h-label">CONTEXTUAL: Footnote copy</div>
+            <div class="h-meta">11px italic -- not interactive, purely informational. Associated via aria-describedby.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         SECTION C -- Mobile 375px
+    ================================================================== -->
+    <div class="section">
+      <div class="section-title">(C) Mobile 375px -- Anonymous Empty State</div>
+      <div class="section-desc">
+        Same three-tier hierarchy as desktop. CTA group fills available width (minus 32px padding).
+        Heading scales to 20px. All interactive elements meet 44px minimum touch target.
+        The text link "Add a card locally" has generous vertical padding for thumb tapping.
+      </div>
+
+      <div class="mobile-frame">
+        <div class="mobile-status-bar">375px viewport</div>
+        <nav class="app-nav" style="padding: 10px 16px;">
+          <span class="nav-brand" style="font-size: 14px;">Fenrir Ledger</span>
+          <div class="nav-actions">
+            <span class="nav-link" style="font-size: 12px;">Sign in</span>
+          </div>
+        </nav>
+        <main style="padding: 16px;">
+          <header class="page-header" style="margin-bottom: 16px;">
+            <h1 class="page-title" style="font-size: 18px;">The Ledger of Fates</h1>
+          </header>
+
+          <section style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 32px 0; gap: 0;">
+            <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">Before Gleipnir was forged, Fenrir roamed free.</h2>
+            <p style="font-size: 13px; font-style: italic; margin-bottom: 24px; max-width: 300px;">Before your first card is added, no chain can be broken.</p>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%;">
+
+              <!-- TIER 1 -->
+              <button class="btn-primary" style="width: 100%;">
+                Start Your Free 30-Day Trial
+              </button>
+              <p style="font-size: 11px; font-style: italic; text-align: center;">
+                Sign in to sync cards, access all devices &amp; unlock Karl.
+              </p>
+
+              <!-- TIER 2 -->
+              <button class="btn-secondary" style="width: 100%;">
+                Login &amp; Return to Hlidskjalf
+              </button>
+
+              <!-- Divider -->
+              <div style="display: flex; align-items: center; gap: 8px; width: 100%; margin: 4px 0;">
+                <span style="flex: 1; border-top: 1px solid;"></span>
+                <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;">or</span>
+                <span style="flex: 1; border-top: 1px solid;"></span>
+              </div>
+
+              <!-- TIER 3 -->
+              <a style="font-size: 12px; text-decoration: underline; padding: 10px 0; min-height: 44px; display: flex; align-items: center;">
+                Add a card locally
+              </a>
+              <p style="font-size: 11px; font-style: italic; text-align: center; margin-top: -4px;">
+                No account needed -- stored on this device only.
+              </p>
+
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <div class="note">
+        <strong>Touch targets:</strong> Primary button: 48px min-height. Secondary button: 44px min-height.
+        Tertiary text link: 44px touch target achieved via 10px vertical padding on the anchor element.
+        The "or" divider is aria-hidden and non-interactive.
+      </div>
+      <div class="note">
+        <strong>Scroll behavior:</strong> On 375px with standard browser chrome, the full CTA group should be
+        visible without scrolling. If the heading + subtext + all three CTAs exceed the fold,
+        the primary CTA must remain above the fold. The tertiary link can be below.
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         SECTION D -- Interaction Spec
+    ================================================================== -->
+    <div class="section">
+      <div class="section-title">(D) Interaction Spec -- Click Behavior &amp; Hover States</div>
+      <div class="section-desc">
+        All three CTAs and their interaction behaviors. The two auth buttons share a destination
+        but differ in copy. The local-add link navigates to the card form.
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Click Action</th>
+            <th>Hover (Desktop)</th>
+            <th>Active/Pressed</th>
+            <th>Loading</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Start Your Free 30-Day Trial</strong></td>
+            <td>router.push(buildSignInUrl(pathname)) -- redirects to auth provider</td>
+            <td>filter: brightness(1.15), gold glow box-shadow (per button-feedback-states.html)</td>
+            <td>scale(0.97), brightness(0.9)</td>
+            <td>Spinner + "Redirecting..." text. Button disabled + aria-busy. Secondary + tertiary also disabled (opacity 0.4).</td>
+          </tr>
+          <tr>
+            <td><strong>Login &amp; Return to Hlidskjalf</strong></td>
+            <td>router.push(buildSignInUrl(pathname)) -- same destination as primary</td>
+            <td>Subtle background fill rgba(255,255,255,0.05), border brightens (per button-feedback-states.html)</td>
+            <td>scale(0.97), brightness(0.9)</td>
+            <td>Spinner + "Redirecting..." text. Button disabled + aria-busy. Primary + tertiary also disabled.</td>
+          </tr>
+          <tr>
+            <td><strong>Add a card locally</strong></td>
+            <td>Next.js Link to /ledger/cards/new -- client-side navigation, no auth required</td>
+            <td>Underline thickens or text brightens slightly</td>
+            <td>No scale effect (text link pattern)</td>
+            <td>N/A -- client-side navigation is instant</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <strong>Important:</strong> Both auth buttons call the same function. The auth provider (Clerk)
+        determines whether the user is signing up or logging in. The button copy is user-facing
+        framing only -- "Start Your Free Trial" signals new user intent, "Login" signals returning user.
+        There is no technical difference in the auth flow.
+      </div>
+
+      <div class="callout" style="margin-top: 12px;">
+        <div class="callout-label">Button Feedback States Reference</div>
+        All hover, active, loading, and disabled states follow the project-wide spec in
+        <code>wireframes/chrome/button-feedback-states.html</code> and <code>interactions.md</code>.
+        The primary button uses the gold variant. The secondary button uses the ghost/secondary variant.
+        The tertiary link uses standard anchor hover behavior (no button feedback states apply).
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         SECTION E -- Authenticated Empty State (unchanged reference)
+    ================================================================== -->
+    <div class="section">
+      <div class="section-title">(E) Authenticated User -- Empty State (unchanged)</div>
+      <div class="section-desc">
+        When the user IS signed in and has zero cards, the empty state is unchanged from #1748:
+        "Import from Google Sheets" (primary) + "Add Card" (secondary). Shown for completeness.
+      </div>
+
+      <div class="frame">
+        <div class="frame-label">Unchanged: /ledger -- Authenticated User -- Zero Cards</div>
+        <div class="page-shell">
+          <nav class="app-nav">
+            <span class="nav-brand">Fenrir Ledger</span>
+            <div class="nav-actions">
+              <span>user@example.com</span>
+              <span>Settings</span>
+            </div>
+          </nav>
+          <main class="page-content">
+            <header class="page-header">
+              <h1 class="page-title">The Ledger of Fates</h1>
+            </header>
+            <section class="empty-hero">
+              <h2 class="empty-hero-heading">Before Gleipnir was forged, Fenrir roamed free.</h2>
+              <p class="empty-hero-subtext">Before your first card is added, no chain can be broken.</p>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                <button class="btn-primary" style="max-width: 280px;">Import from Google Sheets</button>
+                <button class="btn-secondary" style="max-width: 280px;">Add Card</button>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>No change required.</strong> The conditional rendering splits at the component level.
+        AnonEmptyState (this wireframe) vs EmptyState (authenticated) -- see Section G for structure.
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         SECTION F -- Accessibility Requirements (WCAG 2.1 AA)
+    ================================================================== -->
+    <div class="section">
+      <div class="section-title">(F) Accessibility -- WCAG 2.1 AA</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Requirement</th>
+            <th>Implementation Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Primary CTA (Trial)</td>
+            <td>Focus ring visible, min 48px touch target, descriptive label</td>
+            <td>&lt;button type="button"&gt; with visible text. aria-describedby="trial-footnote" links to benefit copy. Gold on void-black meets 4.5:1 contrast.</td>
+          </tr>
+          <tr>
+            <td>Secondary CTA (Login)</td>
+            <td>Focus ring visible, min 44px touch target</td>
+            <td>&lt;button type="button"&gt; with visible text. Text-saga on void-black meets 4.5:1. Focus ring: gold outline 2px offset.</td>
+          </tr>
+          <tr>
+            <td>Tertiary link (Local add)</td>
+            <td>Visible focus ring, min 44px touch target, underline visible</td>
+            <td>&lt;a href="/ledger/cards/new"&gt; -- native anchor behavior. Touch target via padding. text-rune on void-black = 4.52:1 (passes AA for normal text at 12px -- verify in production).</td>
+          </tr>
+          <tr>
+            <td>"or" divider with lines</td>
+            <td>Non-interactive, hide from screen readers</td>
+            <td>aria-hidden="true" on the entire divider container. SR reads the buttons and link sequentially.</td>
+          </tr>
+          <tr>
+            <td>Footnotes</td>
+            <td>Readable by SR, associated with their CTA</td>
+            <td>aria-describedby on each button pointing to the footnote paragraph ID. Footnotes render after their button in DOM order.</td>
+          </tr>
+          <tr>
+            <td>Heading hierarchy</td>
+            <td>h1 then h2, no skipped levels</td>
+            <td>"The Ledger of Fates" = h1. "Before Gleipnir was forged..." = h2. Both maintained from #1748.</td>
+          </tr>
+          <tr>
+            <td>Keyboard tab order</td>
+            <td>Logical top-to-bottom: Primary CTA, Secondary CTA, Tertiary link</td>
+            <td>Natural DOM order. No tabIndex manipulation needed. Three focusable elements in sequence.</td>
+          </tr>
+          <tr>
+            <td>Reduced motion</td>
+            <td>No animation on this page (static layout)</td>
+            <td>Button hover/active transitions are covered by the global reduced-motion media query in button-feedback-states. No page-specific animation.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ==================================================================
+         SECTION G -- Component Structure Recommendation
+    ================================================================== -->
+    <div class="section">
+      <div class="section-title">(G) Component Structure -- Implementation Notes for FiremanDecko</div>
+      <div class="section-desc">
+        This is an evolution of the AnonEmptyState component introduced in #1748.
+        The component already exists; the change is to its CTA group contents.
+      </div>
+
+      <div style="border: 1px solid; padding: 12px; font-size: 12px;">
+        <strong>Modified file:</strong> components/dashboard/AnonEmptyState.tsx<br/><br/>
+        <strong>Changes:</strong><br/>
+        1. Replace the single btn-primary (trial CTA) with two buttons: btn-primary (trial) + btn-secondary (login).<br/>
+        2. Replace the btn-secondary (Add a Card Locally) with a plain &lt;Link&gt; styled as a text link.<br/>
+        3. Update the "or" divider to include horizontal rules (flexbox with border-top spans flanking the text).<br/>
+        4. Move the "or" divider from between auth CTA and local-add to between the login button and the local-add link.<br/>
+        5. Add aria-describedby on the trial button pointing to the footnote paragraph.<br/><br/>
+
+        <strong>Both auth buttons share the same onClick:</strong><br/>
+        <code style="font-size: 11px; font-family: monospace;">
+          onClick={() => router.push(buildSignInUrl(pathname))}
+        </code><br/><br/>
+
+        <strong>No new files needed.</strong> No new props. No changes to Dashboard.tsx conditional logic.
+        This is a content/layout change within AnonEmptyState only.
+      </div>
+
+      <div class="note">
+        <strong>Flexibility:</strong> FiremanDecko may adjust spacing (gap values, padding) to match
+        the themed implementation. The wireframe defines hierarchy and structure, not pixel-perfect spacing.
+        The tertiary link may use a Next.js &lt;Link&gt; component or a plain &lt;a&gt; tag -- either is acceptable
+        as long as it renders as a text link (no button chrome).
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         SECTION H -- State x Render Matrix (updated from #1748)
+    ================================================================== -->
+    <div class="section">
+      <div class="section-title">(H) State x Render Matrix (updated)</div>
+      <div class="section-desc">
+        Updated truth table. Only the Anonymous + 0 cards row changes from #1748.
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Auth State</th>
+            <th>Cards</th>
+            <th>Empty State Component</th>
+            <th>CTA Hierarchy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Anonymous</td>
+            <td>0</td>
+            <td><strong>AnonEmptyState</strong> (modified in #2117)</td>
+            <td>1. Trial (primary btn) 2. Login (secondary btn) 3. Local add (text link)</td>
+          </tr>
+          <tr>
+            <td>Anonymous</td>
+            <td>1+</td>
+            <td>None (Dashboard tabs)</td>
+            <td>SignInNudge banner (unchanged)</td>
+          </tr>
+          <tr>
+            <td>Authenticated</td>
+            <td>0</td>
+            <td>EmptyState (unchanged)</td>
+            <td>1. Import (primary) 2. Add Card (secondary)</td>
+          </tr>
+          <tr>
+            <td>Authenticated</td>
+            <td>1+</td>
+            <td>None (Dashboard tabs)</td>
+            <td>N/A</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ==================================================================
+         SECTION I -- Delta from #1748
+    ================================================================== -->
+    <div class="section">
+      <div class="section-title">(I) Delta from #1748 -- What Changed</div>
+      <div class="section-desc">
+        Summary of changes relative to the anon-empty-state.html wireframe from issue #1748.
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>#1748 Design</th>
+            <th>#2117 Design</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Auth action</td>
+            <td>Single btn-primary: "Start Your Free 30-Day Trial"</td>
+            <td>Two buttons: btn-primary (Trial) + btn-secondary (Login)</td>
+            <td>Returning users need a distinct "login" entry point that doesn't imply they're starting a new trial.</td>
+          </tr>
+          <tr>
+            <td>Login copy</td>
+            <td>N/A</td>
+            <td>"Login &amp; Return to Hlidskjalf"</td>
+            <td>Norse mythology reinforcement. Hlidskjalf = Odin's high seat = "your dashboard awaits."</td>
+          </tr>
+          <tr>
+            <td>Local add</td>
+            <td>btn-secondary (bordered button, 1px, 13px)</td>
+            <td>Text link (12px, underline, no border)</td>
+            <td>De-emphasized to avoid competing with auth CTAs. Local-only is an escape hatch, not the recommended path.</td>
+          </tr>
+          <tr>
+            <td>"or" divider</td>
+            <td>Text-only "or" between auth CTA and local-add</td>
+            <td>Line-rule divider between login button and local-add link</td>
+            <td>Horizontal rules create stronger visual separation between the auth group and the local option.</td>
+          </tr>
+          <tr>
+            <td>CTA group width</td>
+            <td>max-width: 320px</td>
+            <td>max-width: 340px</td>
+            <td>Slightly wider to accommodate the longer "Login &amp; Return to Hlidskjalf" text without wrapping.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- .page -->
+</body>
+</html>
