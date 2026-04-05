@@ -281,8 +281,8 @@ jobs:
 
   app-pre-deploy-tests:
     name: "App: Pre-Deploy Tests"
-    needs: [build-app-image]
-    if: needs.build-app-image.result == 'success'
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.app == 'true' || needs.detect-changes.outputs.k8s-app == 'true'
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
