@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-05T01:20:09.695Z",
+  "updatedAt": "2026-04-05T01:26:28.418Z",
   "createdAt": "2026-03-19T01:01:15.554Z",
   "id": "gmail-reddit-monitor",
   "name": "Gmail — Reddit Monitor",
@@ -433,7 +433,7 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "loose",
+            "typeValidation": "strict",
             "version": 1
           },
           "conditions": [
@@ -457,11 +457,9 @@
               }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
-        "options": {
-          "looseTypeValidation": true
-        }
+        "options": {}
       },
       "id": "a1b2c3d4-0022-4000-8000-000000000022",
       "name": "Is Preferred Subreddit?",
@@ -689,9 +687,9 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "7a1a25d6-a156-4538-b39d-a8f2ac83f40a",
+  "versionId": "532a9113-2c4d-478c-90ed-8642034b61e1",
   "activeVersionId": null,
-  "versionCounter": 27,
+  "versionCounter": 32,
   "triggerCount": 0,
   "tags": [
     {
