@@ -607,8 +607,7 @@ jobs:
             --from-literal=GOOGLE_CLIENT_ID="${{ secrets.ODINS_THRONE_CLIENT_ID }}" \
             --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.ODINS_THRONE_CLIENT_SECRET }}" \
             --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.MONITOR_OAUTH2_PROXY_COOKIE_SECRET }}" \
-            --from-literal=emails.txt="declanshanaghy@gmail.com
-freyafenrir78@gmail.com" \
+            --from-literal=emails.txt=$'declanshanaghy@gmail.com\nfreyafenrir78@gmail.com' \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Resolve odins-throne image tag
@@ -702,8 +701,7 @@ freyafenrir78@gmail.com" \
             --from-literal=GOOGLE_CLIENT_ID="${{ secrets.ODINS_THRONE_CLIENT_ID }}" \
             --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.ODINS_THRONE_CLIENT_SECRET }}" \
             --from-literal=OAUTH2_PROXY_COOKIE_SECRET="${{ secrets.UMAMI_OAUTH2_PROXY_COOKIE_SECRET }}" \
-            --from-literal=emails.txt="declanshanaghy@gmail.com
-freyafenrir78@gmail.com" \
+            --from-literal=emails.txt=$'declanshanaghy@gmail.com\nfreyafenrir78@gmail.com' \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Setup Helm
@@ -814,8 +812,7 @@ freyafenrir78@gmail.com" \
             --dry-run=client -o yaml | kubectl apply -f -
           kubectl create secret generic n8n-oauth2-proxy-emails \
             --namespace=fenrir-marketing \
-            --from-literal=emails.txt="declanshanaghy@gmail.com
-freyafenrir78@gmail.com" \
+            --from-literal=emails.txt=$'declanshanaghy@gmail.com\nfreyafenrir78@gmail.com' \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Setup Helm
