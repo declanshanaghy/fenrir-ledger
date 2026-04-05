@@ -124,49 +124,6 @@ resource "google_project_iam_member" "deploy_roles" {
 }
 
 # --------------------------------------------------------------------------
-# Cost Alerts — Budget notification
-# --------------------------------------------------------------------------
-
-resource "google_billing_budget" "monthly_budget" {
-  count    = var.billing_account_id != "" ? 1 : 0
-  provider = google-beta
-
-  billing_account = var.billing_account_id
-  display_name    = "Fenrir Ledger Monthly Budget"
-
-  budget_filter {
-    projects = ["projects/${data.google_project.project.number}"]
-  }
-
-  amount {
-    specified_amount {
-      currency_code = "USD"
-      units         = tostring(var.cost_alert_amount)
-    }
-  }
-
-  threshold_rules {
-    threshold_percent = 0.5
-    spend_basis       = "CURRENT_SPEND"
-  }
-
-  threshold_rules {
-    threshold_percent = 0.8
-    spend_basis       = "CURRENT_SPEND"
-  }
-
-  threshold_rules {
-    threshold_percent = 1.0
-    spend_basis       = "CURRENT_SPEND"
-  }
-
-  threshold_rules {
-    threshold_percent = 1.2
-    spend_basis       = "FORECASTED_SPEND"
-  }
-}
-
-# --------------------------------------------------------------------------
 # Data sources
 # --------------------------------------------------------------------------
 
