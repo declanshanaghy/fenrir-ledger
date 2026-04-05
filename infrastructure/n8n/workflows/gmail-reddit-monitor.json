@@ -252,17 +252,34 @@
     },
     {
       "parameters": {
-        "jsCode": "// Fetch the Reddit post content via the JSON API\n// Uses n8n's built-in $http (fetch is not available in Code nodes)\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const jsonUrl = item.json.jsonUrl;\n  if (!jsonUrl) continue;\n\n  try {\n    const response = await $http.request({\n      method: 'GET',\n      url: jsonUrl,\n      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FenrirBot/1.0)' },\n      returnFullResponse: true,\n    });\n\n    const data = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;\n    const post = data?.[0]?.data?.children?.[0]?.data || {};\n\n    results.push({\n      json: {\n        ...item.json,\n        postTitle: post.title || '(no title)',\n        postText: (post.selftext || '').substring(0, 2000),\n        postAuthor: post.author || 'unknown',\n        postScore: post.score || 0,\n        postComments: post.num_comments || 0,\n        postCreated: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : '',\n        fetchError: null\n      }\n    });\n  } catch (e) {\n    results.push({ json: { ...item.json, postTitle: '(fetch error)', postText: '', postAuthor: '', fetchError: e.message } });\n  }\n}\n\nreturn results;"
+        "method": "GET",
+        "url": "={{ $json.jsonUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (compatible; FenrirBot/1.0)"
+            }
+          ]
+        }
       },
       "id": "a1b2c3d4-0031-4000-8000-000000000031",
       "name": "Fetch \u2014 Reddit Post JSON",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         1184,
         720
       ],
-      "notes": "Fetches post content from Reddit's JSON API (append .json to post URL). No auth needed. Rate limit: 60 req/min."
+      "notes": "Fetches Reddit post JSON API. Continues on error so downstream nodes can filter failures.",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -470,6 +487,20 @@
         416
       ],
       "notes": "True = suggestion with preferred sub links \u2192 suggestion branch. False = noise \u2192 mark as read."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Reddit JSON API response into post fields\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const data = item.json;\n  // HTTP Request node merges response into json \u2014 the Reddit API returns an array\n  // The response body is at the top level when responseFormat is JSON\n  let post = {};\n  try {\n    // Reddit .json endpoint returns [listing, comments] array\n    const listing = Array.isArray(data) ? data : (data.body ? (typeof data.body === 'string' ? JSON.parse(data.body) : data.body) : [data]);\n    post = listing?.[0]?.data?.children?.[0]?.data || {};\n  } catch (e) {\n    // Parse failed \u2014 treat as empty\n  }\n\n  results.push({\n    json: {\n      messageId: item.json.messageId || '',\n      subject: item.json.subject || '',\n      postUrl: item.json.postUrl || '',\n      postId: item.json.postId || '',\n      subreddit: item.json.subreddit || '',\n      jsonUrl: item.json.jsonUrl || '',\n      snippet: item.json.snippet || '',\n      postTitle: post.title || '(fetch failed)',\n      postText: (post.selftext || '').substring(0, 2000),\n      postAuthor: post.author || 'unknown',\n      postScore: post.score || 0,\n      postComments: post.num_comments || 0,\n      postCreated: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : ''\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "a1b2c3d4-0033-4000-8000-000000000033",
+      "name": "Parse \u2014 Reddit Post Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        720
+      ],
+      "notes": "Extracts post title, text, author, score from Reddit JSON API response."
     }
   ],
   "connections": {
@@ -601,7 +632,7 @@
       "main": [
         [
           {
-            "node": "Filter \u2014 Post Fetched OK",
+            "node": "Parse \u2014 Reddit Post Data",
             "type": "main",
             "index": 0
           }
@@ -671,6 +702,17 @@
         [
           {
             "node": "Gmail \u2014 Mark Other Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse \u2014 Reddit Post Data": {
+      "main": [
+        [
+          {
+            "node": "Filter \u2014 Post Fetched OK",
             "type": "main",
             "index": 0
           }
