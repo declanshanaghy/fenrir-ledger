@@ -219,6 +219,11 @@ async function fetchPullResponse(householdId: string): Promise<PullResponseData 
  * Pulls from cloud, LWW-merges with given local cards, persists the result.
  * Returns the merged card array and the pulled syncVersion.
  * If the pull fails, returns the original cards and null version (degrade gracefully).
+ *
+ * Issue #2120: Before merging, drop local tombstones for cards absent from
+ * the cloud response. Such tombstones represent cards expunged by another
+ * household member — the cloud's authoritative absence wins over a local
+ * tombstone, preventing expunged cards from reappearing via the pull path.
  */
 async function pullMergeApply(
   householdId: string,
@@ -226,7 +231,9 @@ async function pullMergeApply(
 ): Promise<{ merged: Card[]; version: number | null }> {
   const pullData = await fetchPullResponse(householdId);
   if (!pullData) return { merged: currentCards, version: null };
-  const merged = lwwMerge(currentCards, pullData.cards);
+  const cloudIds = new Set(pullData.cards.map((c) => c.id));
+  const filteredLocal = currentCards.filter((c) => !c.deletedAt || cloudIds.has(c.id));
+  const merged = lwwMerge(filteredLocal, pullData.cards);
   setAllCards(householdId, merged);
   return { merged, version: pullData.syncVersion };
 }
@@ -532,10 +539,15 @@ export function useCloudSync(): CloudSyncState {
 
       const { cards: cloudCards, activeCount, syncVersion: pulledVersion } = pullData;
 
-      // LWW merge: cloud cards win ties (most recent updatedAt)
+      // Issue #2120: Drop local tombstones for cards absent from cloud before
+      // merging. Cards expunged by another household member are gone from
+      // Firestore entirely — keeping their local tombstones would resurrect
+      // them in this member's trash view via the pull path.
       const localCards = getRawAllCards(householdId);
       const localActiveCount = localCards.filter((c) => !c.deletedAt).length;
-      const mergedCards = lwwMerge(localCards, cloudCards);
+      const cloudIds = new Set(cloudCards.map((c) => c.id));
+      const filteredLocal = localCards.filter((c) => !c.deletedAt || cloudIds.has(c.id));
+      const mergedCards = lwwMerge(filteredLocal, cloudCards);
 
       // Apply merged result — uses setAllCards (not saveCard) so fenrir:cards-changed
       // is not dispatched and no push loop is created.
