@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-04T00:00:00.000Z",
+  "updatedAt": "2026-04-05T00:19:52.637Z",
   "createdAt": "2026-03-19T01:01:15.554Z",
   "id": "gmail-reddit-monitor",
   "name": "Gmail — Reddit Monitor",
@@ -21,27 +21,23 @@
     },
     {
       "parameters": {
-        "resource": "message",
         "operation": "getAll",
-        "returnAll": false,
         "simple": false,
-        "limit": 50,
         "filters": {
-          "sender": "noreply@redditmail.com",
-          "readStatus": "unread"
+          "readStatus": "unread",
+          "sender": "noreply@redditmail.com"
         },
-        "options": {
-          "attachmentsBinaryData": false
-        }
+        "options": {}
       },
       "id": "a1b2c3d4-0002-4000-8000-000000000002",
       "name": "Gmail — Fetch Reddit Emails",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        460,
+        464,
         400
       ],
+      "webhookId": "95e63c2f-12d0-407e-9637-cc662d937715",
       "credentials": {
         "gmailOAuth2": {
           "id": "Eck5j1Xj1x6zyc9A",
@@ -53,13 +49,20 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-is-reply",
               "leftValue": "={{ $json.Subject || $json.subject }}",
               "rightValue": "replied to your",
-              "operator": { "type": "string", "operation": "contains" }
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
             }
           ],
           "combinator": "and"
@@ -70,7 +73,10 @@
       "name": "Is Reply?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [ 680, 400 ],
+      "position": [
+        688,
+        400
+      ],
       "notes": "True = reply email → reply branch. False = suggestion or noise → second router."
     },
     {
@@ -81,19 +87,29 @@
       "name": "Check — Has Preferred Sub?",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [ 900, 500 ],
+      "position": [
+        912,
+        416
+      ],
       "notes": "For non-reply emails: checks if it's a suggestion email with links to preferred subreddits."
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-is-suggestion",
               "leftValue": "={{ $json.isSuggestion }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "equal" }
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
             }
           ],
           "combinator": "and"
@@ -104,10 +120,12 @@
       "name": "Is Preferred Suggestion?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [ 1120, 500 ],
+      "position": [
+        1152,
+        416
+      ],
       "notes": "True = suggestion with preferred sub links → suggestion branch. False = noise → mark as read."
     },
-
     {
       "parameters": {
         "jsCode": "// Subreddits to ignore\nconst IGNORED_SUBREDDITS = new Set(\n  ($env.IGNORED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst items = $input.all();\nconst results = [];\nconst seenThreads = new Set();\n\nfor (const item of items) {\n  const subject = item.json.Subject || item.json.subject || '';\n  const snippet = item.json.snippet || item.json.text || '';\n  const htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n  const messageId = item.json.id || '';\n  const threadId = item.json.threadId || messageId;\n  const date = item.json.internalDate\n    ? new Date(parseInt(item.json.internalDate)).toISOString()\n    : (item.json.date || new Date().toISOString());\n\n  const subjectMatch = subject.match(/u\\/(\\S+)\\s+replied to your (?:post|comment) in (r\\/\\S+)/i);\n  const replierName = subjectMatch ? subjectMatch[1] : 'someone';\n  const subreddit = subjectMatch ? subjectMatch[2] : 'unknown';\n\n  const botNames = ['automoderator', 'bot', 'moderator', 'modteam'];\n  if (botNames.some(b => replierName.toLowerCase().includes(b))) continue;\n\n  const isIgnored = IGNORED_SUBREDDITS.has(subreddit.toLowerCase());\n\n  if (seenThreads.has(threadId)) continue;\n  seenThreads.add(threadId);\n\n  let replyLink = '';\n  const viewReplyMatch = htmlBody.match(/href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[^\"']*\\/comments\\/[^\"']*)[\"'][^>]*>[^<]*(?:View Reply|Reply|View Comment|View)/i);\n  if (viewReplyMatch) {\n    replyLink = viewReplyMatch[1];\n  } else {\n    const commentLinkMatch = htmlBody.match(/href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[^\"']*\\/comments\\/[^\"']*)[\"']/i);\n    if (commentLinkMatch) replyLink = commentLinkMatch[1];\n  }\n\n  results.push({\n    json: {\n      messageId, threadId, date, subject, replierName, subreddit,\n      replyText: snippet.substring(0, 1000).trim(),\n      replyLink, isIgnored, rawBody: snippet\n    }\n  });\n}\n\nreturn results;"
@@ -117,21 +135,28 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        900,
-        220
+        912,
+        208
       ],
       "notes": "Parses reply notification emails. Extracts replierName, subreddit, replyText, replyLink. Emits isIgnored flag."
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-not-ignored-reply",
               "leftValue": "={{ $json.isIgnored }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "notEqual" }
+              "operator": {
+                "type": "boolean",
+                "operation": "notEqual"
+              }
             }
           ],
           "combinator": "and"
@@ -143,25 +168,25 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1120,
-        220
+        1136,
+        208
       ],
       "notes": "Splits replies: non-ignored to Claude, ignored to Mark as Read."
     },
     {
       "parameters": {
-        "resource": "text",
-        "operation": "message",
-        "modelId": { "__rl": true, "mode": "id", "value": "claude-sonnet-4-20250514" },
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-sonnet-4-20250514"
+        },
         "messages": {
           "values": [
             {
-              "content": "=A Reddit user named {{ $json.replierName }} replied to your comment on {{ $json.subreddit }}.\n\nTheir reply:\n{{ $json.replyText }}\n\nDraft a short, genuine follow-up response. Write 2-4 short paragraphs (one point per paragraph, 1-2 sentences each). Break up your response so it reads naturally on Reddit. No walls of text.\n\nBe conversational, helpful, and specific to what they said. Where it fits naturally, steer the conversation toward tracking strategies that matter for churning: annual fee dates, signup bonus deadlines, minimum spend windows, product change timing, or statement close dates. Share from personal experience.\n\nSprinkle in the occasional emoji or ASCII smiley (like :-D or ;-) or :-P) when the mood fits.\n\nDo not mention any specific apps, tools, or products by name.",
-              "role": "user"
+              "content": "=A Reddit user named {{ $json.replierName }} replied to your comment on {{ $json.subreddit }}.\n\nTheir reply:\n{{ $json.replyText }}\n\nDraft a short, genuine follow-up response. Write 2-4 short paragraphs (one point per paragraph, 1-2 sentences each). Break up your response so it reads naturally on Reddit. No walls of text.\n\nBe conversational, helpful, and specific to what they said. Where it fits naturally, steer the conversation toward tracking strategies that matter for churning: annual fee dates, signup bonus deadlines, minimum spend windows, product change timing, or statement close dates. Share from personal experience.\n\nSprinkle in the occasional emoji or ASCII smiley (like :-D or ;-) or :-P) when the mood fits.\n\nDo not mention any specific apps, tools, or products by name."
             }
           ]
         },
-        "simplify": true,
         "options": {
           "system": "You are Freya, a 34-year-old in Denver. You and your husband Marcus (software engineer) got into churning 3 years ago after he booked your honeymoon to Iceland on points. Now you manage 12 active cards between you. You have two daughters, Lily (7) and Nora (4), and a golden retriever named Odin.\n\nYou track everything in a color-coded spreadsheet you built yourself. Your favorites: Amex Gold (groceries for the family basically earns itself), Chase Sapphire Reserve (travel), Citi Premier (backup flexibility). You recently closed an Amex Platinum after the second AF because you weren't using the credits enough with two kids. Current goal: family trip to Japan next year, fully on points. Stockpiling MR and UR.\n\nYour philosophy: churning is a numbers game, and the people who win are the ones who treat their card stack like a portfolio with clear dates and milestones for every card. You're practical, not a maximizer. More of a 'good enough' optimizer.\n\nYour tone is friendly, knowledgeable, and never promotional. You give real value first. You write short Reddit comments (2-4 sentences per paragraph, multiple paragraphs). No marketing speak. No exclamation points. Never use em dashes. Use occasional emojis or ASCII smileys (:-D, ;-), :-P). Reference your family naturally. Sound like a real person. Never mention any specific apps, tools, or products by name.",
           "maxTokens": 512
@@ -171,8 +196,16 @@
       "name": "Claude — Draft Reply",
       "type": "@n8n/n8n-nodes-langchain.anthropic",
       "typeVersion": 1,
-      "position": [ 1340, 220 ],
-      "credentials": { "anthropicApi": { "id": "anthropic-fenrir", "name": "Anthropic (Fenrir)" } },
+      "position": [
+        1296,
+        64
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "anthropic-fenrir",
+          "name": "Anthropic (Fenrir)"
+        }
+      },
       "notes": "Drafts a follow-up reply to a Reddit comment."
     },
     {
@@ -183,13 +216,15 @@
       "name": "Merge — Reply + Draft",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [ 1560, 220 ],
+      "position": [
+        1584,
+        64
+      ],
       "notes": "Merges Claude reply draft with email context."
     },
     {
       "parameters": {
         "resource": "draft",
-        "operation": "create",
         "subject": "=Reply to u/{{ $json.replierName }} on {{ $json.subreddit }}",
         "emailType": "html",
         "message": "=<h3>Reddit Reply Draft</h3>\n<p><strong>Reply to:</strong> <a href=\"{{ $json.replyLink }}\">View Reply on Reddit</a></p>\n<p><strong>Thread:</strong> {{ $json.subreddit }} | <strong>Replier:</strong> u/{{ $json.replierName }}</p>\n<p><strong>Received:</strong> {{ $json.date }}</p>\n<hr/>\n<h4>Their Reply</h4>\n<blockquote>{{ $json.replyText }}</blockquote>\n<hr/>\n<h4>Draft Response (post as u/Wide-Pass369)</h4>\n<div style=\"background: #f0f8ff; padding: 12px; border-radius: 4px; white-space: pre-line;\">{{ $json.draftText }}</div>\n<hr/>\n<p><em>1. Click the link above to open the Reddit comment<br/>2. Review and edit the draft response<br/>3. Post as u/Wide-Pass369<br/>4. Delete this email when done</em></p>",
@@ -199,13 +234,21 @@
       "name": "Gmail — Create Reply Draft",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [ 1780, 220 ],
-      "credentials": { "gmailOAuth2": { "id": "Eck5j1Xj1x6zyc9A", "name": "Gmail account" } },
+      "position": [
+        1792,
+        64
+      ],
+      "webhookId": "cba68c68-60a0-4be0-a66b-85d7f4c64e21",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Eck5j1Xj1x6zyc9A",
+          "name": "Gmail account"
+        }
+      },
       "notes": "Creates draft for reply follow-up."
     },
     {
       "parameters": {
-        "resource": "message",
         "operation": "markAsRead",
         "messageId": "={{ $('Extract — Reply Context').first().json.messageId }}"
       },
@@ -213,11 +256,19 @@
       "name": "Gmail — Mark Reply Read",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [ 2000, 300 ],
-      "credentials": { "gmailOAuth2": { "id": "Eck5j1Xj1x6zyc9A", "name": "Gmail account" } },
+      "position": [
+        1984,
+        224
+      ],
+      "webhookId": "fb57573b-afc8-49e1-ad2f-eff7c3dc0f89",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Eck5j1Xj1x6zyc9A",
+          "name": "Gmail account"
+        }
+      },
       "notes": "Marks reply email as read after processing or if ignored."
     },
-
     {
       "parameters": {
         "jsCode": "// Extract Reddit post links from suggestion emails and filter by PREFERRED_SUBREDDITS\nconst PREFERRED = new Set(\n  ($env.PREFERRED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\nconst IGNORED = new Set(\n  ($env.IGNORED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst items = $input.all();\nconst results = [];\nconst seen = new Set();\n\nfor (const item of items) {\n  const messageId = item.json.id || '';\n  const subject = item.json.Subject || item.json.subject || '';\n  const htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n  const snippet = item.json.snippet || item.json.text || '';\n\n  // Find all Reddit post links in the email HTML\n  const linkRegex = /href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/([^/]+)\\/comments\\/([^/\"']+)[^\"']*)[\"']/gi;\n  let match;\n  while ((match = linkRegex.exec(htmlBody)) !== null) {\n    const postUrl = match[1].split('?')[0].replace(/\\/+$/, '');\n    const subreddit = 'r/' + match[2];\n    const postId = match[3];\n    const normalKey = postUrl.toLowerCase();\n\n    if (seen.has(normalKey)) continue;\n    seen.add(normalKey);\n\n    // Skip ignored subs\n    if (IGNORED.has(subreddit.toLowerCase())) continue;\n\n    // Only process preferred subs (if list is non-empty)\n    const isPreferred = PREFERRED.size === 0 || PREFERRED.has(subreddit.toLowerCase());\n    if (!isPreferred) continue;\n\n    results.push({\n      json: {\n        messageId,\n        subject,\n        postUrl,\n        postId,\n        subreddit,\n        jsonUrl: postUrl + '.json',\n        snippet: snippet.substring(0, 500)\n      }\n    });\n  }\n}\n\nreturn results;"
@@ -226,7 +277,10 @@
       "name": "Extract — Suggested Posts",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [ 900, 580 ],
+      "position": [
+        928,
+        688
+      ],
       "notes": "Extracts Reddit post links from suggestion emails. Filters by PREFERRED_SUBREDDITS and IGNORED_SUBREDDITS env vars."
     },
     {
@@ -237,19 +291,29 @@
       "name": "Fetch — Reddit Post JSON",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [ 1120, 580 ],
+      "position": [
+        1184,
+        720
+      ],
       "notes": "Fetches post content from Reddit's JSON API (append .json to post URL). No auth needed. Rate limit: 60 req/min."
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-has-content",
               "leftValue": "={{ $json.postTitle }}",
               "rightValue": "(fetch",
-              "operator": { "type": "string", "operation": "notStartsWith" }
+              "operator": {
+                "type": "string",
+                "operation": "notStartsWith"
+              }
             }
           ],
           "combinator": "and"
@@ -260,23 +324,26 @@
       "name": "Filter — Post Fetched OK",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [ 1340, 580 ],
+      "position": [
+        1440,
+        800
+      ],
       "notes": "Only proceed if the Reddit JSON fetch succeeded."
     },
     {
       "parameters": {
-        "resource": "text",
-        "operation": "message",
-        "modelId": { "__rl": true, "mode": "id", "value": "claude-sonnet-4-20250514" },
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-sonnet-4-20250514"
+        },
         "messages": {
           "values": [
             {
-              "content": "=Here's a Reddit post on {{ $json.subreddit }} that's relevant to your expertise in credit card churning.\n\nTitle: {{ $json.postTitle }}\nAuthor: u/{{ $json.postAuthor }}\nScore: {{ $json.postScore }} | Comments: {{ $json.postComments }}\n\nPost content:\n{{ $json.postText || '(no body text, title-only post)' }}\n\nURL: {{ $json.postUrl }}\n\nDraft a helpful top-level comment on this post. Write 2-4 short paragraphs (one point per paragraph, 1-2 sentences each). Be specific to the post content. Add real value with personal experience and practical advice.\n\nSprinkle in the occasional emoji or ASCII smiley when the mood fits.\n\nDo not mention any specific apps, tools, or products by name. If the post doesn't relate to credit cards, churning, or personal finance at all, respond with exactly: SKIP",
-              "role": "user"
+              "content": "=Here's a Reddit post on {{ $json.subreddit }} that's relevant to your expertise in credit card churning.\n\nTitle: {{ $json.postTitle }}\nAuthor: u/{{ $json.postAuthor }}\nScore: {{ $json.postScore }} | Comments: {{ $json.postComments }}\n\nPost content:\n{{ $json.postText || '(no body text, title-only post)' }}\n\nURL: {{ $json.postUrl }}\n\nDraft a helpful top-level comment on this post. Write 2-4 short paragraphs (one point per paragraph, 1-2 sentences each). Be specific to the post content. Add real value with personal experience and practical advice.\n\nSprinkle in the occasional emoji or ASCII smiley when the mood fits.\n\nDo not mention any specific apps, tools, or products by name. If the post doesn't relate to credit cards, churning, or personal finance at all, respond with exactly: SKIP"
             }
           ]
         },
-        "simplify": true,
         "options": {
           "system": "You are Freya, a 34-year-old in Denver. You and your husband Marcus (software engineer) got into churning 3 years ago after he booked your honeymoon to Iceland on points. Now you manage 12 active cards between you. You have two daughters, Lily (7) and Nora (4), and a golden retriever named Odin.\n\nYou track everything in a color-coded spreadsheet you built yourself. Your favorites: Amex Gold (groceries for the family basically earns itself), Chase Sapphire Reserve (travel), Citi Premier (backup flexibility). You recently closed an Amex Platinum after the second AF because you weren't using the credits enough with two kids. Current goal: family trip to Japan next year, fully on points. Stockpiling MR and UR.\n\nYour philosophy: churning is a numbers game, and the people who win are the ones who treat their card stack like a portfolio with clear dates and milestones for every card. You're practical, not a maximizer. More of a 'good enough' optimizer.\n\nYour tone is friendly, knowledgeable, and never promotional. You give real value first. You write short Reddit comments (2-4 sentences per paragraph, multiple paragraphs). No marketing speak. No exclamation points. Never use em dashes. Use occasional emojis or ASCII smileys (:-D, ;-), :-P). Reference your family naturally. Sound like a real person. Never mention any specific apps, tools, or products by name.",
           "maxTokens": 512
@@ -286,8 +353,16 @@
       "name": "Claude — Draft Comment",
       "type": "@n8n/n8n-nodes-langchain.anthropic",
       "typeVersion": 1,
-      "position": [ 1560, 580 ],
-      "credentials": { "anthropicApi": { "id": "anthropic-fenrir", "name": "Anthropic (Fenrir)" } },
+      "position": [
+        1584,
+        656
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "anthropic-fenrir",
+          "name": "Anthropic (Fenrir)"
+        }
+      },
       "notes": "Drafts a new top-level comment for a suggested Reddit post."
     },
     {
@@ -298,13 +373,15 @@
       "name": "Merge — Post + Draft",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [ 1780, 580 ],
+      "position": [
+        1888,
+        656
+      ],
       "notes": "Merges Claude comment draft with post context. Filters out SKIP responses."
     },
     {
       "parameters": {
         "resource": "draft",
-        "operation": "create",
         "subject": "=Comment on {{ $json.subreddit }}: {{ $json.postTitle }}",
         "emailType": "html",
         "message": "=<h3>Reddit Comment Draft</h3>\n<p><strong>Post:</strong> <a href=\"{{ $json.postUrl }}\">{{ $json.postTitle }}</a></p>\n<p><strong>Subreddit:</strong> {{ $json.subreddit }} | <strong>Author:</strong> u/{{ $json.postAuthor }} | <strong>Score:</strong> {{ $json.postScore }} | <strong>Comments:</strong> {{ $json.postComments }}</p>\n<hr/>\n<h4>Draft Comment (post as u/Wide-Pass369)</h4>\n<div style=\"background: #f0f8ff; padding: 12px; border-radius: 4px; white-space: pre-line;\">{{ $json.draftText }}</div>\n<hr/>\n<p><em>1. Click the post link above<br/>2. Review and edit the draft comment<br/>3. Post as u/Wide-Pass369<br/>4. Delete this email when done</em></p>",
@@ -314,13 +391,21 @@
       "name": "Gmail — Create Comment Draft",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [ 2000, 580 ],
-      "credentials": { "gmailOAuth2": { "id": "Eck5j1Xj1x6zyc9A", "name": "Gmail account" } },
+      "position": [
+        2080,
+        656
+      ],
+      "webhookId": "00d3b9b7-f38c-4e66-917d-0ec7cc054fc0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Eck5j1Xj1x6zyc9A",
+          "name": "Gmail account"
+        }
+      },
       "notes": "Creates draft for new comment on a suggested Reddit post."
     },
     {
       "parameters": {
-        "resource": "message",
         "operation": "markAsRead",
         "messageId": "={{ $('Extract — Suggested Posts').first().json.messageId }}"
       },
@@ -328,14 +413,21 @@
       "name": "Gmail — Mark Suggestion Read",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [ 2220, 580 ],
-      "credentials": { "gmailOAuth2": { "id": "Eck5j1Xj1x6zyc9A", "name": "Gmail account" } },
+      "position": [
+        2240,
+        816
+      ],
+      "webhookId": "1af95b27-89da-4bd3-ae58-ef887fdc4a02",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Eck5j1Xj1x6zyc9A",
+          "name": "Gmail account"
+        }
+      },
       "notes": "Marks the suggestion email as read after draft is created."
     },
-
     {
       "parameters": {
-        "resource": "message",
         "operation": "markAsRead",
         "messageId": "={{ $json.id }}"
       },
@@ -343,17 +435,29 @@
       "name": "Gmail — Mark Other Read",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [ 900, 650 ],
-      "credentials": { "gmailOAuth2": { "id": "Eck5j1Xj1x6zyc9A", "name": "Gmail account" } },
+      "position": [
+        1472,
+        448
+      ],
+      "webhookId": "87d057a4-5594-41d0-83ec-3d4a4b330b68",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Eck5j1Xj1x6zyc9A",
+          "name": "Gmail account"
+        }
+      },
       "notes": "Marks non-reply/non-suggestion Reddit emails (noise) as read immediately."
     },
     {
-      "parameters": { "options": {} },
+      "parameters": {},
       "id": "a1b2c3d4-0008-4000-8000-000000000008",
       "name": "No Emails",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [ 900, 780 ],
+      "position": [
+        272,
+        768
+      ],
       "notes": "No unread Reddit emails found."
     }
   ],
@@ -361,126 +465,204 @@
     "Manual Trigger": {
       "main": [
         [
-          { "node": "Gmail — Fetch Reddit Emails", "type": "main", "index": 0 }
+          {
+            "node": "Gmail — Fetch Reddit Emails",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Gmail — Fetch Reddit Emails": {
       "main": [
         [
-          { "node": "Is Reply?", "type": "main", "index": 0 }
+          {
+            "node": "Is Reply?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Is Reply?": {
       "main": [
         [
-          { "node": "Extract — Reply Context", "type": "main", "index": 0 }
+          {
+            "node": "Extract — Reply Context",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Check — Has Preferred Sub?", "type": "main", "index": 0 }
+          {
+            "node": "Check — Has Preferred Sub?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Check — Has Preferred Sub?": {
       "main": [
         [
-          { "node": "Is Preferred Suggestion?", "type": "main", "index": 0 }
+          {
+            "node": "Is Preferred Suggestion?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Is Preferred Suggestion?": {
       "main": [
         [
-          { "node": "Extract — Suggested Posts", "type": "main", "index": 0 }
+          {
+            "node": "Extract — Suggested Posts",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Gmail — Mark Other Read", "type": "main", "index": 0 }
+          {
+            "node": "Gmail — Mark Other Read",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-
     "Extract — Reply Context": {
       "main": [
         [
-          { "node": "Filter — Reply Not Ignored", "type": "main", "index": 0 }
+          {
+            "node": "Filter — Reply Not Ignored",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Filter — Reply Not Ignored": {
       "main": [
         [
-          { "node": "Claude — Draft Reply", "type": "main", "index": 0 }
+          {
+            "node": "Claude — Draft Reply",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Gmail — Mark Reply Read", "type": "main", "index": 0 }
+          {
+            "node": "Gmail — Mark Reply Read",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Claude — Draft Reply": {
       "main": [
         [
-          { "node": "Merge — Reply + Draft", "type": "main", "index": 0 }
+          {
+            "node": "Merge — Reply + Draft",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Merge — Reply + Draft": {
       "main": [
         [
-          { "node": "Gmail — Create Reply Draft", "type": "main", "index": 0 }
+          {
+            "node": "Gmail — Create Reply Draft",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Gmail — Create Reply Draft": {
       "main": [
         [
-          { "node": "Gmail — Mark Reply Read", "type": "main", "index": 0 }
+          {
+            "node": "Gmail — Mark Reply Read",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-
     "Extract — Suggested Posts": {
       "main": [
         [
-          { "node": "Fetch — Reddit Post JSON", "type": "main", "index": 0 }
+          {
+            "node": "Fetch — Reddit Post JSON",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Fetch — Reddit Post JSON": {
       "main": [
         [
-          { "node": "Filter — Post Fetched OK", "type": "main", "index": 0 }
+          {
+            "node": "Filter — Post Fetched OK",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Filter — Post Fetched OK": {
       "main": [
         [
-          { "node": "Claude — Draft Comment", "type": "main", "index": 0 }
+          {
+            "node": "Claude — Draft Comment",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Gmail — Mark Suggestion Read", "type": "main", "index": 0 }
+          {
+            "node": "Gmail — Mark Suggestion Read",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Claude — Draft Comment": {
       "main": [
         [
-          { "node": "Merge — Post + Draft", "type": "main", "index": 0 }
+          {
+            "node": "Merge — Post + Draft",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Merge — Post + Draft": {
       "main": [
         [
-          { "node": "Gmail — Create Comment Draft", "type": "main", "index": 0 }
+          {
+            "node": "Gmail — Create Comment Draft",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Gmail — Create Comment Draft": {
       "main": [
         [
-          { "node": "Gmail — Mark Suggestion Read", "type": "main", "index": 0 }
+          {
+            "node": "Gmail — Mark Suggestion Read",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
@@ -493,10 +675,10 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "e328a9d2-6ad5-4b8f-b0e6-967479bd8487",
+  "pinData": {},
+  "versionId": "232aa3b6-eb2a-445f-a7f9-b1bf97c94ce2",
   "activeVersionId": null,
-  "versionCounter": 2,
+  "versionCounter": 21,
   "triggerCount": 0,
   "tags": [
     {

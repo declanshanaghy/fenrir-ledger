@@ -13,7 +13,10 @@
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -34,7 +37,10 @@
       "name": "Gmail — Fetch AutoMod Emails",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [460, 300],
+      "position": [
+        460,
+        300
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "Eck5j1Xj1x6zyc9A",
@@ -69,7 +75,10 @@
       "name": "Filter — AutoMod Only",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [680, 300]
+      "position": [
+        680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -79,7 +88,10 @@
       "name": "Extract — Removal Details",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [900, 220]
+      "position": [
+        900,
+        220
+      ]
     },
     {
       "parameters": {
@@ -89,7 +101,10 @@
       "name": "Build — Digest Issue Body",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1120, 220]
+      "position": [
+        1120,
+        220
+      ]
     },
     {
       "parameters": {
@@ -118,7 +133,10 @@
       "name": "Has Removals?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1340, 220]
+      "position": [
+        1340,
+        220
+      ]
     },
     {
       "parameters": {
@@ -128,14 +146,19 @@
         "repository": "fenrir-ledger",
         "title": "={{ $json.title }}",
         "body": "={{ $json.body }}",
-        "labels": ["marketing"],
+        "labels": [
+          "marketing"
+        ],
         "additionalFields": {}
       },
       "id": "automod-0007",
       "name": "GitHub — Create Digest Issue",
       "type": "n8n-nodes-base.github",
       "typeVersion": 1,
-      "position": [1560, 140],
+      "position": [
+        1560,
+        140
+      ],
       "credentials": {
         "githubApi": {
           "id": "github-fenrir-token",
@@ -149,7 +172,10 @@
       "name": "No Removals Found",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [900, 420]
+      "position": [
+        900,
+        420
+      ]
     },
     {
       "parameters": {},
@@ -157,32 +183,91 @@
       "name": "No New Removals",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1560, 340]
+      "position": [
+        1560,
+        340
+      ]
     }
   ],
   "connections": {
     "Manual Trigger": {
-      "main": [[{"node": "Gmail — Fetch AutoMod Emails", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Gmail — Fetch AutoMod Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Gmail — Fetch AutoMod Emails": {
-      "main": [[{"node": "Filter — AutoMod Only", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Filter — AutoMod Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Filter — AutoMod Only": {
       "main": [
-        [{"node": "Extract — Removal Details", "type": "main", "index": 0}],
-        [{"node": "No Removals Found", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Extract — Removal Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Removals Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Extract — Removal Details": {
-      "main": [[{"node": "Build — Digest Issue Body", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Build — Digest Issue Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Build — Digest Issue Body": {
-      "main": [[{"node": "Has Removals?", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Has Removals?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Has Removals?": {
       "main": [
-        [{"node": "GitHub — Create Digest Issue", "type": "main", "index": 0}],
-        [{"node": "No New Removals", "type": "main", "index": 0}]
+        [
+          {
+            "node": "GitHub — Create Digest Issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No New Removals",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
@@ -195,7 +280,10 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "automod-v1",
+  "versionId": "d15b9075-099c-49d4-a782-fe87d7bc8fca",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
   "tags": [
     {
       "updatedAt": "2026-03-18T00:00:00.000Z",
@@ -203,5 +291,28 @@
       "id": "tag-marketing",
       "name": "marketing"
     }
-  ]
+  ],
+  "shared": [
+    {
+      "updatedAt": "2026-03-22T09:50:58.596Z",
+      "createdAt": "2026-03-22T09:50:58.596Z",
+      "role": "workflow:owner",
+      "workflowId": "gmail-automod-digest",
+      "projectId": "ijvbmfY8ADB2nP8o",
+      "project": {
+        "updatedAt": "2026-03-18T15:43:38.591Z",
+        "createdAt": "2026-03-18T04:35:30.486Z",
+        "id": "ijvbmfY8ADB2nP8o",
+        "name": "Dek Shanaghy <declan@shanaghy.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "fee27c46-c145-43f0-9faf-6b584f2f7c5c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
 }

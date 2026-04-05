@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-22T00:00:00.000Z",
+  "updatedAt": "2026-04-04T23:27:05.502Z",
   "createdAt": "2026-03-22T00:00:00.000Z",
   "id": "gmail-f5bot-monitor",
   "name": "Gmail — F5Bot Keyword Monitor",
@@ -15,34 +15,30 @@
       "typeVersion": 1,
       "position": [
         240,
-        300
+        304
       ],
       "notes": "Odin kicks this off manually to process F5Bot keyword alert emails.\n\nFUTURE: Replace with a Webhook node — set up a Gmail filter (From: alerts@f5bot.com, Subject: F5Bot found something) that forwards matching emails to the n8n webhook URL. This eliminates manual polling entirely."
     },
     {
       "parameters": {
-        "resource": "message",
         "operation": "getAll",
-        "returnAll": false,
         "limit": 20,
-        "filters": {
-          "sender": "f5bot",
-          "subject": "F5Bot found something",
-          "readStatus": "unread"
-        },
         "simple": false,
-        "options": {
-          "attachmentsBinaryData": false
-        }
+        "filters": {
+          "readStatus": "unread",
+          "sender": "f5bot"
+        },
+        "options": {}
       },
       "id": "f5b0-0002-4000-8000-000000000002",
       "name": "Gmail — Fetch F5Bot Alerts",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        460,
-        300
+        464,
+        304
       ],
+      "webhookId": "16e3bfa8-8e26-4e96-ad0f-de89fdab3657",
       "credentials": {
         "gmailOAuth2": {
           "id": "Eck5j1Xj1x6zyc9A",
@@ -79,8 +75,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        680,
-        300
+        688,
+        304
       ],
       "notes": "Secondary guard: only process emails whose subject explicitly contains 'F5Bot found something'. The Gmail fetch already filters by sender + subject, but this provides defense-in-depth against mis-filtered messages."
     },
@@ -93,8 +89,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        900,
-        220
+        912,
+        224
       ],
       "notes": "Parses the HTML body of each F5Bot alert email to extract all Reddit post/comment URLs.\nEmits one item per unique Reddit link — n8n fan-out iterates all downstream nodes per item.\nDeduplicates URLs within each email. Detects comment vs post by URL path depth (6+ segments = comment)."
     },
@@ -127,7 +123,7 @@
       "typeVersion": 2,
       "position": [
         1120,
-        220
+        224
       ],
       "notes": "Safety guard: only process items with a valid Reddit URL (starts with http). Handles edge cases where Extract — Reddit Links might emit a malformed item."
     },
@@ -159,8 +155,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1340,
-        220
+        1344,
+        224
       ],
       "notes": "Splits items by isIgnored flag. True branch (not ignored) goes to Claude for draft reply. False branch (ignored subreddit) goes directly to Mark as Read."
     },
@@ -180,7 +176,6 @@
           ]
         },
         "options": {
-          "systemMessage": "You are Freya, a 34-year-old in Denver. You and your husband Marcus (software engineer) got into churning 3 years ago after he booked your honeymoon to Iceland on points. Now you manage 12 active cards between you. You have two daughters, Lily (7) and Nora (4), and a golden retriever named Odin.\n\nYou track everything in a color-coded spreadsheet you built yourself. Your favorites: Amex Gold (groceries for the family basically earns itself), Chase Sapphire Reserve (travel), Citi Premier (backup flexibility). You recently closed an Amex Platinum after the second AF because you weren't using the credits enough with two kids. Current goal: family trip to Japan next year, fully on points. Stockpiling MR and UR.\n\nYour philosophy: churning is a numbers game, and the people who win are the ones who treat their card stack like a portfolio with clear dates and milestones for every card. You're practical, not a maximizer. More of a 'good enough' optimizer.\n\nYour tone is friendly, knowledgeable, and never promotional. You give real value first with specific advice, honest opinions, and genuine engagement. You write short Reddit comments (2-4 sentences per paragraph, multiple paragraphs). No marketing speak. No exclamation points. Never use em dashes. Use occasional emojis or ASCII smileys (:-D, ;-), :-P) to sound human and casual. Reference your family naturally: 'my husband and I split the card apps,' 'with two kids under 8 the grocery spend basically earns itself.' Sound like a real person who genuinely enjoys the hobby. Never mention any specific apps, tools, or products by name. When tracking comes up naturally, talk about the strategy and what to track, not what tool to use.",
           "maxTokens": 512
         }
       },
@@ -189,8 +184,8 @@
       "type": "@n8n/n8n-nodes-langchain.anthropic",
       "typeVersion": 1,
       "position": [
-        1780,
-        220
+        1600,
+        -16
       ],
       "credentials": {
         "anthropicApi": {
@@ -208,15 +203,14 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2000,
-        220
+        2016,
+        16
       ],
       "notes": "Extracts Claude's draft text from the API response and merges it with the full post context from Extract — Post Content, so the Gmail Draft node has everything needed to compose the email."
     },
     {
       "parameters": {
         "resource": "draft",
-        "operation": "create",
         "subject": "=F5Bot: {{ $json.keyword }} | {{ $json.subreddit }} ({{ $json.postTitle }})",
         "emailType": "html",
         "message": "=<h3>F5Bot Keyword Alert: <strong>{{ $json.keyword }}</strong></h3>\n<p>\n  <strong>Post:</strong> <a href=\"{{ $json.redditUrl }}\">{{ $json.postTitle }}</a><br>\n  <strong>Subreddit:</strong> {{ $json.subreddit }}<br>\n  <strong>Author:</strong> u/{{ $json.author }}<br>\n  <strong>Type:</strong> {{ $json.isComment ? \"Comment thread\" : \"Post\" }}\n</p>\n<hr>\n<h4>Content Snippet</h4>\n<blockquote style=\"border-left: 3px solid #ccc; padding-left: 12px; color: #555;\">\n  {{ $json.snippet || \"(no snippet available)\" }}\n</blockquote>\n<hr>\n<h4>Claude Draft Reply</h4>\n<p style=\"background: #f0f8ff; padding: 12px; border-radius: 4px; white-space: pre-line;\">{{ $json.draftText }}</div>\n<hr>\n<p><em>Odin: review the draft above, edit as needed, then post as u/Wide-Pass369. Delete this draft when done.<br>Generated by the F5Bot Monitor n8n workflow.</em></p>",
@@ -227,9 +221,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        2220,
-        220
+        2224,
+        16
       ],
+      "webhookId": "555dbba0-a672-45fd-b8c1-976e08e36512",
       "credentials": {
         "gmailOAuth2": {
           "id": "Eck5j1Xj1x6zyc9A",
@@ -239,36 +234,31 @@
       "notes": "Creates a Gmail draft in freyafenrir@gmail.com with the Reddit post context and Claude's draft reply.\nOne draft per Reddit link found in the F5Bot alert email.\nOdin reviews each draft, edits if needed, then posts manually as u/Wide-Pass369."
     },
     {
-      "parameters": {
-        "options": {}
-      },
+      "parameters": {},
       "id": "f5b0-000b-4000-8000-000000000011",
       "name": "No Emails Found",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        900,
-        420
+        912,
+        432
       ],
       "notes": "Reached when no unread F5Bot alert emails are present. Workflow ends cleanly — nothing to do."
     },
     {
-      "parameters": {
-        "options": {}
-      },
+      "parameters": {},
       "id": "f5b0-000c-4000-8000-000000000012",
       "name": "No Reddit Links",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1340,
-        420
+        1344,
+        432
       ],
       "notes": "Reached when a F5Bot email item has no valid extractable Reddit URLs. Workflow ends cleanly for that item."
     },
     {
       "parameters": {
-        "resource": "message",
         "operation": "markAsRead",
         "messageId": "={{ $('Extract — Reddit Links').first().json.emailId }}"
       },
@@ -277,9 +267,10 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        2420,
-        220
+        2432,
+        208
       ],
+      "webhookId": "31da81c6-d389-4dc7-92b9-f213ce8aeec1",
       "credentials": {
         "gmailOAuth2": {
           "id": "Eck5j1Xj1x6zyc9A",
@@ -419,23 +410,23 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "f5b00001-0000-4000-8000-000000000000",
+  "pinData": {},
+  "versionId": "bd23563d-25e8-401b-b9a7-a673caedc369",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 5,
   "triggerCount": 0,
   "tags": [
     {
-      "updatedAt": "2026-03-22T00:00:00.000Z",
-      "createdAt": "2026-03-22T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z",
+      "createdAt": "2026-03-18T00:00:00.000Z",
       "id": "tag-marketing",
       "name": "marketing"
     }
   ],
   "shared": [
     {
-      "updatedAt": "2026-03-22T00:00:00.000Z",
-      "createdAt": "2026-03-22T00:00:00.000Z",
+      "updatedAt": "2026-03-23T00:08:21.488Z",
+      "createdAt": "2026-03-23T00:08:21.488Z",
       "role": "workflow:owner",
       "workflowId": "gmail-f5bot-monitor",
       "projectId": "ijvbmfY8ADB2nP8o",
