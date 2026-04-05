@@ -433,6 +433,7 @@ jobs:
             --from-literal=NEXT_PUBLIC_APP_VERSION="${{ github.sha }}" \
             --from-literal=GITHUB_TOKEN="${{ secrets.GH_TOKEN_AGENTS }}" \
             --from-literal=ADMIN_EMAILS="${{ secrets.ADMIN_EMAILS }}" \
+            --from-literal=FENRIR_JWT_SECRET="${{ secrets.FENRIR_JWT_SECRET }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Sync agent secrets
