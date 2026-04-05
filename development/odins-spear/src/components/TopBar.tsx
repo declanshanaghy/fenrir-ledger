@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Text } from "ink";
 import { log } from "@fenrir/logger";
 
-const TUI_TABS = ["Users", "Households"];
+const TUI_TABS = ["Households", "Users"];
 const GOLD = "#c9920a";
 const GRAY = "#6b6b80";
 
