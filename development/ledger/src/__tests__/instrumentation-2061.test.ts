@@ -1,8 +1,9 @@
 /**
  * Tests for Next.js instrumentation startup hook — Fenrir Ledger
  *
- * Validates that register() correctly guards the KMS init call behind
- * the Node.js runtime check (NEXT_RUNTIME === 'nodejs').
+ * Validates that register() calls initJwtSecret() on all runtimes
+ * except Edge. In standalone mode, NEXT_RUNTIME may not be set,
+ * so register() defaults to running.
  *
  * @see src/instrumentation.ts
  * @ref #2061
@@ -55,10 +56,10 @@ describe("instrumentation register() — runtime guard", () => {
     expect(mockInitJwtSecret).not.toHaveBeenCalled();
   });
 
-  it("does NOT call initJwtSecret when NEXT_RUNTIME is undefined", async () => {
+  it("calls initJwtSecret when NEXT_RUNTIME is undefined (standalone mode)", async () => {
     delete process.env.NEXT_RUNTIME;
     const { register } = await import("../instrumentation");
     await register();
-    expect(mockInitJwtSecret).not.toHaveBeenCalled();
+    expect(mockInitJwtSecret).toHaveBeenCalledOnce();
   });
 });
