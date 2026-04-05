@@ -23,6 +23,17 @@ const NAME_TRUNCATE = 19;
 
 type HouseholdTier = "free" | "karl" | "trial";
 
+/** Minimal card data for the inline summary panel in HouseholdDetailView */
+export interface CardSummaryItem {
+  id: string;
+  name: string;
+  status: string;
+  issuer: string;
+  annualFee: number | null;
+  annualFeeDate: string | null;
+  deletedAt: string | null;
+}
+
 export interface HouseholdListItem {
   id: string;
   name: string;
@@ -48,6 +59,7 @@ export interface HouseholdDetail {
   members: MemberRow[];
   cardTotal: number;
   activeCards: number;
+  cards: CardSummaryItem[];
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
   stripeStatus: string | null;
@@ -186,9 +198,19 @@ interface HouseholdDetailViewProps {
   detail: HouseholdDetail;
 }
 
+const CARD_STATUS_DISPLAY: Record<string, { dot: string; color: string }> = {
+  active:          { dot: "●", color: "green"   },
+  fee_approaching: { dot: "◐", color: "yellow"  },
+  promo_expiring:  { dot: "◐", color: "yellow"  },
+  closed:          { dot: "○", color: "gray"    },
+  bonus_open:      { dot: "◎", color: "cyan"    },
+  overdue:         { dot: "●", color: "#ef4444" },
+  graduated:       { dot: "◑", color: "#9b9baa" },
+};
+
 export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React.JSX.Element {
   const {
-    household, members, cardTotal, activeCards,
+    household, members, cardTotal, activeCards, cards,
     stripeCustomerId, stripeSubscriptionId, stripeStatus, currentPeriodEnd,
     cancelAtPeriodEnd, stripePlanName, stripePeriodStart, stripePaymentLast4, stripePaymentBrand,
   } = detail;
@@ -275,11 +297,42 @@ export function HouseholdDetailView({ detail }: HouseholdDetailViewProps): React
       )}
 
       {/* Card Summary */}
-      <HSectionTitle title="Card Summary" />
-      <Box flexDirection="row" gap={3}>
-        <HDetailRow label="Active"  value={String(activeCards)} valueColor={GREEN} />
-        <HDetailRow label="Total"   value={String(cardTotal)} />
-      </Box>
+      <HSectionTitle title={`Card Summary (${activeCards} active / ${cardTotal} total)`} />
+      {cards.length === 0 ? (
+        <Text color={GRAY} dimColor>(no cards for this household)</Text>
+      ) : (
+        <Box flexDirection="column">
+          {/* Column header */}
+          <Box flexDirection="row">
+            <Text color={DIM}>{"  "}</Text>
+            <Text color={DIM}>{"Name".padEnd(24)}</Text>
+            <Text color={DIM}>{"Issuer".padEnd(14)}</Text>
+            <Text color={DIM}>{"Ann Fee"}</Text>
+          </Box>
+          {cards.map((card) => {
+            const { dot, color } = CARD_STATUS_DISPLAY[card.status] ?? { dot: "○", color: "gray" };
+            const isDeleted = Boolean(card.deletedAt);
+            const name = card.name.length > 23 ? card.name.slice(0, 22) + "\u2026" : card.name;
+            const issuer = (card.issuer || "—").slice(0, 13);
+            const fee = card.annualFee != null ? `$${card.annualFee}` : "—";
+            return (
+              <Box key={card.id} flexDirection="row">
+                <Text color={color}>{dot}</Text>
+                <Text color="white">{" "}</Text>
+                <Text
+                  color={isDeleted ? GRAY : LAVENDER}
+                  dimColor={isDeleted}
+                >
+                  {name.padEnd(24)}
+                </Text>
+                <Text color={GRAY}>{issuer.padEnd(14)}</Text>
+                <Text color={isDeleted ? GRAY : LAVENDER}>{fee}</Text>
+                {isDeleted ? <Text color={GRAY} dimColor>{" DEL"}</Text> : null}
+              </Box>
+            );
+          })}
+        </Box>
+      )}
 
       {/* Action hints */}
       <Box marginTop={1}>
@@ -370,7 +423,7 @@ async function loadHouseholds(): Promise<HouseholdListItem[]> {
 async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDetail> {
   log.debug("loadHouseholdDetail called", { id: hh.id });
   if (!firestoreClient) {
-    return { household: hh, members: [], cardTotal: 0, activeCards: 0, stripeCustomerId: null, stripeSubscriptionId: null, stripeStatus: null, currentPeriodEnd: null, cancelAtPeriodEnd: null, stripePlanName: null, stripePeriodStart: null, stripePaymentLast4: null, stripePaymentBrand: null };
+    return { household: hh, members: [], cardTotal: 0, activeCards: 0, cards: [], stripeCustomerId: null, stripeSubscriptionId: null, stripeStatus: null, currentPeriodEnd: null, cancelAtPeriodEnd: null, stripePlanName: null, stripePeriodStart: null, stripePaymentLast4: null, stripePaymentBrand: null };
   }
 
   // Members: query users by householdId
@@ -379,17 +432,31 @@ async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDeta
     firestoreClient.collection("households").doc(hh.id).collection("cards").get(),
   ]);
 
-  // Build card counts per member
+  // Build card counts per member and collect card summary items
   const cardsByUser = new Map<string, number>();
+  const cards: CardSummaryItem[] = [];
   for (const c of cardsSnap.docs) {
     const cd = c.data() as Record<string, unknown>;
     const uid = (cd["userId"] as string) || (cd["ownerId"] as string) || "";
     if (uid) cardsByUser.set(uid, (cardsByUser.get(uid) ?? 0) + 1);
+    cards.push({
+      id:           c.id,
+      name:         (cd["name"] as string | undefined) ?? (cd["cardName"] as string | undefined) ?? "(unnamed)",
+      status:       (cd["status"] as string | undefined) ?? "active",
+      issuer:       (cd["issuer"] as string | undefined) ?? (cd["issuerId"] as string | undefined) ?? "",
+      annualFee:    typeof cd["annualFee"] === "number" ? cd["annualFee"] : null,
+      annualFeeDate: (cd["annualFeeDate"] as string | undefined) ?? null,
+      deletedAt:    (cd["deletedAt"] as string | undefined) ?? null,
+    });
   }
-  const activeCards = cardsSnap.docs.filter((c) => {
-    const cd = c.data() as Record<string, unknown>;
-    return !cd["deletedAt"];
-  }).length;
+  // Sort: active first, then by name; deleted last
+  const STATUS_ORDER: Record<string, number> = { active: 0, fee_approaching: 1, promo_expiring: 2, closed: 3 };
+  cards.sort((a, b) => {
+    const ao = a.deletedAt ? 99 : (STATUS_ORDER[a.status] ?? 4);
+    const bo = b.deletedAt ? 99 : (STATUS_ORDER[b.status] ?? 4);
+    return ao !== bo ? ao - bo : a.name.localeCompare(b.name);
+  });
+  const activeCards = cards.filter((c) => !c.deletedAt).length;
 
   const members: MemberRow[] = membersSnap.docs.map((d) => {
     const ud = d.data() as Record<string, unknown>;
@@ -488,12 +555,13 @@ async function loadHouseholdDetail(hh: HouseholdListItem): Promise<HouseholdDeta
     }
   }
 
-  log.debug("loadHouseholdDetail returning", { memberCount: members.length, cardTotal: cardsSnap.docs.length });
+  log.debug("loadHouseholdDetail returning", { memberCount: members.length, cardTotal: cards.length });
   return {
     household: hh,
     members,
-    cardTotal: cardsSnap.docs.length,
+    cardTotal: cards.length,
     activeCards,
+    cards,
     stripeCustomerId,
     stripeSubscriptionId,
     stripeStatus,
