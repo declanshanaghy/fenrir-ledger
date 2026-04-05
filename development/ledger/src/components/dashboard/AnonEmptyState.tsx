@@ -3,19 +3,19 @@
 /**
  * AnonEmptyState — displayed on the dashboard when an anonymous user has zero cards.
  *
- * Primary CTA:   Sign in / Start free 30-day trial (navigates via buildSignInUrl)
- * Secondary CTA: Add a card locally (navigates to /ledger/cards/new)
+ * Three-tier CTA hierarchy per Luna wireframe for issue #2117:
+ *   - TIER 1 PRIMARY:   "Start Your Free 30-Day Trial" (gold button, sign-up intent)
+ *   - TIER 2 SECONDARY: "Login & Return to Hlidskjalf" (outlined button, returning users)
+ *   - "or" divider with horizontal rules
+ *   - TIER 3 TERTIARY:  "Add a card locally" (text link, no button chrome)
  *
- * Visual hierarchy matches the Luna wireframe (Section B) for issue #1748:
- *   - Primary button: prominent, bold, 2px border equivalent via ring styling
- *   - "or" divider: aria-hidden, purely visual
- *   - Secondary button: subordinate, lighter weight
- *   - Footnotes: associated via aria-describedby
+ * Both auth buttons call the same buildSignInUrl(pathname) handler.
+ * The distinction is copy-only — the auth flow handles new vs returning users.
  *
  * Gleipnir easter egg #1 (ingredient 6 of 6: spittle of a bird) is preserved
  * on the outer wrapper div, matching EmptyState.tsx.
  *
- * Issue #1748
+ * Issue #1748 (original), updated by issue #2117
  */
 
 import Link from "next/link";
@@ -65,19 +65,19 @@ export function AnonEmptyState() {
         Before your first card is added, no chain can be broken.
       </p>
 
-      {/* CTA group — vertically stacked, max-width 320px, centered */}
-      <div className="flex flex-col items-center w-full max-w-xs gap-3">
+      {/* CTA group — vertically stacked, max-width 340px, centered */}
+      <div className="flex flex-col items-center w-full max-w-[340px] gap-3">
 
-        {/* PRIMARY: Start free trial / Sign in */}
+        {/* TIER 1 PRIMARY: Start free trial / Sign up */}
         <button
           type="button"
           id="anon-cta-signin"
           onClick={handleSignIn}
           aria-describedby="anon-cta-signin-footnote"
-          className="inline-flex items-center justify-center w-full font-heading tracking-wide text-base transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 active:scale-[0.97] active:brightness-90 h-12 px-6 rounded-sm"
+          className="inline-flex items-center justify-center w-full font-heading tracking-wide text-base font-semibold transition-colors bg-primary text-primary-foreground hover:bg-primary hover:brightness-110 active:scale-[0.97] active:brightness-90 h-12 px-6 rounded-sm"
           style={{ minHeight: 48 }}
         >
-          Start your free 30-day trial
+          Start Your Free 30-Day Trial
         </button>
         <p
           id="anon-cta-signin-footnote"
@@ -86,20 +86,35 @@ export function AnonEmptyState() {
           Sign in to sync cards, access all devices &amp; unlock Karl.
         </p>
 
-        {/* Visual divider — aria-hidden, SR hears the two buttons sequentially */}
-        <span
-          aria-hidden="true"
-          className="text-xs text-muted-foreground/50 uppercase tracking-widest"
+        {/* TIER 2 SECONDARY: Returning user login */}
+        <button
+          type="button"
+          id="anon-cta-login"
+          onClick={handleSignIn}
+          className="inline-flex items-center justify-center w-full font-heading tracking-wide text-sm transition-colors border border-border text-foreground hover:border-gold/60 hover:text-gold h-11 px-6 rounded-sm"
+          style={{ minHeight: 44 }}
         >
-          or
-        </span>
+          Login &amp; Return to Hlidskjalf
+        </button>
 
-        {/* SECONDARY: Add a card locally */}
+        {/* Visual divider before tertiary option — aria-hidden, SR hears buttons sequentially */}
+        <div
+          aria-hidden="true"
+          className="flex items-center gap-3 w-full my-1"
+        >
+          <span className="flex-1 border-t border-border/40" />
+          <span className="text-xs text-muted-foreground/50 uppercase tracking-widest">
+            or
+          </span>
+          <span className="flex-1 border-t border-border/40" />
+        </div>
+
+        {/* TIER 3 TERTIARY: Add a card locally — text link, no button chrome */}
         <Link
           href="/ledger/cards/new"
           id="anon-cta-local"
           aria-describedby="anon-cta-local-footnote"
-          className="inline-flex items-center justify-center w-full font-heading tracking-wide text-sm transition-colors border border-border text-muted-foreground hover:border-gold/50 hover:text-gold h-11 px-6 rounded-sm"
+          className="inline-flex items-center justify-center font-body text-xs text-muted-foreground underline underline-offset-2 hover:text-gold transition-colors px-4 py-2"
           style={{ minHeight: 44 }}
         >
           Add a card locally

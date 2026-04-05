@@ -1,10 +1,11 @@
 /**
- * AnonEmptyState + Dashboard conditional rendering — tests for issue #1748.
+ * AnonEmptyState + Dashboard conditional rendering — tests for issue #1748 / #2117.
  *
  * Covers:
- *  - AnonEmptyState renders sign-in primary CTA and add-locally secondary CTA
+ *  - AnonEmptyState renders sign-in primary CTA and login secondary CTA (#2117)
  *  - Primary CTA calls router.push with buildSignInUrl result
- *  - Secondary CTA is a link to /ledger/cards/new
+ *  - Login CTA also calls router.push with buildSignInUrl result (#2117)
+ *  - "Add a card locally" is a text link to /ledger/cards/new (#2117 de-emphasis)
  *  - "or" divider is aria-hidden
  *  - Footnotes are associated via aria-describedby
  *  - Dashboard renders AnonEmptyState when status=anonymous and zero cards
@@ -126,7 +127,7 @@ vi.mock("@/hooks/useAuth", () => ({
 
 // ── AnonEmptyState unit tests ────────────────────────────────────────────────
 
-describe("AnonEmptyState #1748", () => {
+describe("AnonEmptyState #2117 — three-tier CTA hierarchy", () => {
   beforeEach(() => {
     mockPush.mockReset();
   });
@@ -145,17 +146,26 @@ describe("AnonEmptyState #1748", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the secondary CTA link to /ledger/cards/new", () => {
+  it("renders the secondary login CTA button", () => {
+    render(<AnonEmptyState />);
+    expect(
+      screen.getByRole("button", { name: /login.*hlidskjalf/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the tertiary local-add link to /ledger/cards/new", () => {
     render(<AnonEmptyState />);
     const link = screen.getByRole("link", { name: /add a card locally/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/ledger/cards/new");
   });
 
-  it("renders the 'or' divider as aria-hidden", () => {
+  it("renders the 'or' divider inside an aria-hidden container", () => {
     render(<AnonEmptyState />);
-    const divider = screen.getByText(/^or$/i);
-    expect(divider).toHaveAttribute("aria-hidden", "true");
+    const orText = screen.getByText(/^or$/i);
+    // The "or" span is nested inside the aria-hidden divider container
+    const dividerContainer = orText.closest("[aria-hidden='true']");
+    expect(dividerContainer).not.toBeNull();
   });
 
   it("primary button has aria-describedby pointing to the sign-in footnote", () => {
@@ -168,7 +178,7 @@ describe("AnonEmptyState #1748", () => {
     expect(footnote?.textContent).toMatch(/sync cards/i);
   });
 
-  it("secondary link has aria-describedby pointing to the local footnote", () => {
+  it("local link has aria-describedby pointing to the local footnote", () => {
     render(<AnonEmptyState />);
     const link = screen.getByRole("link", { name: /add a card locally/i });
     const footnoteId = link.getAttribute("aria-describedby");
@@ -189,10 +199,38 @@ describe("AnonEmptyState #1748", () => {
     );
   });
 
+  it("clicking login CTA calls router.push with the same sign-in URL", () => {
+    render(<AnonEmptyState />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /login.*hlidskjalf/i }),
+    );
+    expect(mockPush).toHaveBeenCalledOnce();
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringContaining("/ledger/sign-in"),
+    );
+  });
+
   it("outer div has aria-description easter egg attribute", () => {
     const { container } = render(<AnonEmptyState />);
     const outer = container.firstChild as HTMLElement;
     expect(outer.getAttribute("aria-description")).toBe("the spittle of a bird");
+  });
+
+  it("both primary and login CTAs call the same buildSignInUrl destination", () => {
+    render(<AnonEmptyState />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /start your free 30-day trial/i }),
+    );
+    const primaryUrl = mockPush.mock.calls[0][0] as string;
+
+    mockPush.mockReset();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /login.*hlidskjalf/i }),
+    );
+    const loginUrl = mockPush.mock.calls[0][0] as string;
+
+    expect(primaryUrl).toBe(loginUrl);
   });
 });
 
@@ -209,6 +247,14 @@ describe("Dashboard #1748 — zero-cards conditional rendering", () => {
     // AnonEmptyState renders the trial CTA button
     expect(
       screen.getByRole("button", { name: /start your free 30-day trial/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders AnonEmptyState login CTA when status=anonymous and zero cards", () => {
+    mockAuthStatus = "anonymous";
+    render(<Dashboard cards={[]} />);
+    expect(
+      screen.getByRole("button", { name: /login.*hlidskjalf/i }),
     ).toBeInTheDocument();
   });
 
