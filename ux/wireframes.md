@@ -1,5 +1,13 @@
 # Wireframes: Fenrir Ledger
 
+## Ledger Empty State — Separate Login + Sign Up Buttons (Issue #2117)
+
+| File | Description |
+|------|-------------|
+| [wireframes/app/ledger-empty-state-2117.html](wireframes/app/ledger-empty-state-2117.html) | Ledger empty state redesign for anonymous users: 9 sections — (A) before/after comparison (#1748 single auth CTA vs #2117 three-tier hierarchy); (B) desktop wireframe with three-tier CTA group (Tier 1: "Start Your Free 30-Day Trial" gold primary button, Tier 2: "Login & Return to Hlidskjalf" secondary outlined button, Tier 3: "Add a card locally" text link); (C) mobile 375px wireframe with same hierarchy, full-width CTAs, 44px+ touch targets; (D) interaction spec table (click behavior, hover states, loading states — both auth buttons call buildSignInUrl, local-add is a client-side Link); (E) authenticated empty state unchanged reference; (F) WCAG 2.1 AA accessibility table (focus rings, aria-describedby on footnotes, heading hierarchy, keyboard tab order, reduced motion); (G) component structure notes for FiremanDecko (modify AnonEmptyState.tsx only, no new files); (H) updated state x render matrix; (I) delta table from #1748. |
+
+---
+
 ## Timer Icon on Card Views — Hunt, Howl, Valhalla, All Tabs (Issue #1850)
 
 | File | Description |
