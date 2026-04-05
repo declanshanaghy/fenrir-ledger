@@ -1,32 +1,18 @@
 /**
- * KMS envelope decryption for JWT signing secret — Fenrir Ledger
+ * JWT signing secret — Fenrir Ledger
  *
- * Called ONCE on pod startup (via Next.js instrumentation). Decrypts the
- * FENRIR_JWT_SECRET_CIPHERTEXT env var via Cloud KMS and stores the plaintext
- * key in module memory. The key is NEVER written to disk or logged.
+ * Called ONCE on pod startup (via Next.js instrumentation). Reads the
+ * FENRIR_JWT_SECRET env var and stores it in module memory.
+ * The key is NEVER written to disk or logged.
  *
- * Envelope encryption pattern:
- *   - At secret creation: gcloud kms encrypt → base64 ciphertext stored in K8s
- *   - At pod startup: kms.decrypt() → plaintext key held in memory only
- *   - Per request: getJwtSecret() returns the in-memory key (zero KMS calls)
+ * Secret lifecycle:
+ *   - Source of truth: Google Secret Manager
+ *   - Synced to K8s via: node scripts/sync-secrets.mjs --push FENRIR_JWT_SECRET
+ *   - Injected into pods via fenrir-app-secrets K8s Secret
  *
- * Key rotation:
- *   1. Re-encrypt DEK with new KMS key version (sync-secrets.mjs --push)
- *   2. Update K8s secret (FENRIR_JWT_SECRET_CIPHERTEXT)
- *   3. Restart pods — initJwtSecret() decrypts with the new version
- *
- * Local development (NODE_ENV !== 'production'):
- *   Falls back to FENRIR_JWT_SECRET plaintext env var — no KMS call.
- *
- * Required env vars (production):
- *   KMS_KEY_NAME              — full resource name from `terraform output kms_key_name`
- *   FENRIR_JWT_SECRET_CIPHERTEXT — base64-encoded KMS ciphertext
- *
- * Required env vars (development):
- *   FENRIR_JWT_SECRET         — plaintext signing key
+ * Required env var:
+ *   FENRIR_JWT_SECRET — plaintext signing key (all environments)
  */
-
-import { KeyManagementServiceClient } from "@google-cloud/kms";
 
 /** Module-level cache — set once, never mutated after init */
 let _jwtSecret: string | null = null;
@@ -34,57 +20,23 @@ let _jwtSecret: string | null = null;
 /**
  * Initialise the in-memory JWT signing secret.
  *
- * In production: reads FENRIR_JWT_SECRET_CIPHERTEXT and KMS_KEY_NAME, calls
- * Cloud KMS decrypt, and caches the plaintext key in module memory.
- *
- * In development: reads FENRIR_JWT_SECRET directly.
+ * Reads FENRIR_JWT_SECRET from the environment and caches it in module memory.
  *
  * Idempotent — safe to call multiple times (no-op after first successful init).
  *
- * @throws {Error} if required env vars are missing or KMS decrypt fails
+ * @throws {Error} if FENRIR_JWT_SECRET env var is missing
  */
 export async function initJwtSecret(): Promise<void> {
   if (_jwtSecret !== null) return; // Already initialised
 
-  if (process.env.NODE_ENV !== "production") {
-    const dev = process.env.FENRIR_JWT_SECRET;
-    if (!dev) {
-      throw new Error(
-        "FENRIR_JWT_SECRET env var must be set for JWT signing in development"
-      );
-    }
-    _jwtSecret = dev;
-    return;
-  }
-
-  const ciphertext = process.env.FENRIR_JWT_SECRET_CIPHERTEXT;
-  if (!ciphertext) {
+  const secret = process.env.FENRIR_JWT_SECRET;
+  if (!secret) {
     throw new Error(
-      "FENRIR_JWT_SECRET_CIPHERTEXT env var is required in production — " +
-        "run sync-secrets.mjs to encrypt and push the ciphertext"
+      "FENRIR_JWT_SECRET env var must be set for JWT signing — " +
+        "run: node scripts/sync-secrets.mjs --push FENRIR_JWT_SECRET"
     );
   }
-
-  const keyName = process.env.KMS_KEY_NAME;
-  if (!keyName) {
-    throw new Error(
-      "KMS_KEY_NAME env var is required in production — " +
-        "set to the value of `terraform output kms_key_name`"
-    );
-  }
-
-  const client = new KeyManagementServiceClient();
-  const [result] = await client.decrypt({
-    name: keyName,
-    ciphertext: Buffer.from(ciphertext, "base64"),
-  });
-
-  if (!result.plaintext) {
-    throw new Error("KMS decrypt returned empty plaintext — check KMS IAM and ciphertext validity");
-  }
-
-  // Trim whitespace in case the plaintext was padded during encryption
-  _jwtSecret = Buffer.from(result.plaintext).toString("utf8").trimEnd();
+  _jwtSecret = secret;
 }
 
 /**
