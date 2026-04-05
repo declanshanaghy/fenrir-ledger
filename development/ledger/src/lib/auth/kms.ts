@@ -1,9 +1,8 @@
 /**
  * JWT signing secret — Fenrir Ledger
  *
- * Called ONCE on pod startup (via Next.js instrumentation). Reads the
- * FENRIR_JWT_SECRET env var and stores it in module memory.
- * The key is NEVER written to disk or logged.
+ * Reads FENRIR_JWT_SECRET directly from process.env on every call.
+ * No init step needed — the env var is available in all worker processes.
  *
  * Secret lifecycle:
  *   - Source of truth: Google Secret Manager
@@ -14,21 +13,15 @@
  *   FENRIR_JWT_SECRET — plaintext signing key (all environments)
  */
 
-/** Module-level cache — set once, never mutated after init */
-let _jwtSecret: string | null = null;
-
 /**
- * Initialise the in-memory JWT signing secret.
+ * Returns the JWT signing secret from process.env.
  *
- * Reads FENRIR_JWT_SECRET from the environment and caches it in module memory.
- *
- * Idempotent — safe to call multiple times (no-op after first successful init).
+ * Reads directly from the environment on every call — no module-level
+ * caching needed because process.env is shared across all workers.
  *
  * @throws {Error} if FENRIR_JWT_SECRET env var is missing
  */
-export async function initJwtSecret(): Promise<void> {
-  if (_jwtSecret !== null) return; // Already initialised
-
+export function getJwtSecret(): string {
   const secret = process.env.FENRIR_JWT_SECRET;
   if (!secret) {
     throw new Error(
@@ -36,27 +29,22 @@ export async function initJwtSecret(): Promise<void> {
         "run: node scripts/sync-secrets.mjs --push FENRIR_JWT_SECRET"
     );
   }
-  _jwtSecret = secret;
+  return secret;
 }
 
 /**
- * Returns the in-memory JWT signing secret.
- *
- * @throws {Error} if initJwtSecret() has not been successfully called
+ * No-op — kept for backwards compatibility with instrumentation.ts.
+ * The secret is now read directly from process.env, no init needed.
  */
-export function getJwtSecret(): string {
-  if (_jwtSecret === null) {
-    throw new Error(
-      "JWT secret not initialised — ensure initJwtSecret() is awaited at pod startup"
-    );
-  }
-  return _jwtSecret;
+export async function initJwtSecret(): Promise<void> {
+  // Validate the env var is present at startup, but don't cache it
+  getJwtSecret();
 }
 
 /**
- * Resets the cached secret. Used in tests only — never call in production.
+ * Resets nothing — kept for test compatibility.
  * @internal
  */
 export function _resetJwtSecretForTesting(): void {
-  _jwtSecret = null;
+  // No-op: secret is read from process.env directly
 }
