@@ -738,6 +738,45 @@ jobs:
             echo "PVC postgresql-data-postgresql-0 not found yet — skipping PV patch"
           fi
 
+      - name: Setup Terraform (snapshot activation)
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~> 1.9"
+
+      - name: Activate PostgreSQL snapshot policy
+        # Discovers the GCE disk name from the PV's CSI volumeHandle and runs
+        # a targeted terraform apply to attach the pre-defined snapshot policy.
+        # The snapshot policy resource is created by the main terraform job;
+        # this step wires it to the physical disk after Helm provisions the PVC.
+        # Idempotent — safe to run on every deploy. Issue #2090.
+        run: |
+          PV_NAME=$(kubectl get pvc postgresql-data-postgresql-0 \
+            -n fenrir-analytics \
+            -o jsonpath='{.spec.volumeName}' 2>/dev/null || true)
+          if [ -z "$PV_NAME" ]; then
+            echo "PVC not found — skipping snapshot policy activation"
+            exit 0
+          fi
+          DISK_HANDLE=$(kubectl get pv "$PV_NAME" \
+            -o jsonpath='{.spec.csi.volumeHandle}' 2>/dev/null || true)
+          if [ -z "$DISK_HANDLE" ]; then
+            echo "Could not read volumeHandle for PV $PV_NAME — skipping"
+            exit 0
+          fi
+          DISK_NAME="${DISK_HANDLE##*/}"
+          echo "Activating snapshot policy for PostgreSQL disk: $DISK_NAME"
+          cd infrastructure
+          terraform init -input=false -reconfigure
+          export TF_VAR_postgresql_disk_name="$DISK_NAME"
+          terraform apply -input=false -auto-approve \
+            -target=google_compute_disk_resource_policy_attachment.postgresql_snapshot_attachment
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_region: ${{ secrets.GCP_REGION }}
+          TF_VAR_zone: ${{ secrets.GCP_ZONE }}
+          TF_VAR_uptime_check_host: ${{ secrets.TF_VAR_UPTIME_CHECK_HOST }}
+          TF_VAR_stripe_api_key: ${{ secrets.STRIPE_SECRET_KEY }}
+
       - name: Verify rollout
         run: |
           echo "### Analytics Deploy" >> $GITHUB_STEP_SUMMARY
@@ -859,6 +898,44 @@ jobs:
           else
             echo "No PVC found in fenrir-marketing yet — skipping PV patch"
           fi
+
+      - name: Setup Terraform (snapshot activation)
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~> 1.9"
+
+      - name: Activate n8n snapshot policy
+        # Discovers the GCE disk name from the PV's CSI volumeHandle and runs
+        # a targeted terraform apply to attach the pre-defined snapshot policy.
+        # The snapshot policy resource is created by the main terraform job;
+        # this step wires it to the physical disk after Helm provisions the PVC.
+        # Idempotent — safe to run on every deploy. Issue #2090.
+        run: |
+          PV_NAME=$(kubectl get pvc -n fenrir-marketing \
+            -o jsonpath='{.items[0].spec.volumeName}' 2>/dev/null || true)
+          if [ -z "$PV_NAME" ]; then
+            echo "PVC not found — skipping snapshot policy activation"
+            exit 0
+          fi
+          DISK_HANDLE=$(kubectl get pv "$PV_NAME" \
+            -o jsonpath='{.spec.csi.volumeHandle}' 2>/dev/null || true)
+          if [ -z "$DISK_HANDLE" ]; then
+            echo "Could not read volumeHandle for PV $PV_NAME — skipping"
+            exit 0
+          fi
+          DISK_NAME="${DISK_HANDLE##*/}"
+          echo "Activating snapshot policy for n8n disk: $DISK_NAME"
+          cd infrastructure
+          terraform init -input=false -reconfigure
+          export TF_VAR_n8n_disk_name="$DISK_NAME"
+          terraform apply -input=false -auto-approve \
+            -target=google_compute_disk_resource_policy_attachment.n8n_snapshot_attachment
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_region: ${{ secrets.GCP_REGION }}
+          TF_VAR_zone: ${{ secrets.GCP_ZONE }}
+          TF_VAR_uptime_check_host: ${{ secrets.TF_VAR_UPTIME_CHECK_HOST }}
+          TF_VAR_stripe_api_key: ${{ secrets.STRIPE_SECRET_KEY }}
 
       - name: Verify rollout
         run: |

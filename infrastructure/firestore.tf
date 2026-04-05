@@ -18,7 +18,33 @@ resource "google_firestore_database" "main" {
   # Prevent accidental deletion of production data
   deletion_policy = "DELETE"
 
+  # Enable 35-day point-in-time recovery — issue #2090
+  point_in_time_recovery_enablement = "POINT_IN_TIME_RECOVERY_ENABLED"
+
   depends_on = [google_project_service.apis]
+}
+
+# --------------------------------------------------------------------------
+# Firestore Backup Schedule — daily exports, 30-day retention
+#
+# Firestore managed backups stored in Firestore's backup storage system.
+# Backups can be listed via: gcloud firestore backups list --location=REGION
+# Restore: gcloud firestore databases restore --source-backup=BACKUP_NAME
+#          --destination-database=RESTORE_DB_NAME
+#
+# See infrastructure/docs/database-restore.md for full restore procedures.
+# --------------------------------------------------------------------------
+
+resource "google_firestore_backup_schedule" "daily" {
+  project  = var.project_id
+  database = google_firestore_database.main.name
+
+  # 30 days = 30 * 24 * 60 * 60 = 2,592,000 seconds
+  retention = "2592000s"
+
+  daily_recurrence {}
+
+  depends_on = [google_firestore_database.main]
 }
 
 # --------------------------------------------------------------------------
