@@ -52,18 +52,60 @@
     },
     {
       "parameters": {
-        "jsCode": "// Route Reddit emails into categories based on subject line\nconst items = $input.all();\nconst replies = [];\nconst suggestions = [];\nconst other = [];\n\nfor (const item of items) {\n  const subject = (item.json.Subject || item.json.subject || '').toLowerCase();\n  \n  if (subject.includes('replied to your')) {\n    replies.push(item);\n  } else if (\n    subject.includes('posts from') ||\n    subject.includes('trending') ||\n    subject.includes('popular') ||\n    subject.includes('because you') ||\n    subject.includes('you might like') ||\n    subject.includes('new posts in') ||\n    subject.includes('top posts')\n  ) {\n    suggestions.push(item);\n  } else {\n    other.push(item);\n  }\n}\n\n// Return 3 outputs: [replies, suggestions, other]\nreturn [replies, suggestions, other];"
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-is-reply",
+              "leftValue": "={{ $json.Subject || $json.subject }}",
+              "rightValue": "replied to your",
+              "operator": { "type": "string", "operation": "contains" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
       "id": "a1b2c3d4-0020-4000-8000-000000000020",
-      "name": "Router — Email Type",
+      "name": "Is Reply?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 680, 400 ],
+      "notes": "True = reply email → reply branch. False = suggestion or noise → second router."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if the email contains links to posts in preferred subreddits\nconst PREFERRED = new Set(\n  ($env.PREFERRED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst item = $input.first();\nconst htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\nconst subject = (item.json.Subject || item.json.subject || '').toLowerCase();\n\n// Check if this looks like a suggestion email\nconst isSuggestion = (\n  subject.includes('posts from') ||\n  subject.includes('trending') ||\n  subject.includes('popular') ||\n  subject.includes('because you') ||\n  subject.includes('you might like') ||\n  subject.includes('new posts in') ||\n  subject.includes('top posts')\n);\n\nif (!isSuggestion) {\n  // Not a suggestion, pass through with isSuggestion=false\n  return [{ json: { ...item.json, isSuggestion: false } }];\n}\n\n// Check if any links match preferred subs\nconst linkRegex = /href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/([^/]+)\\/comments\\/[^\"']*)[\"']/gi;\nlet hasPreferred = false;\nlet match;\nwhile ((match = linkRegex.exec(htmlBody)) !== null) {\n  const sub = 'r/' + match[2];\n  if (PREFERRED.size === 0 || PREFERRED.has(sub.toLowerCase())) {\n    hasPreferred = true;\n    break;\n  }\n}\n\nreturn [{ json: { ...item.json, isSuggestion: hasPreferred } }];"
+      },
+      "id": "a1b2c3d4-0021-4000-8000-000000000021",
+      "name": "Check — Has Preferred Sub?",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        680,
-        400
-      ],
-      "outputs": ["main", "main", "main"],
-      "notes": "Splits Reddit emails into 3 categories by subject: replies (output 0), post suggestions (output 1), other/noise (output 2)."
+      "position": [ 900, 500 ],
+      "notes": "For non-reply emails: checks if it's a suggestion email with links to preferred subreddits."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-is-suggestion",
+              "leftValue": "={{ $json.isSuggestion }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equal" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0022-4000-8000-000000000022",
+      "name": "Is Preferred Suggestion?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1120, 500 ],
+      "notes": "True = suggestion with preferred sub links → suggestion branch. False = noise → mark as read."
     },
 
     {
@@ -326,15 +368,29 @@
     "Gmail — Fetch Reddit Emails": {
       "main": [
         [
-          { "node": "Router — Email Type", "type": "main", "index": 0 }
+          { "node": "Is Reply?", "type": "main", "index": 0 }
         ]
       ]
     },
-    "Router — Email Type": {
+    "Is Reply?": {
       "main": [
         [
           { "node": "Extract — Reply Context", "type": "main", "index": 0 }
         ],
+        [
+          { "node": "Check — Has Preferred Sub?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Check — Has Preferred Sub?": {
+      "main": [
+        [
+          { "node": "Is Preferred Suggestion?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Is Preferred Suggestion?": {
+      "main": [
         [
           { "node": "Extract — Suggested Posts", "type": "main", "index": 0 }
         ],
