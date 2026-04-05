@@ -2,7 +2,7 @@
   "updatedAt": "2026-04-05T01:26:28.418Z",
   "createdAt": "2026-03-19T01:01:15.554Z",
   "id": "gmail-reddit-monitor",
-  "name": "Gmail — Reddit Monitor",
+  "name": "Gmail \u2014 Reddit Monitor",
   "description": "Monitors Freya's Gmail for Reddit reply notifications AND suggested post emails. Replies get follow-up drafts. Suggested posts in preferred subreddits get new comment drafts via Reddit JSON API.",
   "active": false,
   "isArchived": false,
@@ -30,7 +30,7 @@
         "options": {}
       },
       "id": "a1b2c3d4-0002-4000-8000-000000000002",
-      "name": "Gmail — Fetch Reddit Emails",
+      "name": "Gmail \u2014 Fetch Reddit Emails",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
@@ -77,14 +77,14 @@
         688,
         400
       ],
-      "notes": "True = reply email → reply branch. False = suggestion or noise → second router."
+      "notes": "True = reply email \u2192 reply branch. False = suggestion or noise \u2192 second router."
     },
     {
       "parameters": {
         "jsCode": "// Check if the email contains displayed subreddit names matching preferred subs.\n// Reddit emails use click.redditmail.com tracking links, so we match the\n// visible text (e.g. >r/churning<) instead of href URLs.\nconst PREFERRED = new Set(\n  ($env.PREFERRED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst item = $input.first();\nconst htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n\n// Match displayed subreddit names like >r/churning< or >r/CreditCards<\nconst subRegex = />r\\/([A-Za-z0-9_]+)</gi;\nlet hasPreferred = false;\nlet match;\nwhile ((match = subRegex.exec(htmlBody)) !== null) {\n  const sub = 'r/' + match[1].toLowerCase();\n  if (PREFERRED.size === 0 || PREFERRED.has(sub)) {\n    hasPreferred = true;\n    break;\n  }\n}\n\nreturn [{ json: { ...item.json, hasPreferred } }];"
       },
       "id": "a1b2c3d4-0021-4000-8000-000000000021",
-      "name": "Check — Has Preferred Sub?",
+      "name": "Check \u2014 Has Preferred Sub?",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -98,7 +98,7 @@
         "jsCode": "// Subreddits to ignore\nconst IGNORED_SUBREDDITS = new Set(\n  ($env.IGNORED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst items = $input.all();\nconst results = [];\nconst seenThreads = new Set();\n\nfor (const item of items) {\n  const subject = item.json.Subject || item.json.subject || '';\n  const snippet = item.json.snippet || item.json.text || '';\n  const htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n  const messageId = item.json.id || '';\n  const threadId = item.json.threadId || messageId;\n  const date = item.json.internalDate\n    ? new Date(parseInt(item.json.internalDate)).toISOString()\n    : (item.json.date || new Date().toISOString());\n\n  const subjectMatch = subject.match(/u\\/(\\S+)\\s+replied to your (?:post|comment) in (r\\/\\S+)/i);\n  const replierName = subjectMatch ? subjectMatch[1] : 'someone';\n  const subreddit = subjectMatch ? subjectMatch[2] : 'unknown';\n\n  const botNames = ['automoderator', 'bot', 'moderator', 'modteam'];\n  if (botNames.some(b => replierName.toLowerCase().includes(b))) continue;\n\n  const isIgnored = IGNORED_SUBREDDITS.has(subreddit.toLowerCase());\n\n  if (seenThreads.has(threadId)) continue;\n  seenThreads.add(threadId);\n\n  let replyLink = '';\n  const viewReplyMatch = htmlBody.match(/href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[^\"']*\\/comments\\/[^\"']*)[\"'][^>]*>[^<]*(?:View Reply|Reply|View Comment|View)/i);\n  if (viewReplyMatch) {\n    replyLink = viewReplyMatch[1];\n  } else {\n    const commentLinkMatch = htmlBody.match(/href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[^\"']*\\/comments\\/[^\"']*)[\"']/i);\n    if (commentLinkMatch) replyLink = commentLinkMatch[1];\n  }\n\n  results.push({\n    json: {\n      messageId, threadId, date, subject, replierName, subreddit,\n      replyText: snippet.substring(0, 1000).trim(),\n      replyLink, isIgnored, rawBody: snippet\n    }\n  });\n}\n\nreturn results;"
       },
       "id": "a1b2c3d4-0004-4000-8000-000000000004",
-      "name": "Extract — Reply Context",
+      "name": "Extract \u2014 Reply Context",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -131,7 +131,7 @@
         "options": {}
       },
       "id": "a1b2c3d4-0009-4000-8000-000000000009",
-      "name": "Filter — Reply Not Ignored",
+      "name": "Filter \u2014 Reply Not Ignored",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
@@ -160,7 +160,7 @@
         }
       },
       "id": "a1b2c3d4-0005-4000-8000-000000000005",
-      "name": "Claude — Draft Reply",
+      "name": "Claude \u2014 Draft Reply",
       "type": "@n8n/n8n-nodes-langchain.anthropic",
       "typeVersion": 1,
       "position": [
@@ -177,10 +177,10 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst contextItems = $('Extract — Reply Context').all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const claudeResponse = items[i].json;\n  const draftText = claudeResponse?.text || claudeResponse?.content?.[0]?.text || 'Claude draft unavailable.';\n  const context = contextItems[i]?.json || contextItems[0]?.json || {};\n\n  results.push({\n    json: {\n      draftText,\n      replierName: context.replierName || 'unknown',\n      subreddit: context.subreddit || 'unknown',\n      replyText: context.replyText || '',\n      replyLink: context.replyLink || '',\n      subject: context.subject || '',\n      messageId: context.messageId || '',\n      date: context.date || ''\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "const items = $input.all();\nconst contextItems = $('Extract \u2014 Reply Context').all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const claudeResponse = items[i].json;\n  const draftText = claudeResponse?.text || claudeResponse?.content?.[0]?.text || 'Claude draft unavailable.';\n  const context = contextItems[i]?.json || contextItems[0]?.json || {};\n\n  results.push({\n    json: {\n      draftText,\n      replierName: context.replierName || 'unknown',\n      subreddit: context.subreddit || 'unknown',\n      replyText: context.replyText || '',\n      replyLink: context.replyLink || '',\n      subject: context.subject || '',\n      messageId: context.messageId || '',\n      date: context.date || ''\n    }\n  });\n}\n\nreturn results;"
       },
       "id": "a1b2c3d4-0006-4000-8000-000000000006",
-      "name": "Merge — Reply + Draft",
+      "name": "Merge \u2014 Reply + Draft",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -198,7 +198,7 @@
         "options": {}
       },
       "id": "a1b2c3d4-0007-4000-8000-000000000007",
-      "name": "Gmail — Create Reply Draft",
+      "name": "Gmail \u2014 Create Reply Draft",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
@@ -217,10 +217,10 @@
     {
       "parameters": {
         "operation": "markAsRead",
-        "messageId": "={{ $('Extract — Reply Context').first().json.messageId }}"
+        "messageId": "={{ $('Extract \u2014 Reply Context').first().json.messageId }}"
       },
       "id": "a1b2c3d4-0010-4000-8000-000000000010",
-      "name": "Gmail — Mark Reply Read",
+      "name": "Gmail \u2014 Mark Reply Read",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
@@ -238,24 +238,24 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract Reddit post links from suggestion emails and filter by PREFERRED_SUBREDDITS\nconst PREFERRED = new Set(\n  ($env.PREFERRED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\nconst IGNORED = new Set(\n  ($env.IGNORED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst items = $input.all();\nconst results = [];\nconst seen = new Set();\n\nfor (const item of items) {\n  const messageId = item.json.id || '';\n  const subject = item.json.Subject || item.json.subject || '';\n  const htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n  const snippet = item.json.snippet || item.json.text || '';\n\n  // Find all Reddit post links in the email HTML\n  const linkRegex = /href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/([^/]+)\\/comments\\/([^/\"']+)[^\"']*)[\"']/gi;\n  let match;\n  while ((match = linkRegex.exec(htmlBody)) !== null) {\n    const postUrl = match[1].split('?')[0].replace(/\\/+$/, '');\n    const subreddit = 'r/' + match[2];\n    const postId = match[3];\n    const normalKey = postUrl.toLowerCase();\n\n    if (seen.has(normalKey)) continue;\n    seen.add(normalKey);\n\n    // Skip ignored subs\n    if (IGNORED.has(subreddit.toLowerCase())) continue;\n\n    // Only process preferred subs (if list is non-empty)\n    const isPreferred = PREFERRED.size === 0 || PREFERRED.has(subreddit.toLowerCase());\n    if (!isPreferred) continue;\n\n    results.push({\n      json: {\n        messageId,\n        subject,\n        postUrl,\n        postId,\n        subreddit,\n        jsonUrl: postUrl + '.json',\n        snippet: snippet.substring(0, 500)\n      }\n    });\n  }\n}\n\nreturn results;"
+        "jsCode": "// Extract Reddit post links from suggestion emails.\n// Reddit emails use click.redditmail.com tracking URLs with the real URL\n// percent-encoded inside. We find displayed subreddit names (>r/SubName<)\n// then extract the embedded reddit.com URL from the next tracking link.\nconst PREFERRED = new Set(\n  ($env.PREFERRED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\nconst IGNORED = new Set(\n  ($env.IGNORED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst items = $input.all();\nconst results = [];\nconst seen = new Set();\n\nfor (const item of items) {\n  const messageId = item.json.id || '';\n  const subject = item.json.Subject || item.json.subject || '';\n  const htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n  const snippet = item.json.snippet || item.json.text || '';\n\n  // Find displayed subreddit names like >r/churning< or ><strong>r/churning</strong><\n  const subRegex = />(?:<[^>]*>)*r\\/([A-Za-z0-9_]+)(?:<[^>]*>)*</gi;\n  let subMatch;\n  while ((subMatch = subRegex.exec(htmlBody)) !== null) {\n    const subreddit = 'r/' + subMatch[1];\n    const subLower = subreddit.toLowerCase();\n\n    if (IGNORED.has(subLower)) continue;\n    if (PREFERRED.size > 0 && !PREFERRED.has(subLower)) continue;\n\n    // Search after this match for the next click.redditmail tracking link\n    // containing an embedded reddit.com/r/.../comments/ URL\n    const after = htmlBody.substring(subMatch.index, subMatch.index + 5000);\n    const linkMatch = after.match(\n      /click\\.redditmail\\.com\\/CL0\\/(https:%2F%2F(?:www\\.)?reddit\\.com%2Fr%2F[^%]+%2Fcomments%2F[^&\"]+)/i\n    );\n    if (!linkMatch) continue;\n\n    // Decode the percent-encoded URL and strip query params\n    const postUrl = decodeURIComponent(linkMatch[1]).split('?')[0].replace(/\\/+$/, '');\n    const normalKey = postUrl.toLowerCase();\n    if (seen.has(normalKey)) continue;\n    seen.add(normalKey);\n\n    // Extract post ID from URL\n    const idMatch = postUrl.match(/\\/comments\\/([^/]+)/);\n    const postId = idMatch ? idMatch[1] : '';\n\n    results.push({\n      json: {\n        messageId,\n        subject,\n        postUrl,\n        postId,\n        subreddit,\n        jsonUrl: postUrl + '.json',\n        snippet: snippet.substring(0, 500)\n      }\n    });\n  }\n}\n\nreturn results;"
       },
       "id": "a1b2c3d4-0030-4000-8000-000000000030",
-      "name": "Extract — Suggested Posts",
+      "name": "Extract \u2014 Suggested Posts",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         928,
         688
       ],
-      "notes": "Extracts Reddit post links from suggestion emails. Filters by PREFERRED_SUBREDDITS and IGNORED_SUBREDDITS env vars."
+      "notes": "Extracts Reddit post URLs from tracking links (click.redditmail.com). Matches displayed subreddit names then decodes embedded URLs."
     },
     {
       "parameters": {
         "jsCode": "// Fetch the Reddit post content via the JSON API\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const jsonUrl = item.json.jsonUrl;\n  if (!jsonUrl) continue;\n\n  try {\n    const response = await fetch(jsonUrl, {\n      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FenrirBot/1.0)' }\n    });\n    \n    if (!response.ok) {\n      results.push({ json: { ...item.json, postTitle: '(fetch failed)', postText: '', postAuthor: '', fetchError: response.status } });\n      continue;\n    }\n\n    const data = await response.json();\n    const post = data?.[0]?.data?.children?.[0]?.data || {};\n\n    results.push({\n      json: {\n        ...item.json,\n        postTitle: post.title || '(no title)',\n        postText: (post.selftext || '').substring(0, 2000),\n        postAuthor: post.author || 'unknown',\n        postScore: post.score || 0,\n        postComments: post.num_comments || 0,\n        postCreated: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : '',\n        fetchError: null\n      }\n    });\n  } catch (e) {\n    results.push({ json: { ...item.json, postTitle: '(fetch error)', postText: '', postAuthor: '', fetchError: e.message } });\n  }\n}\n\nreturn results;"
       },
       "id": "a1b2c3d4-0031-4000-8000-000000000031",
-      "name": "Fetch — Reddit Post JSON",
+      "name": "Fetch \u2014 Reddit Post JSON",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -288,7 +288,7 @@
         "options": {}
       },
       "id": "a1b2c3d4-0032-4000-8000-000000000032",
-      "name": "Filter — Post Fetched OK",
+      "name": "Filter \u2014 Post Fetched OK",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
@@ -317,7 +317,7 @@
         }
       },
       "id": "a1b2c3d4-0033-4000-8000-000000000033",
-      "name": "Claude — Draft Comment",
+      "name": "Claude \u2014 Draft Comment",
       "type": "@n8n/n8n-nodes-langchain.anthropic",
       "typeVersion": 1,
       "position": [
@@ -334,10 +334,10 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst contextItems = $('Fetch — Reddit Post JSON').all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const claudeResponse = items[i].json;\n  const draftText = claudeResponse?.text || claudeResponse?.content?.[0]?.text || 'Claude draft unavailable.';\n  \n  // Skip posts Claude flagged as irrelevant\n  if (draftText.trim() === 'SKIP') continue;\n  \n  const context = contextItems[i]?.json || contextItems[0]?.json || {};\n\n  results.push({\n    json: {\n      draftText,\n      postTitle: context.postTitle || '',\n      postAuthor: context.postAuthor || '',\n      postUrl: context.postUrl || '',\n      subreddit: context.subreddit || '',\n      postScore: context.postScore || 0,\n      postComments: context.postComments || 0,\n      messageId: context.messageId || ''\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "const items = $input.all();\nconst contextItems = $('Fetch \u2014 Reddit Post JSON').all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const claudeResponse = items[i].json;\n  const draftText = claudeResponse?.text || claudeResponse?.content?.[0]?.text || 'Claude draft unavailable.';\n  \n  // Skip posts Claude flagged as irrelevant\n  if (draftText.trim() === 'SKIP') continue;\n  \n  const context = contextItems[i]?.json || contextItems[0]?.json || {};\n\n  results.push({\n    json: {\n      draftText,\n      postTitle: context.postTitle || '',\n      postAuthor: context.postAuthor || '',\n      postUrl: context.postUrl || '',\n      subreddit: context.subreddit || '',\n      postScore: context.postScore || 0,\n      postComments: context.postComments || 0,\n      messageId: context.messageId || ''\n    }\n  });\n}\n\nreturn results;"
       },
       "id": "a1b2c3d4-0034-4000-8000-000000000034",
-      "name": "Merge — Post + Draft",
+      "name": "Merge \u2014 Post + Draft",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -355,7 +355,7 @@
         "options": {}
       },
       "id": "a1b2c3d4-0035-4000-8000-000000000035",
-      "name": "Gmail — Create Comment Draft",
+      "name": "Gmail \u2014 Create Comment Draft",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
@@ -374,10 +374,10 @@
     {
       "parameters": {
         "operation": "markAsRead",
-        "messageId": "={{ $('Extract — Suggested Posts').first().json.messageId }}"
+        "messageId": "={{ $('Extract \u2014 Suggested Posts').first().json.messageId }}"
       },
       "id": "a1b2c3d4-0036-4000-8000-000000000036",
-      "name": "Gmail — Mark Suggestion Read",
+      "name": "Gmail \u2014 Mark Suggestion Read",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
@@ -399,7 +399,7 @@
         "messageId": "={{ $json.id }}"
       },
       "id": "a1b2c3d4-0040-4000-8000-000000000040",
-      "name": "Gmail — Mark Other Read",
+      "name": "Gmail \u2014 Mark Other Read",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
@@ -469,7 +469,7 @@
         1152,
         416
       ],
-      "notes": "True = suggestion with preferred sub links → suggestion branch. False = noise → mark as read."
+      "notes": "True = suggestion with preferred sub links \u2192 suggestion branch. False = noise \u2192 mark as read."
     }
   ],
   "connections": {
@@ -477,14 +477,14 @@
       "main": [
         [
           {
-            "node": "Gmail — Fetch Reddit Emails",
+            "node": "Gmail \u2014 Fetch Reddit Emails",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Gmail — Fetch Reddit Emails": {
+    "Gmail \u2014 Fetch Reddit Emails": {
       "main": [
         [
           {
@@ -499,21 +499,21 @@
       "main": [
         [
           {
-            "node": "Extract — Reply Context",
+            "node": "Extract \u2014 Reply Context",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Check — Has Preferred Sub?",
+            "node": "Check \u2014 Has Preferred Sub?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Check — Has Preferred Sub?": {
+    "Check \u2014 Has Preferred Sub?": {
       "main": [
         [
           {
@@ -524,135 +524,135 @@
         ]
       ]
     },
-    "Extract — Reply Context": {
+    "Extract \u2014 Reply Context": {
       "main": [
         [
           {
-            "node": "Filter — Reply Not Ignored",
+            "node": "Filter \u2014 Reply Not Ignored",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Filter — Reply Not Ignored": {
+    "Filter \u2014 Reply Not Ignored": {
       "main": [
         [
           {
-            "node": "Claude — Draft Reply",
+            "node": "Claude \u2014 Draft Reply",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Gmail — Mark Reply Read",
+            "node": "Gmail \u2014 Mark Reply Read",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Claude — Draft Reply": {
+    "Claude \u2014 Draft Reply": {
       "main": [
         [
           {
-            "node": "Merge — Reply + Draft",
+            "node": "Merge \u2014 Reply + Draft",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Merge — Reply + Draft": {
+    "Merge \u2014 Reply + Draft": {
       "main": [
         [
           {
-            "node": "Gmail — Create Reply Draft",
+            "node": "Gmail \u2014 Create Reply Draft",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Gmail — Create Reply Draft": {
+    "Gmail \u2014 Create Reply Draft": {
       "main": [
         [
           {
-            "node": "Gmail — Mark Reply Read",
+            "node": "Gmail \u2014 Mark Reply Read",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Extract — Suggested Posts": {
+    "Extract \u2014 Suggested Posts": {
       "main": [
         [
           {
-            "node": "Fetch — Reddit Post JSON",
+            "node": "Fetch \u2014 Reddit Post JSON",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Fetch — Reddit Post JSON": {
+    "Fetch \u2014 Reddit Post JSON": {
       "main": [
         [
           {
-            "node": "Filter — Post Fetched OK",
+            "node": "Filter \u2014 Post Fetched OK",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Filter — Post Fetched OK": {
+    "Filter \u2014 Post Fetched OK": {
       "main": [
         [
           {
-            "node": "Claude — Draft Comment",
+            "node": "Claude \u2014 Draft Comment",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Gmail — Mark Suggestion Read",
+            "node": "Gmail \u2014 Mark Suggestion Read",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Claude — Draft Comment": {
+    "Claude \u2014 Draft Comment": {
       "main": [
         [
           {
-            "node": "Merge — Post + Draft",
+            "node": "Merge \u2014 Post + Draft",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Merge — Post + Draft": {
+    "Merge \u2014 Post + Draft": {
       "main": [
         [
           {
-            "node": "Gmail — Create Comment Draft",
+            "node": "Gmail \u2014 Create Comment Draft",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Gmail — Create Comment Draft": {
+    "Gmail \u2014 Create Comment Draft": {
       "main": [
         [
           {
-            "node": "Gmail — Mark Suggestion Read",
+            "node": "Gmail \u2014 Mark Suggestion Read",
             "type": "main",
             "index": 0
           }
@@ -663,14 +663,14 @@
       "main": [
         [
           {
-            "node": "Extract — Suggested Posts",
+            "node": "Extract \u2014 Suggested Posts",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Gmail — Mark Other Read",
+            "node": "Gmail \u2014 Mark Other Read",
             "type": "main",
             "index": 0
           }
