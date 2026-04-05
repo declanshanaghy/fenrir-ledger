@@ -60,8 +60,8 @@ describe("initJwtSecret", () => {
     await expect(initJwtSecret()).resolves.toBeUndefined();
   });
 
-  it("throws if FENRIR_JWT_SECRET is missing", async () => {
+  it("rejects if FENRIR_JWT_SECRET is missing", async () => {
     delete process.env.FENRIR_JWT_SECRET;
-    expect(() => initJwtSecret()).toThrow("FENRIR_JWT_SECRET");
+    await expect(initJwtSecret()).rejects.toThrow("FENRIR_JWT_SECRET");
   });
 });
