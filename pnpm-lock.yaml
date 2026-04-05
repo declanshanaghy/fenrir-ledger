@@ -225,9 +225,6 @@ importers:
 
   development/odins-throne:
     dependencies:
-      '@google-cloud/firestore':
-        specifier: ^8.3.0
-        version: 8.3.0
       '@hono/node-server':
         specifier: ^1.13.7
         version: 1.19.11(hono@4.12.8)
