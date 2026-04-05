@@ -1,34 +1,28 @@
 /**
- * Unit tests for JWT secret init utility — Fenrir Ledger
+ * Unit tests for JWT secret utility — Fenrir Ledger
  *
- * Tests the initJwtSecret / getJwtSecret lifecycle:
- *   - Reads FENRIR_JWT_SECRET env var
- *   - Error paths: missing env var, calling getJwtSecret before init
- *   - Idempotent init
+ * Tests getJwtSecret() which reads directly from process.env.FENRIR_JWT_SECRET.
+ * No init step needed — the env var is available in all worker processes.
  *
  * @see src/lib/auth/kms.ts
  * @ref #2061
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 
-import {
-  initJwtSecret,
-  getJwtSecret,
-  _resetJwtSecretForTesting,
-} from "@/lib/auth/kms";
+import { initJwtSecret, getJwtSecret } from "@/lib/auth/kms";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function setEnv(overrides: Record<string, string | undefined>) {
-  for (const [key, value] of Object.entries(overrides)) {
-    if (value === undefined) {
-      delete process.env[key];
-    } else {
-      process.env[key] = value;
-    }
+const ORIGINAL_SECRET = process.env.FENRIR_JWT_SECRET;
+
+function restoreEnv() {
+  if (ORIGINAL_SECRET === undefined) {
+    delete process.env.FENRIR_JWT_SECRET;
+  } else {
+    process.env.FENRIR_JWT_SECRET = ORIGINAL_SECRET;
   }
 }
 
@@ -36,53 +30,38 @@ function setEnv(overrides: Record<string, string | undefined>) {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("initJwtSecret", () => {
-  beforeEach(() => {
-    _resetJwtSecretForTesting();
-  });
+describe("getJwtSecret", () => {
+  afterEach(restoreEnv);
 
-  afterEach(() => {
-    _resetJwtSecretForTesting();
-  });
-
-  it("reads FENRIR_JWT_SECRET and caches it", async () => {
-    setEnv({ FENRIR_JWT_SECRET: "test-signing-secret-abc" });
-    await initJwtSecret();
+  it("returns the env var value", () => {
+    process.env.FENRIR_JWT_SECRET = "test-signing-secret-abc";
     expect(getJwtSecret()).toBe("test-signing-secret-abc");
   });
 
-  it("throws if FENRIR_JWT_SECRET is missing", async () => {
-    setEnv({ FENRIR_JWT_SECRET: undefined });
-    await expect(initJwtSecret()).rejects.toThrow("FENRIR_JWT_SECRET");
+  it("throws if FENRIR_JWT_SECRET is missing", () => {
+    delete process.env.FENRIR_JWT_SECRET;
+    expect(() => getJwtSecret()).toThrow("FENRIR_JWT_SECRET");
   });
 
-  it("is idempotent — second call is a no-op", async () => {
-    setEnv({ FENRIR_JWT_SECRET: "first-secret" });
-    await initJwtSecret();
-
-    // Change env — should NOT affect the cached value
-    setEnv({ FENRIR_JWT_SECRET: "second-secret" });
-    await initJwtSecret();
+  it("reads the current env var value each time (no stale cache)", () => {
+    process.env.FENRIR_JWT_SECRET = "first-secret";
     expect(getJwtSecret()).toBe("first-secret");
-  });
 
-  it("retries after a failure (cache stays empty on error)", async () => {
-    setEnv({ FENRIR_JWT_SECRET: undefined });
-    await expect(initJwtSecret()).rejects.toThrow("FENRIR_JWT_SECRET");
-
-    // Now set it and retry — should succeed
-    setEnv({ FENRIR_JWT_SECRET: "retry-secret" });
-    await initJwtSecret();
-    expect(getJwtSecret()).toBe("retry-secret");
+    process.env.FENRIR_JWT_SECRET = "second-secret";
+    expect(getJwtSecret()).toBe("second-secret");
   });
 });
 
-describe("getJwtSecret — before init", () => {
-  beforeEach(() => {
-    _resetJwtSecretForTesting();
+describe("initJwtSecret", () => {
+  afterEach(restoreEnv);
+
+  it("validates the env var is present (no-op otherwise)", async () => {
+    process.env.FENRIR_JWT_SECRET = "test-secret";
+    await expect(initJwtSecret()).resolves.toBeUndefined();
   });
 
-  it("throws a descriptive error if called before initJwtSecret", () => {
-    expect(() => getJwtSecret()).toThrow("not initialised");
+  it("throws if FENRIR_JWT_SECRET is missing", async () => {
+    delete process.env.FENRIR_JWT_SECRET;
+    expect(() => initJwtSecret()).toThrow("FENRIR_JWT_SECRET");
   });
 });
