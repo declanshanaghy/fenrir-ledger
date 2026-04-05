@@ -81,7 +81,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Check if the email contains links to posts in preferred subreddits\nconst PREFERRED = new Set(\n  ($env.PREFERRED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst item = $input.first();\nconst htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\nconst subject = (item.json.Subject || item.json.subject || '').toLowerCase();\n\n// Check if this looks like a suggestion email\nconst isSuggestion = (\n  subject.includes('posts from') ||\n  subject.includes('trending') ||\n  subject.includes('popular') ||\n  subject.includes('because you') ||\n  subject.includes('you might like') ||\n  subject.includes('new posts in') ||\n  subject.includes('top posts')\n);\n\nif (!isSuggestion) {\n  // Not a suggestion, pass through with isSuggestion=false\n  return [{ json: { ...item.json, isSuggestion: false } }];\n}\n\n// Check if any links match preferred subs\nconst linkRegex = /href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/([^/]+)\\/comments\\/[^\"']*)[\"']/gi;\nlet hasPreferred = false;\nlet match;\nwhile ((match = linkRegex.exec(htmlBody)) !== null) {\n  const sub = 'r/' + match[2];\n  if (PREFERRED.size === 0 || PREFERRED.has(sub.toLowerCase())) {\n    hasPreferred = true;\n    break;\n  }\n}\n\nreturn [{ json: { ...item.json, isSuggestion: hasPreferred } }];"
+        "jsCode": "// Check if the email contains links to posts in preferred subreddits\nconst PREFERRED = new Set(\n  ($env.PREFERRED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst item = $input.first();\nconst htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n\n// Check if any links match preferred subs\nconst linkRegex = /href=[\"'](https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/([^/]+)\\/comments\\/[^\"']*)[\"']/gi;\nlet hasPreferred = false;\nlet match;\nwhile ((match = linkRegex.exec(htmlBody)) !== null) {\n  const sub = 'r/' + match[2];\n  if (PREFERRED.size === 0 || PREFERRED.has(sub.toLowerCase())) {\n    hasPreferred = true;\n    break;\n  }\n}\n\nreturn [{ json: { ...item.json, hasPreferred } }];"
       },
       "id": "a1b2c3d4-0021-4000-8000-000000000021",
       "name": "Check \u2014 Has Preferred Sub?",
@@ -104,7 +104,7 @@
           "conditions": [
             {
               "id": "dee782c8-a99c-4db8-954c-ee0b1a190307",
-              "leftValue": "={{ $json.isSuggestion }}",
+              "leftValue": "={{ $json.hasPreferred }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
