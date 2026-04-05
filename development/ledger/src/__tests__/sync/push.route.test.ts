@@ -477,3 +477,120 @@ describe("POST /api/sync/push — expunge safety guard (issue #2002)", () => {
     expect(mockDeleteCards).not.toHaveBeenCalled();
   });
 });
+
+// ── Household expunge propagation: issue #2120 ────────────────────────────────
+//
+// When household member A expunges a card, the card is deleted from Firestore.
+// If member B still holds a tombstone (deletedAt set) for that card, the next
+// push from B must NOT write the tombstone back to Firestore — otherwise the
+// card reappears in everyone's trash.
+//
+// A local tombstone whose card ID is absent from Firestore = "remote expunge".
+// The push route must drop it before the LWW merge so the card stays gone.
+
+describe("POST /api/sync/push — household expunge propagation (issue #2120)", () => {
+  beforeEach(() => {
+    mockRequireAuthz.mockResolvedValue(authzKarlSuccess("hh-test"));
+  });
+
+  it("does NOT write back a tombstone for a card absent from Firestore", async () => {
+    // Card C was expunged by another member — absent from Firestore entirely.
+    // Odin still holds a local tombstone (deletedAt set).
+    const tombstone = makeCard({
+      id: "expunged-by-member",
+      deletedAt: "2026-03-01T12:00:00.000Z",
+    });
+    const activeCard = makeCard({ id: "active-card" });
+
+    // Firestore has the active card but NOT the expunged card
+    mockGetAllFirestoreCards.mockResolvedValue([activeCard]);
+
+    const res = await POST(
+      makeRequest({ householdId: "hh-test", cards: [tombstone, activeCard] })
+    );
+    expect(res.status).toBe(200);
+
+    // Tombstone must NOT be written back to Firestore
+    expect(mockSetCards).toHaveBeenCalledOnce();
+    const written = mockSetCards.mock.calls[0]?.[0] as Card[];
+    expect(written.map((c) => c.id)).not.toContain("expunged-by-member");
+    expect(written.map((c) => c.id)).toContain("active-card");
+  });
+
+  it("does NOT return the orphaned tombstone to the client", async () => {
+    const tombstone = makeCard({
+      id: "expunged-by-member",
+      deletedAt: "2026-03-01T12:00:00.000Z",
+    });
+    const activeCard = makeCard({ id: "active-card" });
+    mockGetAllFirestoreCards.mockResolvedValue([activeCard]);
+
+    const res = await POST(
+      makeRequest({ householdId: "hh-test", cards: [tombstone, activeCard] })
+    );
+    const body = await res.json() as { cards: Card[] };
+
+    expect(body.cards.find((c) => c.id === "expunged-by-member")).toBeUndefined();
+    expect(body.cards.find((c) => c.id === "active-card")).toBeDefined();
+  });
+
+  it("keeps a local tombstone when the same card is ALSO a tombstone in Firestore", async () => {
+    // Normal soft-delete: tombstone in both local and Firestore — must survive.
+    const tombstoneRemote = makeCard({
+      id: "deleted-both-sides",
+      deletedAt: "2026-03-01T12:00:00.000Z",
+    });
+    const tombstoneLocal = makeCard({
+      id: "deleted-both-sides",
+      deletedAt: "2026-03-01T12:00:00.000Z",
+    });
+    mockGetAllFirestoreCards.mockResolvedValue([tombstoneRemote]);
+
+    const res = await POST(
+      makeRequest({ householdId: "hh-test", cards: [tombstoneLocal] })
+    );
+    expect(res.status).toBe(200);
+
+    const body = await res.json() as { cards: Card[] };
+    // Tombstone present on both sides — must be included
+    expect(body.cards.find((c) => c.id === "deleted-both-sides")).toBeDefined();
+  });
+
+  it("does NOT discard orphaned tombstones when local is empty (new device guard)", async () => {
+    // An empty push means brand-new device — expunge filtering must not fire.
+    const remoteActive = makeCard({ id: "remote-active" });
+    const remoteTombstone = makeCard({
+      id: "remote-tombstone",
+      deletedAt: "2026-03-01T12:00:00.000Z",
+    });
+    mockGetAllFirestoreCards.mockResolvedValue([remoteActive, remoteTombstone]);
+
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [] }));
+    expect(res.status).toBe(200);
+
+    const body = await res.json() as { cards: Card[] };
+    const ids = body.cards.map((c) => c.id);
+    // Both remote cards must come back to the new device
+    expect(ids).toContain("remote-active");
+    expect(ids).toContain("remote-tombstone");
+  });
+
+  it("handles all-tombstone local state after household expunges all cards", async () => {
+    // Odin has 2 tombstones, both expunged by another member (absent from Firestore).
+    const t1 = makeCard({ id: "t1", deletedAt: "2026-03-01T12:00:00.000Z" });
+    const t2 = makeCard({ id: "t2", deletedAt: "2026-03-01T12:00:00.000Z" });
+    mockGetAllFirestoreCards.mockResolvedValue([]);
+
+    const res = await POST(makeRequest({ householdId: "hh-test", cards: [t1, t2] }));
+    expect(res.status).toBe(200);
+
+    const body = await res.json() as { cards: Card[] };
+    // All orphaned tombstones must be dropped — empty result
+    expect(body.cards).toHaveLength(0);
+
+    // setCards is called with empty array — nothing written back
+    expect(mockSetCards).toHaveBeenCalledOnce();
+    const written = mockSetCards.mock.calls[0]?.[0] as Card[];
+    expect(written).toHaveLength(0);
+  });
+});
