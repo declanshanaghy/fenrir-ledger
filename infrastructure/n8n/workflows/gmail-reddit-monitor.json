@@ -238,7 +238,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract Reddit post links from suggestion emails.\n// Reddit emails use click.redditmail.com tracking URLs with the real URL\n// percent-encoded inside. We find displayed subreddit names (>r/SubName<)\n// then extract the embedded reddit.com URL from the next tracking link.\nconst PREFERRED = new Set(\n  ($env.PREFERRED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\nconst IGNORED = new Set(\n  ($env.IGNORED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst items = $input.all();\nconst results = [];\nconst seen = new Set();\n\nfor (const item of items) {\n  const messageId = item.json.id || '';\n  const subject = item.json.Subject || item.json.subject || '';\n  const htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n  const snippet = item.json.snippet || item.json.text || '';\n\n  // Find displayed subreddit names like >r/churning< or ><strong>r/churning</strong><\n  const subRegex = />(?:<[^>]*>)*r\\/([A-Za-z0-9_]+)(?:<[^>]*>)*</gi;\n  let subMatch;\n  while ((subMatch = subRegex.exec(htmlBody)) !== null) {\n    const subreddit = 'r/' + subMatch[1];\n    const subLower = subreddit.toLowerCase();\n\n    if (IGNORED.has(subLower)) continue;\n    if (PREFERRED.size > 0 && !PREFERRED.has(subLower)) continue;\n\n    // Search after this match for the next click.redditmail tracking link\n    // containing an embedded reddit.com/r/.../comments/ URL\n    const after = htmlBody.substring(subMatch.index, subMatch.index + 5000);\n    const linkMatch = after.match(\n      /click\\.redditmail\\.com\\/CL0\\/(https:%2F%2F(?:www\\.)?reddit\\.com%2Fr%2F[^%]+%2Fcomments%2F[^&\"]+)/i\n    );\n    if (!linkMatch) continue;\n\n    // Decode the percent-encoded URL and strip query params\n    const postUrl = decodeURIComponent(linkMatch[1]).split('?')[0].replace(/\\/+$/, '');\n    const normalKey = postUrl.toLowerCase();\n    if (seen.has(normalKey)) continue;\n    seen.add(normalKey);\n\n    // Extract post ID from URL\n    const idMatch = postUrl.match(/\\/comments\\/([^/]+)/);\n    const postId = idMatch ? idMatch[1] : '';\n\n    results.push({\n      json: {\n        messageId,\n        subject,\n        postUrl,\n        postId,\n        subreddit,\n        jsonUrl: postUrl + '.json',\n        snippet: snippet.substring(0, 500)\n      }\n    });\n  }\n}\n\nreturn results;"
+        "jsCode": "// Extract Reddit posts from suggestion emails using displayed text.\n// Pulls subreddit, title (from URL slug), author, and body snippet from the email HTML.\n// No external fetch needed \u2014 everything comes from the email itself.\nconst PREFERRED = new Set(\n  ($env.PREFERRED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\nconst IGNORED = new Set(\n  ($env.IGNORED_SUBREDDITS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)\n);\n\nconst items = $input.all();\nconst results = [];\nconst seen = new Set();\n\nfor (const item of items) {\n  const messageId = item.json.id || '';\n  const subject = item.json.Subject || item.json.subject || '';\n  const htmlBody = item.json.html || item.json.textAsHtml || item.json.body || '';\n\n  // Find displayed subreddit names like >r/churning< or ><strong>r/churning</strong><\n  const subRegex = />(?:<[^>]*>)*r\\/([A-Za-z0-9_]+)(?:<[^>]*>)*</gi;\n  let subMatch;\n  while ((subMatch = subRegex.exec(htmlBody)) !== null) {\n    const subreddit = 'r/' + subMatch[1];\n    const subLower = subreddit.toLowerCase();\n\n    if (IGNORED.has(subLower)) continue;\n    if (PREFERRED.size > 0 && !PREFERRED.has(subLower)) continue;\n\n    const after = htmlBody.substring(subMatch.index, subMatch.index + 5000);\n\n    // Extract post URL from tracking link\n    const linkMatch = after.match(\n      /click\\.redditmail\\.com\\/CL0\\/(https:%2F%2F(?:www\\.)?reddit\\.com%2Fr%2F[^%]+%2Fcomments%2F[^&\"]+)/i\n    );\n    if (!linkMatch) continue;\n\n    const postUrl = decodeURIComponent(linkMatch[1]).split('?')[0].replace(/\\/+$/, '');\n    const normalKey = postUrl.toLowerCase();\n    if (seen.has(normalKey)) continue;\n    seen.add(normalKey);\n\n    // Extract post ID and title from URL slug\n    const urlParts = postUrl.split('/');\n    const commentsIdx = urlParts.indexOf('comments');\n    const postId = commentsIdx >= 0 ? (urlParts[commentsIdx + 1] || '') : '';\n    const titleSlug = commentsIdx >= 0 ? (urlParts[commentsIdx + 2] || '') : '';\n    const postTitle = titleSlug.replace(/_/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase()) || '(no title)';\n\n    // Extract author from >u/username<\n    const authorMatch = after.match(/>u\\/([A-Za-z0-9_-]+)</);\n    const postAuthor = authorMatch ? authorMatch[1] : 'unknown';\n\n    // Extract body snippet \u2014 strip HTML tags from text after author/timestamp area\n    const textArea = after.substring(after.indexOf(postAuthor) + postAuthor.length);\n    const stripped = textArea.replace(/<[^>]+>/g, '\\n').replace(/&amp;/g, '&').replace(/&#34;/g, '\"').replace(/&bull;/g, '');\n    const lines = stripped.split('\\n').map(l => l.trim()).filter(l => l.length > 20);\n    // First long line after author is usually the post title, second is the snippet\n    const postText = lines.slice(1, 3).join(' ').substring(0, 500) || '';\n\n    results.push({\n      json: {\n        messageId,\n        subject,\n        postUrl,\n        postId,\n        subreddit,\n        postTitle,\n        postAuthor,\n        postText\n      }\n    });\n  }\n}\n\nreturn results;"
       },
       "id": "a1b2c3d4-0030-4000-8000-000000000030",
       "name": "Extract \u2014 Suggested Posts",
@@ -248,106 +248,7 @@
         928,
         688
       ],
-      "notes": "Extracts Reddit post URLs from tracking links (click.redditmail.com). Matches displayed subreddit names then decodes embedded URLs."
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "={{ $json.jsonUrl }}",
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
-        },
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "User-Agent",
-              "value": "Mozilla/5.0 (compatible; FenrirBot/1.0)"
-            }
-          ]
-        }
-      },
-      "id": "a1b2c3d4-0031-4000-8000-000000000031",
-      "name": "Fetch \u2014 Reddit Post JSON",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1184,
-        720
-      ],
-      "notes": "Fetches Reddit post JSON API. Continues on error so downstream nodes can filter failures.",
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "73f1db02-3a03-413b-9006-5c303ae6b734",
-              "leftValue": "={{ $json.postTitle }}",
-              "rightValue": "(fetch",
-              "operator": {
-                "type": "string",
-                "operation": "notStartsWith"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "a1b2c3d4-0032-4000-8000-000000000032",
-      "name": "Filter \u2014 Post Fetched OK",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        1440,
-        800
-      ],
-      "notes": "Only proceed if the Reddit JSON fetch succeeded."
-    },
-    {
-      "parameters": {
-        "modelId": {
-          "__rl": true,
-          "mode": "id",
-          "value": "claude-sonnet-4-20250514"
-        },
-        "messages": {
-          "values": [
-            {
-              "content": "=Here's a Reddit post on {{ $json.subreddit }} that's relevant to your expertise in credit card churning.\n\nTitle: {{ $json.postTitle }}\nAuthor: u/{{ $json.postAuthor }}\nScore: {{ $json.postScore }} | Comments: {{ $json.postComments }}\n\nPost content:\n{{ $json.postText || '(no body text, title-only post)' }}\n\nURL: {{ $json.postUrl }}\n\nDraft a helpful top-level comment on this post. Write 2-4 short paragraphs (one point per paragraph, 1-2 sentences each). Be specific to the post content. Add real value with personal experience and practical advice.\n\nSprinkle in the occasional emoji or ASCII smiley when the mood fits.\n\nDo not mention any specific apps, tools, or products by name. If the post doesn't relate to credit cards, churning, or personal finance at all, respond with exactly: SKIP"
-            }
-          ]
-        },
-        "options": {
-          "system": "You are Freya, a 34-year-old in Denver. You and your husband Marcus (software engineer) got into churning 3 years ago after he booked your honeymoon to Iceland on points. Now you manage 12 active cards between you. You have two daughters, Lily (7) and Nora (4), and a golden retriever named Odin.\n\nYou track everything in a color-coded spreadsheet you built yourself. Your favorites: Amex Gold (groceries for the family basically earns itself), Chase Sapphire Reserve (travel), Citi Premier (backup flexibility). You recently closed an Amex Platinum after the second AF because you weren't using the credits enough with two kids. Current goal: family trip to Japan next year, fully on points. Stockpiling MR and UR.\n\nYour philosophy: churning is a numbers game, and the people who win are the ones who treat their card stack like a portfolio with clear dates and milestones for every card. You're practical, not a maximizer. More of a 'good enough' optimizer.\n\nYour tone is friendly, knowledgeable, and never promotional. You give real value first. You write short Reddit comments (2-4 sentences per paragraph, multiple paragraphs). No marketing speak. No exclamation points. Never use em dashes. Use occasional emojis or ASCII smileys (:-D, ;-), :-P). Reference your family naturally. Sound like a real person. Never mention any specific apps, tools, or products by name.",
-          "maxTokens": 512
-        }
-      },
-      "id": "a1b2c3d4-0033-4000-8000-000000000033",
-      "name": "Claude \u2014 Draft Comment",
-      "type": "@n8n/n8n-nodes-langchain.anthropic",
-      "typeVersion": 1,
-      "position": [
-        1584,
-        656
-      ],
-      "credentials": {
-        "anthropicApi": {
-          "id": "anthropic-fenrir",
-          "name": "Anthropic (Fenrir)"
-        }
-      },
-      "notes": "Drafts a new top-level comment for a suggested Reddit post."
+      "notes": "Extracts post URL, title (from slug), author, and snippet directly from email HTML. No Reddit API fetch needed."
     },
     {
       "parameters": {
@@ -487,20 +388,6 @@
         416
       ],
       "notes": "True = suggestion with preferred sub links \u2192 suggestion branch. False = noise \u2192 mark as read."
-    },
-    {
-      "parameters": {
-        "jsCode": "// Parse Reddit JSON API response into post fields\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const data = item.json;\n  // HTTP Request node merges response into json \u2014 the Reddit API returns an array\n  // The response body is at the top level when responseFormat is JSON\n  let post = {};\n  try {\n    // Reddit .json endpoint returns [listing, comments] array\n    const listing = Array.isArray(data) ? data : (data.body ? (typeof data.body === 'string' ? JSON.parse(data.body) : data.body) : [data]);\n    post = listing?.[0]?.data?.children?.[0]?.data || {};\n  } catch (e) {\n    // Parse failed \u2014 treat as empty\n  }\n\n  results.push({\n    json: {\n      messageId: item.json.messageId || '',\n      subject: item.json.subject || '',\n      postUrl: item.json.postUrl || '',\n      postId: item.json.postId || '',\n      subreddit: item.json.subreddit || '',\n      jsonUrl: item.json.jsonUrl || '',\n      snippet: item.json.snippet || '',\n      postTitle: post.title || '(fetch failed)',\n      postText: (post.selftext || '').substring(0, 2000),\n      postAuthor: post.author || 'unknown',\n      postScore: post.score || 0,\n      postComments: post.num_comments || 0,\n      postCreated: post.created_utc ? new Date(post.created_utc * 1000).toISOString() : ''\n    }\n  });\n}\n\nreturn results;"
-      },
-      "id": "a1b2c3d4-0033-4000-8000-000000000033",
-      "name": "Parse \u2014 Reddit Post Data",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1424,
-        720
-      ],
-      "notes": "Extracts post title, text, author, score from Reddit JSON API response."
     }
   ],
   "connections": {
@@ -621,34 +508,10 @@
       "main": [
         [
           {
-            "node": "Fetch \u2014 Reddit Post JSON",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch \u2014 Reddit Post JSON": {
-      "main": [
-        [
-          {
-            "node": "Parse \u2014 Reddit Post Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Filter \u2014 Post Fetched OK": {
-      "main": [
-        [
-          {
             "node": "Claude \u2014 Draft Comment",
             "type": "main",
             "index": 0
-          }
-        ],
-        [
+          },
           {
             "node": "Gmail \u2014 Mark Suggestion Read",
             "type": "main",
@@ -702,17 +565,6 @@
         [
           {
             "node": "Gmail \u2014 Mark Other Read",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse \u2014 Reddit Post Data": {
-      "main": [
-        [
-          {
-            "node": "Filter \u2014 Post Fetched OK",
             "type": "main",
             "index": 0
           }
