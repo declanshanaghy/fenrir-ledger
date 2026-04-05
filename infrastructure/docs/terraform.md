@@ -165,10 +165,9 @@ Binding pattern: each K8s SA is annotated with `iam.gke.io/gcp-service-account=<
 | `cluster_name` | `fenrir-autopilot` | GKE cluster name |
 | `network_name` | (set in var) | VPC name |
 | `artifact_repo_name` | (set in var) | Artifact Registry repo name |
-| `billing_account_id` | — | Required for project/billing association |
 | `uptime_check_host` | — | Hostname for uptime monitoring check |
 
-All variables have defaults except `billing_account_id` and `uptime_check_host` — these must be supplied at apply time (via GitHub Secrets in CI).
+All variables have defaults except `uptime_check_host` — this must be supplied at apply time (via GitHub Secrets in CI).
 
 ### `outputs.tf` — Output Values
 

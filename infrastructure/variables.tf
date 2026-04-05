@@ -56,18 +56,6 @@ variable "deploy_service_account" {
   default     = "fenrir-deploy@fenrir-ledger-prod.iam.gserviceaccount.com"
 }
 
-variable "billing_account_id" {
-  description = "GCP billing account ID (format: XXXXXX-XXXXXX-XXXXXX). If empty, billing budget is skipped."
-  type        = string
-  default     = ""
-}
-
-variable "cost_alert_amount" {
-  description = "Monthly budget amount in USD for cost alerts"
-  type        = number
-  default     = 150
-}
-
 # --------------------------------------------------------------------------
 # Monitoring
 # --------------------------------------------------------------------------
