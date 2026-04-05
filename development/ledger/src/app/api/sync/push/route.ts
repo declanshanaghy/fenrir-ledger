@@ -160,12 +160,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
+    // Drop local tombstones for cards expunged by another household member.
+    // Issue #2120: When another member expunges card C, it is deleted from
+    // Firestore entirely (no tombstone). If this client still holds a tombstone
+    // for C (deletedAt set), the LWW merge would treat it as "local-only" and
+    // write it back to Firestore — making C reappear for all members. Filtering
+    // these orphaned tombstones out before the merge prevents the resurrection.
+    //
+    // Guard: only applies when localCards is non-empty (same new-device guard as
+    // above) so a brand-new device does not silently discard remote tombstones.
+    const remoteIds = new Set(remoteCards.map((c) => c.id));
+    const cardsToMerge =
+      localCards.length > 0
+        ? localCards.filter((c) => !c.deletedAt || remoteIds.has(c.id))
+        : localCards;
+
     // Merge only non-expunged remote cards with local (LWW per-card).
     // When localCards is empty (new device) all remote cards are kept so they
     // are returned to the client and written back to localStorage on first sync.
     const nonExpungedRemote =
       localCards.length > 0 ? remoteCards.filter((c) => localIds.has(c.id)) : remoteCards;
-    const { merged, stats } = mergeCardsWithStats(localCards, nonExpungedRemote);
+    const { merged, stats } = mergeCardsWithStats(cardsToMerge, nonExpungedRemote);
 
     // Write merged result back to Firestore
     await setCards(merged);
