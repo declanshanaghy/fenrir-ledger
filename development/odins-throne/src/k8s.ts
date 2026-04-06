@@ -99,7 +99,9 @@ export function mapAgentJobToJob(j: AgentJob): Job {
   const meta = parseJobMeta(j.name, j.labels);
   // Prefer fenrir/pr-title over fenrir/issue-title (PR title is more specific)
   const prTitle = j.annotations["fenrir/pr-title"] || null;
-  const issueAnnotation = j.annotations["fenrir/issue-title"] || null;
+  const issueAnnotation = j.annotations["fenrir/issue-title"]
+    || j.annotations["pack/issue-title"]
+    || null;
   const branchName = j.annotations["fenrir/branch"] || null;
   // "active" means the K8s job controller created the pod, but the pod may
   // still be in Pending phase (image pull, scheduling). We expose "pending"
@@ -251,7 +253,9 @@ export function watchAgentJobs(
             const meta = parseJobMeta(name, labels);
             const annotations = (obj.metadata?.annotations as Record<string, string>) ?? {};
             const prTitle = annotations["fenrir/pr-title"] || null;
-            const issueAnnotation = annotations["fenrir/issue-title"] || null;
+            const issueAnnotation = annotations["fenrir/issue-title"]
+              || annotations["pack/issue-title"]
+              || null;
             jobMap.set(name, {
               ...meta,
               name,
