@@ -25,6 +25,8 @@ app:
     PORT: "3001"
     K8S_NAMESPACE: "fenrir-agents"
     JOB_LABEL_SELECTOR: "app.kubernetes.io/component=agent-sandbox"
+    # NAMESPACES_JSON injected separately from odins-throne-config ConfigMap
+    # via deployment.yaml valueFrom configMapKeyRef when namespaces.enabled=true.
 
   # K8s secret containing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET — injected via envFrom.
   # SESSION_SECRET and ALLOWED_EMAIL are no longer used (handled by oauth2-proxy).
@@ -133,11 +135,26 @@ ingress:
       - odins-throne.fenrirledger.com
 
 # -- RBAC ------------------------------------------------------------------
-# ServiceAccount with cross-namespace read access to jobs/pods/logs
-# in fenrir-agents so the monitor can display agent activity.
+# ServiceAccount with cross-namespace read access to jobs/pods/logs.
+# agentsNamespaces lists every namespace the monitor needs read access to.
 rbac:
   enabled: true
   agentsNamespace: fenrir-agents
+  # Additional namespaces for cross-project monitoring.
+  # Each entry gets its own RoleBinding in that namespace.
+  additionalNamespaces:
+    - say-so-agents
+
+# -- Namespaces ConfigMap --------------------------------------------------
+# Defines which namespaces are available in the UI selector.
+# The list is serialised as NAMESPACES_JSON and injected into the pod env.
+namespaces:
+  enabled: true
+  list:
+    - id: fenrir-agents
+      label: "Fenrir Ledger Agents"
+    - id: say-so-agents
+      label: "SaySo Agents"
 
 # -- Secrets ---------------------------------------------------------------
 secrets:
