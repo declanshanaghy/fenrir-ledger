@@ -46,10 +46,14 @@ export function parseSessionIdTitle(sessionId: string): string | null {
  *   2. branchName parse (only if branch contains an issue pattern)
  *   3. sessionId parse (issue-<N>-step<S>-<agent>-<uuid> pattern)
  *   4. Raw branchName or sessionId (graceful degradation)
+ *
+ * When issueTitle is available it is returned as-is (no prefix).
+ * The caller (JobCard) is responsible for rendering "Issue #N · Agent · Step N"
+ * as the secondary line below the title.
  */
 export function resolveSessionTitle(job: DisplayJob): string {
   if (job.issueTitle) {
-    return `Issue #${job.issue} – ${job.issueTitle} – Step ${job.step}`;
+    return job.issueTitle;
   }
   if (job.branchName) {
     const fromBranch = parseBranchTitle(job.branchName, job.step);

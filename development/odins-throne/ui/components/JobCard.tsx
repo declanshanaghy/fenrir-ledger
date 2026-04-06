@@ -45,10 +45,12 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
   const sColor = statusColorMap[job.status] || (theme === "light" ? "#57534e" : "#606070");
   const sLabel = STATUS_LABELS[job.status] || job.status;
   const pulse = job.status === "running" ? " pulse" : "";
+  // Primary title: bare issueTitle when available, else "Issue #N – Step N" fallback
   const displayTitle = resolveSessionTitle(job);
-  const cardTitle = job.issueTitle
-    ? `#${job.issue} \u2013 ${job.issueTitle}`
-    : displayTitle;
+  // Secondary meta line: "Issue #N · Agent · Step N" when title is shown; otherwise "Agent · Step N"
+  const secondaryMeta = job.issueTitle
+    ? `Issue #${job.issue} \u00b7 ${job.agentName} \u00b7 Step ${job.step}`
+    : null;
 
   if (displayMode === "compact") {
     return (
@@ -91,7 +93,7 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
     <div
       className={`card${isActive ? " active" : ""}${isTerminating ? " card--terminating" : ""}`}
       role="listitem"
-      aria-label={`Job: Issue ${job.issue} – ${displayTitle} – Step ${job.step} – ${job.agentName} – ${sLabel}`}
+      aria-label={`Job: ${displayTitle} – Issue ${job.issue} – ${job.agentName} – Step ${job.step} – ${sLabel}`}
       onClick={onClick}
     >
       <div className="card-top">
@@ -113,15 +115,27 @@ export function JobCard({ job, isActive, onClick, onAvatarClick, isPinned = fals
             #{job.issue}
           </span>
         )}
-        <span className="card-issue-title" title={isExtended ? (job.issueTitle ?? displayTitle) : cardTitle}>
-          {isExtended ? (job.issueTitle ?? displayTitle) : cardTitle}
+        <span className="card-issue-title" title={displayTitle}>
+          {displayTitle}
         </span>
       </div>
       <div className="card-meta-new">
-        <span className="card-agent-badge" style={{ color: agentColor }}>
-          {job.agentName}
-        </span>
-        <span>Step {job.step}</span>
+        {secondaryMeta ? (
+          <span className="card-secondary-meta" aria-label={secondaryMeta}>
+            <span className="card-secondary-issue">Issue #{job.issue}</span>
+            <span className="card-meta-sep" aria-hidden="true"> · </span>
+            <span className="card-agent-badge" style={{ color: agentColor }}>{job.agentName}</span>
+            <span className="card-meta-sep" aria-hidden="true"> · </span>
+            <span>Step {job.step}</span>
+          </span>
+        ) : (
+          <>
+            <span className="card-agent-badge" style={{ color: agentColor }}>
+              {job.agentName}
+            </span>
+            <span>Step {job.step}</span>
+          </>
+        )}
         {job.fixture && <span className="card-fixture-badge" title="Fixture (replayed log)">ᚠ</span>}
         {isExtended ? (
           <>
