@@ -438,43 +438,82 @@ function startLogStream(
 export const HEARTBEAT_INTERVAL_MS = 20_000;
 
 // ---------------------------------------------------------------------------
+// Per-namespace watcher context — shared across all connections for that ns
+// ---------------------------------------------------------------------------
+
+interface NamespaceContext {
+  cachedJobs: Job[];
+  clients: Set<WebSocket>;
+  cancelWatch: () => void;
+}
+
+// ---------------------------------------------------------------------------
 // WebSocket server — single multiplexed /ws endpoint
 // ---------------------------------------------------------------------------
 
 export function attachWebSocketServer(
   server: ServerType,
-  namespace = "fenrir-app",
-  labelSelector = "app=odin-agent"
+  labelSelector = "app.kubernetes.io/component=agent-sandbox",
+  allowedNamespaces: string[] = ["fenrir-agents"],
+  defaultNamespace = "fenrir-agents"
 ): WebSocketServer {
-  // Per-server-instance state — no module-level singletons
-  const connectedClients = new Set<WebSocket>();
-  let cachedJobs: Job[] = [];
+  // Per-namespace watcher contexts — lazy initialised on first connection
+  const nsContexts = new Map<string, NamespaceContext>();
 
-  // Start K8s job watch, push updates to all connected clients
-  watchAgentJobs(
-    namespace,
-    labelSelector,
-    (jobs) => {
-      cachedJobs = jobs;
-      broadcast(connectedClients, {
-        type: "jobs-updated",
-        ts: Date.now(),
-        jobs: mergeWithFixtures(jobs),
-      });
-    },
-    (err) => {
-      console.error("[ws] K8s watch error:", err.message);
-      // watchAgentJobs auto-reconnects internally
+  function getOrCreateContext(namespace: string): NamespaceContext {
+    const existing = nsContexts.get(namespace);
+    if (existing) return existing;
+
+    const ctx: NamespaceContext = {
+      cachedJobs: [],
+      clients: new Set(),
+      cancelWatch: watchAgentJobs(
+        namespace,
+        labelSelector,
+        (jobs) => {
+          ctx.cachedJobs = jobs;
+          broadcast(ctx.clients, {
+            type: "jobs-updated",
+            ts: Date.now(),
+            jobs: mergeWithFixtures(jobs),
+          });
+        },
+        (err) => {
+          console.error(`[ws] K8s watch error (ns=${namespace}):`, err.message);
+          // watchAgentJobs auto-reconnects internally
+        }
+      ),
+    };
+    nsContexts.set(namespace, ctx);
+    return ctx;
+  }
+
+  function releaseContext(namespace: string, ws: WebSocket): void {
+    const ctx = nsContexts.get(namespace);
+    if (!ctx) return;
+    ctx.clients.delete(ws);
+    if (ctx.clients.size === 0) {
+      ctx.cancelWatch();
+      nsContexts.delete(namespace);
     }
-  );
+  }
 
   const wss = new WebSocketServer({ server: server as Server, path: "/ws" });
 
   // Auth is handled by oauth2-proxy sidecar — no in-app session check needed.
 
-  wss.on("connection", async (ws: WebSocket, _req: IncomingMessage) => {
-    // Register this client for jobs-updated broadcasts
-    connectedClients.add(ws);
+  wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
+    // Extract namespace from query param (e.g. /ws?namespace=say-so-agents)
+    const rawUrl = req.url ?? "";
+    const qIdx = rawUrl.indexOf("?");
+    const nsParam = qIdx >= 0
+      ? new URLSearchParams(rawUrl.slice(qIdx + 1)).get("namespace") ?? ""
+      : "";
+    const namespace = allowedNamespaces.includes(nsParam) ? nsParam : defaultNamespace;
+
+    // Get or start the watcher for this namespace, register this client
+    const ctx = getOrCreateContext(namespace);
+    ctx.clients.add(ws);
 
     // ── Per-connection heartbeat ───────────────────────────────────────────
     // Ping every 20 s so GKE's 30 s idle timeout never fires.
@@ -496,12 +535,12 @@ export function attachWebSocketServer(
     }, HEARTBEAT_INTERVAL_MS);
 
     // Seed cache from listAgentJobs if watch hasn't populated it yet
-    let jobs = cachedJobs;
+    let jobs = ctx.cachedJobs;
     if (jobs.length === 0) {
       try {
         const agentJobs = await listAgentJobs(namespace, labelSelector);
         jobs = agentJobs.map(mapAgentJobToJob);
-        cachedJobs = jobs;
+        ctx.cachedJobs = jobs;
       } catch {
         // proceed with empty list
       }
@@ -528,7 +567,7 @@ export function attachWebSocketServer(
         // startLogStream returns a cancel function immediately — async work runs
         // in the background. Setting subscriptions synchronously prevents duplicate
         // subscribe messages from spawning parallel streams for the same session.
-        const cancel = startLogStream(ws, sessionId, namespace, () => cachedJobs);
+        const cancel = startLogStream(ws, sessionId, namespace, () => ctx.cachedJobs);
         subscriptions.set(sessionId, cancel);
       } else if (msg.type === "unsubscribe") {
         const { sessionId } = msg;
@@ -548,7 +587,7 @@ export function attachWebSocketServer(
 
     const cleanup = () => {
       clearInterval(heartbeat);
-      connectedClients.delete(ws);
+      releaseContext(namespace, ws);
       for (const [, cancel] of subscriptions) {
         cancel();
       }

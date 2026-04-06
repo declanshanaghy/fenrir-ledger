@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ServerMessage } from "./lib/types";
 import { randomQuote } from "./lib/constants";
 import { useWebSocket } from "./hooks/useWebSocket";
+import { useNamespace } from "./hooks/useNamespace";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useJobs } from "./hooks/useJobs";
 import { useLogStream } from "./hooks/useLogStream";
@@ -26,6 +27,7 @@ import type { CachedSessionMeta } from "./lib/localStorageLogs";
 export function App() {
   const quote = useMemo(() => randomQuote(), []);
   const { theme } = useTheme();
+  const { namespace, namespaces, setNamespace } = useNamespace();
   const [profileAgent, setProfileAgent] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<{ sessionId: string; jobTitle: string } | null>(null);
   const { jobs, handleMessage: handleJobsMessage, refreshCached } = useJobs();
@@ -59,6 +61,21 @@ export function App() {
     migrateRemoveDuplicateLogs();
     evictExpiredLogs();
   }, []);
+
+  // When namespace changes: clear active session, entries, and subscriptions.
+  // The WebSocket hook reconnects automatically to the new namespace.
+  const prevNamespaceRef = useRef(namespace);
+  useEffect(() => {
+    if (prevNamespaceRef.current === namespace) return;
+    prevNamespaceRef.current = namespace;
+    // Clean up existing subscriptions
+    if (subscribedSessionRef.current) {
+      subscribedSessionRef.current = null;
+    }
+    backgroundSubsRef.current.clear();
+    setActiveSessionId(null);
+    clearEntries();
+  }, [namespace, setActiveSessionId, clearEntries]);
 
   const [isFixture, setIsFixture] = useState(false);
   const [pinnedSessionId, setPinnedSessionId] = useState<string | null>(null);
@@ -113,7 +130,7 @@ export function App() {
     [handleJobsMessage, handleLogMessage, activeSessionId]
   );
 
-  const { state: wsState, error: wsError, send } = useWebSocket(onMessage);
+  const { state: wsState, error: wsError, send } = useWebSocket(onMessage, namespace);
 
   const handleSelectSession = useCallback(
     (sessionId: string) => {
@@ -337,6 +354,9 @@ export function App() {
           pinnedSessionIds={pinnedSessionIds}
           onCancelJob={handleOpenCancelDialog}
           terminatingSessionIds={terminatingSessionIds}
+          namespace={namespace}
+          namespaces={namespaces}
+          onNamespaceChange={setNamespace}
         />
         <ErrorBoundary>
           <LogViewer

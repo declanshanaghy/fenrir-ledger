@@ -48,6 +48,13 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            {{- if .Values.namespaces.enabled }}
+            - name: NAMESPACES_JSON
+              valueFrom:
+                configMapKeyRef:
+                  name: odins-throne-config
+                  key: namespaces.json
+            {{- end }}
             {{- if .Values.app.secretRef }}
           envFrom:
             - secretRef:

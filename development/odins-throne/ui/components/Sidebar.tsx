@@ -1,9 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { DisplayJob } from "../lib/types";
 import { useTheme } from "../hooks/useTheme";
+import type { NamespaceOption } from "../hooks/useNamespace";
 import { JobCard } from "./JobCard";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { StatusBadge } from "./StatusBadge";
+import { NamespaceSelector } from "./NamespaceSelector";
 
 const WIDTH_KEY = "hlidskjalf:sidebar-width";
 const DEFAULT_WIDTH = 300;
@@ -51,9 +53,12 @@ interface Props {
   pinnedSessionIds?: Set<string>;
   onCancelJob?: (sessionId: string) => void;
   terminatingSessionIds?: Set<string>;
+  namespace: string;
+  namespaces: NamespaceOption[];
+  onNamespaceChange: (ns: string) => void;
 }
 
-export function Sidebar({ jobs, activeSessionId, quote, wsState, onSelectSession, onAvatarClick, onOdinClick, onTogglePinSession, pinnedSessionIds, onCancelJob, terminatingSessionIds }: Props) {
+export function Sidebar({ jobs, activeSessionId, quote, wsState, onSelectSession, onAvatarClick, onOdinClick, onTogglePinSession, pinnedSessionIds, onCancelJob, terminatingSessionIds, namespace, namespaces, onNamespaceChange }: Props) {
   const { theme, setTheme } = useTheme();
   const [width, setWidth] = useState<number>(loadWidth);
   const isDraggingRef = useRef(false);
@@ -138,6 +143,12 @@ export function Sidebar({ jobs, activeSessionId, quote, wsState, onSelectSession
             </div>
           </>
         )}
+        <NamespaceSelector
+          namespace={namespace}
+          namespaces={namespaces}
+          onNamespaceChange={onNamespaceChange}
+          isCompact={isCompact}
+        />
       </div>
       <div className="card-list" role="list" aria-label="Job sessions">
         {jobs.length === 0 ? (

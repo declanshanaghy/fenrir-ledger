@@ -7,8 +7,43 @@ import { attachWebSocketServer } from "./ws.js";
 const app = new Hono();
 
 const PORT = parseInt(process.env.PORT ?? "3001", 10);
-const NAMESPACE = process.env.K8S_NAMESPACE ?? "fenrir-agents";
+const DEFAULT_NAMESPACE = process.env.K8S_NAMESPACE ?? "fenrir-agents";
 const JOB_LABEL = process.env.JOB_LABEL_SELECTOR ?? "app.kubernetes.io/component=agent-sandbox";
+
+// ── Namespace configuration ──────────────────────────────────────────────────
+
+export interface NamespaceConfig {
+  id: string;
+  label: string;
+}
+
+const DEFAULT_NAMESPACES: NamespaceConfig[] = [
+  { id: "fenrir-agents", label: "Fenrir Ledger Agents" },
+  { id: "say-so-agents", label: "SaySo Agents" },
+];
+
+function loadNamespaces(): NamespaceConfig[] {
+  // Prefer NAMESPACES_JSON env var (injected from ConfigMap)
+  const raw = process.env.NAMESPACES_JSON;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as NamespaceConfig[];
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {
+      console.warn("[config] Failed to parse NAMESPACES_JSON, using defaults");
+    }
+  }
+  return DEFAULT_NAMESPACES;
+}
+
+const NAMESPACES = loadNamespaces();
+
+/** Validate that a namespace param is in the allowed list. */
+function resolveNamespace(param: string | undefined): string {
+  if (!param) return DEFAULT_NAMESPACE;
+  const allowed = NAMESPACES.map((n) => n.id);
+  return allowed.includes(param) ? param : DEFAULT_NAMESPACE;
+}
 
 // ── Health check (public) ────────────────────────────────────────────────────
 app.get("/healthz", (c) => {
@@ -17,10 +52,16 @@ app.get("/healthz", (c) => {
 
 // ── Protected routes (auth enforced by oauth2-proxy sidecar) ─────────────────
 
+// Return available namespaces — read from NAMESPACES_JSON env var (sourced from ConfigMap)
+app.get("/api/namespaces", (c) => {
+  return c.json({ namespaces: NAMESPACES });
+});
+
 // List agent jobs — kept for curl debugging; UI uses WebSocket push
 app.get("/api/jobs", async (c) => {
+  const namespace = resolveNamespace(c.req.query("namespace"));
   try {
-    const jobs = await listAgentJobs(NAMESPACE, JOB_LABEL);
+    const jobs = await listAgentJobs(namespace, JOB_LABEL);
     return c.json({ jobs, count: jobs.length });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
@@ -32,8 +73,9 @@ app.get("/api/jobs", async (c) => {
 // Download full agent session log from K8s pod
 app.get("/api/logs/:sessionId", async (c) => {
   const sessionId = c.req.param("sessionId");
+  const namespace = resolveNamespace(c.req.query("namespace"));
   try {
-    const podName = await findPodForSession(sessionId, NAMESPACE);
+    const podName = await findPodForSession(sessionId, namespace);
     if (!podName) {
       return c.json({ error: "Pod not found for session" }, 404);
     }
@@ -41,7 +83,7 @@ app.get("/api/logs/:sessionId", async (c) => {
     await new Promise<void>((resolve, reject) => {
       streamPodLogs(
         podName,
-        NAMESPACE,
+        namespace,
         (line) => lines.push(line),
         () => resolve(),
         (err) => reject(err),
@@ -65,8 +107,9 @@ app.get("/api/logs/:sessionId", async (c) => {
 // Cancel / delete a running agent job — invoked by Ragnarök dialog confirm
 app.delete("/api/jobs/:sessionId", async (c) => {
   const sessionId = c.req.param("sessionId");
+  const namespace = resolveNamespace(c.req.query("namespace"));
   try {
-    await deleteAgentJob(sessionId, NAMESPACE);
+    await deleteAgentJob(sessionId, namespace);
     console.log(`[k8s] Job deleted for session ${sessionId}`);
     return c.json({ ok: true, sessionId });
   } catch (err) {
@@ -89,6 +132,6 @@ const server = serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log(`[odin-throne] Listening on http://localhost:${info.port}`);
 });
 
-attachWebSocketServer(server, NAMESPACE, JOB_LABEL);
+attachWebSocketServer(server, JOB_LABEL, NAMESPACES.map((n) => n.id), DEFAULT_NAMESPACE);
 
 export { app };

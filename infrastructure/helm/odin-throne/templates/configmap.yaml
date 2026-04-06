@@ -1,0 +1,12 @@
+{{- if .Values.namespaces.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: odins-throne-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "odin-throne.labels" (dict "component" "odins-throne") | nindent 4 }}
+data:
+  namespaces.json: |
+    {{ .Values.namespaces.list | toJson | nindent 4 }}
+{{- end }}
