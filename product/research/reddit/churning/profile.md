@@ -1,6 +1,26 @@
 # r/churning — Subreddit Engagement Profile
 
-**Promotion Policy: AVOID**
+> ## ⛔ FINAL VERDICT: DO NOT POST HERE
+>
+> **Status:** Evaluated and dropped from the n8n post composer pipeline (2026-04-08).
+>
+> r/churning is permanently excluded from Fenrir's Reddit outreach. The sub's absolute
+> ban on self-promotion, active AI-content detection, and swift permanent-ban policy
+> make even value-only engagement too risky. One misread comment tanks the account
+> and damages reputation across the entire churning ecosystem.
+>
+> **Operational impact:**
+> - Removed from `PREFERRED_SUBREDDITS` in the n8n workflow config
+> - Added to `IGNORED_SUBREDDITS` so the monitor and composer both skip it
+> - No automated posting, no automated monitoring, no manual posting
+>
+> The research below is retained as **reference only** — to inform voice and tone
+> choices for other churning-adjacent subs (r/CreditCardChurning, r/awardtravel, etc.)
+> where promotion is viable. Do not use this file to plan r/churning engagement.
+
+---
+
+**Historical Promotion Policy (pre-exclusion): AVOID**
 Zero product mention. Pure value only. No links. No "I built something." Nothing.
 
 ---
@@ -163,4 +183,4 @@ Skip the thread if:
 | AI content | Moderation team actively detects AI-generated posts. Ban on detection. |
 | Civility | Moderators remove personal attacks. Standard Reddit conduct rules apply. |
 
-**Verdict: AVOID. Build karma here through pure value. Never mention Fenrir.**
+**Verdict (2026-04-08): EXCLUDED. Sub removed from PREFERRED_SUBREDDITS and added to IGNORED_SUBREDDITS in the n8n workflow config. No automated or manual engagement.**
