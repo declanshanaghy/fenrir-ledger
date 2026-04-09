@@ -1,4 +1,5 @@
 {
+  "id": "reddit-post-composer",
   "name": "Reddit Post Composer",
   "active": false,
   "nodes": [
