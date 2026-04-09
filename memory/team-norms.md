@@ -133,6 +133,20 @@ flags or conditionals to preserve both. Ask if ambiguous.
 Open a GitHub Issue with the `research` label before starting any research.
 Post findings as a comment and close when done.
 
+### Research PRs: Auto-Merge When Docs-Only
+
+Research agents MUST auto-merge their own PRs when **all** changes are docs/markdown
+(no code, no config, no workflow files). No Loki QA step for docs-only research.
+
+Final step for the research agent:
+```bash
+# Verify diff is docs-only
+cd /workspace/repo && git diff origin/main --name-only | grep -vE '\.(md|mdx|txt|yml|yaml|json)$|^product/research/' && echo "NON-DOCS CHANGES — DO NOT AUTO-MERGE" || \
+  (gh pr merge <PR_NUMBER> --squash --delete-branch && gh issue close <ISSUE_NUMBER>)
+```
+
+If the diff contains any non-docs files, stop and hand off to Loki instead.
+
 ---
 
 ## "Hunt. Kill. Return."
